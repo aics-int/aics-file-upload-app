@@ -3,24 +3,43 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x]
     steps:
       - uses: actions/checkout@v2
 #       - name: Initialize
 #         uses: actions/setup-python@v2
 #         with:
 #           python-version: 3.9
-      - name: Initialize
-        uses: actions/setup-java@v2
+#       - name: Initialize
+#         uses: actions/setup-java@v2
+#         with:
+#           java-version: '11'
+#           distribution: 'adopt'
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
         with:
-          java-version: '11'
-          distribution: 'adopt'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: Install Dependencies & Lint
-        run: ./gradlew -i yarn lint
-      - name: Detect Circular Dependencies
-        run: ./gradlew -i detectCircularDeps
+          node-version: ${{ matrix.node-version }}
+      - name: Install Dependencies
+        run: yarn
+      - name: Lint
+        run: yarn lint
+      - name: Check for Circular Dependencies
+        run: yarn madge
       - name: Unit Test
-        run: ./gradlew -i test
+        run: yarn test
       - name: Compile
-        run: ./gradlew -i compile
+        run: yarn compile
+    
+#       - name: Grant execute permission for gradlew
+#         run: chmod +x gradlew
+#       - name: Install Dependencies & Lint
+#         run: ./gradlew -i yarn lint
+#       - name: Detect Circular Dependencies
+#         run: ./gradlew -i detectCircularDeps
+#       - name: Unit Test
+#         run: ./gradlew -i test
+#       - name: Compile
+#         run: ./gradlew -i compile
