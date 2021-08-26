@@ -1,0 +1,19 @@
+name: Test AICS File Upload App
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Initialize
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Dependencies & Lint
+        run: ./gradlew -i yarn lint
+      - name: Detect Circular Dependencies
+        run: ./gradlew -i detectCircularDeps
+      - name: Unit Test
+        run: ./gradlew -i test
+      - name: Compile
+        run: ./gradlew -i compile
