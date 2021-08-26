@@ -133,8 +133,3 @@ And notify people in the #file-upload-app Slack channel
 To create an executable that will allow you to test a production build of the
 app, you can run `yarn build-executable`. The executable will be built to the
 `dist` directory.
-
-## Mirroring
-
-The mirror for this repo is at https://github.com/aicsgithub/aics-file-upload-app in order to
-enable electron packaging in GitHub Actions.
