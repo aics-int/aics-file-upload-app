@@ -17,7 +17,7 @@ Windows: https://classic.yarnpkg.com/en/docs/install#windows-stable
 ### Step 2: Clone Repo, Install Dependencies
 
 ```bash
-git clone ssh://git@aicsbitbucket.corp.alleninstitute.org:7999/sw/aics-file-upload-app.git
+git clone git@github.com:aics-int/aics-file-upload-app.git
 cd file-upload-app
 yarn
 ```
