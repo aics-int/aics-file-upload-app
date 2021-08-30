@@ -13,6 +13,7 @@ import {
   getLookupAnnotationTypeId,
   getTemplateIdToName,
   getUniqueBarcodeSearchResults,
+  getUserIdToDisplayName,
 } from "../selectors";
 
 describe("Metadata selectors", () => {
@@ -221,6 +222,41 @@ describe("Metadata selectors", () => {
           annotationOptions: ["a", "b"],
         },
       ]);
+    });
+  });
+
+  describe("getUserIdToDisplayName", () => {
+    it("maps user ids to display names", () => {
+      // Arrange
+      const state = {
+        ...mockState,
+        metadata: {
+          ...mockState.metadata,
+          users: ["Foo", "Bar", "Baz"].map((displayName, index) => ({
+            displayName,
+            userId: index,
+          })),
+        },
+      };
+      const expected = {
+        0: "Foo",
+        1: "Bar",
+        2: "Baz",
+      };
+
+      // Act
+      const actual = getUserIdToDisplayName(state);
+
+      // Assert
+      expect(actual).to.deep.equal(expected);
+    });
+
+    it("produces empty map when users is undefined", () => {
+      // Act
+      const actual = getUserIdToDisplayName(mockState);
+
+      // Assert
+      expect(actual).to.deep.equal({});
     });
   });
 });

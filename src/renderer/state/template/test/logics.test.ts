@@ -34,6 +34,7 @@ import {
   mockMMSTemplate,
   mockState,
   mockTemplateDraft,
+  mockUser,
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
 import { AnnotationDraft, AsyncRequest, State } from "../../types";
@@ -707,12 +708,24 @@ describe("Template Logics", () => {
       store.dispatch(openTemplateEditor(1));
       await logicMiddleware.whenComplete();
 
+      // expect(JSON.stringify(actions.list)).to.be.true;
       expect(actions.includesMatch(expectedAction)).to.be.true;
     };
 
     it("dispatches startTemplateDraft given OK requests", async () => {
-      mmsClient.getTemplate.resolves(mockMMSTemplate);
-      const expectedAction = startTemplateDraft(mockMMSTemplate, {
+      mmsClient.getTemplate.resolves({
+        ...mockMMSTemplate,
+        createdBy: mockUser.userId,
+        modifiedBy: mockUser.userId,
+      });
+      const expectedTemplate = {
+        ...mockMMSTemplate,
+        createdBy: mockUser.userId,
+        modifiedBy: mockUser.userId,
+        createdByDisplayName: mockUser.displayName,
+        modifiedByDisplayName: mockUser.displayName,
+      };
+      const expectedAction = startTemplateDraft(expectedTemplate, {
         ...mockMMSTemplate,
         annotations: [
           {
@@ -721,6 +734,10 @@ describe("Template Logics", () => {
             orderIndex: 0,
           },
         ],
+        createdBy: mockUser.userId,
+        modifiedBy: mockUser.userId,
+        createdByDisplayName: mockUser.displayName,
+        modifiedByDisplayName: mockUser.displayName,
       });
       await runTest(expectedAction);
     });

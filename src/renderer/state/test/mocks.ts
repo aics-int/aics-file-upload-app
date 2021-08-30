@@ -19,6 +19,7 @@ import {
   Unit,
   ImagingSession,
   BarcodePrefix,
+  User,
 } from "../../services/labkey-client/types";
 import {
   CellPopulation,
@@ -623,6 +624,11 @@ export const mockUnit: Unit = {
   unitsId: 1,
 };
 
+export const mockUser: User = {
+  displayName: "tester",
+  userId: 3,
+};
+
 export const mockLookups: Lookup[] = [
   {
     ...mockAuditInfo,
@@ -649,6 +655,7 @@ export const nonEmptyStateForInitiatingUpload: State = {
       name: "foo",
     },
     lookups: mockLookups,
+    users: [mockUser],
   },
   selection: {
     ...mockSelection,
