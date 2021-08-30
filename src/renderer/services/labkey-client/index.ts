@@ -32,6 +32,7 @@ import {
   LK_SCHEMA,
   Lookup,
   Unit,
+  User,
 } from "./types";
 
 const BASE_URL = "/labkey";
@@ -298,6 +299,21 @@ export default class LabkeyClient extends HttpCacheClient {
       type: unit.Type,
       unitsId: unit.UnitsId,
     }));
+  }
+
+  /**
+   * Retrieves all high level user information from LabKey
+   */
+  public async getUsers(): Promise<User[]> {
+    const columns = ["UserId", "DisplayName"];
+    const query = LabkeyClient.getSelectRowsURL(
+      LK_SCHEMA.FILE_METADATA,
+      "User"
+    );
+    const response = await this.get(query);
+    return response.rows.map((r: LabkeyLookup) =>
+      camelizeKeys(pick(r, columns))
+    );
   }
 
   public async getColumnValues(

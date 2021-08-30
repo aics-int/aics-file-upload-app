@@ -40,7 +40,10 @@ import {
   saveTemplate,
   updateTemplateDraft,
 } from "../../state/template/actions";
-import { getTemplateDraft } from "../../state/template/selectors";
+import {
+  getOriginalTemplate,
+  getTemplateDraft,
+} from "../../state/template/selectors";
 import { AnnotationWithOptions } from "../../state/template/types";
 import { AnnotationDraft, AsyncRequest } from "../../state/types";
 import Table from "../Table";
@@ -74,7 +77,10 @@ const FOCUSED_ANNOTATION_KEYS = [
   { key: "annotationTypeName", title: "Data Type" },
   { key: "annotationOptions", title: "Dropdown Options" },
   { key: "lookupTable", title: "Lookup Reference" },
-  { key: "created", title: "Created" },
+  { key: "created", title: "Date Added to Template" },
+  { key: "createdByDisplayName", title: "Added to Template by" },
+  { key: "modified", title: "Last Modified" },
+  { key: "modifiedByDisplayName", title: "Last Modified by" },
 ];
 
 const FOCUSED_ANNOTATION_COLUMNS: ColumnProps<AnnotationKeys>[] = [
@@ -97,6 +103,7 @@ const FOCUSED_ANNOTATION_COLUMNS: ColumnProps<AnnotationKeys>[] = [
 function TemplateEditorModal(props: Props) {
   const dispatch = useDispatch();
   const template = useSelector(getTemplateDraft);
+  const originalTemplate = useSelector(getOriginalTemplate);
   const showTemplateHint = useSelector(getShowTemplateHint);
   const allAnnotations = useSelector(getAnnotationsWithAnnotationOptions);
   const requestsInProgress = useSelector(
@@ -174,6 +181,7 @@ function TemplateEditorModal(props: Props) {
       annotationTypeName: annotation["annotationTypeId/Name"],
       required: false,
       orderIndex: template.annotations.length,
+      modified: undefined as any, // no-date is more true than any date here
     });
     dispatch(addExistingAnnotation(annotation));
   }
@@ -355,6 +363,14 @@ function TemplateEditorModal(props: Props) {
           </div>
         ) : (
           <>
+            {isEditing && (
+              <p className={styles.auditInfo}>
+                Created {originalTemplate?.created} by{" "}
+                {originalTemplate?.createdByDisplayName}. Last Modified{" "}
+                {originalTemplate?.modified} by{" "}
+                {originalTemplate?.modifiedByDisplayName}.
+              </p>
+            )}
             {showTemplateHint && (
               <Alert
                 className={styles.alert}

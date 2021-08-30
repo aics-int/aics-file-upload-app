@@ -309,6 +309,10 @@ export interface TemplateDraft {
   name?: string;
   templateId?: number;
   version?: number;
+  createdBy?: number;
+  modifiedBy?: number;
+  createdByDisplayName?: string;
+  modifiedByDisplayName?: string;
 }
 
 export interface TemplateStateBranch {

@@ -157,6 +157,11 @@ export interface Unit {
   unitsId: number;
 }
 
+export interface User {
+  userId: number;
+  displayName: string;
+}
+
 export interface LabkeyUnit {
   Type: string;
   Description: string;

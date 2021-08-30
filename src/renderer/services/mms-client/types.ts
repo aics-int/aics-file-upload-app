@@ -103,6 +103,8 @@ export interface Template extends Audited {
   name: string;
   templateId: number;
   version: number;
+  createdByDisplayName?: string;
+  modifiedByDisplayName?: string;
 }
 
 export interface TemplateAnnotation extends Audited {
@@ -115,6 +117,8 @@ export interface TemplateAnnotation extends Audited {
   orderIndex: number;
   name: string;
   required: boolean;
+  createdByDisplayName?: string;
+  modifiedByDisplayName?: string;
 }
 
 export interface AnnotationMetadataRequest {

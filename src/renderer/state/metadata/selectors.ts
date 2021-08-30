@@ -7,6 +7,7 @@ import {
   AnnotationType,
   ColumnType,
   LabkeyPlateResponse,
+  User,
 } from "../../services/labkey-client/types";
 import { AnnotationWithOptions } from "../template/types";
 import { BarcodeSelectorOption, State } from "../types";
@@ -38,6 +39,7 @@ export const getPlateBarcodeToPlates = (state: State) =>
   state.metadata.plateBarcodeToPlates;
 export const getTemplates = (state: State) => state.metadata.templates;
 export const getUnits = (state: State) => state.metadata.units;
+export const getUsers = (state: State) => state.metadata.users;
 export const getUploadHistory = (state: State) => state.metadata.history.upload;
 
 // Some annotations are used purely for displaying data in the File Explorer, here we exclude those
@@ -119,4 +121,16 @@ export const getAnnotationsWithAnnotationOptions = createSelector(
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   }
+);
+
+export const getUserIdToDisplayName = createSelector(
+  [getUsers],
+  (users: User[]): { [userId: number]: string } =>
+    users.reduce(
+      (accum, user) => ({
+        ...accum,
+        [user.userId]: user.displayName,
+      }),
+      {}
+    )
 );
