@@ -17,7 +17,7 @@ Windows: https://classic.yarnpkg.com/en/docs/install#windows-stable
 ### Step 2: Clone Repo, Install Dependencies
 
 ```bash
-git clone ssh://git@aicsbitbucket.corp.alleninstitute.org:7999/sw/aics-file-upload-app.git
+git clone git@github.com:aics-int/aics-file-upload-app.git
 cd file-upload-app
 yarn
 ```
@@ -133,8 +133,3 @@ And notify people in the #file-upload-app Slack channel
 To create an executable that will allow you to test a production build of the
 app, you can run `yarn build-executable`. The executable will be built to the
 `dist` directory.
-
-## Mirroring
-
-The mirror for this repo is at https://github.com/aicsgithub/aics-file-upload-app in order to
-enable electron packaging in GitHub Actions.

@@ -1,0 +1,21 @@
+name: Test AICS File Upload App
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Initialize
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install Dependencies
+        run: yarn
+      - name: Lint
+        run: yarn lint
+      - name: Check for Circular Dependencies
+        run: yarn madge
+      - name: Unit Test
+        run: yarn test
+      - name: Compile
+        run: yarn compile
