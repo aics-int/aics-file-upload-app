@@ -1724,6 +1724,42 @@ describe("Upload logics", () => {
       expect(showOpenDialogStub.called).to.be.true;
       expect(actions.includesMatch({ type: REPLACE_UPLOAD })).to.be.true;
     });
+    it("creates mapping for new plate barcode entries", async () => {
+      // Arrange
+      const showMessageBoxStub = stub().resolves({ response: 1 });
+      const showOpenDialogStub = stub().resolves({
+        cancelled: false,
+        filePaths: ["/foo"],
+      });
+      const plateBarcodeToPlates = {
+        abc123: [{ wells: [] }],
+        def456: [{ wells: [] }],
+      };
+      const draft = {
+        ...mockState,
+        metadata: {
+          ...mockState.metadata,
+          plateBarcodeToPlates,
+        },
+      };
+      const readFileStub = stub().resolves(JSON.stringify(draft));
+      sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
+      sandbox.replace(dialog, "showOpenDialog", showOpenDialogStub);
+      sandbox.replace(mockReduxLogicDeps, "readFile", readFileStub);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        nonEmptyStateForInitiatingUpload
+      );
+
+      // Act
+      store.dispatch(openUploadDraft());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(actions.includesMatch({ type: REPLACE_UPLOAD })).to.be.true;
+      expect(
+        actions.includesMatch(setPlateBarcodeToPlates(plateBarcodeToPlates))
+      ).to.be.true;
+    });
   });
   describe("submitFileMetadataUpdateLogic", () => {
     let mockStateForEditingMetadata: State;
