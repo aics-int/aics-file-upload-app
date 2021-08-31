@@ -804,6 +804,7 @@ const openUploadLogic = createLogic({
     const { draft } = ctx;
     const uploadFilesFromDraft = getUpload(draft);
     try {
+      dispatch(setPlateBarcodeToPlates(getPlateBarcodeToPlates(draft)));
       dispatch(addUploadFiles(Object.values(uploadFilesFromDraft)));
     } catch (e) {
       dispatch(setErrorAlert(`Encountered error while resolving files: ${e}`));
