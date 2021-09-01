@@ -40,7 +40,10 @@ import {
   saveTemplate,
   updateTemplateDraft,
 } from "../../state/template/actions";
-import { getTemplateDraft } from "../../state/template/selectors";
+import {
+  getOriginalTemplate,
+  getTemplateDraft,
+} from "../../state/template/selectors";
 import { AnnotationWithOptions } from "../../state/template/types";
 import { AnnotationDraft, AsyncRequest } from "../../state/types";
 import Table from "../Table";
@@ -68,13 +71,23 @@ interface AnnotationKeys {
   value: string;
 }
 
+const AUDIT_ANNOTATION_KEYS = [
+  { key: "created", title: "Date Added to Template" },
+  { key: "createdByDisplayName", title: "Added to Template by" },
+  { key: "modified", title: "Last Modified" },
+  { key: "modifiedByDisplayName", title: "Last Modified by" },
+];
+const AUDIT_ANNOTATION_KEY_SET = new Set(
+  AUDIT_ANNOTATION_KEYS.map((k) => k.key)
+);
+
 const FOCUSED_ANNOTATION_KEYS = [
   { key: "name", title: "Name" },
   { key: "description", title: "Description" },
   { key: "annotationTypeName", title: "Data Type" },
   { key: "annotationOptions", title: "Dropdown Options" },
   { key: "lookupTable", title: "Lookup Reference" },
-  { key: "created", title: "Created" },
+  ...AUDIT_ANNOTATION_KEYS,
 ];
 
 const FOCUSED_ANNOTATION_COLUMNS: ColumnProps<AnnotationKeys>[] = [
@@ -97,6 +110,7 @@ const FOCUSED_ANNOTATION_COLUMNS: ColumnProps<AnnotationKeys>[] = [
 function TemplateEditorModal(props: Props) {
   const dispatch = useDispatch();
   const template = useSelector(getTemplateDraft);
+  const originalTemplate = useSelector(getOriginalTemplate);
   const showTemplateHint = useSelector(getShowTemplateHint);
   const allAnnotations = useSelector(getAnnotationsWithAnnotationOptions);
   const requestsInProgress = useSelector(
@@ -155,13 +169,20 @@ function TemplateEditorModal(props: Props) {
       const annotation = (focusedAnnotation || template.annotations[0]) as {
         [key: string]: any;
       };
-      const value = annotation[key] && castArray(annotation[key]).join(", ");
-      if (value) {
-        return [{ key: title, value }];
+      if (
+        !AUDIT_ANNOTATION_KEY_SET.has(key) ||
+        originalTemplate?.annotations.find(
+          (a) => a.annotationId === annotation?.annotationId
+        )
+      ) {
+        const value = annotation[key] && castArray(annotation[key]).join(", ");
+        if (value) {
+          return [{ key: title, value }];
+        }
       }
       return [];
     });
-  }, [focusedAnnotation, template.annotations]);
+  }, [focusedAnnotation, template.annotations, originalTemplate]);
 
   function onCloseAnnotationModal() {
     setAnnotationToEdit(undefined);
@@ -355,6 +376,14 @@ function TemplateEditorModal(props: Props) {
           </div>
         ) : (
           <>
+            {isEditing && (
+              <p className={styles.auditInfo}>
+                Created {originalTemplate?.created} by{" "}
+                {originalTemplate?.createdByDisplayName}. Last Modified{" "}
+                {originalTemplate?.modified} by{" "}
+                {originalTemplate?.modifiedByDisplayName}.
+              </p>
+            )}
             {showTemplateHint && (
               <Alert
                 className={styles.alert}

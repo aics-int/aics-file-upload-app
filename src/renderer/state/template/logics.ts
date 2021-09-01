@@ -16,6 +16,7 @@ import {
   getBooleanAnnotationTypeId,
   getLookupAnnotationTypeId,
   getLookups,
+  getUserIdToDisplayName,
 } from "../metadata/selectors";
 import { getApplyTemplateInfo, getWithRetry } from "../stateHelpers";
 import {
@@ -183,14 +184,25 @@ const openTemplateEditorLogic = createLogic({
     const templateId = action.payload;
     if (!isNil(templateId)) {
       const annotationTypes = getAnnotationTypes(getState());
+      const userIdToDisplayName = getUserIdToDisplayName(getState());
       try {
         const [template] = await getWithRetry(
           () => Promise.all([mmsClient.getTemplate(templateId)]),
           dispatch
         );
-        const { annotations, ...etc } = template;
+        const templateWithAuditInfo = {
+          ...template,
+          annotations: template.annotations.map((a) => ({
+            ...a,
+            createdByDisplayName: userIdToDisplayName[a.createdBy],
+            modifiedByDisplayName: userIdToDisplayName[a.modifiedBy],
+          })),
+          createdByDisplayName: userIdToDisplayName[template.createdBy],
+          modifiedByDisplayName: userIdToDisplayName[template.modifiedBy],
+        };
+        const { annotations, ...etc } = templateWithAuditInfo;
         dispatch(
-          startTemplateDraft(template, {
+          startTemplateDraft(templateWithAuditInfo, {
             ...etc,
             annotations: annotations.map((a: TemplateAnnotation) => {
               const type = annotationTypes.find(

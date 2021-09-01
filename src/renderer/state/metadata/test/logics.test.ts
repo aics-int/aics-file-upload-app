@@ -37,6 +37,7 @@ import {
   mockLookups,
   mockState,
   mockUnit,
+  mockUser,
   mockWellAnnotation,
 } from "../../test/mocks";
 import { AsyncRequest } from "../../types";
@@ -147,6 +148,7 @@ describe("Metadata logics", () => {
       labkeyClient.getImagingSessions.resolves(mockImagingSessions);
       labkeyClient.getLookups.resolves(mockLookups);
       labkeyClient.getUnits.resolves([mockUnit]);
+      labkeyClient.getUsers.resolves([mockUser]);
 
       const expectedAction = receiveMetadata({
         annotations: mockAnnotations,
@@ -158,6 +160,7 @@ describe("Metadata logics", () => {
         imagingSessions: mockImagingSessions,
         lookups: mockLookups,
         units: [mockUnit],
+        users: [mockUser],
       });
       await runRequestSucceededTest(requestMetadata(), expectedAction);
     });
