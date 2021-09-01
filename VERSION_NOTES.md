@@ -1,5 +1,10 @@
 # Version Notes
 
+## 2.6.0 (09/01/21)
+- Feature: The ordering of annotations within a template can now be controlled by the template creator.
+- Feature: Display a status message when an upload has succeeded, yet is potentially not available in the FMS File Explorer
+- Bugfix: Retrieve plate barcode mapping from upload draft state
+
 ## 2.5.0 (08/03/21)
 - Feature: Revamp upload table to provide users with more control and flexibility in viewing them
 - Feature: "Easy upload", users can now postpone adding metadata to an upload by uploading without one
