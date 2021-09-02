@@ -819,24 +819,22 @@ const openUploadLogic = createLogic({
     // Dates are not converted back into JSON objects when read from a file so they
     // must be formatted
     const uploadFilesFromDraft = Object.entries(getUpload(draft)).reduce(
-      (uploadAccum, [key, file]) => {
-        return {
-          ...uploadAccum,
-          [key]: Object.entries(file).reduce((fileAccum, [name, value]) => {
-            if (dateAnnotationNameSet.has(name)) {
-              return {
-                ...fileAccum,
-                [name]: value.map((v: string) => new Date(v)),
-              };
-            }
-
+      (uploadAccum, [key, file]) => ({
+        ...uploadAccum,
+        [key]: Object.entries(file).reduce((fileAccum, [name, value]) => {
+          if (dateAnnotationNameSet.has(name)) {
             return {
               ...fileAccum,
-              [name]: value,
+              [name]: castArray(value).map((v: string) => new Date(v)),
             };
-          }, {}),
-        };
-      },
+          }
+
+          return {
+            ...fileAccum,
+            [name]: value,
+          };
+        }, {}),
+      }),
       {}
     );
     try {
