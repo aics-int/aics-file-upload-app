@@ -36,6 +36,7 @@ import {
   mockAnnotationTypes,
   mockAuditInfo,
   mockDateAnnotation,
+  mockDateTimeAnnotation,
   mockFailedUploadJob,
   mockJob,
   mockMMSTemplate,
@@ -1759,6 +1760,53 @@ describe("Upload logics", () => {
       expect(
         actions.includesMatch(setPlateBarcodeToPlates(plateBarcodeToPlates))
       ).to.be.true;
+    });
+    it("converts date strings to date instances", async () => {
+      const expectedUploadFile = {
+        file: "abc123",
+        [mockDateAnnotation.name]: [new Date("2021-03-04")],
+        [mockDateTimeAnnotation.name]: [new Date("2021-03-04T00:01:03Z")],
+      };
+      const state: State = {
+        ...mockState,
+        upload: getMockStateWithHistory({
+          abc123: expectedUploadFile,
+        }),
+      };
+      const showMessageBoxStub = stub().resolves({ response: 1 });
+      const showOpenDialogStub = stub().resolves({
+        cancelled: false,
+        filePaths: ["/foo"],
+      });
+      const readFileStub = stub().resolves(JSON.stringify(state));
+      sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
+      sandbox.replace(dialog, "showOpenDialog", showOpenDialogStub);
+      sandbox.replace(mockReduxLogicDeps, "readFile", readFileStub);
+      const { actions, logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        metadata: {
+          ...nonEmptyStateForInitiatingUpload.metadata,
+          annotations: [
+            {
+              ...mockDateAnnotation,
+              "annotationTypeId/Name": ColumnType.DATE,
+              exposeToFileUploadApp: true,
+            },
+            {
+              ...mockDateTimeAnnotation,
+              "annotationTypeId/Name": ColumnType.DATETIME,
+              exposeToFileUploadApp: true,
+            },
+          ],
+          annotationTypes: mockAnnotationTypes,
+        },
+      });
+
+      store.dispatch(openUploadDraft());
+      await logicMiddleware.whenComplete();
+
+      expect(actions.includesMatch(addUploadFiles([expectedUploadFile]))).to.be
+        .true;
     });
   });
   describe("submitFileMetadataUpdateLogic", () => {

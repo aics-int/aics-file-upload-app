@@ -28,9 +28,12 @@ import { setErrorAlert } from "../feedback/actions";
 import { updateUploadProgressInfo } from "../job/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
+  getAnnotations,
   getAnnotationTypes,
   getBooleanAnnotationTypeId,
   getCurrentUploadFilePath,
+  getDateAnnotationTypeId,
+  getDateTimeAnnotationTypeId,
   getPlateBarcodeToPlates,
 } from "../metadata/selectors";
 import { closeUpload, viewUploads, resetUpload } from "../route/actions";
@@ -802,7 +805,38 @@ const openUploadLogic = createLogic({
     );
 
     const { draft } = ctx;
-    const uploadFilesFromDraft = getUpload(draft);
+    const annotations = getAnnotations(getState());
+    const dateAnnotationTypeId = getDateAnnotationTypeId(getState());
+    const dateTimeAnnotationTypeId = getDateTimeAnnotationTypeId(getState());
+    const dateAnnotationNames = annotations
+      .filter(
+        (a) =>
+          a.annotationTypeId === dateAnnotationTypeId ||
+          a.annotationTypeId === dateTimeAnnotationTypeId
+      )
+      .map((a) => a.name);
+    const dateAnnotationNameSet = new Set(dateAnnotationNames);
+    // Dates are not converted back into JSON objects when read from a file so they
+    // must be formatted
+    const uploadFilesFromDraft = Object.entries(getUpload(draft)).reduce(
+      (uploadAccum, [key, file]) => ({
+        ...uploadAccum,
+        [key]: Object.entries(file).reduce((fileAccum, [name, value]) => {
+          if (dateAnnotationNameSet.has(name)) {
+            return {
+              ...fileAccum,
+              [name]: castArray(value).map((v: string) => new Date(v)),
+            };
+          }
+
+          return {
+            ...fileAccum,
+            [name]: value,
+          };
+        }, {}),
+      }),
+      {}
+    );
     try {
       dispatch(setPlateBarcodeToPlates(getPlateBarcodeToPlates(draft)));
       dispatch(addUploadFiles(Object.values(uploadFilesFromDraft)));
