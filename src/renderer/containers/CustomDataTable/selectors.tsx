@@ -1,11 +1,15 @@
 import { basename } from "path";
 
-import { createSelector } from "reselect";
+import { isEqual } from "lodash";
+import {
+  createSelector,
+  createSelectorCreator,
+  defaultMemoize,
+} from "reselect";
 
 import { MAIN_FONT_WIDTH, AnnotationName } from "../../constants";
 import { ColumnType } from "../../services/labkey-client/types";
 import {
-  getAnnotations,
   getAnnotationTypes,
   getPlateBarcodeToPlates,
 } from "../../state/metadata/selectors";
@@ -26,6 +30,9 @@ import ReadOnlyCell from "../Table/DefaultCells/ReadOnlyCell";
 import SelectionHeader from "../Table/Headers/SelectionHeader";
 
 import { CustomColumn } from "./types";
+
+// The default "createSelector" from reselect is too shallow for getHiddenColumns
+const createDeepEqualSelector = createSelectorCreator(defaultMemoize, isEqual);
 
 const MAX_HEADER_WIDTH = 200;
 
@@ -69,35 +76,7 @@ const SELECTION_COLUMN: CustomColumn = {
   maxWidth: 35,
 };
 
-export const PLATE_BARCODE_COLUMN: CustomColumn = {
-  accessor: AnnotationName.PLATE_BARCODE,
-  Cell: PlateBarcodeCell,
-  // This description was pulled from LK 07/16/21
-  description: "The barcode for a Plate in LabKey	",
-  width: getColumnWidthForType(AnnotationName.PLATE_BARCODE, ColumnType.LOOKUP),
-};
-
-export const IMAGING_SESSION_COLUMN: CustomColumn = {
-  accessor: AnnotationName.IMAGING_SESSION,
-  Cell: ImagingSessionCell,
-  // This description was pulled from LK 07/16/21
-  description:
-    "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
-  width: getColumnWidthForType(
-    AnnotationName.IMAGING_SESSION,
-    ColumnType.LOOKUP
-  ),
-};
-
-export const WELL_COLUMN: CustomColumn = {
-  accessor: AnnotationName.WELL,
-  Cell: WellCell,
-  // This description was pulled from LK 03/22/21
-  description: "A well on a plate (that has been entered into the Plate UI)",
-  width: 100,
-};
-
-const DEFAULT_COLUMNS: CustomColumn[] = [
+export const DEFAULT_COLUMNS: CustomColumn[] = [
   {
     accessor: "file",
     id: "File",
@@ -113,105 +92,113 @@ const DEFAULT_COLUMNS: CustomColumn[] = [
     description: "Any additional text data (not ideal for querying)",
     maxWidth: 50,
   },
+  {
+    accessor: AnnotationName.PLATE_BARCODE,
+    Cell: PlateBarcodeCell,
+    // This description was pulled from LK 07/16/21
+    description: "The barcode for a Plate in LabKey	",
+    width: getColumnWidthForType(
+      AnnotationName.PLATE_BARCODE,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
+    accessor: AnnotationName.IMAGING_SESSION,
+    Cell: ImagingSessionCell,
+    // This description was pulled from LK 07/16/21
+    description:
+      "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
+    width: getColumnWidthForType(
+      AnnotationName.IMAGING_SESSION,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
+    accessor: AnnotationName.WELL,
+    Cell: WellCell,
+    // This description was pulled from LK 03/22/21
+    description: "A well on a plate (that has been entered into the Plate UI)",
+    width: 100,
+  },
 ];
 
+export const getHiddenColumns = createSelector(
+  [getUpload, getMassEditRow, getPlateBarcodeToPlates],
+  (upload, massEditRow, plateBarcodeToPlates): string[] => {
+    const selectedPlateBarcodes: string[] = massEditRow
+      ? massEditRow[AnnotationName.PLATE_BARCODE] || []
+      : Object.values(upload).flatMap(
+          (u) => u[AnnotationName.PLATE_BARCODE] || []
+        );
+
+    // If no plates have been selected ignored imaging session and well
+    if (!selectedPlateBarcodes.length) {
+      return [AnnotationName.IMAGING_SESSION, AnnotationName.WELL];
+    }
+
+    // If no plates selected have imaging sessions ignore imaging session
+    const platesHaveImagingSessions = selectedPlateBarcodes.some((pb) =>
+      plateBarcodeToPlates[pb]?.some((i) => i?.name)
+    );
+    if (!platesHaveImagingSessions) {
+      return [AnnotationName.IMAGING_SESSION];
+    }
+
+    return [];
+  }
+);
+
+// Uses createDeepEqualSelector() instead of default selector
+// becaues getHiddenColumns() re-computes on every upload state change
+// which is not helpful or necessary for computing the columns
+export const getDefaultColumnsForTable = createDeepEqualSelector(
+  [getHiddenColumns],
+  (hiddenColumns): CustomColumn[] =>
+    DEFAULT_COLUMNS.filter((c) => !hiddenColumns.includes(c.accessor as string))
+);
+
 export const getTemplateColumnsForTable = createSelector(
-  [
-    getAnnotationTypes,
-    getAppliedTemplate,
-    getAnnotations,
-    getUpload,
-    getPlateBarcodeToPlates,
-    getMassEditRow,
-  ],
-  (
-    annotationTypes,
-    template,
-    annotations,
-    uploads,
-    plateBarcodeToPlates,
-    massEditRow
-  ): CustomColumn[] => {
+  [getAnnotationTypes, getAppliedTemplate],
+  (annotationTypes, template): CustomColumn[] => {
     if (!template) {
       return [];
     }
 
-    const columns: CustomColumn[] = [];
-
-    const plateBarcodeAnnotation = annotations.find(
-      (a) => a.name === AnnotationName.PLATE_BARCODE
-    );
-    columns.push({
-      ...PLATE_BARCODE_COLUMN,
-      description:
-        plateBarcodeAnnotation?.description || PLATE_BARCODE_COLUMN.description,
-    });
-
-    // If the user has selected plate barcodes add Well as a column
-    const selectedPlateBarcodes: string[] = massEditRow
-      ? massEditRow[AnnotationName.PLATE_BARCODE] || []
-      : Object.values(uploads).flatMap(
-          (u) => u[AnnotationName.PLATE_BARCODE] || []
-        );
-    if (selectedPlateBarcodes.length) {
-      // If any of the selected barcodes have imaging sessions add Imaging Session as a column
-      const platesHaveImagingSessions = selectedPlateBarcodes.some((pb) =>
-        plateBarcodeToPlates[pb]?.some((i) => i?.name)
-      );
-      if (platesHaveImagingSessions) {
-        const imagingSessionAnnotation = annotations.find(
-          (a) => a.name === AnnotationName.IMAGING_SESSION
-        );
-        columns.push({
-          ...IMAGING_SESSION_COLUMN,
-          description:
-            imagingSessionAnnotation?.description ||
-            IMAGING_SESSION_COLUMN.description,
-        });
-      }
-
-      const wellAnnotation = annotations.find(
-        (a) => a.name === AnnotationName.WELL
-      );
-      columns.push({
-        ...WELL_COLUMN,
-        description: wellAnnotation?.description || WELL_COLUMN.description,
-      });
-    }
-
-    template.annotations
+    return template.annotations
       .sort((a, b) => a.orderIndex - b.orderIndex)
-      .forEach((annotation) => {
+      .map((annotation) => {
         const type = annotationTypes.find(
           (type) => type.annotationTypeId === annotation.annotationTypeId
         )?.name;
-        columns.push({
+        return {
           type,
           accessor: annotation.name,
           description: annotation.description,
           dropdownValues: annotation.annotationOptions,
           isRequired: annotation.required,
           width: getColumnWidthForType(annotation.name, type),
-        });
+        };
       });
-
-    return columns;
   }
 );
 
 export const getColumnsForTable = createSelector(
-  [getTemplateColumnsForTable, getAreSelectedUploadsInFlight],
-  (templateColumns, isReadOnly): CustomColumn[] => {
+  [
+    getDefaultColumnsForTable,
+    getTemplateColumnsForTable,
+    getAreSelectedUploadsInFlight,
+  ],
+  (defaultColumns, templateColumns, isReadOnly): CustomColumn[] => {
     if (isReadOnly) {
       const columns = templateColumns.map((column) => ({
         ...column,
         Cell: ReadOnlyCell,
       }));
-      return [...DEFAULT_COLUMNS, ...columns].map((column) => ({
+      return [...defaultColumns, ...columns].map((column) => ({
         ...column,
         isReadOnly: true,
       }));
     }
-    return [SELECTION_COLUMN, ...DEFAULT_COLUMNS, ...templateColumns];
+    return [SELECTION_COLUMN, ...defaultColumns, ...templateColumns];
   }
 );
