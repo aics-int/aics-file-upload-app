@@ -7,12 +7,13 @@ import { AnnotationName } from "../../constants";
 import { ROW_COUNT_COLUMN } from "../../state/constants";
 import { applyMassEdit, cancelMassEdit } from "../../state/selection/actions";
 import { getMassEditRowAsTableRow } from "../../state/selection/selectors";
-import { getTemplateColumnsForTable } from "../CustomDataTable/selectors";
 import Table from "../Table";
 import NotesCell from "../Table/CustomCells/NotesCell";
 import DefaultCell from "../Table/DefaultCells/DefaultCell";
 import ReadOnlyCell from "../Table/DefaultCells/ReadOnlyCell";
 import DefaultHeader from "../Table/Headers/DefaultHeader";
+
+import { getColumnsForMassEditTable } from "./selectors";
 
 const styles = require("./styles.pcss");
 
@@ -42,7 +43,7 @@ const DEFAULT_COLUMNS = [
 export default function MassEditTable() {
   const dispatch = useDispatch();
   const row = useSelector(getMassEditRowAsTableRow);
-  const templateColumns = useSelector(getTemplateColumnsForTable);
+  const templateColumns = useSelector(getColumnsForMassEditTable);
 
   const data: any[] = React.useMemo(() => [row], [row]);
   const columns = React.useMemo(

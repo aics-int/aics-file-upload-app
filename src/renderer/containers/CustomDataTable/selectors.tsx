@@ -1,11 +1,6 @@
 import { basename } from "path";
 
-import { isEqual } from "lodash";
-import {
-  createSelector,
-  createSelectorCreator,
-  defaultMemoize,
-} from "reselect";
+import { createSelector } from "reselect";
 
 import { MAIN_FONT_WIDTH, AnnotationName } from "../../constants";
 import { ColumnType } from "../../services/labkey-client/types";
@@ -13,10 +8,7 @@ import {
   getAnnotationTypes,
   getPlateBarcodeToPlates,
 } from "../../state/metadata/selectors";
-import {
-  getAreSelectedUploadsInFlight,
-  getMassEditRow,
-} from "../../state/selection/selectors";
+import { getAreSelectedUploadsInFlight } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
 import { getUpload } from "../../state/upload/selectors";
 import { getTextWidth } from "../../util";
@@ -30,9 +22,6 @@ import ReadOnlyCell from "../Table/DefaultCells/ReadOnlyCell";
 import SelectionHeader from "../Table/Headers/SelectionHeader";
 
 import { CustomColumn } from "./types";
-
-// The default "createSelector" from reselect is too shallow for getHiddenColumns
-const createDeepEqualSelector = createSelectorCreator(defaultMemoize, isEqual);
 
 const MAX_HEADER_WIDTH = 200;
 
@@ -76,6 +65,34 @@ const SELECTION_COLUMN: CustomColumn = {
   maxWidth: 35,
 };
 
+export const PLATE_BARCODE_COLUMN: CustomColumn = {
+  accessor: AnnotationName.PLATE_BARCODE,
+  Cell: PlateBarcodeCell,
+  // This description was pulled from LK 07/16/21
+  description: "The barcode for a Plate in LabKey	",
+  width: getColumnWidthForType(AnnotationName.PLATE_BARCODE, ColumnType.LOOKUP),
+};
+
+export const WELL_COLUMN: CustomColumn = {
+  accessor: AnnotationName.WELL,
+  Cell: WellCell,
+  // This description was pulled from LK 03/22/21
+  description: "A well on a plate (that has been entered into the Plate UI)",
+  width: 100,
+};
+
+export const IMAGING_SESSION_COLUMN: CustomColumn = {
+  accessor: AnnotationName.IMAGING_SESSION,
+  Cell: ImagingSessionCell,
+  // This description was pulled from LK 07/16/21
+  description:
+    "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
+  width: getColumnWidthForType(
+    AnnotationName.IMAGING_SESSION,
+    ColumnType.LOOKUP
+  ),
+};
+
 export const DEFAULT_COLUMNS: CustomColumn[] = [
   {
     accessor: "file",
@@ -92,72 +109,33 @@ export const DEFAULT_COLUMNS: CustomColumn[] = [
     description: "Any additional text data (not ideal for querying)",
     maxWidth: 50,
   },
-  {
-    accessor: AnnotationName.PLATE_BARCODE,
-    Cell: PlateBarcodeCell,
-    // This description was pulled from LK 07/16/21
-    description: "The barcode for a Plate in LabKey	",
-    width: getColumnWidthForType(
-      AnnotationName.PLATE_BARCODE,
-      ColumnType.LOOKUP
-    ),
-  },
-  {
-    accessor: AnnotationName.IMAGING_SESSION,
-    Cell: ImagingSessionCell,
-    // This description was pulled from LK 07/16/21
-    description:
-      "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
-    width: getColumnWidthForType(
-      AnnotationName.IMAGING_SESSION,
-      ColumnType.LOOKUP
-    ),
-  },
-  {
-    accessor: AnnotationName.WELL,
-    Cell: WellCell,
-    // This description was pulled from LK 03/22/21
-    description: "A well on a plate (that has been entered into the Plate UI)",
-    width: 100,
-  },
 ];
 
-export const getHiddenColumns = createSelector(
-  [getUpload, getMassEditRow, getPlateBarcodeToPlates],
-  (upload, massEditRow, plateBarcodeToPlates): string[] => {
-    const selectedPlateBarcodes: string[] = massEditRow
-      ? massEditRow[AnnotationName.PLATE_BARCODE] || []
-      : Object.values(upload).flatMap(
-          (u) => u[AnnotationName.PLATE_BARCODE] || []
-        );
+export const getSelectedPlateBarcodes = createSelector(
+  [getUpload],
+  (upload): string[] =>
+    Object.values(upload).flatMap((u) => u[AnnotationName.PLATE_BARCODE] || [])
+);
 
-    // If no plates have been selected ignored imaging session and well
-    if (!selectedPlateBarcodes.length) {
-      return [AnnotationName.IMAGING_SESSION, AnnotationName.WELL];
-    }
+export const getCanShowWellColumn = createSelector(
+  [getSelectedPlateBarcodes],
+  (selectedPlateBarcodes): boolean => !!selectedPlateBarcodes.length
+);
 
-    // If no plates selected have imaging sessions ignore imaging session
-    const platesHaveImagingSessions = selectedPlateBarcodes.some((pb) =>
+// If no selected plates have imaging sessions ignore imaging session
+export const getCanShowImagingSessionColumn = createSelector(
+  [getSelectedPlateBarcodes, getPlateBarcodeToPlates],
+  (selectedPlateBarcodes, plateBarcodeToPlates): boolean =>
+    selectedPlateBarcodes.some((pb) =>
       plateBarcodeToPlates[pb]?.some((i) => i?.name)
-    );
-    if (!platesHaveImagingSessions) {
-      return [AnnotationName.IMAGING_SESSION];
-    }
-
-    return [];
-  }
+    )
 );
 
-// Uses createDeepEqualSelector() instead of default selector
-// because getHiddenColumns() re-computes on every upload state change
-// which is not helpful or necessary for computing the columns
-// and can cause the user adjusted column widths to get reset
-export const getDefaultColumnsForTable = createDeepEqualSelector(
-  [getHiddenColumns],
-  (hiddenColumns): CustomColumn[] =>
-    DEFAULT_COLUMNS.filter((c) => !hiddenColumns.includes(c.accessor as string))
-);
-
+// Uses shallow equality comparable selectors to avoid
+// re-rendering on each upload state change which would
+// cause downstream effects like reseting user adjusted
+// column widths for selectors that rely on upload state
+// changes
 export const getTemplateColumnsForTable = createSelector(
   [getAnnotationTypes, getAppliedTemplate],
   (annotationTypes, template): CustomColumn[] => {
@@ -185,21 +163,39 @@ export const getTemplateColumnsForTable = createSelector(
 
 export const getColumnsForTable = createSelector(
   [
-    getDefaultColumnsForTable,
     getTemplateColumnsForTable,
+    getCanShowWellColumn,
+    getCanShowImagingSessionColumn,
     getAreSelectedUploadsInFlight,
   ],
-  (defaultColumns, templateColumns, isReadOnly): CustomColumn[] => {
+  (
+    templateColumns,
+    canShowWellColumn,
+    canShowImagingSessionColumn,
+    isReadOnly
+  ): CustomColumn[] => {
+    let columns: CustomColumn[] = [PLATE_BARCODE_COLUMN];
+
+    if (canShowImagingSessionColumn) {
+      columns.push(IMAGING_SESSION_COLUMN);
+    }
+
+    if (canShowWellColumn) {
+      columns.push(WELL_COLUMN);
+    }
+
+    columns.push(...templateColumns);
     if (isReadOnly) {
-      const columns = templateColumns.map((column) => ({
+      columns = columns.map((column) => ({
         ...column,
         Cell: ReadOnlyCell,
       }));
-      return [...defaultColumns, ...columns].map((column) => ({
+      return [...DEFAULT_COLUMNS, ...columns].map((column) => ({
         ...column,
         isReadOnly: true,
       }));
     }
-    return [SELECTION_COLUMN, ...defaultColumns, ...templateColumns];
+
+    return [SELECTION_COLUMN, ...DEFAULT_COLUMNS, ...columns];
   }
 );
