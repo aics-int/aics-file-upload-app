@@ -96,6 +96,19 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
       action.type === UPDATE_UPLOAD_ROWS,
     perform: (state: UploadStateBranch, action: UpdateUploadRowsAction) => {
       const { metadataUpdate, uploadKeys } = action.payload;
+
+      const modifiedAnnotations = Object.keys(metadataUpdate);
+      // Reset Imaging Session and Well on Plate Barcode changes
+      if (modifiedAnnotations.includes(AnnotationName.PLATE_BARCODE)) {
+        metadataUpdate[AnnotationName.IMAGING_SESSION] =
+          metadataUpdate[AnnotationName.IMAGING_SESSION] || [];
+        metadataUpdate[AnnotationName.WELL] =
+          metadataUpdate[AnnotationName.WELL] || [];
+      } else if (modifiedAnnotations.includes(AnnotationName.IMAGING_SESSION)) {
+        metadataUpdate[AnnotationName.WELL] =
+          metadataUpdate[AnnotationName.WELL] || [];
+      }
+
       const update: UploadStateBranch = {};
       uploadKeys.forEach((key) => {
         update[key] = {

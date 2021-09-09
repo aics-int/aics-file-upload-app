@@ -4,7 +4,12 @@ import { AnnotationName } from "../../../constants";
 import { resetUpload } from "../../route/actions";
 import { getMockStateWithHistory, mockState } from "../../test/mocks";
 import { UploadStateBranch } from "../../types";
-import { replaceUpload, updateUpload, updateUploads } from "../actions";
+import {
+  replaceUpload,
+  updateUpload,
+  updateUploadRows,
+  updateUploads,
+} from "../actions";
 import reducer from "../reducer";
 
 describe("upload reducer", () => {
@@ -100,6 +105,146 @@ describe("upload reducer", () => {
       expect(result.present).to.deep.equal(expected);
     });
   });
+
+  describe("updateUploadRows", () => {
+    it("performs update", () => {
+      // Arrange
+      const keyToChange = "abc123";
+      const state = getMockStateWithHistory({
+        [keyToChange]: {
+          file: keyToChange,
+          color: "blue",
+          date: "today",
+        },
+        keyToNotChange: {
+          file: "keyToNotChange",
+          color: "green",
+        },
+      });
+      const update = {
+        color: "orange",
+      };
+      const expected = {
+        ...state.present,
+        [keyToChange]: {
+          ...state.present[keyToChange],
+          ...update,
+        },
+      };
+
+      // Act
+      const actual = reducer(state, updateUploadRows([keyToChange], update));
+
+      // Assert
+      expect(actual.present).to.deep.equal(expected);
+    });
+
+    it("do not reset well and imaging session if present in update when barcode is", () => {
+      // Arrange
+      const keyToChange = "392841243";
+      const state = getMockStateWithHistory({
+        [keyToChange]: {
+          file: keyToChange,
+          color: "green",
+          [AnnotationName.PLATE_BARCODE]: ["1234121"],
+          [AnnotationName.IMAGING_SESSION]: ["4 hours"],
+          [AnnotationName.WELL]: [131, 21412],
+        },
+      });
+      const update = {
+        [AnnotationName.PLATE_BARCODE]: ["1239841234"],
+        [AnnotationName.IMAGING_SESSION]: ["2 hours"],
+        [AnnotationName.WELL]: [2349234],
+      };
+      const expected = {
+        ...state.present,
+        [keyToChange]: {
+          ...state.present[keyToChange],
+          ...update,
+        },
+      };
+
+      // Act
+      const actual = reducer(
+        state,
+        updateUploadRows(Object.keys(expected), update)
+      );
+
+      // Assert
+      expect(actual.present).to.deep.equal(expected);
+    });
+
+    it("do not reset imaging session if present in update when imaging session is", () => {
+      // Arrange
+      const keyToChange = "392841243";
+      const state = getMockStateWithHistory({
+        [keyToChange]: {
+          file: keyToChange,
+          color: "green",
+          [AnnotationName.PLATE_BARCODE]: ["1234121"],
+          [AnnotationName.IMAGING_SESSION]: ["4 hours"],
+          [AnnotationName.WELL]: [131, 21412],
+        },
+      });
+      const update = {
+        [AnnotationName.PLATE_BARCODE]: ["1239841234"],
+        [AnnotationName.IMAGING_SESSION]: ["2 hours"],
+      };
+      const expected = {
+        ...state.present,
+        [keyToChange]: {
+          ...state.present[keyToChange],
+          ...update,
+          [AnnotationName.WELL]: [],
+        },
+      };
+
+      // Act
+      const actual = reducer(
+        state,
+        updateUploadRows(Object.keys(expected), update)
+      );
+
+      // Assert
+      expect(actual.present).to.deep.equal(expected);
+    });
+
+    it("reset well and imaging session if not present in update when barcode is", () => {
+      // Arrange
+      const keyToChange = "392841243";
+      const state = getMockStateWithHistory({
+        [keyToChange]: {
+          file: keyToChange,
+          color: "green",
+          [AnnotationName.PLATE_BARCODE]: ["1234121"],
+          [AnnotationName.IMAGING_SESSION]: ["4 hours"],
+          [AnnotationName.WELL]: [131, 21412],
+        },
+      });
+      const update = {
+        [AnnotationName.PLATE_BARCODE]: ["1239841234"],
+      };
+      const expected = {
+        ...state.present,
+        [keyToChange]: {
+          ...state.present[keyToChange],
+          ...update,
+          [AnnotationName.IMAGING_SESSION]: [],
+          [AnnotationName.WELL]: [],
+        },
+      };
+
+      // Act
+      const actual = reducer(
+        state,
+        updateUploadRows(Object.keys(expected), update)
+      );
+
+      // Assert
+      expect(actual.present).to.deep.equal(expected);
+    });
+  });
+
   describe("replaceUpload", () => {
     it("replaces entire upload with upload in draft", () => {
       const uploadPartial = {
