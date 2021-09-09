@@ -149,8 +149,9 @@ export const getHiddenColumns = createSelector(
 );
 
 // Uses createDeepEqualSelector() instead of default selector
-// becaues getHiddenColumns() re-computes on every upload state change
+// because getHiddenColumns() re-computes on every upload state change
 // which is not helpful or necessary for computing the columns
+// and can cause the user adjusted column widths to get reset
 export const getDefaultColumnsForTable = createDeepEqualSelector(
   [getHiddenColumns],
   (hiddenColumns): CustomColumn[] =>
