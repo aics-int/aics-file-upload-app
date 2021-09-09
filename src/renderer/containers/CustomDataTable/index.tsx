@@ -12,18 +12,24 @@ import {
   Row,
 } from "react-table";
 
+import { AnnotationName } from "../../constants";
 import { getMassEditRow } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
 import { getUploadRowKey } from "../../state/upload/constants";
 import { getUploadAsTableRows } from "../../state/upload/selectors";
 import { UploadTableRow } from "../../state/upload/types";
+import { useHiddenColumns } from "../../util/hooks";
 import MassEditTable from "../MassEditTable";
 import SubFileSelectionModal from "../SubFileSelectionModal";
 import Table from "../Table";
 import DefaultCell from "../Table/DefaultCells/DefaultCell";
 import DefaultHeader from "../Table/Headers/DefaultHeader";
 
-import { getColumnsForTable } from "./selectors";
+import {
+  getCanShowImagingSessionColumn,
+  getCanShowWellColumn,
+  getColumnsForTable,
+} from "./selectors";
 import TableFooter from "./TableFooter";
 import TableToolHeader from "./TableToolHeader";
 import { CustomColumn } from "./types";
@@ -57,6 +63,10 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
   const template = useSelector(getAppliedTemplate);
   const isMassEditing = useSelector(getMassEditRow);
   const columnDefinitions = useSelector(getColumnsForTable);
+  const canShowWellColumn = useSelector(getCanShowWellColumn);
+  const canShowImagingSessionColumn = useSelector(
+    getCanShowImagingSessionColumn
+  );
 
   const data = React.useMemo(() => rows, [rows]);
   const columns: CustomColumn[] = React.useMemo(
@@ -82,6 +92,8 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
         sortType: ARRAY_SORT,
       },
       getRowId: getUploadRowKey,
+      // Prevent hidden columns from resetting on data changes
+      autoResetHiddenColumns: false,
       // This comes from the useExpanded plugin and prevents
       // sorting from reseting after data is modified - Sean M 03/23/21
       autoResetExpanded: false,
@@ -104,6 +116,12 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
     useBlockLayout, // Makes element widths adjustable
     useResizeColumns
   );
+
+  const columnsToHide = [
+    ...(canShowImagingSessionColumn ? [] : [AnnotationName.IMAGING_SESSION]),
+    ...(canShowWellColumn ? [] : [AnnotationName.WELL]),
+  ];
+  useHiddenColumns(tableInstance, columnsToHide);
 
   if (!template || !data.length) {
     return null;

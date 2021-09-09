@@ -1,41 +1,14 @@
 import { expect } from "chai";
 
 import { AnnotationName } from "../../../constants";
-import {
-  mockAuditInfo,
-  mockMMSTemplate,
-  mockState,
-} from "../../../state/test/mocks";
-import {
-  DEFAULT_COLUMNS,
-  IMAGING_SESSION_COLUMN,
-  PLATE_BARCODE_COLUMN,
-  WELL_COLUMN,
-} from "../../CustomDataTable/selectors";
+import { mockState } from "../../../state/test/mocks";
 import {
   getCanShowImagingSessionColumn,
   getCanShowWellColumn,
   getSelectedPlateBarcodes,
-  getColumnsForMassEditTable,
 } from "../selectors";
 
 describe("MassEditRow selectors", () => {
-  const annotationNames = ["Cell Line", "Color", "Is Aligned"];
-  const annotations = annotationNames.map((name, index) => ({
-    ...mockAuditInfo,
-    annotationId: index,
-    name,
-    description: `${name} description`,
-    annotationTypeId: index === 0 ? 0 : 1,
-    orderIndex: index,
-    annotationOptions: [],
-    required: false,
-  }));
-  const appliedTemplate = {
-    ...mockMMSTemplate,
-    annotations,
-  };
-
   describe("getSelectedPlateBarcodes", () => {
     it("returns empty array when no plate barcodes are selected", () => {
       // Act
@@ -153,108 +126,6 @@ describe("MassEditRow selectors", () => {
 
       // Assert
       expect(actual).to.be.false;
-    });
-  });
-
-  describe("getColumnsForMassEditTable", () => {
-    it("includes only template columns when no barcode selected", () => {
-      // Arrange
-      const state = {
-        ...mockState,
-        template: {
-          ...mockState.template,
-          appliedTemplate,
-        },
-      };
-
-      // Act
-      const actual = getColumnsForMassEditTable(state);
-
-      // Assert
-      DEFAULT_COLUMNS.forEach((column) => {
-        expect(actual).to.not.include(column);
-      });
-      annotationNames.forEach((annotationName) => {
-        expect(actual.some((c) => c.accessor === annotationName)).to.be.true;
-      });
-      expect(actual).to.include(PLATE_BARCODE_COLUMN);
-      expect(actual).to.not.include(WELL_COLUMN);
-      expect(actual).to.not.include(IMAGING_SESSION_COLUMN);
-    });
-
-    it("includes well column when plate barcodes are selected", () => {
-      // Arrange
-      const state = {
-        ...mockState,
-        selection: {
-          ...mockState.selection,
-          massEditRow: {
-            [AnnotationName.PLATE_BARCODE]: ["892432"],
-          },
-        },
-        template: {
-          ...mockState.template,
-          appliedTemplate,
-        },
-      };
-
-      // Act
-      const actual = getColumnsForMassEditTable(state);
-
-      // Assert
-      DEFAULT_COLUMNS.forEach((column) => {
-        expect(actual).to.not.include(column);
-      });
-      annotationNames.forEach((annotationName) => {
-        expect(actual.some((c) => c.accessor === annotationName)).to.be.true;
-      });
-      expect(actual).to.include(PLATE_BARCODE_COLUMN);
-      expect(actual).to.include(WELL_COLUMN);
-      expect(actual).to.not.include(IMAGING_SESSION_COLUMN);
-    });
-
-    it("includes imaging session column when selected barcodes have imaging session options", () => {
-      // Arrange
-      const plateBarcode = "1234123";
-      const state = {
-        ...mockState,
-        metadata: {
-          ...mockState.metadata,
-          plateBarcodeToPlates: {
-            [plateBarcode]: [
-              {
-                name: "imaging session 1",
-                imagingSessionId: 4,
-                wells: [],
-              },
-            ],
-          },
-        },
-        selection: {
-          ...mockState.selection,
-          massEditRow: {
-            [AnnotationName.PLATE_BARCODE]: [plateBarcode],
-          },
-        },
-        template: {
-          ...mockState.template,
-          appliedTemplate,
-        },
-      };
-
-      // Act
-      const actual = getColumnsForMassEditTable(state);
-
-      // Assert
-      DEFAULT_COLUMNS.forEach((column) => {
-        expect(actual).to.not.include(column);
-      });
-      annotationNames.forEach((annotationName) => {
-        expect(actual.some((c) => c.accessor === annotationName)).to.be.true;
-      });
-      expect(actual).to.include(PLATE_BARCODE_COLUMN);
-      expect(actual).to.include(WELL_COLUMN);
-      expect(actual).to.include(IMAGING_SESSION_COLUMN);
     });
   });
 });

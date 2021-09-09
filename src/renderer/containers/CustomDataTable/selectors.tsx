@@ -65,35 +65,7 @@ const SELECTION_COLUMN: CustomColumn = {
   maxWidth: 35,
 };
 
-export const PLATE_BARCODE_COLUMN: CustomColumn = {
-  accessor: AnnotationName.PLATE_BARCODE,
-  Cell: PlateBarcodeCell,
-  // This description was pulled from LK 07/16/21
-  description: "The barcode for a Plate in LabKey	",
-  width: getColumnWidthForType(AnnotationName.PLATE_BARCODE, ColumnType.LOOKUP),
-};
-
-export const WELL_COLUMN: CustomColumn = {
-  accessor: AnnotationName.WELL,
-  Cell: WellCell,
-  // This description was pulled from LK 03/22/21
-  description: "A well on a plate (that has been entered into the Plate UI)",
-  width: 100,
-};
-
-export const IMAGING_SESSION_COLUMN: CustomColumn = {
-  accessor: AnnotationName.IMAGING_SESSION,
-  Cell: ImagingSessionCell,
-  // This description was pulled from LK 07/16/21
-  description:
-    "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
-  width: getColumnWidthForType(
-    AnnotationName.IMAGING_SESSION,
-    ColumnType.LOOKUP
-  ),
-};
-
-export const DEFAULT_COLUMNS: CustomColumn[] = [
+const DEFAULT_COLUMNS: CustomColumn[] = [
   {
     accessor: "file",
     id: "File",
@@ -108,6 +80,37 @@ export const DEFAULT_COLUMNS: CustomColumn[] = [
     Cell: NotesCell,
     description: "Any additional text data (not ideal for querying)",
     maxWidth: 50,
+  },
+];
+
+export const PLATE_RELATED_COLUMNS: CustomColumn[] = [
+  {
+    accessor: AnnotationName.PLATE_BARCODE,
+    Cell: PlateBarcodeCell,
+    // This description was pulled from LK 07/16/21
+    description: "The barcode for a Plate in LabKey	",
+    width: getColumnWidthForType(
+      AnnotationName.PLATE_BARCODE,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
+    accessor: AnnotationName.IMAGING_SESSION,
+    Cell: ImagingSessionCell,
+    // This description was pulled from LK 07/16/21
+    description:
+      "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
+    width: getColumnWidthForType(
+      AnnotationName.IMAGING_SESSION,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
+    accessor: AnnotationName.WELL,
+    Cell: WellCell,
+    // This description was pulled from LK 03/22/21
+    description: "A well on a plate (that has been entered into the Plate UI)",
+    width: 100,
   },
 ];
 
@@ -143,50 +146,32 @@ export const getTemplateColumnsForTable = createSelector(
       return [];
     }
 
-    return template.annotations
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .map((annotation) => {
-        const type = annotationTypes.find(
-          (type) => type.annotationTypeId === annotation.annotationTypeId
-        )?.name;
-        return {
-          type,
-          accessor: annotation.name,
-          description: annotation.description,
-          dropdownValues: annotation.annotationOptions,
-          isRequired: annotation.required,
-          width: getColumnWidthForType(annotation.name, type),
-        };
-      });
+    return [
+      ...PLATE_RELATED_COLUMNS,
+      ...template.annotations
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((annotation) => {
+          const type = annotationTypes.find(
+            (type) => type.annotationTypeId === annotation.annotationTypeId
+          )?.name;
+          return {
+            type,
+            accessor: annotation.name,
+            description: annotation.description,
+            dropdownValues: annotation.annotationOptions,
+            isRequired: annotation.required,
+            width: getColumnWidthForType(annotation.name, type),
+          };
+        }),
+    ];
   }
 );
 
 export const getColumnsForTable = createSelector(
-  [
-    getTemplateColumnsForTable,
-    getCanShowWellColumn,
-    getCanShowImagingSessionColumn,
-    getAreSelectedUploadsInFlight,
-  ],
-  (
-    templateColumns,
-    canShowWellColumn,
-    canShowImagingSessionColumn,
-    isReadOnly
-  ): CustomColumn[] => {
-    let columns: CustomColumn[] = [PLATE_BARCODE_COLUMN];
-
-    if (canShowImagingSessionColumn) {
-      columns.push(IMAGING_SESSION_COLUMN);
-    }
-
-    if (canShowWellColumn) {
-      columns.push(WELL_COLUMN);
-    }
-
-    columns.push(...templateColumns);
+  [getTemplateColumnsForTable, getAreSelectedUploadsInFlight],
+  (templateColumns, isReadOnly): CustomColumn[] => {
     if (isReadOnly) {
-      columns = columns.map((column) => ({
+      const columns = templateColumns.map((column) => ({
         ...column,
         Cell: ReadOnlyCell,
       }));
@@ -196,6 +181,6 @@ export const getColumnsForTable = createSelector(
       }));
     }
 
-    return [SELECTION_COLUMN, ...DEFAULT_COLUMNS, ...columns];
+    return [SELECTION_COLUMN, ...DEFAULT_COLUMNS, ...templateColumns];
   }
 );

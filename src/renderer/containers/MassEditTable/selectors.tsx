@@ -3,13 +3,6 @@ import { createSelector } from "reselect";
 import { AnnotationName } from "../../constants";
 import { getPlateBarcodeToPlates } from "../../state/metadata/selectors";
 import { getMassEditRow } from "../../state/selection/selectors";
-import {
-  getTemplateColumnsForTable,
-  IMAGING_SESSION_COLUMN,
-  PLATE_BARCODE_COLUMN,
-  WELL_COLUMN,
-} from "../CustomDataTable/selectors";
-import { CustomColumn } from "../CustomDataTable/types";
 
 export const getSelectedPlateBarcodes = createSelector(
   [getMassEditRow],
@@ -28,28 +21,4 @@ export const getCanShowImagingSessionColumn = createSelector(
     selectedPlateBarcodes.some((pb) =>
       plateBarcodeToPlates[pb]?.some((i) => i?.name)
     )
-);
-
-export const getColumnsForMassEditTable = createSelector(
-  [
-    getTemplateColumnsForTable,
-    getCanShowWellColumn,
-    getCanShowImagingSessionColumn,
-  ],
-  (
-    columnsFromTemplate,
-    canShowWellColumn,
-    canShowImagingSessionColumn
-  ): CustomColumn[] => {
-    const columns: CustomColumn[] = [PLATE_BARCODE_COLUMN];
-
-    if (canShowImagingSessionColumn) {
-      columns.push(IMAGING_SESSION_COLUMN);
-    }
-    if (canShowWellColumn) {
-      columns.push(WELL_COLUMN);
-    }
-
-    return [...columns, ...columnsFromTemplate];
-  }
 );
