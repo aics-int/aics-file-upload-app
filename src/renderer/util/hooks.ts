@@ -43,11 +43,6 @@ export const useHiddenColumns = (
 
   React.useEffect(() => {
     if (!isHidingExpectedColumns) {
-      console.log(
-        "setting hidden columns",
-        isHidingExpectedColumns,
-        columnsToHide
-      );
       setHiddenColumns(columnsToHide);
     }
   }, [columnsToHide, isHidingExpectedColumns, setHiddenColumns]);
