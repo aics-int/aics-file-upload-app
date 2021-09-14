@@ -5,14 +5,10 @@ import { createSelector } from "reselect";
 import { MAIN_FONT_WIDTH, AnnotationName } from "../../constants";
 import { ColumnType } from "../../services/labkey-client/types";
 import {
-  getAnnotations,
   getAnnotationTypes,
   getPlateBarcodeToPlates,
 } from "../../state/metadata/selectors";
-import {
-  getAreSelectedUploadsInFlight,
-  getMassEditRow,
-} from "../../state/selection/selectors";
+import { getAreSelectedUploadsInFlight } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
 import { getUpload } from "../../state/upload/selectors";
 import { getTextWidth } from "../../util";
@@ -69,34 +65,6 @@ const SELECTION_COLUMN: CustomColumn = {
   maxWidth: 35,
 };
 
-export const PLATE_BARCODE_COLUMN: CustomColumn = {
-  accessor: AnnotationName.PLATE_BARCODE,
-  Cell: PlateBarcodeCell,
-  // This description was pulled from LK 07/16/21
-  description: "The barcode for a Plate in LabKey	",
-  width: getColumnWidthForType(AnnotationName.PLATE_BARCODE, ColumnType.LOOKUP),
-};
-
-export const IMAGING_SESSION_COLUMN: CustomColumn = {
-  accessor: AnnotationName.IMAGING_SESSION,
-  Cell: ImagingSessionCell,
-  // This description was pulled from LK 07/16/21
-  description:
-    "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
-  width: getColumnWidthForType(
-    AnnotationName.IMAGING_SESSION,
-    ColumnType.LOOKUP
-  ),
-};
-
-export const WELL_COLUMN: CustomColumn = {
-  accessor: AnnotationName.WELL,
-  Cell: WellCell,
-  // This description was pulled from LK 03/22/21
-  description: "A well on a plate (that has been entered into the Plate UI)",
-  width: 100,
-};
-
 const DEFAULT_COLUMNS: CustomColumn[] = [
   {
     accessor: "file",
@@ -115,87 +83,87 @@ const DEFAULT_COLUMNS: CustomColumn[] = [
   },
 ];
 
+export const PLATE_RELATED_COLUMNS: CustomColumn[] = [
+  {
+    accessor: AnnotationName.PLATE_BARCODE,
+    Cell: PlateBarcodeCell,
+    // This description was pulled from LK 07/16/21
+    description: "The barcode for a Plate in LabKey	",
+    width: getColumnWidthForType(
+      AnnotationName.PLATE_BARCODE,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
+    accessor: AnnotationName.IMAGING_SESSION,
+    Cell: ImagingSessionCell,
+    // This description was pulled from LK 07/16/21
+    description:
+      "Describes the session in which a plate is imaged. This is used especially when a single plate is imaged multiple times to identify each session (e.g. 2 hour - Drugs, 4 hour - Drugs)	",
+    width: getColumnWidthForType(
+      AnnotationName.IMAGING_SESSION,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
+    accessor: AnnotationName.WELL,
+    Cell: WellCell,
+    // This description was pulled from LK 03/22/21
+    description: "A well on a plate (that has been entered into the Plate UI)",
+    width: 100,
+  },
+];
+
+export const getSelectedPlateBarcodes = createSelector(
+  [getUpload],
+  (upload): string[] =>
+    Object.values(upload).flatMap((u) => u[AnnotationName.PLATE_BARCODE] || [])
+);
+
+export const getCanShowWellColumn = createSelector(
+  [getSelectedPlateBarcodes],
+  (selectedPlateBarcodes): boolean => !!selectedPlateBarcodes.length
+);
+
+// If no selected plates have imaging sessions ignore imaging session
+export const getCanShowImagingSessionColumn = createSelector(
+  [getSelectedPlateBarcodes, getPlateBarcodeToPlates],
+  (selectedPlateBarcodes, plateBarcodeToPlates): boolean =>
+    selectedPlateBarcodes.some((pb) =>
+      plateBarcodeToPlates[pb]?.some((i) => i?.name)
+    )
+);
+
+// Uses shallow equality comparable selectors to avoid
+// re-rendering on each upload state change which would
+// cause downstream effects like reseting user adjusted
+// column widths for selectors that rely on upload state
+// changes
 export const getTemplateColumnsForTable = createSelector(
-  [
-    getAnnotationTypes,
-    getAppliedTemplate,
-    getAnnotations,
-    getUpload,
-    getPlateBarcodeToPlates,
-    getMassEditRow,
-  ],
-  (
-    annotationTypes,
-    template,
-    annotations,
-    uploads,
-    plateBarcodeToPlates,
-    massEditRow
-  ): CustomColumn[] => {
+  [getAnnotationTypes, getAppliedTemplate],
+  (annotationTypes, template): CustomColumn[] => {
     if (!template) {
       return [];
     }
 
-    const columns: CustomColumn[] = [];
-
-    const plateBarcodeAnnotation = annotations.find(
-      (a) => a.name === AnnotationName.PLATE_BARCODE
-    );
-    columns.push({
-      ...PLATE_BARCODE_COLUMN,
-      description:
-        plateBarcodeAnnotation?.description || PLATE_BARCODE_COLUMN.description,
-    });
-
-    // If the user has selected plate barcodes add Well as a column
-    const selectedPlateBarcodes: string[] = massEditRow
-      ? massEditRow[AnnotationName.PLATE_BARCODE] || []
-      : Object.values(uploads).flatMap(
-          (u) => u[AnnotationName.PLATE_BARCODE] || []
-        );
-    if (selectedPlateBarcodes.length) {
-      // If any of the selected barcodes have imaging sessions add Imaging Session as a column
-      const platesHaveImagingSessions = selectedPlateBarcodes.some((pb) =>
-        plateBarcodeToPlates[pb]?.some((i) => i?.name)
-      );
-      if (platesHaveImagingSessions) {
-        const imagingSessionAnnotation = annotations.find(
-          (a) => a.name === AnnotationName.IMAGING_SESSION
-        );
-        columns.push({
-          ...IMAGING_SESSION_COLUMN,
-          description:
-            imagingSessionAnnotation?.description ||
-            IMAGING_SESSION_COLUMN.description,
-        });
-      }
-
-      const wellAnnotation = annotations.find(
-        (a) => a.name === AnnotationName.WELL
-      );
-      columns.push({
-        ...WELL_COLUMN,
-        description: wellAnnotation?.description || WELL_COLUMN.description,
-      });
-    }
-
-    template.annotations
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .forEach((annotation) => {
-        const type = annotationTypes.find(
-          (type) => type.annotationTypeId === annotation.annotationTypeId
-        )?.name;
-        columns.push({
-          type,
-          accessor: annotation.name,
-          description: annotation.description,
-          dropdownValues: annotation.annotationOptions,
-          isRequired: annotation.required,
-          width: getColumnWidthForType(annotation.name, type),
-        });
-      });
-
-    return columns;
+    return [
+      ...PLATE_RELATED_COLUMNS,
+      ...template.annotations
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((annotation) => {
+          const type = annotationTypes.find(
+            (type) => type.annotationTypeId === annotation.annotationTypeId
+          )?.name;
+          return {
+            type,
+            accessor: annotation.name,
+            description: annotation.description,
+            dropdownValues: annotation.annotationOptions,
+            isRequired: annotation.required,
+            width: getColumnWidthForType(annotation.name, type),
+          };
+        }),
+    ];
   }
 );
 
@@ -212,6 +180,7 @@ export const getColumnsForTable = createSelector(
         isReadOnly: true,
       }));
     }
+
     return [SELECTION_COLUMN, ...DEFAULT_COLUMNS, ...templateColumns];
   }
 );
