@@ -559,19 +559,41 @@ const getAnnotations = (
 };
 
 export const extensionToFileTypeMap: { [index: string]: FileType } = {
+  ".ab1": FileType.SANGER_TRACE,
+  ".bam": FileType.BAM,
+  ".bai": FileType.BAM_INDEX,
+  ".bam.bai": FileType.BAM_INDEX,
+  ".bam.pbi": FileType.BAM_INDEX,
   ".csv": FileType.CSV,
   ".czexp": FileType.ZEISS_CONFIG_FILE,
   ".czi": FileType.IMAGE,
   ".czmbi": FileType.ZEISS_CONFIG_FILE,
   ".czsh": FileType.ZEISS_CONFIG_FILE,
+  ".fa": FileType.FASTA,
+  ".fa.gz": FileType.FASTA,
+  ".fasta": FileType.FASTA,
+  ".fasta.gz": FileType.FASTA,
+  ".fastq": FileType.FASTQ,
+  ".fastq.gz": FileType.FASTQ,
   ".gif": FileType.IMAGE,
+  ".gtf": FileType.GTF_ANNOTATION,
+  ".gff": FileType.GTF_ANNOTATION,
+  ".gff3": FileType.GTF_ANNOTATION,
+  ".gtf.gz": FileType.GTF_ANNOTATION,
+  ".gff.gz": FileType.GTF_ANNOTATION,
+  ".gff3.gz": FileType.GTF_ANNOTATION,
   ".jpeg": FileType.IMAGE,
   ".jpg": FileType.IMAGE,
   ".pdf": FileType.IMAGE, // TODO: decide if we consider this to be true
   ".png": FileType.IMAGE,
+  ".sam": FileType.SAM,
   ".tif": FileType.IMAGE,
   ".tiff": FileType.IMAGE,
   ".txt": FileType.TEXT,
+  ".vcf": FileType.VCF,
+  ".vcf.gz": FileType.VCF,
+  ".vcf.idx": FileType.VCF_INDEX,
+  ".vcf.gz.tbi": FileType.VCF_INDEX
 };
 
 export const getUploadRequests = createSelector(

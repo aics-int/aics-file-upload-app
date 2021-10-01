@@ -211,9 +211,18 @@ export interface SaveUploadDraftSuccessAction extends WriteToStoreAction {
 }
 
 export enum FileType {
+  BAM = "bam",
+  BAM_INDEX = "bam_index",
   CSV = "csv",
+  FASTA = "fasta",
+  FASTQ = "fastq", 
+  GTF_ANNOTATION = "gtf_annotation", 
   IMAGE = "image",
   OTHER = "other",
+  SAM = "sam",
+  SANGER_TRACE = "sanger_trace",
   TEXT = "text",
+  VCF = "vcf",
+  VCF_INDEX = "vcf_index",
   ZEISS_CONFIG_FILE = "zeiss-config-file",
 }
