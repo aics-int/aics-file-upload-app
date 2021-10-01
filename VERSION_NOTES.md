@@ -1,5 +1,9 @@
 # Version Notes
 
+## 2.7.0 (10/01/21)
+- Feature: Information about who has affected the Metadata Template & the Template's annotations will now be shown.
+- Bugfix: User-adjusted column widths will no longer be resized on data changes.
+
 ## 2.6.0 (09/01/21)
 - Feature: The ordering of annotations within a template can now be controlled by the template creator.
 - Feature: Display a status message when an upload has succeeded, yet is potentially not available in the FMS File Explorer
