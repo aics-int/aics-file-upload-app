@@ -216,7 +216,7 @@ export enum FileType {
   CSV = "csv",
   FASTA = "fasta",
   FASTQ = "fastq", 
-  GTF_ANNOTATION = "gtf_annotation", 
+  GTF_ANNOTATION = "gtf_annotation",
   IMAGE = "image",
   OTHER = "other",
   SAM = "sam",
