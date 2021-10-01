@@ -215,7 +215,7 @@ export enum FileType {
   BAM_INDEX = "bam_index",
   CSV = "csv",
   FASTA = "fasta",
-  FASTQ = "fastq", 
+  FASTQ = "fastq",
   GTF_ANNOTATION = "gtf_annotation",
   IMAGE = "image",
   OTHER = "other",
