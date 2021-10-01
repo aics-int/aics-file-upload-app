@@ -593,7 +593,7 @@ export const extensionToFileTypeMap: { [index: string]: FileType } = {
   ".vcf": FileType.VCF,
   ".vcf.gz": FileType.VCF,
   ".vcf.idx": FileType.VCF_INDEX,
-  ".vcf.gz.tbi": FileType.VCF_INDEX
+  ".vcf.gz.tbi": FileType.VCF_INDEX,
 };
 
 export const getUploadRequests = createSelector(
