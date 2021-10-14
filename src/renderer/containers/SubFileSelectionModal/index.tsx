@@ -29,7 +29,7 @@ function SubFileSelectionModal({ file }: { file: string }) {
 
   // Determine initial state from corresponding upload row
   const row = React.useMemo(() => {
-    const row = uploads.find(({ key }) => key === file);
+    const row = uploads.find(({ file: fileName }) => fileName === file);
     let initialSubImageType;
     if (!isEmpty(row?.subImageNames)) {
       initialSubImageType = SubImageType.GENERIC;
