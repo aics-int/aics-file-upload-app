@@ -83,6 +83,7 @@ export default class JobStatusClient extends HttpCacheClient {
     return response.data[0];
   }
 
+  // TODO: Deprecate?
   /**
    * Wait for upload job from FSS to exist in JSS to prevent
    * a race condition when trying to create child jobs. Ideally this
