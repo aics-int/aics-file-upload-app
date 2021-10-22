@@ -71,7 +71,7 @@ export default class LabkeyClient extends HttpCacheClient {
     this.findImagingSessionsByPlateBarcode = this.findImagingSessionsByPlateBarcode.bind(
       this
     );
-    this.getFileExistsByMD5AndName = this.getFileExistsByMD5AndName.bind(this);
+    this.fileExistsByNameAndMD5 = this.fileExistsByNameAndMD5.bind(this);
     this.selectRows = this.selectRows.bind(this);
     this.selectFirst = this.selectFirst.bind(this);
     this.selectRowsAsList = this.selectRowsAsList.bind(this);
@@ -382,9 +382,9 @@ export default class LabkeyClient extends HttpCacheClient {
     return response.rows;
   }
 
-  public async getFileExistsByMD5AndName(
-    md5: string,
-    name: string
+  public async fileExistsByNameAndMD5(
+    name: string,
+    md5: string
   ): Promise<boolean> {
     const query = LabkeyClient.getSelectRowsURL(LK_SCHEMA.FMS, "File", [
       `query.FileName~eq=${encodeURIComponent(name)}`,

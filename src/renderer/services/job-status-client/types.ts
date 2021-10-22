@@ -1,4 +1,80 @@
-export interface JobBase<T = any> {
+import { FSSResponseFile, UploadRequest } from "../types";
+
+export interface ServiceFields {
+  // TODO: Need to handle backwards compatible views of jobs with results fields from FSS
+  result?: FSSResponseFile[];
+
+  // If user decides to cancel an upload, the app sets this value to true.
+  // This will be true only for uploads after 9/21/20 when this heuristic was created. Otherwise, check the error
+  // field of serviceFields to see if the upload was cancelled.
+  cancelled?: boolean;
+
+  // Present when the upload fails, contains the error message from
+  // the exception caught.
+  error?: string;
+
+  // DEPRECATED
+  // Previously this app tracked each part of the upload using different jobs
+  // assigned different "types", however this is no longer how this app works
+  // and all jobs that do not have type "upload" can be ignored.
+  type: "upload" | "copy" | "copy_child" | "add_metadata";
+
+  // Metadata for the upload file at the time of upload saved
+  // to the job to avoid losing it in the event of a failure.
+  // Set as an array of potentially > 1 values to be backwards
+  // compatible with uploads accomplished with old versions
+  // of this app.
+  files: UploadRequest[];
+
+  // TODO: ????
+  fssUploadId?: string;
+
+  // TODO: ????
+  fssUploadChunkSize?: number;
+
+  // Identifies the upload as part of a larger group of uploads
+  // useful for grouping uploads that were uploaded together
+  groupId?: string;
+
+  // The MD5 hash calculated for this upload file. Tracked in this
+  // job to try to avoid re-calculation when possible.
+  calculatedMD5?: string;
+
+  // Tracks the modified date present in the upload file's metadata at the time
+  // the MD5 calculation occurred. If this date is different than the current
+  // upload file's metadata it can be concluded that the MD5 may no longer
+  // represent the current state of the file.
+  lastModifiedInMS?: number;
+
+  // Rather than re-use a FAILED job representing a failed upload, a new one is created by this app.
+  // This tracks the original job for posterity.
+  originalJobId?: string;
+
+  // Rather than re-use a FAILED job representing a failed upload, a new one is created by this app.
+  // This points to 1+ jobs that replace this job as a form of tracking the upload. One job
+  // is created for each file present in the upload.
+  // More than 1 job should only be present in uploads made by old versions of this app.
+  replacementJobIds?: string[];
+
+  // Tracks how many bytes have been read for the MD5 calculation.
+  bytesProcessedForMD5?: number;
+
+  // This object is filled in by processes [services] that run after the initial upload
+  // upload clients like this one can gain insight into processes run on the file
+  // after upload, for example the FMS Mongo ETL. Property added after 08/02/21.
+  postUploadProcessing?: {
+    [process: string]: {
+      service: string;
+      status: JSSJobStatus;
+      status_detail?: string;
+      service_fields?: {};
+      created: Date;
+      modified: Date;
+    };
+  };
+}
+
+export interface JobBase {
   // Array of child ids of this job.  Optional, supplied by client
   childIds?: string[];
 
@@ -22,7 +98,7 @@ export interface JobBase<T = any> {
   service?: string;
 
   // Additional properties required by a specific job or job type.  Optional, supplied by client
-  serviceFields?: T;
+  serviceFields: ServiceFields;
 
   // The status of this job.  Required, supplied by client.
   status: JSSJobStatus;
@@ -36,7 +112,7 @@ export interface JobBase<T = any> {
   user: string;
 }
 
-export interface CreateJobRequest<T = any> extends JobBase<T> {
+export interface CreateJobRequest extends JobBase {
   // Unique ID of the job. May be supplied by the client, or will be created by JSS
   jobId?: string;
 }
@@ -68,7 +144,7 @@ export interface JSSUpdateJobRequest extends JSSServiceFields {
   status?: JSSJobStatus;
 }
 
-export interface JSSJob<T = any> extends JobBase<T> {
+export interface JSSJob extends JobBase {
   // Datestamp for when the job was originally created.  Required, created by JSS
   created: Date;
 
@@ -107,6 +183,7 @@ export interface MongoFieldQuery {
   $nin?: any;
 }
 
+// TODO: No???
 export enum UploadStage {
   // Value taken from FSS. Is set from time of job
   // creation until processing begins after /uploadComplete

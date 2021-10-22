@@ -34,7 +34,6 @@ import {
   Unit,
 } from "../services/labkey-client/types";
 import { Template, WellResponse } from "../services/mms-client/types";
-import { UploadServiceFields } from "../services/types";
 import { LocalStorage } from "../types";
 
 import Process = CreateLogic.Config.Process;
@@ -182,6 +181,7 @@ export interface FeedbackStateBranch {
   visibleModals: ModalName[];
 }
 
+// TODO: unused?
 export interface UploadProgressInfo {
   completedBytes: number;
   totalBytes: number;
@@ -190,7 +190,7 @@ export interface UploadProgressInfo {
 
 export interface JobStateBranch {
   // Parent job representing an upload of a batch of files
-  uploadJobs: JSSJob<UploadServiceFields>[];
+  uploadJobs: JSSJob[];
   // mapping between  jobIds and their upload progress
   copyProgress: {
     [jobId: string]: UploadProgressInfo;
@@ -284,7 +284,7 @@ export interface UploadRowTableId {
 
 export interface UploadTabSelections {
   cellAtDragStart?: UploadKeyValue;
-  uploads: JSSJob<UploadServiceFields>[];
+  uploads: JSSJob[];
   massEditRow?: MassEditRow;
   rowsSelectedForDragEvent?: UploadRowTableId[];
   rowsSelectedForMassEdit?: string[];
@@ -403,7 +403,7 @@ export interface RequestFailedAction {
 }
 
 // Matches a Job but the created date is represented as a string
-export interface UploadSummaryTableRow extends JSSJob<UploadServiceFields> {
+export interface UploadSummaryTableRow extends JSSJob {
   fileId?: string;
   filePath?: string;
   template?: string;

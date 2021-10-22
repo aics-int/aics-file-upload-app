@@ -86,6 +86,14 @@ export default class MMSClient extends HttpCacheClient {
     return response.data[0];
   }
 
+  public async createFileMetadata(
+    fileId: string,
+    request: UploadRequest
+  ): Promise<void> {
+    const url = `${mmsURL}/1.0/filemetadata/${fileId}`;
+    await this.post(url, decamelizeKeys(request));
+  }
+
   public async editFileMetadata(
     fileId: string,
     request: UploadRequest

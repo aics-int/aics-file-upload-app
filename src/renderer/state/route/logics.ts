@@ -2,7 +2,7 @@ import { existsSync } from "fs";
 import { platform } from "os";
 
 import { Menu, MenuItem } from "electron";
-import { castArray, difference, groupBy, isEmpty, uniq } from "lodash";
+import { groupBy, isEmpty, uniq } from "lodash";
 import { AnyAction } from "redux";
 import { createLogic } from "redux-logic";
 
@@ -508,11 +508,7 @@ const viewUploadsLogic = createLogic({
           const originalFileIds = upload.serviceFields.result.map(
             ({ fileId }: FSSResponseFile) => fileId
           );
-          const deletedFileIds = upload.serviceFields.deletedFileIds
-            ? castArray(upload.serviceFields.deletedFileIds)
-            : [];
-          const fileIds = difference(originalFileIds, deletedFileIds);
-          ctx.fileIds = [...ctx.fileIds, ...fileIds];
+          ctx.fileIds = [...ctx.fileIds, ...originalFileIds];
         } else if (
           upload.serviceFields?.files &&
           !isEmpty(upload.serviceFields?.files)

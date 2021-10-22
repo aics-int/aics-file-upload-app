@@ -1,6 +1,5 @@
 import { AnnotationName } from "../../constants";
 import { JSSJob } from "../../services/job-status-client/types";
-import { UploadServiceFields } from "../../services/types";
 import {
   AutoSaveAction,
   FileModel,
@@ -116,16 +115,12 @@ export interface UploadWithoutMetadataAction {
   type: string;
 }
 
-export interface CancelUploadAction<
-  T extends JSSJob<UploadServiceFields> = JSSJob<UploadServiceFields>
-> {
+export interface CancelUploadAction<T extends JSSJob = JSSJob> {
   payload: T[];
   type: string;
 }
 
-export interface RetryUploadAction<
-  T extends JSSJob<UploadServiceFields> = JSSJob<UploadServiceFields>
-> {
+export interface RetryUploadAction<T extends JSSJob = JSSJob> {
   payload: T[];
   type: string;
 }

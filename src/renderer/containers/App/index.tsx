@@ -14,7 +14,6 @@ import {
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
 import { JSSJob } from "../../services/job-status-client/types";
-import { BaseServiceFields } from "../../services/types";
 import {
   addRequestToInProgress,
   checkForUpdate,
@@ -94,9 +93,7 @@ export default function App() {
 
     eventSource.addEventListener("initialJobs", (event: MessageEvent) => {
       dispatch(removeRequestFromInProgress(AsyncRequest.GET_JOBS));
-      const jobs = camelizeKeys(JSON.parse(event.data)) as JSSJob<
-        BaseServiceFields
-      >[];
+      const jobs = camelizeKeys(JSON.parse(event.data)) as JSSJob[];
       const uploadJobs = jobs.filter(
         (job) => job.serviceFields?.type === "upload"
       );
@@ -104,16 +101,12 @@ export default function App() {
     });
 
     eventSource.addEventListener("jobInsert", (event: MessageEvent) => {
-      const jobChange = camelizeKeys(JSON.parse(event.data)) as JSSJob<
-        BaseServiceFields
-      >;
+      const jobChange = camelizeKeys(JSON.parse(event.data)) as JSSJob;
       dispatch(receiveJobInsert(jobChange));
     });
 
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
-      const jobChange = camelizeKeys(JSON.parse(event.data)) as JSSJob<
-        BaseServiceFields
-      >;
+      const jobChange = camelizeKeys(JSON.parse(event.data)) as JSSJob;
       dispatch(receiveJobUpdate(jobChange));
     });
 

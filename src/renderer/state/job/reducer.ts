@@ -1,7 +1,5 @@
 import { AnyAction } from "redux";
 
-import { JSSJob } from "../../services/job-status-client/types";
-import { UploadServiceFields } from "../../services/types";
 import { JobStateBranch, TypeToDescriptionMap } from "../types";
 import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 import { makeReducer } from "../util";
@@ -48,10 +46,7 @@ const actionToConfigMap: TypeToDescriptionMap<JobStateBranch> = {
     ): JobStateBranch => {
       return {
         ...state,
-        uploadJobs: [
-          newJob as JSSJob<UploadServiceFields>,
-          ...state.uploadJobs,
-        ],
+        uploadJobs: [newJob, ...state.uploadJobs],
       };
     },
   },
@@ -65,9 +60,7 @@ const actionToConfigMap: TypeToDescriptionMap<JobStateBranch> = {
       return {
         ...state,
         uploadJobs: state.uploadJobs.map((job) =>
-          job.jobId === updatedJob.jobId
-            ? (updatedJob as JSSJob<UploadServiceFields>)
-            : job
+          job.jobId === updatedJob.jobId ? updatedJob : job
         ),
       };
     },

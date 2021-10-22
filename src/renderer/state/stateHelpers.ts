@@ -20,6 +20,7 @@ import {
  * methods found in other files.
  */
 
+// TODO: Why does this exist ???
 export const handleUploadProgress = (
   fileNames: string[],
   onProgress: (progress: UploadProgressInfo) => void

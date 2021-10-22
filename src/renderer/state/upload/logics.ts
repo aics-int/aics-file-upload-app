@@ -1,8 +1,5 @@
-import { basename, extname } from "path";
-
 import {
   castArray,
-  chunk,
   flatMap,
   forEach,
   get,
@@ -18,14 +15,13 @@ import { createLogic } from "redux-logic";
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import FileManagementSystem from "../../services/fms-client";
 import { CopyCancelledError } from "../../services/fms-client/CopyCancelledError";
-import { StartUploadResponse } from "../../services/fss-client";
+import { JSSJob, JSSJobStatus } from "../../services/job-status-client/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/mms-client/types";
 import { UploadRequest } from "../../services/types";
 import { determineFilesFromNestedPaths, splitTrimAndFilter } from "../../util";
 import { requestFailed } from "../actions";
 import { setErrorAlert } from "../feedback/actions";
-import { updateUploadProgressInfo } from "../job/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
   getAnnotations,
@@ -37,17 +33,17 @@ import {
   getPlateBarcodeToPlates,
 } from "../metadata/selectors";
 import { closeUpload, viewUploads, resetUpload } from "../route/actions";
-import {
-  handleStartingNewUploadJob,
-  resetHistoryActions,
-} from "../route/logics";
+import { handleStartingNewUploadJob } from "../route/logics";
 import { updateMassEditRow } from "../selection/actions";
-import { getMassEditRow, getSelectedUploads } from "../selection/selectors";
+import {
+  getMassEditRow,
+  getSelectedUploads,
+  getSelectedUser,
+} from "../selection/selectors";
 import { getTemplateId } from "../setting/selectors";
 import {
   ensureDraftGetsSaved,
   getApplyTemplateInfo,
-  handleUploadProgress,
   pivotAnnotations,
 } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
@@ -60,7 +56,6 @@ import {
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicRejectCb,
   ReduxLogicTransformDependenciesWithAction,
-  UploadProgressInfo,
   UploadStateBranch,
   FileModel,
   PlateAtImagingSession,
@@ -81,6 +76,7 @@ import {
   saveUploadDraftSuccess,
   updateUploads,
   uploadFailed,
+  uploadSucceeded,
 } from "./actions";
 import {
   ADD_UPLOAD_FILES,
@@ -99,7 +95,6 @@ import {
   UPLOAD_WITHOUT_METADATA,
 } from "./constants";
 import {
-  extensionToFileTypeMap,
   getCanSaveUploadDraft,
   getUpload,
   getUploadFileNames,
@@ -108,7 +103,6 @@ import {
 import {
   ApplyTemplateAction,
   CancelUploadAction,
-  FileType,
   InitiateUploadAction,
   OpenUploadDraftAction,
   RetryUploadAction,
@@ -119,6 +113,47 @@ import {
   UpdateUploadRowsAction,
   UploadWithoutMetadataAction,
 } from "./types";
+
+class TaskQueue<T> {
+  private readonly tasks: (() => Promise<T>)[];
+  private readonly batchSize: number;
+  private readonly results: T[] = [];
+  private taskIndex = 0;
+
+  public constructor(tasks: (() => Promise<T>)[], batchSize: number) {
+    this.tasks = tasks;
+    this.batchSize = batchSize;
+  }
+
+  public run(): Promise<T[]> {
+    return new Promise<T[]>((resolve) => {
+      while (this.canRunNext()) {
+        const task = this.tasks[this.taskIndex];
+        this.taskIndex++;
+
+        task().then((result) => {
+          this.results.push(result);
+          if (this.canRunNext()) {
+            this.run();
+          } else {
+            resolve(this.results);
+          }
+        });
+      }
+    });
+  }
+
+  private canRunNext(): boolean {
+    return (
+      this.getCountOfRunningTasks() < this.batchSize &&
+      this.taskIndex < this.tasks.length
+    );
+  }
+
+  private getCountOfRunningTasks(): number {
+    return this.taskIndex - this.results.length;
+  }
+}
 
 const applyTemplateLogic = createLogic({
   process: async (
@@ -193,32 +228,26 @@ const initiateUploadLogic = createLogic({
       action,
       fms,
       getState,
-      logger,
     }: ReduxLogicProcessDependenciesWithAction<InitiateUploadAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
     const groupId = FileManagementSystem.createUniqueId();
-    let initiateUploadResults;
+
+    const user = getSelectedUser(getState());
+    const uploads = getUploadRequests(getState());
+
+    // TODO: Register each upload so we can save the metadata of each
+    let jobs: JSSJob[];
     try {
-      initiateUploadResults = await Promise.all(
-        getUploadRequests(getState()).map(async (request) => {
-          const response = await fms.startUpload(
-            request.file.originalPath,
-            request,
-            { groupId }
-          );
-          return { request, response };
-        })
+      jobs = await Promise.all(
+        uploads.map((upload) => fms.initiateUpload(upload, user, { groupId }))
       );
-    } catch (e) {
-      // If we are unable to validate metadata or get the directory to copy
-      // to then we need to alert the user ASAP otherwise this data
-      // will be lost
+    } catch (error) {
       dispatch(
         initiateUploadFailed(
           action.payload,
-          e.message || "Upload failed to start, " + e
+          `Something went wrong while initiating the upload. Details: ${error?.message}`
         )
       );
       done();
@@ -226,39 +255,28 @@ const initiateUploadLogic = createLogic({
     }
 
     dispatch(initiateUploadSucceeded(action.payload));
-    // Reset redo/undo logic
-    dispatch(batchActions([...resetHistoryActions]));
 
-    // Upload 25 files at a time to prevent performance issues in the case of
-    // uploads with many files.
-    for (const batch of chunk(initiateUploadResults, 25)) {
-      await Promise.all(
-        batch.map(async (result) => {
-          const jobName = basename(result.request.file.originalPath);
-          try {
-            await fms.uploadFile(
-              result.response.jobId,
-              result.request.file.originalPath,
-              result.request,
-              result.response.uploadDirectory,
-              handleUploadProgress(
-                [result.request.file.originalPath],
-                (progress: UploadProgressInfo) =>
-                  dispatch(
-                    updateUploadProgressInfo(result.response.jobId, progress)
-                  )
-              )
-            );
-          } catch (e) {
-            if (!(e instanceof CopyCancelledError)) {
-              const error = `Upload ${jobName} failed: ${e.message}`;
-              logger.error(`Upload failed`, e);
-              dispatch(uploadFailed(error, jobName));
-            }
-          }
-        })
-      );
-    }
+    // TODO: What if cancelled before start?
+    const uploadTasks = jobs.map((job) => async () => {
+      const name = job.jobName as string;
+      try {
+        await fms.upload(job);
+        dispatch(uploadSucceeded(name));
+      } catch (error) {
+        dispatch(
+          uploadFailed(
+            `Something went wrong while uploading your files. Details: ${error?.message}`,
+            name
+          )
+        );
+      }
+    });
+
+    // Upload 25 (semi-arbitrary number) files at a time to prevent performance issues
+    // in the case of uploads with many files.
+    const uploadQueue = new TaskQueue(uploadTasks, 25);
+    await uploadQueue.run();
+
     done();
   },
   transform: (
@@ -291,7 +309,7 @@ export const cancelUploadsLogic = createLogic({
     await Promise.all(
       jobs.map(async (job) => {
         try {
-          await fms.cancelUpload(job.jobId);
+          await fms.cancel(job.jobId);
           dispatch(cancelUploadSucceeded(job.jobName || ""));
         } catch (e) {
           logger.error(`Cancel upload failed`, e);
@@ -322,14 +340,8 @@ const retryUploadsLogic = createLogic({
     const jobs = action.payload;
     await Promise.all(
       jobs.map(async (job) => {
-        const fileNames =
-          job.serviceFields?.files.map(({ file }) => file.fileName || "") || [];
         try {
-          await fms.retryUpload(job.jobId, (jobId) =>
-            handleUploadProgress(fileNames, (progress: UploadProgressInfo) =>
-              dispatch(updateUploadProgressInfo(jobId, progress))
-            )
-          );
+          await fms.retry(job.jobId);
         } catch (e) {
           if (!(e instanceof CopyCancelledError)) {
             const error = `Retry upload ${job.jobName} failed: ${e.message}`;
@@ -970,81 +982,57 @@ const uploadWithoutMetadataLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    let filePaths;
+    const groupId = FileManagementSystem.createUniqueId();
+
+    const user = getSelectedUser(deps.getState());
+
+    let jobs: JSSJob[];
     try {
-      filePaths = await determineFilesFromNestedPaths(deps.action.payload);
-    } catch (err) {
-      const error = `Failed resolving files: ${err.message}`;
-      dispatch(uploadFailed(error, deps.action.payload.join(", ")));
+      const filePaths = await determineFilesFromNestedPaths(
+        deps.action.payload
+      );
+      jobs = await Promise.all(
+        filePaths.map(async (filePath) =>
+          deps.jssClient.createJob({
+            jobName: new File(filePath).name,
+            service: "file-upload-app",
+            status: JSSJobStatus.WAITING,
+            user,
+            serviceFields: { groupId, files: [], type: "upload" },
+          })
+        )
+      );
+    } catch (error) {
+      dispatch(
+        uploadFailed(
+          `Something went wrong while initiating the upload. Details: ${error?.message}`,
+          deps.action.payload.join(", ")
+        )
+      );
       done();
       return;
     }
 
-    // Perform initiate upload results all at once first so that jobs appear
-    // in the user uploads as in progress
-    const groupId = FileManagementSystem.createUniqueId();
-    const initiateUploadResults = await Promise.all(
-      filePaths.map(async (filePath) => {
-        const request = {
-          file: {
-            disposition: "tape", // prevent czi -> ome.tiff conversions
-            fileType:
-              extensionToFileTypeMap[extname(filePath).toLowerCase()] ||
-              FileType.OTHER,
-            originalPath: filePath,
-            shouldBeInArchive: true,
-            shouldBeInLocal: true,
-          },
-          microscopy: {},
-        };
-        try {
-          const response = await deps.fms.startUpload(filePath, request, {
-            groupId,
-          });
-          return { request, response };
-        } catch (err) {
-          const fileName = basename(filePath);
-          const error = `Upload ${fileName} failed: ${err.message}`;
-          dispatch(uploadFailed(error, fileName));
-          return null;
-        }
-      })
-    );
+    // TODO: What if cancelled before start?
+    const uploadTasks = jobs.map((job) => async () => {
+      const name = job.jobName as string;
+      try {
+        await deps.fms.upload(job);
+        dispatch(uploadSucceeded(name));
+      } catch (error) {
+        dispatch(
+          uploadFailed(
+            `Something went wrong while uploading your files. Details: ${error?.message}`,
+            name
+          )
+        );
+      }
+    });
 
-    // Remove already failed uploads from list
-    const successfulResults = initiateUploadResults.filter((r) => !!r) as {
-      request: UploadRequest;
-      response: StartUploadResponse;
-    }[];
-
-    // Upload 25 files at a time to prevent performance issues in the case of
-    // uploads with many files.
-    for (const batch of chunk(successfulResults, 25)) {
-      await Promise.all(
-        batch.map(async ({ request, response }) => {
-          try {
-            await deps.fms.uploadFile(
-              response.jobId,
-              request.file.originalPath,
-              request,
-              response.uploadDirectory,
-              handleUploadProgress(
-                [request.file.originalPath],
-                (progress: UploadProgressInfo) =>
-                  dispatch(updateUploadProgressInfo(response.jobId, progress))
-              )
-            );
-          } catch (err) {
-            if (!(err instanceof CopyCancelledError)) {
-              const fileName = basename(request.file.originalPath);
-              const error = `Upload ${fileName} failed: ${err.message}`;
-              deps.logger.error(`Upload failed`, err);
-              dispatch(uploadFailed(error, fileName));
-            }
-          }
-        })
-      );
-    }
+    // Upload 25 (semi-arbitrary number) files at a time to prevent performance issues
+    // in the case of uploads with many files.
+    const uploadQueue = new TaskQueue(uploadTasks, 25);
+    await uploadQueue.run();
 
     done();
   },

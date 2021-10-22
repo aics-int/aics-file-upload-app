@@ -14,6 +14,10 @@ export const mockCreateJobRequest: CreateJobRequest = {
   originationHost: "kitchen",
   status: JSSJobStatus.WAITING,
   currentStage: "started",
+  serviceFields: {
+    files: [],
+    type: "upload",
+  },
 };
 
 export const mockUpdateJobRequest: UpdateJobRequest = {
@@ -27,6 +31,10 @@ export const mockJSSJob: JSSJob = {
   modified: new Date("2019-06-18T15:31:45.610+0000"),
   status: JSSJobStatus.WAITING,
   user: "demo",
+  serviceFields: {
+    files: [],
+    type: "upload",
+  },
 };
 
 export const makeAxiosResponse = <T>(resp: T): AxiosResponse<T> => ({

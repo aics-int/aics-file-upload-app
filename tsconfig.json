@@ -2,7 +2,8 @@
   "extends": "./node_modules/electron-webpack/tsconfig-base.json",
   "compilerOptions": {
     "jsx": "react",
-    "typeRoots": ["./node_modules/@types", "./src/renderer/@types"]
+    "typeRoots": ["./node_modules/@types", "./src/renderer/@types"],
+    // "useUnknownInCatchVariables": false,
   },
-  "types": ["node"]
+  "types": ["node"],
 }

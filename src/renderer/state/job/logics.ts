@@ -6,11 +6,8 @@ import {
   IN_PROGRESS_STATUSES,
   JSSJob,
   JSSJobStatus,
-  UploadStage,
 } from "../../services/job-status-client/types";
-import { UploadServiceFields } from "../../services/types";
 import { setErrorAlert, setInfoAlert } from "../feedback/actions";
-import { handleUploadProgress } from "../stateHelpers";
 import {
   ReduxLogicDoneCb,
   ReduxLogicNextCb,
@@ -19,7 +16,6 @@ import {
 } from "../types";
 import { uploadFailed, uploadSucceeded } from "../upload/actions";
 
-import { updateUploadProgressInfo } from "./actions";
 import { RECEIVE_JOB_UPDATE, RECEIVE_JOBS } from "./constants";
 import { getJobIdToUploadJobMap } from "./selectors";
 import { ReceiveJobsAction, ReceiveJobUpdateAction } from "./types";
@@ -34,10 +30,8 @@ export const handleAbandonedJobsLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const abandonedJobs = action.payload.filter(
-      ({ status, currentStage }) =>
-        currentStage === UploadStage.WAITING_FOR_CLIENT_COPY &&
-        IN_PROGRESS_STATUSES.includes(status)
+    const abandonedJobs = action.payload.filter(({ status }) =>
+      IN_PROGRESS_STATUSES.includes(status)
     );
 
     await Promise.all(
@@ -48,13 +42,7 @@ export const handleAbandonedJobsLogic = createLogic({
           logger.info(info);
           dispatch(setInfoAlert(info));
 
-          // Cancel the job before attempting to retry it
-          await fms.cancelUpload(abandonedJob.jobId);
-          await fms.retryUpload(abandonedJob.jobId, (jobId) =>
-            handleUploadProgress([abandonedJob.jobName || ""], (progress) =>
-              dispatch(updateUploadProgressInfo(jobId, progress))
-            )
-          );
+          await fms.retry(abandonedJob.jobId);
         } catch (e) {
           if (!(e instanceof CopyCancelledError)) {
             const message = `Retry for upload "${abandonedJob.jobName}" failed: ${e.message}`;
@@ -74,9 +62,7 @@ export const handleAbandonedJobsLogic = createLogic({
 // The File Upload App considers a job to be successful and complete when
 // the upload job itself as well as the FMS Mongo ETL post upload process
 // have a successful status
-function isJobSuccessfulAndComplete(
-  job?: JSSJob<UploadServiceFields>
-): boolean {
+function isJobSuccessfulAndComplete(job?: JSSJob): boolean {
   return (
     job?.status === JSSJobStatus.SUCCEEDED &&
     job?.serviceFields?.postUploadProcessing?.etl?.status ===

@@ -18,10 +18,8 @@ import { createLogicMiddleware } from "redux-logic";
 
 import { TEMP_UPLOAD_STORAGE_KEY } from "../../shared/constants";
 import { JobStatusClient, LabkeyClient, MMSClient } from "../services";
+import { FileManagementSystem, FileStorageClient } from "../services";
 import ApplicationInfoService from "../services/application-info";
-import FileManagementSystem from "../services/fms-client";
-import FileCopier from "../services/fms-client/FileCopier";
-import FileStorageClient from "../services/fss-client";
 
 import EnvironmentAwareStorage from "./EnvironmentAwareStorage";
 import { addEvent } from "./feedback/actions";
@@ -91,11 +89,10 @@ const applicationInfoService = new ApplicationInfoService(
 export const reduxLogicDependencies: ReduxLogicExtraDependencies = {
   dialog: remote.dialog,
   fms: new FileManagementSystem({
-    fss: new FileStorageClient(httpClient, storage, useCache),
+    fss: new FileStorageClient(httpClient, storage),
     jss: jssClient,
     lk: labkeyClient,
-    storage,
-    fileCopier: new FileCopier(),
+    mms: mmsClient,
   }),
   getApplicationMenu: () => remote.Menu.getApplicationMenu(),
   ipcRenderer,

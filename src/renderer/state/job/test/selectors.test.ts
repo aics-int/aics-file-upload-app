@@ -86,11 +86,10 @@ describe("Job selectors", () => {
         created: new Date("Oct 1, 2020 03:24:00"),
         serviceFields: {
           files: [],
-          lastModified: {},
-          md5: {},
+          modifiedAtTimeOfMD5Calculation: new Date().toString(),
+          md5: "123412341234",
           originalJobId: mockReplacedJob2.jobId,
           type: "upload",
-          uploadDirectory: "/foo",
         },
       };
 

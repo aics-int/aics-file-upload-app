@@ -1,5 +1,4 @@
 import { JSSJob } from "../../services/job-status-client/types";
-import { BaseServiceFields } from "../../services/types";
 import { UploadProgressInfo } from "../types";
 import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
@@ -24,18 +23,14 @@ export function receiveJobs(uploadJobs: JSSJob[] = []): ReceiveJobsAction {
   };
 }
 
-export function receiveJobInsert(
-  job: JSSJob<BaseServiceFields>
-): ReceiveJobInsertAction {
+export function receiveJobInsert(job: JSSJob): ReceiveJobInsertAction {
   return {
     payload: job,
     type: RECEIVE_JOB_INSERT,
   };
 }
 
-export function receiveJobUpdate<T extends BaseServiceFields = any>(
-  job: JSSJob<T>
-): ReceiveJobUpdateAction {
+export function receiveJobUpdate(job: JSSJob): ReceiveJobUpdateAction {
   return {
     payload: job,
     type: RECEIVE_JOB_UPDATE,

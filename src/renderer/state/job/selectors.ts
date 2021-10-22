@@ -6,7 +6,6 @@ import {
   JSSJob,
   UploadStage,
 } from "../../services/job-status-client/types";
-import { UploadServiceFields } from "../../services/types";
 import { getTemplateIdToName } from "../metadata/selectors";
 import { State, UploadSummaryTableRow } from "../types";
 
@@ -17,11 +16,11 @@ export const getLastSelectedUpload = (state: State) =>
 
 export const getJobIdToUploadJobMap = createSelector(
   [getUploadJobs],
-  (jobs): Map<string, JSSJob<UploadServiceFields>> =>
+  (jobs): Map<string, JSSJob> =>
     jobs.reduce((map, job) => {
       map.set(job.jobId, job);
       return map;
-    }, new Map<string, JSSJob<UploadServiceFields>>())
+    }, new Map<string, JSSJob>())
 );
 
 export const getUploadsByTemplateUsage = createSelector(
@@ -79,7 +78,7 @@ export const getUploadsByTemplateUsage = createSelector(
 // "Waiting for file copy" stage set by FSS when the upload is initiated.
 export const getIsSafeToExit = createSelector(
   [getUploadJobs],
-  (uploadJobs: JSSJob<UploadServiceFields>[]): boolean =>
+  (uploadJobs: JSSJob[]): boolean =>
     !uploadJobs.some(
       (job) =>
         job.currentStage === UploadStage.WAITING_FOR_CLIENT_COPY &&

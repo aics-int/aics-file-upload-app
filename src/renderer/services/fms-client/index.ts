@@ -1,60 +1,45 @@
 import * as fs from "fs";
 import * as path from "path";
-import { promisify } from "util";
 
-import { noop, uniq, throttle } from "lodash";
-import * as hash from "object-hash";
-import * as rimraf from "rimraf";
+import Logger from "js-logger";
+import { ILogger } from "js-logger/src/types";
+import { uniq } from "lodash";
 import * as uuid from "uuid";
 
-import { USER_SETTINGS_KEY } from "../../../shared/constants";
-import { LocalStorage } from "../../types";
-import { makePosixPathCompatibleWithPlatform } from "../../util";
+import { JobStatusClient, LabkeyClient, MMSClient } from "..";
+import { metadata } from "../../state";
 import FileStorageClient, {
-  FSSRequestFile,
-  StartUploadResponse,
-  UploadMetadataResponse,
+  ChunkStatus,
+  UploadStatus,
+  UploadStatusResponse,
 } from "../fss-client";
-import JobStatusClient from "../job-status-client";
-import { JSSJob, JSSJobStatus, UploadStage } from "../job-status-client/types";
-import LabkeyClient from "../labkey-client";
-import { UploadRequest, UploadServiceFields } from "../types";
-
-import { CopyCancelledError } from "./CopyCancelledError";
-import FileCopier from "./FileCopier";
 import {
-  UnrecoverableJobError,
-  UNRECOVERABLE_JOB_ERROR,
-} from "./UnrecoverableJobError";
+  IN_PROGRESS_STATUSES,
+  JSSJob,
+  JSSJobStatus,
+  ServiceFields,
+} from "../job-status-client/types";
+import { UploadRequest } from "../types";
 
-const fsExists = promisify(fs.exists);
+import ChunkedFileReader from "./ChunkedFileReader";
 
 interface FileManagementSystemConfig {
   fss: FileStorageClient;
   jss: JobStatusClient;
   lk: LabkeyClient;
-  storage: LocalStorage;
-  fileCopier: FileCopier;
+  mms: MMSClient;
 }
 
-type CopyProgressCallBack = (
-  originalFilePath: string,
-  bytesCopied: number,
-  totalBytes: number
-) => void;
-
-/*
-    Service entity for storing or retrieving files from the AICS FMS. This
-    class is responsible for abstracting the work needed to upload a file into
-    the FMS.
-*/
+/**
+ * TODO
+ */
 export default class FileManagementSystem {
-  private static readonly DEFAULT_MOUNT_POINT = "/allen/aics";
   private readonly fss: FileStorageClient;
   private readonly jss: JobStatusClient;
   private readonly lk: LabkeyClient;
-  private readonly storage: LocalStorage;
-  private readonly fileCopier: FileCopier;
+  private readonly mms: MMSClient;
+  private readonly fileReader = new ChunkedFileReader();
+  private readonly logger: ILogger = Logger.get("upload-client");
 
   // Creates JSS friendly unique ids
   public static createUniqueId() {
@@ -65,351 +50,375 @@ export default class FileManagementSystem {
     this.fss = config.fss;
     this.jss = config.jss;
     this.lk = config.lk;
-    this.storage = config.storage;
-    this.fileCopier = config.fileCopier;
+    this.mms = config.mms;
   }
 
   /**
-   * This informs FSS of the file we want to upload & retrieves an upload directory for
-   * the client to start physically copying the files to.
-   *
-   * Throws error if a file was not found or the metadata is malformed
+   * TODO
    */
-  public async startUpload(
-    filePath: string,
+  public initiateUpload(
     metadata: UploadRequest,
-    serviceFields: Partial<UploadServiceFields> = {}
-  ): Promise<StartUploadResponse> {
-    console.log("Received startUpload request", metadata);
+    user: string,
+    serviceFields: Partial<ServiceFields> = {}
+  ): Promise<JSSJob> {
+    return this.jss.createJob({
+      jobName: metadata.file.fileName,
+      service: "file-upload-app",
+      status: JSSJobStatus.WAITING,
+      user,
+      serviceFields: {
+        files: [metadata],
+        type: "upload",
+        ...serviceFields,
+      },
+    });
+  }
 
-    // Validate the metadata - ensuring the job is trackable
-    if (!(await fsExists(filePath))) {
-      throw new Error(`Can not find file: ${filePath}`);
-    }
-    if (!metadata.file) {
-      throw new Error(
-        `Metadata for file ${filePath} is missing the property file`
+  /**
+   * Uploads the file at the given path and metadata.
+   *
+   * Utilizes Web Workers to take advantage of I/O wait time & avoid
+   * blocking the main thread (UI).
+   */
+  public async upload(upload: JSSJob): Promise<void> {
+    this.logger.time(upload.jobName || "");
+    try {
+      // Grab file details
+      const source = upload.serviceFields.files[0]?.file.originalPath;
+      const fileName = path.basename(source);
+      const {
+        size: fileSize,
+        mtime: fileLastModified,
+      } = await fs.promises.stat(source);
+      const fileLastModifiedInMs = fileLastModified.getMilliseconds();
+
+      this.logger.debug(
+        `Starting upload for ${fileName} with metadata ${JSON.stringify(
+          metadata
+        )}`
       );
-    }
-    if (!metadata.file.fileType) {
-      throw new Error(
-        `Metadata for file ${filePath} is missing the property file.fileType`
+
+      // Calculate MD5 ahead of submission, re-use from job if possible. Only potentially available
+      // on job if this upload is being re-submitted like for a retry
+      let md5;
+      if (
+        upload.serviceFields.calculatedMD5 &&
+        fileLastModifiedInMs === upload.serviceFields.lastModifiedInMS
+      ) {
+        md5 = upload.serviceFields.calculatedMD5;
+      } else {
+        md5 = await this.calculateMD5(
+          upload.jobId,
+          upload.serviceFields.files[0]?.file.originalPath
+        );
+      }
+
+      // Prevent attempting to upload a duplicate
+      if (await this.lk.fileExistsByNameAndMD5(fileName, md5)) {
+        throw new Error(
+          `File ${fileName} with MD5 ${md5} already exists in LabKey`
+        );
+      }
+
+      // Start job in FSS
+      const registration = await this.fss.registerUpload(
+        fileName,
+        fileSize,
+        md5
       );
-    }
-    if (!metadata.file.originalPath) {
-      throw new Error(
-        `Metadata for file ${filePath} is missing the property file.originalPath`
+
+      // Update parent job with upload job created by FSS
+      await this.jss.updateJob(upload.jobId, {
+        serviceFields: {
+          fssUploadId: registration.uploadId,
+          calculatedMD5: md5,
+        },
+      });
+
+      // Wait for upload
+      this.logger.debug(`Beginning chunked upload to FSS for ${fileName}`);
+      await this.uploadInChunks(
+        registration.uploadId,
+        source,
+        registration.chunkSize
       );
+
+      // Add metadata to file via MMS
+      await this.mms.createFileMetadata(
+        registration.uploadId,
+        upload.serviceFields.files[0]
+      );
+
+      // Finish job
+      await this.finishJob(upload.jobId);
+    } catch (error) {
+      // Fail job in JSS with error
+      const errMsg = `Something went wrong uploading ${upload.jobName}. Details: ${error?.message}`;
+      this.logger.error(errMsg);
+      await this.jss.updateJob(upload.jobId, {
+        status: JSSJobStatus.FAILED,
+        serviceFields: { error: errMsg },
+      });
+      throw error;
+    } finally {
+      this.logger.timeEnd(upload.jobName || "");
     }
-    if (metadata.file.originalPath !== filePath) {
+  }
+
+  /**
+   * Attempts to retry the upload for the given failed job. The job will not
+   * be reused, but will instead be replaced.
+   *
+   * Will attempt to first resume an ongoing upload before retrying it completely.
+   *
+   * Backwards compatible with uploads that have a many to many relationship
+   * with files in which case this will split the uploads into many different uploads.
+   */
+  public async retry(uploadId: string): Promise<void> {
+    console.info(`Retrying upload for jobId=${uploadId}.`);
+
+    // Request job from JSS & validate if it is retryable
+    const upload = await this.jss.getJob(uploadId);
+
+    // Avoid attempting to retry a successful job, should be an update in that case
+    if (upload.status === JSSJobStatus.SUCCEEDED) {
       throw new Error(
-        `Metadata for file ${filePath} has property file.originalPath set to ${metadata.file.originalPath} which doesn't match ${filePath}`
+        `Upload cannot be retried if already successful, actual status is ${upload.status}.`
       );
     }
 
-    // Request FSS for the incoming directory, initiating the job
-    const response = await this.fss.startUpload(
-      filePath,
-      metadata,
-      serviceFields
+    // Attempt to resume an ongoing upload if possible before scraping this one entirely
+    if (upload.serviceFields.fssUploadId) {
+      try {
+        const fssStatus = await this.fss.getStatus(
+          upload.serviceFields.fssUploadId
+        );
+        if (
+          fssStatus.uploadStatus === UploadStatus.WORKING ||
+          fssStatus.uploadStatus === UploadStatus.COMPLETE
+        ) {
+          return this.resume(upload, fssStatus);
+        }
+      } catch (error) {
+        // No-op: This check is just an attempt to resume, still able to recover from here
+      }
+    }
+
+    // Start new upload jobs that will replace the current one
+    const newJobServiceFields = {
+      groupId:
+        upload.serviceFields?.groupId || FileManagementSystem.createUniqueId(),
+      originalJobId: uploadId,
+    };
+
+    // Create a separate upload for each file in this job
+    // One job for multiple files is deprecated, this is here
+    // for backwards-compatibility
+    const results = await Promise.all(
+      (upload.serviceFields?.files || []).map(async (metadata) => {
+        try {
+          // Get a fresh upload job to track the upload with
+          const newUpload = await this.initiateUpload(
+            metadata,
+            upload.user,
+            newJobServiceFields
+          );
+
+          try {
+            // Update the current job with information about the replacement
+            const oldJobPatch = {
+              serviceFields: {
+                error: `This job has been replaced with Job ID: ${newUpload.jobId}`,
+                replacementJobIds: uniq([
+                  ...(upload?.serviceFields?.replacementJobIds || []),
+                  newUpload.jobId,
+                ]),
+              },
+            };
+            // TODO: Should this be a patch update?
+            await this.jss.updateJob(uploadId, oldJobPatch, false);
+
+            // Perform upload with new job and current job's metadata, forgoing the current job
+            return this.upload(newUpload);
+          } catch (error) {
+            // Catch exceptions and fail the job if something happened before the upload could start
+            await this.failJob(
+              newUpload.jobId,
+              `Something went wrong retrying ${newUpload.jobName}. Details: ${error?.message}`
+            );
+            throw error;
+          }
+        } catch (error) {
+          // Catch exceptions to allow other jobs to run before re-throwing the error
+          return { error };
+        }
+      })
     );
 
-    // Ensure upload job exists before ensuring upload has started
-    await this.jss.waitForJobToExist(response.jobId);
-
-    return response;
-  }
-
-  /**
-   * This copies files from the initiated upload to the directory supplied &
-   * then informs FSS that the client's part of the upload is now complete.
-   */
-  public async uploadFile(
-    jobId: string,
-    filePath: string,
-    metadata: UploadRequest,
-    uploadDirectory: string,
-    copyProgressCb: CopyProgressCallBack = noop
-  ): Promise<UploadMetadataResponse> {
-    try {
-      // Physically copy the file to the supplied directory, retrieving the MD5
-      const md5 = await this.copyFile(
-        jobId,
-        filePath,
-        uploadDirectory,
-        copyProgressCb
-      );
-
-      // Update the job with the MD5 to provide a shortcut in case
-      // the user retries the job later on after a failure scenario
-      const jobUpdate = {
-        serviceFields: { md5: { [hash.MD5(filePath)]: md5 } },
-      };
-      await this.jss.updateJob(jobId, jobUpdate, true);
-
-      // Inform FSS that the client side of the upload has completed
-      const file: FSSRequestFile = {
-        fileName: path.basename(filePath),
-        fileType: metadata.file.fileType,
-        md5hex: md5,
-        metadata: {
-          ...metadata,
-          file: {
-            ...metadata.file,
-            fileName: path.basename(filePath),
-            originalPath: filePath,
-          },
-        },
-        shouldBeInArchive: metadata.file.shouldBeInArchive,
-        shouldBeInLocal: metadata.file.shouldBeInLocal,
-      };
-      const response = await this.fss.uploadComplete(jobId, [file]);
-
-      // Update Job stage to reflect completion of client copy
-      // in the event FSS is too busy to process the upload immediately
-      // i.e. leaving the stage otherwise stagnant & false
-      await this.jss.updateJob(jobId, {
-        currentStage: UploadStage.WAITING_FOR_FSS_PROCESSING,
-      });
-      return response;
-    } catch (e) {
-      await this.jss.updateJob(jobId, {
-        status: JSSJobStatus.FAILED,
-        serviceFields: {
-          error: e.message,
-        },
-      });
-      throw e;
-    }
-  }
-
-  /**
-   * Retry the given job from scratch as a new job.
-   * Re-using the same job is not possible as it could lead
-   * to an automatic rejection on the server-side for being
-   * a stale or otherwise unrecoverable job.
-   */
-  public async retryUpload(
-    jobId: string,
-    copyProgressCb: (jobId: string) => CopyProgressCallBack
-  ): Promise<UploadMetadataResponse[]> {
-    console.info(`Retrying upload for jobId=${jobId}.`);
-
-    try {
-      // Request job from JSS & validate if it is retryable
-      const job: JSSJob<UploadServiceFields> = await this.jss.getJob(jobId);
-      await this.validateUploadJobForRetry(job);
-
-      // Start new upload jobs that will replace the current one
-      const newJobServiceFields = {
-        groupId:
-          job.serviceFields?.groupId || FileManagementSystem.createUniqueId(),
-        originalJobId: jobId,
-      };
-
-      // Create a separate upload for each file in this job
-      // One job for multiple files is deprecated, this is here
-      // for backwards-compatibility
-      const results = await Promise.all(
-        (job.serviceFields?.files || []).map(async (file) => {
-          try {
-            // Get the upload directory
-            const newUploadResponse = await this.startUpload(
-              file.file.originalPath,
-              file,
-              newJobServiceFields
-            );
-
-            try {
-              // Update the current job with information about the replacement
-              const oldJobPatch = {
-                serviceFields: {
-                  error: `This job has been replaced with Job ID: ${newUploadResponse.jobId}`,
-                  replacementJobIds: uniq([
-                    ...(job?.serviceFields?.replacementJobIds || []),
-                    newUploadResponse.jobId,
-                  ]),
-                },
-              };
-              await this.jss.updateJob(jobId, oldJobPatch, false);
-
-              // Perform upload with new job and current job's metadata, forgoing the current job
-              return await this.uploadFile(
-                newUploadResponse.jobId,
-                file.file.originalPath,
-                file,
-                newUploadResponse.uploadDirectory,
-                copyProgressCb(newUploadResponse.jobId)
-              );
-            } catch (error) {
-              await this.jss.updateJob(newUploadResponse.jobId, {
-                status:
-                  error.name === UNRECOVERABLE_JOB_ERROR
-                    ? JSSJobStatus.UNRECOVERABLE
-                    : JSSJobStatus.FAILED,
-                serviceFields: { error: error.message },
-              });
-              throw error;
-            }
-          } catch (error) {
-            return { error };
-          }
-        })
-      );
-
-      // This ensures each upload promise is able to complete before
-      // evaluating any failures (similar to Promise.allSettled)
-      return results.map((result) => {
+    // This ensures each upload promise is able to complete before
+    // evaluating any failures (similar to Promise.allSettled)
+    await Promise.all(
+      results.map(async (result) => {
         const errorCase = result as { error: Error };
-        if (errorCase.error) {
+        if (errorCase?.error) {
+          // Update the original upload to track the failure in the
+          // event the new upload has not been created yet
+          const errMsg = `Something went wrong uploading ${uploadId}. Details: ${errorCase.error?.message}`;
+          this.logger.error(errMsg);
+          await this.jss.updateJob(uploadId, {
+            status: JSSJobStatus.FAILED,
+            serviceFields: { error: errMsg },
+          });
           throw errorCase.error;
         }
-        return result as UploadMetadataResponse;
-      });
-    } catch (e) {
-      await this.jss.updateJob(jobId, {
-        status:
-          e.name === UNRECOVERABLE_JOB_ERROR
-            ? JSSJobStatus.UNRECOVERABLE
-            : JSSJobStatus.FAILED,
-        serviceFields: {
-          error: e.message,
-        },
-      });
-      throw e;
-    }
+      })
+    );
   }
 
   /**
-   * Cancels the given Job. This will mark the job as a failure and
-   * stop the copy portion of the upload if ongoing on the client side.
-   * Note: the job is not guaranteed to stop if it has left the
-   * client-side portion of the upload and is now entirely managed by FSS.
+   * Attempts to cancel the ongoing upload. Unable to cancel uploads
+   * in progress or that have been copied into FMS.
    */
-  public async cancelUpload(jobId: string): Promise<void> {
-    this.fileCopier.cancelCopy(jobId);
+  public async cancel(uploadId: string): Promise<void> {
+    const { status, ...job } = await this.jss.getJob(uploadId);
 
-    await this.jss.updateJob(jobId, {
+    // Job must be in progress in order to cancel
+    if (!IN_PROGRESS_STATUSES.includes(status)) {
+      throw new Error(
+        `Upload ${uploadId} cannot be canceled while not in progress, actual status is ${status}`
+      );
+    }
+
+    // If we haven't saved the FSS Job ID this either failed miserably or hasn't progressed much
+    if (job.serviceFields.fssUploadId) {
+      // TODO: Need to actually store fssUploadId somewhere
+      const { uploadStatus } = await this.fss.getStatus(
+        job.serviceFields.fssUploadId
+      );
+
+      // If FSS has completed the upload it is too late to cancel
+      if (uploadStatus === UploadStatus.COMPLETE) {
+        throw new Error(`Upload has progressed too far to be canceled`);
+      }
+    }
+
+    // Cancel any web worker currently active just in case
+    this.fileReader.cancel(uploadId);
+
+    // Update the job to provide feedback
+    await this.jss.updateJob(uploadId, {
       status: JSSJobStatus.FAILED,
       serviceFields: { cancelled: true, error: "Cancelled by user" },
     });
   }
 
   /**
-   * Copies the given source file to the destination folder updating
-   * the copy progress via the supplied callback throughout.
+   * Attempts to resume the given "in progress" upload. This is *not* meant to be
+   * used in regular upload circumstances, but rather should be used
+   * when an upload was stopped while it was ongoing due to an event
+   * like an app crash.
+   *
+   * This will try to take advantage of any work
+   * already done to upload the file.
    */
-  private async copyFile(
-    jobId: string,
-    source: string,
-    dest: string,
-    copyProgressCb: CopyProgressCallBack
-  ): Promise<string> {
-    const fileStats = await fs.promises.stat(source);
-    const fileSize = fileStats.size;
-    const fileName = path.basename(source);
-
-    const userSettings = this.storage.get(USER_SETTINGS_KEY);
-    const mountPoint =
-      userSettings?.mountPoint || FileManagementSystem.DEFAULT_MOUNT_POINT;
-    let targetFolder = dest.replace(
-      FileManagementSystem.DEFAULT_MOUNT_POINT,
-      mountPoint
-    );
-    targetFolder = makePosixPathCompatibleWithPlatform(
-      targetFolder,
-      process.platform
-    );
+  private async resume(
+    upload: JSSJob,
+    fssStatus: UploadStatusResponse
+  ): Promise<void> {
     try {
-      // Update copy progress every 5 seconds
-      const throttledProgress = throttle(
-        (progress) => copyProgressCb(source, progress, fileSize),
-        5000
-      );
-      console.time(`Copy ${source}`);
-      const md5 = await this.fileCopier.copyToDestAndCalcMD5(
-        jobId,
-        source,
-        targetFolder,
-        throttledProgress
-      );
-      console.timeEnd(`Copy ${source}`);
-      // Flush out the last call so completed progress is shown immediately
-      throttledProgress.flush();
-      if (process.platform === "darwin") {
-        const toRemove = path.resolve(targetFolder, `._${fileName}`);
-        try {
-          rimraf.sync(toRemove);
-        } catch (e) {
-          console.error(`Failed to remove ${toRemove}` + e.message);
+      if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
+        // Shouldn't occur, but kept for type safety
+        if (!upload.serviceFields.fssUploadId) {
+          throw new Error(
+            "Upload missing vital information about upload ID to send to server"
+          );
         }
-      }
-      return md5;
-    } catch (e) {
-      if (e instanceof CopyCancelledError) {
-        console.warn(e.message);
+
+        // FSS is has completed its upload, finish the upload by adding metadata
+        // via MMS
+        return await this.mms.createFileMetadata(
+          upload.serviceFields.fssUploadId,
+          upload.serviceFields.files[0]
+        );
+      } else if (fssStatus.uploadStatus === UploadStatus.WORKING) {
+        // Shouldn't occur, but kept for type safety
+        if (!upload.serviceFields.fssUploadChunkSize) {
+          throw new Error(
+            "Upload missing vital information about chunk size to send to server"
+          );
+        }
+
+        // If FSS is still available to continue receiving chunks of this upload
+        // simply continue sending the chunks
+        const lastChunkNumber = fssStatus.chunkStatuses.findIndex(
+          (status) => status !== ChunkStatus.COMPLETE
+        );
+        return await this.uploadInChunks(
+          upload.jobId,
+          upload.serviceFields.files[0]?.file.originalPath,
+          upload.serviceFields.fssUploadChunkSize,
+          lastChunkNumber
+        );
       } else {
-        console.error(`Error while copying file ${source}`, e);
+        // Shouldn't occur, but just in case
+        throw new Error("Unable to resume a failed upload");
       }
-      throw e;
+    } catch (error) {
+      // Fail job in JSS with error
+      const errMsg = `Something went wrong resuming ${upload.jobName}. Details: ${error?.message}`;
+      this.logger.error(errMsg);
+      await this.jss.updateJob(upload.jobId, {
+        status: JSSJobStatus.FAILED,
+        serviceFields: { error: errMsg },
+      });
+      throw error;
     }
   }
 
   /**
-   * Validates the given job for retry throwing an error if
-   * it is not deemed capable of being retried at this time.
+   * Uploads the given file to FSS in chunks using a WebWorker.
    */
-  private async validateUploadJobForRetry(
-    job: JSSJob<UploadServiceFields>
+  private async uploadInChunks(
+    uploadId: string,
+    source: string,
+    chunkSize: number,
+    initialOffset = 0
   ): Promise<void> {
-    if (
-      [
-        JSSJobStatus.UNRECOVERABLE,
-        JSSJobStatus.WORKING,
-        JSSJobStatus.RETRYING,
-        JSSJobStatus.BLOCKED,
-        JSSJobStatus.SUCCEEDED,
-      ].includes(job.status)
-    ) {
-      throw new Error(
-        `Can't retry this upload job because the status is ${job.status}.`
-      );
-    }
+    let chunkNumber = 0;
+    const onChunkRead = async (chunk: string): Promise<void> => {
+      chunkNumber += 1;
+      await this.fss.sendUploadChunk(uploadId, chunkNumber, chunk);
+    };
+    await this.fileReader.sendFileChunksToFss(
+      uploadId,
+      source,
+      onChunkRead,
+      chunkSize,
+      initialOffset
+    );
+  }
 
-    if (!job.serviceFields || !job.serviceFields.files?.length) {
-      throw new UnrecoverableJobError(
-        "Missing crucial upload data (serviceFields.files)"
-      );
-    }
+  /**
+   * Calculates the given file by reading in arbitrarily sized chunks
+   * using a WebWorker until MD5 hash has been built up.
+   */
+  private async calculateMD5(
+    uploadId: string,
+    source: string
+  ): Promise<string> {
+    return this.fileReader.calculateMD5(uploadId, source);
+  }
 
-    const { lastModified, md5 } = job.serviceFields;
-    // Older uploads might not have these fields. we cannot do a duplicate check at this point if that is the case.
-    if (!lastModified || !md5) {
-      return;
-    }
+  private async finishJob(jobId: string): Promise<void> {
+    await this.jss.updateJob(jobId, {
+      status: JSSJobStatus.SUCCEEDED,
+    });
+  }
 
-    // Prevent duplicate files from getting uploaded ASAP
-    // We can do this if MD5 has already been calculated for a file and the file has not been modified since then
-    for (const file of job.serviceFields.files) {
-      const currLastModified = lastModified[hash.MD5(file.file.originalPath)];
-      const currMD5 = md5[hash.MD5(file.file.originalPath)];
-      if (currLastModified && currMD5) {
-        const stats = await fs.promises.stat(file.file.originalPath);
-        if (stats.mtime.getTime() === new Date(currLastModified).getTime()) {
-          if (
-            await this.lk.getFileExistsByMD5AndName(
-              currMD5,
-              path.basename(file.file.originalPath)
-            )
-          ) {
-            throw new Error(
-              `${path.basename(
-                file.file.originalPath
-              )} has already been uploaded to FMS.`
-            );
-          }
-        }
-      }
-    }
+  private async failJob(jobId: string, error: string): Promise<void> {
+    await this.jss.updateJob(jobId, {
+      status: JSSJobStatus.FAILED,
+      serviceFields: { error },
+    });
   }
 }

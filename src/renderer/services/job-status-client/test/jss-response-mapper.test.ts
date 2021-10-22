@@ -13,25 +13,11 @@ describe("JSSResponseMapper", () => {
     });
     it("expands service fields", () => {
       const now = new Date();
-      const input = {
+      const input: JSSJob = {
         ...mockJSSJob,
         serviceFields: {
-          favorites: {
-            boolean: true,
-            color: "red",
-            number: 9,
-            date: now,
-            movies: {
-              "0": "Harry Potter",
-              "1": "Insomnia",
-            },
-            fruit: {
-              "0": "Apple",
-              "2": "Banana",
-            },
-          },
-          files: {
-            "0": {
+          files: [
+            {
               created: now,
               file: {
                 customField: {
@@ -39,17 +25,20 @@ describe("JSSResponseMapper", () => {
                 },
                 originalPath: "/path/to/file",
                 filename: "file",
+                fileType: "image",
               },
               fileType: "text",
             },
-            "1": {
+            {
               fileType: "image",
               file: {
                 originalPath: "/path/to/file2",
                 filename: "file2",
+                fileType: "image",
               },
             },
-          },
+          ],
+          type: "upload",
         },
       };
       const metadata = {
@@ -94,13 +83,15 @@ describe("JSSResponseMapper", () => {
       const input: JSSJob = {
         ...mockJSSJob,
         serviceFields: {
-          "foo(dot)txt": "bar(dot)txt",
+          files: [],
+          type: "upload",
         },
       };
       const expected: JSSJob = {
         ...mockJSSJob,
         serviceFields: {
-          "foo.txt": "bar(dot)txt",
+          files: [],
+          type: "upload",
         },
       };
       const result = JSSResponseMapper.map(input);
@@ -112,7 +103,8 @@ describe("JSSResponseMapper", () => {
         ...mockJSSJob,
         currentStage,
         serviceFields: {
-          foo: "bar",
+          files: [],
+          type: "upload",
         },
       };
       const result = JSSResponseMapper.map(input);

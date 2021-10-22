@@ -26,7 +26,6 @@ import {
   Template,
   TemplateAnnotation,
 } from "../../services/mms-client/types";
-import { UploadServiceFields } from "../../services/types";
 import {
   feedback,
   job,
@@ -183,7 +182,10 @@ export const mockJob: JSSJob = {
   modified: new Date(),
   originationHost: "dev-aics-fup-001",
   service: "aicsfiles-js",
-  serviceFields: null,
+  serviceFields: {
+    files: [],
+    type: "upload",
+  },
   status: JSSJobStatus.WAITING,
   updateParent: false,
   user: "fakeuser",
@@ -400,8 +402,11 @@ export const mockSuccessfulUploadJob: JSSJob = {
   jobName: "mockJob1",
   modified: new Date(),
   serviceFields: {
-    copyJobId: "copyJobId1",
-    result: [{ fileId: "cat" }, { fileId: "dog" }],
+    result: [
+      { fileId: "cat", fileName: "cat", readPath: "cat" },
+      { fileId: "dog", fileName: "cat", readPath: "cat" },
+    ],
+    files: [],
     type: "upload",
     postUploadProcessing: {
       etl: {
@@ -416,7 +421,7 @@ export const mockSuccessfulUploadJob: JSSJob = {
   user: "test_user",
 };
 
-export const mockWorkingUploadJob: JSSJob<UploadServiceFields> = {
+export const mockWorkingUploadJob: JSSJob = {
   created: new Date(),
   currentStage: "Copying files",
   jobId: "2222222222",
@@ -424,10 +429,9 @@ export const mockWorkingUploadJob: JSSJob<UploadServiceFields> = {
   modified: new Date(),
   serviceFields: {
     files: [],
-    lastModified: {},
-    md5: {},
+    modifiedAtTimeOfMD5Calculation: new Date().toString(),
+    md5: "12341243",
     type: "upload",
-    uploadDirectory: "/tmp/fss/asdf",
   },
   status: JSSJobStatus.WORKING,
   user: "test_user",
@@ -439,7 +443,7 @@ export const mockWaitingUploadJob: JSSJob = {
   status: JSSJobStatus.WAITING,
 };
 
-export const mockFailedUploadJob: JSSJob<UploadServiceFields> = {
+export const mockFailedUploadJob: JSSJob = {
   created: new Date(),
   currentStage: "Copy error",
   jobId: "3333333333",
@@ -466,10 +470,9 @@ export const mockFailedUploadJob: JSSJob<UploadServiceFields> = {
         },
       },
     ],
-    lastModified: {},
-    md5: {},
+    modifiedAtTimeOfMD5Calculation: new Date().toString(),
+    md5: "12341234",
     type: "upload",
-    uploadDirectory: "/foo",
   },
   status: JSSJobStatus.FAILED,
   user: "test_user",
@@ -482,6 +485,7 @@ const mockAddMetadataJob: JSSJob = {
   jobName: "Add Metadata job 1",
   modified: new Date(),
   serviceFields: {
+    files: [],
     type: "add_metadata",
   },
   status: JSSJobStatus.WAITING,

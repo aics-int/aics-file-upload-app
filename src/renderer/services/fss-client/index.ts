@@ -1,25 +1,21 @@
-import * as fs from "fs";
-import * as path from "path";
-
-import axios, { AxiosRequestConfig } from "axios";
-import * as humps from "humps";
-import { castArray } from "lodash";
-import * as hash from "object-hash";
-
 import { LocalStorage } from "../../types";
 import HttpCacheClient from "../http-cache-client";
-import { JSSJob } from "../job-status-client/types";
-import {
-  AicsSuccessResponse,
-  FSSResponseFile,
-  HttpClient,
-  UploadRequest,
-  UploadServiceFields,
-} from "../types";
+import { AicsSuccessResponse, HttpClient, UploadRequest } from "../types";
 
-const UPLOAD_TYPE = "upload";
+export enum UploadStatus {
+  WORKING = "WORKING", // as expected, in process
+  FAILED = "FAILED", // software failure
+  COMPLETE = "COMPLETE",
+  CANCELLED = "CANCELLED", // user cancelled
+  EXPIRED = "EXPIRED", // too long since last activity
+}
 
-const fssURL = "/fss";
+export enum ChunkStatus {
+  ALLOCATED = "Allocated",
+  WORKING = "Working",
+  FAILED = "Failed",
+  COMPLETE = "Complete",
+}
 
 // Request Types
 export interface FSSRequestFile {
@@ -31,91 +27,89 @@ export interface FSSRequestFile {
   shouldBeInLocal?: boolean;
 }
 
-interface UploadMetadataRequest {
-  jobId: string;
-  files: FSSRequestFile[];
+// RESPONSE TYPES
+
+interface RegisterUploadResponse {
+  uploadId: string; // ID for tracking upload
+  chunkSize: number; // Size of chunks to send to service
 }
 
-// Response Types
-export interface StartUploadResponse {
-  jobId: string;
-  uploadDirectory: string;
+// Receipt of chunk submission
+interface UploadChunkResponse {
+  chunkNumber: number;
+  fileId: string;
+  uploadId: string;
+  errorCount: number; // TODO: why is this ever non-zero?
 }
 
-export interface UploadMetadataResponse {
-  jobId: string;
-  files: FSSResponseFile[];
+export interface UploadStatusResponse {
+  chunkSize?: number; // Not in the FSS2 model yet, adding ahead of time as an optional field
+  chunkStatuses: ChunkStatus[];
+  uploadStatus: UploadStatus;
 }
 
 /**
- * Provides interface with FSS endpoints.
+ * TODO
  */
 export default class FileStorageClient extends HttpCacheClient {
-  constructor(
-    httpClient: HttpClient,
-    localStorage: LocalStorage,
-    useCache = false
-  ) {
-    super(httpClient, localStorage, useCache);
-    this.startUpload = this.startUpload.bind(this);
-    this.uploadComplete = this.uploadComplete.bind(this);
+  private static readonly ENDPOINT = "file-storage-service/2.0/upload";
+
+  constructor(httpClient: HttpClient, localStorage: LocalStorage) {
+    super(httpClient, localStorage, false);
   }
 
-  public async startUpload(
-    filePath: string,
-    metadata: UploadRequest,
-    serviceFields: Partial<UploadServiceFields>
-  ): Promise<StartUploadResponse> {
-    const fileName = path.basename(filePath);
-    const fileStats = await fs.promises.stat(filePath);
-    const requestBody: Partial<JSSJob<Partial<UploadServiceFields>>> = {
-      jobName: fileName,
-      serviceFields: {
-        ...serviceFields,
-        md5: {},
-        files: [metadata],
-        type: UPLOAD_TYPE,
-        lastModified: { [hash.MD5(filePath)]: fileStats.mtime.toJSON() },
-      },
-    };
-    const response = await this.post<AicsSuccessResponse<StartUploadResponse>>(
-      `${fssURL}/1.0/file/upload`,
-      requestBody,
-      FileStorageClient.getHttpRequestConfig()
-    );
-
-    return response.data[0];
-  }
-
-  public async uploadComplete(
-    jobId: string,
-    files: FSSRequestFile[]
-  ): Promise<UploadMetadataResponse> {
-    const request: UploadMetadataRequest = {
-      files,
-      jobId,
+  public async registerUpload(
+    fileName: string,
+    fileSize: number,
+    md5: string
+  ): Promise<RegisterUploadResponse> {
+    const url = `${FileStorageClient.ENDPOINT}/registerUpload`;
+    const postBody = {
+      fileName,
+      fileSize,
+      md5,
     };
     const response = await this.post<
-      AicsSuccessResponse<UploadMetadataResponse>
-    >(
-      `${fssURL}/1.0/file/uploadComplete`,
-      request,
-      FileStorageClient.getHttpRequestConfig()
-    );
+      AicsSuccessResponse<RegisterUploadResponse>
+    >(url, postBody);
     return response.data[0];
   }
 
-  // FSS expects properties of requests to be in snake_case format and returns responses in snake_case format as well
-  private static getHttpRequestConfig(): AxiosRequestConfig {
-    return {
-      transformResponse: [
-        ...castArray(axios.defaults.transformResponse),
-        (data: any) => humps.camelizeKeys(data),
-      ],
-      transformRequest: [
-        (data: any) => humps.decamelizeKeys(data),
-        ...castArray(axios.defaults.transformRequest),
-      ],
-    };
+  public async sendUploadChunk(
+    uploadId: string,
+    chunkNumber: number,
+    postBody: string
+  ) {
+    const url = `${FileStorageClient.ENDPOINT}/uploadChunk/${uploadId}/${chunkNumber}`;
+    const response = await this.post<AicsSuccessResponse<UploadChunkResponse>>(
+      url,
+      postBody
+    );
+    // TODO:????
+    if (response.data[0].errorCount > 0) {
+      throw new Error("What?????");
+    }
+  }
+
+  public async cancelUpload(uploadId: string) {
+    const url = `${FileStorageClient.ENDPOINT}/${uploadId}`;
+    await this.delete<AicsSuccessResponse<UploadStatusResponse>>(
+      url,
+      undefined
+    );
+  }
+
+  public async getStatus(uploadId: string): Promise<UploadStatusResponse> {
+    const url = `${FileStorageClient.ENDPOINT}/${uploadId}`;
+    const response = await this.delete<
+      AicsSuccessResponse<UploadStatusResponse>
+    >(url, undefined);
+    return response.data[0];
+  }
+
+  // TODO: What is this...?
+  public async repeatFinalize(uploadId: string): Promise<void> {
+    const url = `${FileStorageClient.ENDPOINT}/finalize/${uploadId}`;
+    await this.patch<AicsSuccessResponse<UploadChunkResponse>>(url, undefined);
   }
 }
