@@ -48,15 +48,15 @@ export default class ChunkedFileReader {
   /**
    * TODO
    */
-  public async sendFileChunksToFss(
+  public async read(
     uploadId: string,
     source: string,
-    onProgress: (chunk: string) => Promise<void>,
+    onProgress: (chunk: Uint8Array) => Promise<void>,
     chunkSize: number,
-    initialOffset: number
+    offset: number
   ): Promise<void> {
     const readStream = fs.createReadStream(source, {
-      start: initialOffset,
+      start: offset,
       highWaterMark: chunkSize,
     });
     const progressStream = new stream.Transform({
@@ -96,7 +96,7 @@ export default class ChunkedFileReader {
       const cancelledError = new CopyCancelledError();
       Object.values(this.uploadIdToStreamMap[uploadId]).forEach(
         (fileStream) => {
-          fileStream.destroy(cancelledError);
+          fileStream?.destroy(cancelledError);
         }
       );
       delete this.uploadIdToStreamMap[uploadId];

@@ -86,8 +86,8 @@ describe("Job selectors", () => {
         created: new Date("Oct 1, 2020 03:24:00"),
         serviceFields: {
           files: [],
-          modifiedAtTimeOfMD5Calculation: new Date().toString(),
-          md5: "123412341234",
+          lastModifiedInMS: new Date().getMilliseconds(),
+          calculatedMD5: "123412341234",
           originalJobId: mockReplacedJob2.jobId,
           type: "upload",
         },

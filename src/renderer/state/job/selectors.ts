@@ -35,7 +35,7 @@ export const getUploadsByTemplateUsage = createSelector(
   } => {
     const replacedJobIdSet = uploadJobs.reduce((setSoFar, job) => {
       if (job.serviceFields?.originalJobId) {
-        setSoFar.add(job.serviceFields.originalJobId);
+        setSoFar.add(job.serviceFields?.originalJobId);
       }
       return setSoFar;
     }, new Set());
@@ -49,13 +49,15 @@ export const getUploadsByTemplateUsage = createSelector(
           ...job,
           created: new Date(job.created),
           modified: new Date(job.modified),
+          // TODO: I... am not sure what to do for progression...
           progress: jobIdToCopyProgress[job.jobId],
-          fileId: job.serviceFields?.result
-            ?.map((file) => file.fileId)
-            .join(", "),
-          filePath: job.serviceFields?.result
-            ?.map((file) => file.readPath)
-            .join(", "),
+          fileId:
+            job.serviceFields?.result?.map((file) => file.fileId).join(", ") ||
+            job.serviceFields?.fssUploadId,
+          filePath:
+            job.serviceFields?.result
+              ?.map((file) => file.readPath)
+              .join(", ") || job.serviceFields?.fmsFilePath,
           template:
             templateIdToName[
               job.serviceFields?.files?.[0]?.customMetadata?.templateId || 0

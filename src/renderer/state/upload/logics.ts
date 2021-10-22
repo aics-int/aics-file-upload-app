@@ -1,3 +1,5 @@
+import * as path from "path";
+
 import {
   castArray,
   flatMap,
@@ -15,7 +17,7 @@ import { createLogic } from "redux-logic";
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import FileManagementSystem from "../../services/fms-client";
 import { CopyCancelledError } from "../../services/fms-client/CopyCancelledError";
-import { JSSJob, JSSJobStatus } from "../../services/job-status-client/types";
+import { JSSJob } from "../../services/job-status-client/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/mms-client/types";
 import { UploadRequest } from "../../services/types";
@@ -95,6 +97,7 @@ import {
   UPLOAD_WITHOUT_METADATA,
 } from "./constants";
 import {
+  extensionToFileTypeMap,
   getCanSaveUploadDraft,
   getUpload,
   getUploadFileNames,
@@ -103,6 +106,7 @@ import {
 import {
   ApplyTemplateAction,
   CancelUploadAction,
+  FileType,
   InitiateUploadAction,
   OpenUploadDraftAction,
   RetryUploadAction,
@@ -992,14 +996,25 @@ const uploadWithoutMetadataLogic = createLogic({
         deps.action.payload
       );
       jobs = await Promise.all(
-        filePaths.map(async (filePath) =>
-          deps.jssClient.createJob({
-            jobName: new File(filePath).name,
-            service: "file-upload-app",
-            status: JSSJobStatus.WAITING,
+        filePaths.map((filePath) =>
+          deps.fms.initiateUpload(
+            {
+              file: {
+                fileName: path.basename(filePath),
+                disposition: "tape", // prevent czi -> ome.tiff conversions
+                fileType:
+                  extensionToFileTypeMap[
+                    path.extname(filePath).toLowerCase()
+                  ] || FileType.OTHER,
+                originalPath: filePath,
+                shouldBeInArchive: true,
+                shouldBeInLocal: true,
+              },
+              microscopy: {},
+            },
             user,
-            serviceFields: { groupId, files: [], type: "upload" },
-          })
+            { groupId }
+          )
         )
       );
     } catch (error) {

@@ -171,7 +171,7 @@ export default class HttpCacheClient {
     return this.checkCache(key, action);
   }
 
-  private getHttpRequestConfig = (): AxiosRequestConfig => {
+  protected getHttpRequestConfig = (): AxiosRequestConfig => {
     const userSettings = this.localStorage.get(USER_SETTINGS_KEY);
     const username = userSettings?.username || DEFAULT_USERNAME;
     return {

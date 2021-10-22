@@ -1,5 +1,4 @@
 import { Icon, Progress, Tooltip } from "antd";
-import * as classNames from "classnames";
 import * as React from "react";
 import { CellProps } from "react-table";
 
@@ -20,6 +19,18 @@ const POWER_OF_1000_TO_ABBREV = new Map<number, string>([
   [3, "GB"],
   [4, "TB"],
 ]);
+
+enum Step {
+  ONE,
+  TWO,
+  THREE,
+}
+
+const STEP_INFO = {
+  [Step.ONE]: "Step 1 of 3: Reading file",
+  [Step.TWO]: "Step 2 of 3: Uploading file",
+  [Step.THREE]: "Step 3 of 3: Adding metadata",
+};
 
 function getBytesDisplay(bytes: number): string {
   const powerOf1000 = getPowerOf1000(bytes);
@@ -77,44 +88,37 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       />
     );
   } else {
-    let progress = 0;
-    let fssCompletedBytes = 0;
-    let totalBytesDisplay = "0";
-    let completedBytesDisplay = "?";
-    if (props.row.original.progress?.totalBytes) {
-      const { completedBytes, totalBytes } = props.row.original.progress;
-      fssCompletedBytes =
-        props.row.original.serviceFields?.fssBytesProcessed ?? 0;
+    const md5BytesRead = 0;
+    const bytesUploaded = 0;
+    const totalBytes = 0;
 
-      // `completedBytes` refers to the copy done by the app itself, while
-      // `fssCompletedBytes` refers to the post-upload processing done by FSS.
-      const completedBytesForStep = fssCompletedBytes || completedBytes;
-      progress =
-        totalBytes === completedBytesForStep
-          ? 100
-          : Math.floor(totalBytes / completedBytesForStep);
-      completedBytesDisplay = getBytesDisplay(completedBytesForStep);
-      totalBytesDisplay = getBytesDisplay(totalBytes);
+    let step = Step.ONE;
+    if (bytesUploaded === totalBytes) {
+      step = Step.THREE;
+    } else if (bytesUploaded) {
+      step = Step.TWO;
     }
+    tooltip = `${tooltip} - ${STEP_INFO[step]}`;
 
-    const stepInfo = !fssCompletedBytes
-      ? "Step 1 of 2: Uploading file"
-      : "Step 2 of 2: Post-upload processing";
-    tooltip = `${tooltip} - ${stepInfo}`;
+    const bytesReadForStep = bytesUploaded || md5BytesRead;
+    const progressForStep =
+      totalBytes === bytesReadForStep
+        ? 100
+        : Math.floor(totalBytes / bytesReadForStep);
 
     content = (
       <>
         <Progress
-          className={classNames({ [styles.safeToClose]: !!fssCompletedBytes })}
           type="circle"
-          percent={progress}
+          percent={progressForStep}
           width={25}
           status="active"
         />
         <div className={styles.activeInfo}>
-          <p>Step {!fssCompletedBytes ? 1 : 2} of 2</p>
+          <p>Step {step} of 3</p>
           <p>
-            {completedBytesDisplay} / {totalBytesDisplay}
+            {getBytesDisplay(bytesUploaded || md5BytesRead)} /{" "}
+            {getBytesDisplay(totalBytes)}
           </p>
         </div>
       </>

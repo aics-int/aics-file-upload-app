@@ -29,6 +29,8 @@ export interface ServiceFields {
   // TODO: ????
   fssUploadId?: string;
 
+  fmsFilePath?: string;
+
   // TODO: ????
   fssUploadChunkSize?: number;
 
@@ -124,7 +126,7 @@ export interface UpdateJobRequest {
   childIds?: string[];
 
   // Additional properties required by a specific job or job type.
-  serviceFields?: any;
+  serviceFields?: Partial<ServiceFields>;
 
   // Name of the most recent host to update the status of the job.
   currentHost?: string;

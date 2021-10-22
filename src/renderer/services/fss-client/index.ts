@@ -1,6 +1,10 @@
+import axios, { AxiosRequestConfig } from "axios";
+import { camelizeKeys } from "humps";
+import { castArray } from "lodash";
+
 import { LocalStorage } from "../../types";
 import HttpCacheClient from "../http-cache-client";
-import { AicsSuccessResponse, HttpClient, UploadRequest } from "../types";
+import { HttpClient } from "../types";
 
 export enum UploadStatus {
   WORKING = "WORKING", // as expected, in process
@@ -17,18 +21,7 @@ export enum ChunkStatus {
   COMPLETE = "Complete",
 }
 
-// Request Types
-export interface FSSRequestFile {
-  fileName: string;
-  md5hex: string;
-  fileType: string;
-  metadata: UploadRequest;
-  shouldBeInArchive?: boolean;
-  shouldBeInLocal?: boolean;
-}
-
 // RESPONSE TYPES
-
 interface RegisterUploadResponse {
   uploadId: string; // ID for tracking upload
   chunkSize: number; // Size of chunks to send to service
@@ -37,9 +30,8 @@ interface RegisterUploadResponse {
 // Receipt of chunk submission
 interface UploadChunkResponse {
   chunkNumber: number;
-  fileId: string;
+  fileId?: string;
   uploadId: string;
-  errorCount: number; // TODO: why is this ever non-zero?
 }
 
 export interface UploadStatusResponse {
@@ -48,68 +40,97 @@ export interface UploadStatusResponse {
   uploadStatus: UploadStatus;
 }
 
+interface FileRecord {
+  addedToLabkey: boolean;
+  archivePath: string;
+  cloudPath: string;
+  fileId: string;
+  fileName: string;
+  fileSize: number;
+  localPath: string;
+  md5: string;
+}
+
 /**
  * TODO
  */
 export default class FileStorageClient extends HttpCacheClient {
-  private static readonly ENDPOINT = "file-storage-service/2.0/upload";
+  private static readonly ENDPOINT = "fss2/2.0";
+  private static readonly BASE_FILE_PATH = `${FileStorageClient.ENDPOINT}/file`;
+  private static readonly BASE_UPLOAD_PATH = `${FileStorageClient.ENDPOINT}/upload`;
 
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
     super(httpClient, localStorage, false);
   }
 
-  public async registerUpload(
+  public registerUpload(
     fileName: string,
     fileSize: number,
     md5: string
   ): Promise<RegisterUploadResponse> {
-    const url = `${FileStorageClient.ENDPOINT}/registerUpload`;
+    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/registerUpload`;
     const postBody = {
-      fileName,
-      fileSize,
-      md5,
+      // Unfortunately FSS expects snake_case in all but one case (MD5)
+      // so the conversion must be manual each request
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      file_name: fileName,
+      // Unfortunately FSS expects snake_case in all but one case (MD5)
+      // so the conversion must be manual each request
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      file_size: fileSize,
+      MD5: md5,
     };
-    const response = await this.post<
-      AicsSuccessResponse<RegisterUploadResponse>
-    >(url, postBody);
-    return response.data[0];
+    return this.post<RegisterUploadResponse>(
+      url,
+      postBody,
+      FileStorageClient.getHttpRequestConfig()
+    );
   }
 
-  public async sendUploadChunk(
+  public sendUploadChunk(
     uploadId: string,
+    chunkSize: number,
     chunkNumber: number,
-    postBody: string
-  ) {
-    const url = `${FileStorageClient.ENDPOINT}/uploadChunk/${uploadId}/${chunkNumber}`;
-    const response = await this.post<AicsSuccessResponse<UploadChunkResponse>>(
-      url,
-      postBody
-    );
-    // TODO:????
-    if (response.data[0].errorCount > 0) {
-      throw new Error("What?????");
-    }
+    postBody: Uint8Array
+  ): Promise<UploadChunkResponse> {
+    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/uploadChunk/${uploadId}/${chunkNumber}`;
+    const rangeStart = (chunkNumber - 1) * chunkSize;
+    const rangeEnd = rangeStart + postBody.byteLength - 1;
+    return this.post<UploadChunkResponse>(url, postBody, {
+      ...FileStorageClient.getHttpRequestConfig(),
+      headers: {
+        ...this.getHttpRequestConfig().headers,
+        range: `${rangeStart}-${rangeEnd}`,
+      },
+    });
   }
 
-  public async cancelUpload(uploadId: string) {
-    const url = `${FileStorageClient.ENDPOINT}/${uploadId}`;
-    await this.delete<AicsSuccessResponse<UploadStatusResponse>>(
-      url,
-      undefined
-    );
+  public cancelUpload(uploadId: string): Promise<UploadStatusResponse> {
+    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/${uploadId}`;
+    return this.delete<UploadStatusResponse>(url, undefined);
   }
 
-  public async getStatus(uploadId: string): Promise<UploadStatusResponse> {
-    const url = `${FileStorageClient.ENDPOINT}/${uploadId}`;
-    const response = await this.delete<
-      AicsSuccessResponse<UploadStatusResponse>
-    >(url, undefined);
-    return response.data[0];
+  public getStatus(uploadId: string): Promise<UploadStatusResponse> {
+    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/${uploadId}`;
+    return this.get<UploadStatusResponse>(url);
   }
 
-  // TODO: What is this...?
-  public async repeatFinalize(uploadId: string): Promise<void> {
-    const url = `${FileStorageClient.ENDPOINT}/finalize/${uploadId}`;
-    await this.patch<AicsSuccessResponse<UploadChunkResponse>>(url, undefined);
+  public getFileAttributes(fileId: string): Promise<FileRecord> {
+    const url = `${FileStorageClient.BASE_FILE_PATH}/${fileId}`;
+    return this.get<FileRecord>(url);
+  }
+
+  public repeatFinalize(uploadId: string): Promise<UploadChunkResponse> {
+    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/finalize/${uploadId}`;
+    return this.patch<UploadChunkResponse>(url, undefined);
+  }
+
+  private static getHttpRequestConfig(): AxiosRequestConfig {
+    return {
+      transformResponse: [
+        ...castArray(axios.defaults.transformResponse),
+        (data) => camelizeKeys(data),
+      ],
+    };
   }
 }
