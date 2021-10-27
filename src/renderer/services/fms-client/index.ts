@@ -195,8 +195,7 @@ export default class FileManagementSystem {
           fssStatus.uploadStatus === UploadStatus.WORKING ||
           fssStatus.uploadStatus === UploadStatus.COMPLETE
         ) {
-          await this.resume(upload, fssStatus);
-          return;
+          return await this.resume(upload, fssStatus);
         }
       } catch (error) {
         // No-op: This check is just an attempt to resume, still able to recover from here
@@ -238,13 +237,14 @@ export default class FileManagementSystem {
             await this.jss.updateJob(uploadId, oldJobPatch, false);
 
             // Perform upload with new job and current job's metadata, forgoing the current job
-            return this.upload(newUpload);
+            return await this.upload(newUpload);
           } catch (error) {
             // Catch exceptions and fail the job if something happened before the upload could start
-            await this.failJob(
-              newUpload.jobId,
-              `Something went wrong retrying ${newUpload.jobName}. Details: ${error?.message}`
-            );
+            const errMsg = `Something went wrong retrying ${newUpload.jobName}. Details: ${error?.message}`;
+            await this.jss.updateJob(newUpload.jobId, {
+              status: JSSJobStatus.FAILED,
+              serviceFields: { error: errMsg },
+            });
             throw error;
           }
         } catch (error) {
@@ -442,13 +442,6 @@ export default class FileManagementSystem {
       serviceFields: {
         fmsFilePath: localPath,
       },
-    });
-  }
-
-  private async failJob(jobId: string, error: string): Promise<void> {
-    await this.jss.updateJob(jobId, {
-      status: JSSJobStatus.FAILED,
-      serviceFields: { error },
     });
   }
 }
