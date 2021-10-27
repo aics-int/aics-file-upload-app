@@ -2,7 +2,13 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as stream from "stream";
 
-import { CopyCancelledError } from "./CopyCancelledError";
+// Create an explicit error class to capture cancellations
+export class CancellationError extends Error {
+  constructor() {
+    super("File copy cancelled by user.");
+    this.name = "CancellationError";
+  }
+}
 
 /**
  * TODO
@@ -93,7 +99,7 @@ export default class ChunkedFileReader {
     if (uploadId in this.uploadIdToStreamMap) {
       // TODO Why unpipe vs destroy
       this.uploadIdToStreamMap[uploadId].readStream.unpipe();
-      const cancelledError = new CopyCancelledError();
+      const cancelledError = new CancellationError();
       Object.values(this.uploadIdToStreamMap[uploadId]).forEach(
         (fileStream) => {
           fileStream?.destroy(cancelledError);

@@ -21,7 +21,7 @@ import {
 } from "../job-status-client/types";
 import { UploadRequest } from "../types";
 
-import ChunkedFileReader from "./ChunkedFileReader";
+import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
 
 interface FileManagementSystemConfig {
   fss: FileStorageClient;
@@ -147,14 +147,17 @@ export default class FileManagementSystem {
       // Add metadata and complete tracker job
       await this.finalizeUpload(upload, fileId);
     } catch (error) {
-      // Fail job in JSS with error
-      const errMsg = `Something went wrong uploading ${upload.jobName}. Details: ${error?.message}`;
-      this.logger.error(errMsg);
-      await this.jss.updateJob(upload.jobId, {
-        status: JSSJobStatus.FAILED,
-        serviceFields: { error: errMsg },
-      });
-      throw error;
+      // Ignore cancellation errors
+      if (!(error instanceof CancellationError)) {
+        // Fail job in JSS with error
+        const errMsg = `Something went wrong uploading ${upload.jobName}. Details: ${error?.message}`;
+        this.logger.error(errMsg);
+        await this.jss.updateJob(upload.jobId, {
+          status: JSSJobStatus.FAILED,
+          serviceFields: { error: errMsg },
+        });
+        throw error;
+      }
     } finally {
       this.logger.timeEnd(upload.jobName || "");
     }
@@ -192,7 +195,8 @@ export default class FileManagementSystem {
           fssStatus.uploadStatus === UploadStatus.WORKING ||
           fssStatus.uploadStatus === UploadStatus.COMPLETE
         ) {
-          return this.resume(upload, fssStatus);
+          await this.resume(upload, fssStatus);
+          return;
         }
       } catch (error) {
         // No-op: This check is just an attempt to resume, still able to recover from here
@@ -323,6 +327,11 @@ export default class FileManagementSystem {
     upload: JSSJob,
     fssStatus: UploadStatusResponse
   ): Promise<void> {
+    // Update status in case resume process goes smoothly
+    await this.jss.updateJob(upload.jobId, {
+      status: JSSJobStatus.RETRYING,
+    });
+
     try {
       let fileId;
       if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
@@ -334,6 +343,7 @@ export default class FileManagementSystem {
         }
 
         // Check to see if FSS completed the upload, but has yet to create the database record in LK
+        console.log("getting attributes", fssStatus, upload.serviceFields);
         const file = await this.fss.getFileAttributes(
           upload.serviceFields.fssUploadId
         );
@@ -425,6 +435,7 @@ export default class FileManagementSystem {
     await this.mms.createFileMetadata(fileId, upload.serviceFields.files[0]);
 
     // Complete tracker job and add the local file path to it for ease of viewing
+    console.log("getting attributes at end");
     const { localPath } = await this.fss.getFileAttributes(fileId);
     await this.jss.updateJob(upload.jobId, {
       status: JSSJobStatus.SUCCEEDED,

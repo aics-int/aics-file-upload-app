@@ -100,7 +100,7 @@ export default class FileStorageClient extends HttpCacheClient {
       ...FileStorageClient.getHttpRequestConfig(),
       headers: {
         ...this.getHttpRequestConfig().headers,
-        range: `${rangeStart}-${rangeEnd}`,
+        range: `bytes=${rangeStart}-${rangeEnd}`,
       },
     });
   }
