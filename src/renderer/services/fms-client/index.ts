@@ -224,7 +224,8 @@ export default class FileManagementSystem {
 
           try {
             // Update the current job with information about the replacement
-            const oldJobPatch = {
+            await this.jss.updateJob(uploadId, {
+              status: JSSJobStatus.FAILED,
               serviceFields: {
                 error: `This job has been replaced with Job ID: ${newUpload.jobId}`,
                 replacementJobIds: uniq([
@@ -232,21 +233,15 @@ export default class FileManagementSystem {
                   newUpload.jobId,
                 ]),
               },
-            };
-            // TODO: Should this be a patch update?
-            await this.jss.updateJob(uploadId, oldJobPatch, false);
-
-            // Perform upload with new job and current job's metadata, forgoing the current job
-            return await this.upload(newUpload);
-          } catch (error) {
-            // Catch exceptions and fail the job if something happened before the upload could start
-            const errMsg = `Something went wrong retrying ${newUpload.jobName}. Details: ${error?.message}`;
-            await this.jss.updateJob(newUpload.jobId, {
-              status: JSSJobStatus.FAILED,
-              serviceFields: { error: errMsg },
             });
+          } catch (error) {
+            // Cancel the new job if unable to update the old one
+            await this.cancel(newUpload.jobId);
             throw error;
           }
+
+          // Perform upload with new job and current job's metadata, forgoing the current job
+          return await this.upload(newUpload);
         } catch (error) {
           // Catch exceptions to allow other jobs to run before re-throwing the error
           return { error };
@@ -254,24 +249,13 @@ export default class FileManagementSystem {
       })
     );
 
-    // This ensures each upload promise is able to complete before
-    // evaluating any failures (similar to Promise.allSettled)
-    await Promise.all(
-      results.map(async (result) => {
-        const errorCase = result as { error: Error };
-        if (errorCase?.error) {
-          // Update the original upload to track the failure in the
-          // event the new upload has not been created yet
-          const errMsg = `Something went wrong uploading ${uploadId}. Details: ${errorCase.error?.message}`;
-          this.logger.error(errMsg);
-          await this.jss.updateJob(uploadId, {
-            status: JSSJobStatus.FAILED,
-            serviceFields: { error: errMsg },
-          });
-          throw errorCase.error;
-        }
-      })
-    );
+    // Evaluate the results throwing the first error seen (if any)
+    results.forEach((result) => {
+      const errorCase = result as { error: Error };
+      if (errorCase.error) {
+        throw errorCase.error;
+      }
+    });
   }
 
   /**
@@ -288,9 +272,11 @@ export default class FileManagementSystem {
       );
     }
 
+    // Cancel any web worker currently active just in case
+    this.fileReader.cancel(uploadId);
+
     // If we haven't saved the FSS Job ID this either failed miserably or hasn't progressed much
     if (job.serviceFields?.fssUploadId) {
-      // TODO: Need to actually store fssUploadId somewhere
       const { uploadStatus } = await this.fss.getStatus(
         job.serviceFields?.fssUploadId
       );
@@ -299,13 +285,10 @@ export default class FileManagementSystem {
       if (uploadStatus === UploadStatus.COMPLETE) {
         throw new Error(`Upload has progressed too far to be canceled`);
       }
+
+      // Cancel upload in FSS
+      await this.fss.cancelUpload(job.serviceFields.fssUploadId);
     }
-
-    // Cancel any web worker currently active just in case
-    this.fileReader.cancel(uploadId);
-
-    // Cancel upload in FSS
-    await this.fss.cancelUpload(uploadId);
 
     // Update the job to provide feedback
     await this.jss.updateJob(uploadId, {
@@ -343,7 +326,6 @@ export default class FileManagementSystem {
         }
 
         // Check to see if FSS completed the upload, but has yet to create the database record in LK
-        console.log("getting attributes", fssStatus, upload.serviceFields);
         const file = await this.fss.getFileAttributes(
           upload.serviceFields.fssUploadId
         );
@@ -435,7 +417,6 @@ export default class FileManagementSystem {
     await this.mms.createFileMetadata(fileId, upload.serviceFields.files[0]);
 
     // Complete tracker job and add the local file path to it for ease of viewing
-    console.log("getting attributes at end");
     const { localPath } = await this.fss.getFileAttributes(fileId);
     await this.jss.updateJob(upload.jobId, {
       status: JSSJobStatus.SUCCEEDED,
