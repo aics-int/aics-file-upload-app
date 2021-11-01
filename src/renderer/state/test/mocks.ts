@@ -5,7 +5,6 @@ import { GridCell } from "../../entities";
 import {
   JSSJob,
   JSSJobStatus,
-  UploadStage,
 } from "../../services/job-status-client/types";
 import {
   Annotation,
@@ -439,7 +438,6 @@ export const mockWorkingUploadJob: JSSJob = {
 
 export const mockWaitingUploadJob: JSSJob = {
   ...mockWorkingUploadJob,
-  currentStage: UploadStage.WAITING_FOR_CLIENT_COPY,
   status: JSSJobStatus.WAITING,
 };
 

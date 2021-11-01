@@ -4,7 +4,6 @@ import { createSelector } from "reselect";
 import {
   IN_PROGRESS_STATUSES,
   JSSJob,
-  UploadStage,
 } from "../../services/job-status-client/types";
 import { getTemplateIdToName } from "../metadata/selectors";
 import { State, UploadSummaryTableRow } from "../types";
@@ -19,6 +18,17 @@ export const getJobIdToUploadJobMap = createSelector(
   (jobs): Map<string, JSSJob> =>
     jobs.reduce((map, job) => {
       map.set(job.jobId, job);
+      return map;
+    }, new Map<string, JSSJob>())
+);
+
+export const getFssUploadIdToUploadJobMap = createSelector(
+  [getUploadJobs],
+  (jobs): Map<string, JSSJob> =>
+    jobs.reduce((map, job) => {
+      if (job.serviceFields?.fssUploadId) {
+        map.set(job.serviceFields?.fssUploadId, job);
+      }
       return map;
     }, new Map<string, JSSJob>())
 );
@@ -75,15 +85,14 @@ export const getUploadsByTemplateUsage = createSelector(
   }
 );
 
-// The app is only safe to exit after the client side of the upload completes
-// this is signaled by the "currentStage" of the job being after the
-// "Waiting for file copy" stage set by FSS when the upload is initiated.
+// Can't close the app if any uploads are currently in progress
+// otherwise we are, at the very least, waiting to attach metadata
+// to the files
 export const getIsSafeToExit = createSelector(
   [getUploadJobs],
   (uploadJobs: JSSJob[]): boolean =>
     !uploadJobs.some(
       (job) =>
-        job.currentStage === UploadStage.WAITING_FOR_CLIENT_COPY &&
         IN_PROGRESS_STATUSES.includes(job.status)
     )
 );

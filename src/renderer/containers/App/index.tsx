@@ -102,22 +102,12 @@ export default function App() {
 
     eventSource.addEventListener("jobInsert", (event: MessageEvent) => {
       const job = camelizeKeys(JSON.parse(event.data)) as JSSJob;
-      if (job.serviceFields?.type === "upload") {
-        dispatch(receiveJobInsert(job));
-      } else {
-        // TODO: Need to track the child job updates somehow...
-        // dispatch(receiveFssJob(job))
-      }
+      dispatch(receiveJobInsert(job));
     });
 
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
       const jobChange = camelizeKeys(JSON.parse(event.data)) as JSSJob;
-      if (jobChange.serviceFields?.type === "upload") {
-        dispatch(receiveJobUpdate(jobChange));
-      } else {
-        // TODO: Need to update the child job somehow...
-        // dispatch(receiveFssJob(job))
-      }
+      dispatch(receiveJobUpdate(jobChange));
     });
 
     eventSource.onDisconnect(() =>

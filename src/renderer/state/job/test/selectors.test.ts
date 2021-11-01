@@ -3,7 +3,6 @@ import { expect } from "chai";
 import {
   JSSJob,
   JSSJobStatus,
-  UploadStage,
 } from "../../../services/job-status-client/types";
 import {
   mockFailedUploadJob,
@@ -121,7 +120,6 @@ describe("Job selectors", () => {
           uploadJobs: [
             {
               ...mockWorkingUploadJob,
-              currentStage: UploadStage.WAITING_FOR_CLIENT_COPY,
             },
           ],
         },
@@ -142,7 +140,6 @@ describe("Job selectors", () => {
           uploadJobs: [
             {
               ...mockWorkingUploadJob,
-              currentStage: UploadStage.COMPLETE,
             },
           ],
         },

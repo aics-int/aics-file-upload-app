@@ -60,7 +60,7 @@ export default class FileStorageClient extends HttpCacheClient {
   private static readonly BASE_UPLOAD_PATH = `${FileStorageClient.ENDPOINT}/upload`;
 
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
-    super(httpClient, localStorage, false);
+    super(httpClient, localStorage, false, "https");
   }
 
   public registerUpload(

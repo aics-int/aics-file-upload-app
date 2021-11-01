@@ -116,6 +116,7 @@ import {
   UpdateUploadRowsAction,
   UploadWithoutMetadataAction,
 } from "./types";
+import { updateUploadProgressInfo } from "../job/actions";
 
 class TaskQueue<T> {
   private readonly tasks: (() => Promise<T>)[];
@@ -238,13 +239,12 @@ const initiateUploadLogic = createLogic({
     const groupId = FileManagementSystem.createUniqueId();
 
     const user = getSelectedUser(getState());
-    const uploads = getUploadRequests(getState());
+    const requests = getUploadRequests(getState());
 
-    // TODO: Register each upload so we can save the metadata of each
-    let jobs: JSSJob[];
+    let uploads: JSSJob[];
     try {
-      jobs = await Promise.all(
-        uploads.map((upload) => fms.initiateUpload(upload, user, { groupId }))
+      uploads = await Promise.all(
+        requests.map((request) => fms.initiateUpload(request, user, { groupId }))
       );
     } catch (error) {
       dispatch(
@@ -260,10 +260,13 @@ const initiateUploadLogic = createLogic({
     dispatch(initiateUploadSucceeded(action.payload));
 
     // TODO: What if cancelled before start?
-    const uploadTasks = jobs.map((job) => async () => {
-      const name = job.jobName as string;
+    const uploadTasks = uploads.map((upload) => async () => {
+      const name = upload.jobName as string;
       try {
-        await fms.upload(job);
+        const onProgress = (completedBytes: number, totalBytes: number) => {
+          dispatch(updateUploadProgressInfo(upload.jobId, { completedBytes, totalBytes }))
+        };
+        await fms.upload(upload, onProgress);
         dispatch(uploadSucceeded(name));
       } catch (error) {
         dispatch(
@@ -340,15 +343,18 @@ const retryUploadsLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const jobs = action.payload;
+    const uploads = action.payload;
     await Promise.all(
-      jobs.map(async (job) => {
+      uploads.map(async (upload) => {
         try {
-          await fms.retry(job.jobId);
+          const onProgress = (uploadId: string, completedBytes: number, totalBytes: number) => {
+            dispatch(updateUploadProgressInfo(uploadId, { completedBytes, totalBytes }))
+          }
+          await fms.retry(upload.jobId, onProgress);
         } catch (e) {
-          const error = `Retry upload ${job.jobName} failed: ${e.message}`;
-          logger.error(`Retry for jobId=${job.jobId} failed`, e);
-          dispatch(uploadFailed(error, job.jobName || ""));
+          const error = `Retry upload ${upload.jobName} failed: ${e.message}`;
+          logger.error(`Retry for jobId=${upload.jobId} failed`, e);
+          dispatch(uploadFailed(error, upload.jobName || ""));
         }
       })
     );
@@ -987,12 +993,12 @@ const uploadWithoutMetadataLogic = createLogic({
 
     const user = getSelectedUser(deps.getState());
 
-    let jobs: JSSJob[];
+    let uploads: JSSJob[];
     try {
       const filePaths = await determineFilesFromNestedPaths(
         deps.action.payload
       );
-      jobs = await Promise.all(
+      uploads = await Promise.all(
         filePaths.map((filePath) =>
           deps.fms.initiateUpload(
             {
@@ -1026,10 +1032,14 @@ const uploadWithoutMetadataLogic = createLogic({
     }
 
     // TODO: What if cancelled before start?
-    const uploadTasks = jobs.map((job) => async () => {
-      const name = job.jobName as string;
+    const uploadTasks = uploads.map((upload) => async () => {
+      const name = upload.jobName as string;
       try {
-        await deps.fms.upload(job);
+        const onProgress = (completedBytes: number, totalBytes: number) => {
+          console.log("progress")
+          dispatch(updateUploadProgressInfo(upload.jobId, { completedBytes, totalBytes }))
+        }
+        await deps.fms.upload(upload, onProgress);
         dispatch(uploadSucceeded(name));
       } catch (error) {
         dispatch(

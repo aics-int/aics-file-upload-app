@@ -14,6 +14,7 @@ import {
   ReduxLogicTransformDependencies,
 } from "../types";
 import { uploadFailed, uploadSucceeded } from "../upload/actions";
+import { updateUploadProgressInfo } from "./actions";
 
 import { RECEIVE_JOB_UPDATE, RECEIVE_JOBS } from "./constants";
 import { getJobIdToUploadJobMap } from "./selectors";
@@ -29,21 +30,24 @@ export const handleAbandonedJobsLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const abandonedJobs = action.payload.filter(({ status }) =>
+    const abandonedUploads = action.payload.filter(({ status }) =>
       IN_PROGRESS_STATUSES.includes(status)
     );
 
     await Promise.all(
-      abandonedJobs.map(async (abandonedJob) => {
+      abandonedUploads.map(async (abandonedUpload) => {
         try {
           // Alert user to abandoned job
-          const info = `Upload "${abandonedJob.jobName}" was abandoned and will now be retried.`;
+          const info = `Upload "${abandonedUpload.jobName}" was abandoned and will now be retried.`;
           logger.info(info);
           dispatch(setInfoAlert(info));
 
-          await fms.retry(abandonedJob.jobId);
+          const onProgress = (uploadId: string, completedBytes: number, totalBytes: number) => {
+            dispatch(updateUploadProgressInfo(uploadId, { completedBytes, totalBytes }))
+          }
+          await fms.retry(abandonedUpload.jobId, onProgress);
         } catch (e) {
-          const message = `Retry for upload "${abandonedJob.jobName}" failed: ${e.message}`;
+          const message = `Retry for upload "${abandonedUpload.jobName}" failed: ${e.message}`;
           logger.error(message, e);
           dispatch(setErrorAlert(message));
         }

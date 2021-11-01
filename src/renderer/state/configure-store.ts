@@ -37,6 +37,7 @@ import {
   template,
   upload,
 } from "./";
+import ChunkedFileReader from "../services/fms-client/ChunkedFileReader";
 
 const readFile = promisify(fsReadFile);
 const writeFile = promisify(fsWriteFile);
@@ -89,6 +90,7 @@ const applicationInfoService = new ApplicationInfoService(
 export const reduxLogicDependencies: ReduxLogicExtraDependencies = {
   dialog: remote.dialog,
   fms: new FileManagementSystem({
+    fileReader: new ChunkedFileReader(),
     fss: new FileStorageClient(httpClient, storage),
     jss: jssClient,
     lk: labkeyClient,

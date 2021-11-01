@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
+import { throttle } from "lodash";
 import * as stream from "stream";
 
 // Create an explicit error class to capture cancellations
@@ -14,6 +15,9 @@ export class CancellationError extends Error {
  * TODO
  */
 export default class ChunkedFileReader {
+  // Time to delay any throttled callbacks
+  public static readonly THROTTLE_DELAY_IN_MS = 200;
+  // Map of uploadIds to streams to allow cancellations/cleanup
   private readonly uploadIdToStreamMap: {
     [jobId: string]: {
       readStream: fs.ReadStream;
@@ -26,17 +30,28 @@ export default class ChunkedFileReader {
   /**
    * TODO
    */
-  public async calculateMD5(uploadId: string, source: string): Promise<string> {
+  public async calculateMD5(uploadId: string, source: string, onProgress: (bytesRead: number) => void): Promise<string> {
     const readStream = fs.createReadStream(source);
     const hashStream = crypto.createHash("md5").setEncoding("hex");
+    let bytesCopied = 0;
+    const throttledOnProgress = throttle(onProgress, ChunkedFileReader.THROTTLE_DELAY_IN_MS);
+    const progressStream = new stream.Transform({
+      transform(chunk, _, callback) {
+        bytesCopied += chunk.length;
+        throttledOnProgress(bytesCopied);
+        this.push(chunk);
+        callback();
+      },
+    });
 
     this.uploadIdToStreamMap[uploadId] = {
       readStream,
       hashStream,
+      progressStream,
     };
 
     await new Promise<void>((resolve, reject) => {
-      stream.pipeline(readStream, hashStream, (error) => {
+      stream.pipeline(readStream, progressStream, hashStream, (error) => {
         if (error) {
           delete this.uploadIdToStreamMap[uploadId];
           reject(error);

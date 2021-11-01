@@ -51,8 +51,9 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
   let content: React.ReactNode;
   if (JSSJobStatus.SUCCEEDED === props.value) {
+    const etlProcess = props.row.original.serviceFields?.postUploadProcessing?.etl;
     if (
-      props.row.original.serviceFields?.postUploadProcessing?.etl?.status ===
+      etlProcess?.status ===
       JSSJobStatus.SUCCEEDED
     ) {
       content = (
@@ -60,10 +61,10 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       );
     } else {
       if (
-        props.row.original.serviceFields?.postUploadProcessing?.etl?.status ===
+        etlProcess?.status ===
         JSSJobStatus.FAILED
       ) {
-        tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the FMS File Explorer. Attempt to make it visible in the FMS Explorer resulted in the following error: ${props.row.original.serviceFields?.postUploadProcessing?.etl?.status_detail}`;
+        tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the FMS File Explorer. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess.status_detail}`;
       } else {
         tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the FMS File Explorer if it isn't already`;
       }
@@ -88,9 +89,9 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       />
     );
   } else {
-    const md5BytesRead = 0;
-    const bytesUploaded = 0;
-    const totalBytes = 0;
+    const md5BytesRead = props.row.original.progress?.completedBytes || 0;
+    const bytesUploaded = (props.row.original.serviceFields?.calculatedMD5 && props.row.original.progress?.completedBytes) || 0;
+    const totalBytes = props.row.original.progress?.totalBytes || 0;
 
     let step = Step.ONE;
     if (bytesUploaded === totalBytes) {

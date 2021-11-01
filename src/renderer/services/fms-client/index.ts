@@ -3,7 +3,7 @@ import * as path from "path";
 
 import Logger from "js-logger";
 import { ILogger } from "js-logger/src/types";
-import { uniq } from "lodash";
+import { throttle, uniq } from "lodash";
 import * as uuid from "uuid";
 
 import { JobStatusClient, LabkeyClient, MMSClient } from "..";
@@ -24,6 +24,7 @@ import { UploadRequest } from "../types";
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
 
 interface FileManagementSystemConfig {
+  fileReader: ChunkedFileReader;
   fss: FileStorageClient;
   jss: JobStatusClient;
   lk: LabkeyClient;
@@ -31,14 +32,16 @@ interface FileManagementSystemConfig {
 }
 
 /**
- * TODO
+ * Service entity for storing or retrieving files from the AICS FMS. This
+ * class is responsible for abstracting the work needed to upload a file into
+ * the FMS.
  */
 export default class FileManagementSystem {
+  private readonly fileReader: ChunkedFileReader;
   private readonly fss: FileStorageClient;
   private readonly jss: JobStatusClient;
   private readonly lk: LabkeyClient;
   private readonly mms: MMSClient;
-  private readonly fileReader = new ChunkedFileReader();
   private readonly logger: ILogger = Logger.get("upload-client");
 
   // Creates JSS friendly unique ids
@@ -47,6 +50,7 @@ export default class FileManagementSystem {
   }
 
   public constructor(config: FileManagementSystemConfig) {
+    this.fileReader = config.fileReader;
     this.fss = config.fss;
     this.jss = config.jss;
     this.lk = config.lk;
@@ -54,7 +58,8 @@ export default class FileManagementSystem {
   }
 
   /**
-   * TODO
+   * Initiates the upload by creating a tracker job
+   * in JSS with the metadata to enable retry functionality
    */
   public initiateUpload(
     metadata: UploadRequest,
@@ -80,7 +85,7 @@ export default class FileManagementSystem {
    * Utilizes Web Workers to take advantage of I/O wait time & avoid
    * blocking the main thread (UI).
    */
-  public async upload(upload: JSSJob): Promise<void> {
+  public async upload(upload: JSSJob, onProgress: (bytesRead: number, totalBytes: number) => void): Promise<void> {
     this.logger.time(upload.jobName || "");
     try {
       // Grab file details
@@ -99,7 +104,8 @@ export default class FileManagementSystem {
       );
 
       // Calculate MD5 ahead of submission, re-use from job if possible. Only potentially available
-      // on job if this upload is being re-submitted like for a retry
+      // on job if this upload is being re-submitted like for a retry. Avoid reusing MD5 if the file
+      // has been modified since the MD5 was calculated
       let md5;
       if (
         upload.serviceFields.calculatedMD5 &&
@@ -109,7 +115,8 @@ export default class FileManagementSystem {
       } else {
         md5 = await this.fileReader.calculateMD5(
           upload.jobId,
-          upload.serviceFields.files[0]?.file.originalPath
+          upload.serviceFields.files[0]?.file.originalPath,
+          (bytesRead) => onProgress(bytesRead, fileSize)
         );
       }
 
@@ -129,10 +136,12 @@ export default class FileManagementSystem {
       );
 
       // Update parent job with upload job created by FSS
+      // for tracking in the event of a retry
       await this.jss.updateJob(upload.jobId, {
         serviceFields: {
           fssUploadId: registration.uploadId,
           calculatedMD5: md5,
+          lastModifiedInMS: fileLastModifiedInMs
         },
       });
 
@@ -141,7 +150,8 @@ export default class FileManagementSystem {
       const fileId = await this.uploadInChunks(
         registration.uploadId,
         source,
-        registration.chunkSize
+        registration.chunkSize,
+        (bytesRead) => onProgress(bytesRead, fileSize)
       );
 
       // Add metadata and complete tracker job
@@ -172,7 +182,7 @@ export default class FileManagementSystem {
    * Backwards compatible with uploads that have a many to many relationship
    * with files in which case this will split the uploads into many different uploads.
    */
-  public async retry(uploadId: string): Promise<void> {
+  public async retry(uploadId: string, onProgress: (uploadId: string, bytesRead: number, totalBytes: number) => void): Promise<void> {
     console.info(`Retrying upload for jobId=${uploadId}.`);
 
     // Request job from JSS & validate if it is retryable
@@ -195,7 +205,8 @@ export default class FileManagementSystem {
           fssStatus.uploadStatus === UploadStatus.WORKING ||
           fssStatus.uploadStatus === UploadStatus.COMPLETE
         ) {
-          return await this.resume(upload, fssStatus);
+          const { size: fileSize } = await fs.promises.stat(upload.serviceFields.files?.[0]?.file.originalPath);
+          return await this.resume(upload, fssStatus, (bytesRead) => onProgress(uploadId, bytesRead, fileSize));
         }
       } catch (error) {
         // No-op: This check is just an attempt to resume, still able to recover from here
@@ -241,7 +252,7 @@ export default class FileManagementSystem {
           }
 
           // Perform upload with new job and current job's metadata, forgoing the current job
-          return await this.upload(newUpload);
+          return await this.upload(newUpload, (completedBytes, totalBytes) => onProgress(newUpload.jobId, completedBytes, totalBytes));
         } catch (error) {
           // Catch exceptions to allow other jobs to run before re-throwing the error
           return { error };
@@ -308,7 +319,8 @@ export default class FileManagementSystem {
    */
   private async resume(
     upload: JSSJob,
-    fssStatus: UploadStatusResponse
+    fssStatus: UploadStatusResponse,
+    onProgress: (bytesRead: number) => void,
   ): Promise<void> {
     // Update status in case resume process goes smoothly
     await this.jss.updateJob(upload.jobId, {
@@ -352,7 +364,8 @@ export default class FileManagementSystem {
           upload.jobId,
           upload.serviceFields.files[0]?.file.originalPath,
           upload.serviceFields.fssUploadChunkSize,
-          lastChunkNumber
+          onProgress,
+          lastChunkNumber,
         );
       } else {
         // Shouldn't occur, but just in case
@@ -380,10 +393,12 @@ export default class FileManagementSystem {
     uploadId: string,
     source: string,
     chunkSize: number,
-    initialChunkNumber = 0
+    onProgress: (bytesRead: number) => void,
+    initialChunkNumber: number = 0,
   ): Promise<string> {
     let chunkNumber = initialChunkNumber;
     let fileId: string | undefined = undefined;
+    const throttledOnProgress = throttle(onProgress, ChunkedFileReader.THROTTLE_DELAY_IN_MS);
     const onChunkRead = async (chunk: Uint8Array): Promise<void> => {
       chunkNumber += 1;
       const response = await this.fss.sendUploadChunk(
@@ -392,6 +407,7 @@ export default class FileManagementSystem {
         chunkNumber,
         chunk
       );
+      throttledOnProgress(chunkNumber * chunkSize);
       // On the last chunk sent the File Id should be returned from FSS
       fileId = response.fileId;
     };
@@ -413,6 +429,8 @@ export default class FileManagementSystem {
    * FSS's portion has been completed
    */
   private async finalizeUpload(upload: JSSJob, fileId: string): Promise<void> {
+    // TODO: Wait for file to exist by polling... something?
+    
     // Add metadata to file via MMS
     await this.mms.createFileMetadata(fileId, upload.serviceFields.files[0]);
 
