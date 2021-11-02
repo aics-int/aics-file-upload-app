@@ -125,6 +125,7 @@ export default class FileStorageClient extends HttpCacheClient {
     return this.patch<UploadChunkResponse>(url, undefined);
   }
 
+  // FSS returns responses in snake_case format
   private static getHttpRequestConfig(): AxiosRequestConfig {
     return {
       transformResponse: [

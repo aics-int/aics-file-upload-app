@@ -72,7 +72,6 @@ export interface MMSFile {
   templateId?: number;
 }
 
-// TODO: unused
 export interface UploadRequest {
   customMetadata?: MMSFile;
   fileType?: string;

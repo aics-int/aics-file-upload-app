@@ -9,7 +9,6 @@ import {
   HTTP_STATUS,
   ReduxLogicNextCb,
   ReduxLogicTransformDependencies,
-  UploadProgressInfo,
   UploadStateBranch,
 } from "./types";
 
@@ -19,29 +18,6 @@ import {
  * methods often depend on services, which differentiates them from pure utility
  * methods found in other files.
  */
-
-// TODO: Why does this exist ???
-export const handleUploadProgress = (
-  fileNames: string[],
-  onProgress: (progress: UploadProgressInfo) => void
-) => {
-  const copyProgress = new Map();
-  fileNames.forEach((fileName: string) => {
-    copyProgress.set(fileName, 0);
-  });
-  return (originalPath: string, bytesCopied: number, totalBytes: number) => {
-    copyProgress.set(originalPath, bytesCopied);
-    let completedBytes = 0;
-    copyProgress.forEach((value: number) => {
-      completedBytes += value;
-    });
-    const progress: UploadProgressInfo = {
-      completedBytes,
-      totalBytes,
-    };
-    onProgress(progress);
-  };
-};
 
 // every annotation will be stored in an array, regardless of whether it can have multiple values or not
 export const pivotAnnotations = (

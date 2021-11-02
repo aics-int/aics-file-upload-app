@@ -181,7 +181,6 @@ export interface FeedbackStateBranch {
   visibleModals: ModalName[];
 }
 
-// TODO: unused?
 export interface UploadProgressInfo {
   completedBytes: number;
   totalBytes: number;

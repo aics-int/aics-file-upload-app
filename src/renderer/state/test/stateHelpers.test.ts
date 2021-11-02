@@ -6,7 +6,6 @@ import {
   replace,
   restore,
   SinonStubbedInstance,
-  match,
 } from "sinon";
 
 import MMSClient from "../../services/mms-client";
@@ -16,7 +15,6 @@ import {
   ensureDraftGetsSaved,
   getApplyTemplateInfo,
   getWithRetry,
-  handleUploadProgress,
 } from "../stateHelpers";
 import { ReduxLogicTransformDependencies, UploadStateBranch } from "../types";
 import { getUploadRowKey } from "../upload/constants";
@@ -32,47 +30,6 @@ import {
 describe("State helpers", () => {
   afterEach(() => {
     restore();
-  });
-
-  describe("handleUploadProgress", () => {
-    it("returns a function that calls postMessage with the correct stats over time", () => {
-      const onProgress = stub();
-      const copyProgressCb = handleUploadProgress(["a", "b"], onProgress);
-
-      copyProgressCb("a", 1, 12);
-      expect(
-        onProgress.calledWith(
-          match({
-            completedBytes: 1,
-            totalBytes: 12,
-          })
-        )
-      ).to.be.true;
-      onProgress.reset();
-
-      copyProgressCb("b", 2, 12);
-      expect(
-        onProgress.calledWith(
-          match({
-            completedBytes: 3,
-            totalBytes: 12,
-          })
-        )
-      ).to.be.true;
-      onProgress.reset();
-
-      // File stream has reported that 2 bytes of file "a" have been copied in total
-      copyProgressCb("a", 2, 12);
-      // 2 bytes for file "a", 2 bytes for file "b" = 4 bytes total copied
-      expect(
-        onProgress.calledWith(
-          match({
-            completedBytes: 4,
-            totalBytes: 12,
-          })
-        )
-      ).to.be.true;
-    });
   });
 
   describe("getWithRetry", () => {

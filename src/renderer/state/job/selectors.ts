@@ -59,7 +59,6 @@ export const getUploadsByTemplateUsage = createSelector(
           ...job,
           created: new Date(job.created),
           modified: new Date(job.modified),
-          // TODO: I... am not sure what to do for progression...
           progress: jobIdToCopyProgress[job.jobId],
           fileId:
             job.serviceFields?.result?.map((file) => file.fileId).join(", ") ||
@@ -91,8 +90,5 @@ export const getUploadsByTemplateUsage = createSelector(
 export const getIsSafeToExit = createSelector(
   [getUploadJobs],
   (uploadJobs: JSSJob[]): boolean =>
-    !uploadJobs.some(
-      (job) =>
-        IN_PROGRESS_STATUSES.includes(job.status)
-    )
+    !uploadJobs.some((job) => IN_PROGRESS_STATUSES.includes(job.status))
 );
