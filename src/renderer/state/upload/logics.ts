@@ -23,6 +23,7 @@ import { UploadRequest } from "../../services/types";
 import { determineFilesFromNestedPaths, splitTrimAndFilter } from "../../util";
 import { requestFailed } from "../actions";
 import { setErrorAlert } from "../feedback/actions";
+import { updateUploadProgressInfo } from "../job/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
   getAnnotations,
@@ -116,48 +117,6 @@ import {
   UpdateUploadRowsAction,
   UploadWithoutMetadataAction,
 } from "./types";
-import { updateUploadProgressInfo } from "../job/actions";
-
-class TaskQueue<T> {
-  private readonly tasks: (() => Promise<T>)[];
-  private readonly batchSize: number;
-  private readonly results: T[] = [];
-  private taskIndex = 0;
-
-  public constructor(tasks: (() => Promise<T>)[], batchSize: number) {
-    this.tasks = tasks;
-    this.batchSize = batchSize;
-  }
-
-  public run(): Promise<T[]> {
-    return new Promise<T[]>((resolve) => {
-      while (this.canRunNext()) {
-        const task = this.tasks[this.taskIndex];
-        this.taskIndex++;
-
-        task().then((result) => {
-          this.results.push(result);
-          if (this.canRunNext()) {
-            this.run();
-          } else {
-            resolve(this.results);
-          }
-        });
-      }
-    });
-  }
-
-  private canRunNext(): boolean {
-    return (
-      this.getCountOfRunningTasks() < this.batchSize &&
-      this.taskIndex < this.tasks.length
-    );
-  }
-
-  private getCountOfRunningTasks(): number {
-    return this.taskIndex - this.results.length;
-  }
-}
 
 const applyTemplateLogic = createLogic({
   process: async (
@@ -244,7 +203,9 @@ const initiateUploadLogic = createLogic({
     let uploads: JSSJob[];
     try {
       uploads = await Promise.all(
-        requests.map((request) => fms.initiateUpload(request, user, { groupId }))
+        requests.map((request) =>
+          fms.initiateUpload(request, user, { groupId })
+        )
       );
     } catch (error) {
       dispatch(
@@ -259,12 +220,16 @@ const initiateUploadLogic = createLogic({
 
     dispatch(initiateUploadSucceeded(action.payload));
 
-    // TODO: What if cancelled before start?
     const uploadTasks = uploads.map((upload) => async () => {
       const name = upload.jobName as string;
       try {
         const onProgress = (completedBytes: number, totalBytes: number) => {
-          dispatch(updateUploadProgressInfo(upload.jobId, { completedBytes, totalBytes }))
+          dispatch(
+            updateUploadProgressInfo(upload.jobId, {
+              completedBytes,
+              totalBytes,
+            })
+          );
         };
         await fms.upload(upload, onProgress);
         dispatch(uploadSucceeded(name));
@@ -347,9 +312,15 @@ const retryUploadsLogic = createLogic({
     await Promise.all(
       uploads.map(async (upload) => {
         try {
-          const onProgress = (uploadId: string, completedBytes: number, totalBytes: number) => {
-            dispatch(updateUploadProgressInfo(uploadId, { completedBytes, totalBytes }))
-          }
+          const onProgress = (
+            uploadId: string,
+            completedBytes: number,
+            totalBytes: number
+          ) => {
+            dispatch(
+              updateUploadProgressInfo(uploadId, { completedBytes, totalBytes })
+            );
+          };
           await fms.retry(upload.jobId, onProgress);
         } catch (e) {
           const error = `Retry upload ${upload.jobName} failed: ${e.message}`;
@@ -1031,14 +1002,18 @@ const uploadWithoutMetadataLogic = createLogic({
       return;
     }
 
-    // TODO: What if cancelled before start?
     const uploadTasks = uploads.map((upload) => async () => {
       const name = upload.jobName as string;
       try {
         const onProgress = (completedBytes: number, totalBytes: number) => {
-          console.log("progress")
-          dispatch(updateUploadProgressInfo(upload.jobId, { completedBytes, totalBytes }))
-        }
+          console.log("progress");
+          dispatch(
+            updateUploadProgressInfo(upload.jobId, {
+              completedBytes,
+              totalBytes,
+            })
+          );
+        };
         await deps.fms.upload(upload, onProgress);
         dispatch(uploadSucceeded(name));
       } catch (error) {
@@ -1053,7 +1028,7 @@ const uploadWithoutMetadataLogic = createLogic({
 
     // Upload 25 (semi-arbitrary number) files at a time to prevent performance issues
     // in the case of uploads with many files.
-    const uploadQueue = new TaskQueue(uploadTasks, 25);
+    const uploadQueue = new BatchedTaskQueue(uploadTasks, 25);
     await uploadQueue.run();
 
     done();
