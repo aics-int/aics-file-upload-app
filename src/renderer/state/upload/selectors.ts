@@ -598,7 +598,6 @@ export const getUploadRequests = createSelector(
           templateId: template.templateId,
         },
         file: {
-          fileName: basename(filePath),
           disposition: "tape", // prevent czi -> ome.tiff conversions
           ...(metadata[0].fileId && { fileId: metadata[0].fileId }),
           fileType:

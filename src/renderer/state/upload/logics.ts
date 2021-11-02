@@ -15,6 +15,7 @@ import { isDate, isMoment } from "moment";
 import { createLogic } from "redux-logic";
 
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
+import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 import FileManagementSystem from "../../services/fms-client";
 import { JSSJob } from "../../services/job-status-client/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
@@ -245,7 +246,7 @@ const initiateUploadLogic = createLogic({
 
     // Upload 25 (semi-arbitrary number) files at a time to prevent performance issues
     // in the case of uploads with many files.
-    const uploadQueue = new TaskQueue(uploadTasks, 25);
+    const uploadQueue = new BatchedTaskQueue(uploadTasks, 25);
     await uploadQueue.run();
 
     done();
@@ -974,7 +975,6 @@ const uploadWithoutMetadataLogic = createLogic({
           deps.fms.initiateUpload(
             {
               file: {
-                fileName: path.basename(filePath),
                 disposition: "tape", // prevent czi -> ome.tiff conversions
                 fileType:
                   extensionToFileTypeMap[

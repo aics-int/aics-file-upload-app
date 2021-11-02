@@ -51,19 +51,14 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
   let content: React.ReactNode;
   if (JSSJobStatus.SUCCEEDED === props.value) {
-    const etlProcess = props.row.original.serviceFields?.postUploadProcessing?.etl;
-    if (
-      etlProcess?.status ===
-      JSSJobStatus.SUCCEEDED
-    ) {
+    const etlProcess =
+      props.row.original.serviceFields?.postUploadProcessing?.etl;
+    if (etlProcess?.status === JSSJobStatus.SUCCEEDED) {
       content = (
         <Icon className={styles.success} type="check-circle" theme="filled" />
       );
     } else {
-      if (
-        etlProcess?.status ===
-        JSSJobStatus.FAILED
-      ) {
+      if (etlProcess?.status === JSSJobStatus.FAILED) {
         tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the FMS File Explorer. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess.status_detail}`;
       } else {
         tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the FMS File Explorer if it isn't already`;
@@ -90,18 +85,21 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     );
   } else {
     const md5BytesRead = props.row.original.progress?.completedBytes || 0;
-    const bytesUploaded = (props.row.original.serviceFields?.calculatedMD5 && props.row.original.progress?.completedBytes) || 0;
+    const bytesCompleted =
+      (props.row.original.serviceFields?.calculatedMD5 &&
+        props.row.original.progress?.completedBytes) ||
+      0;
     const totalBytes = props.row.original.progress?.totalBytes || 0;
 
     let step = Step.ONE;
-    if (bytesUploaded === totalBytes) {
+    if (bytesCompleted === totalBytes) {
       step = Step.THREE;
-    } else if (bytesUploaded) {
+    } else if (bytesCompleted) {
       step = Step.TWO;
     }
     tooltip = `${tooltip} - ${STEP_INFO[step]}`;
 
-    const bytesReadForStep = bytesUploaded || md5BytesRead;
+    const bytesReadForStep = bytesCompleted || md5BytesRead;
     const progressForStep =
       totalBytes === bytesReadForStep
         ? 100
@@ -118,7 +116,7 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
         <div className={styles.activeInfo}>
           <p>Step {step} of 3</p>
           <p>
-            {getBytesDisplay(bytesUploaded || md5BytesRead)} /{" "}
+            {getBytesDisplay(bytesCompleted || md5BytesRead)} /{" "}
             {getBytesDisplay(totalBytes)}
           </p>
         </div>
