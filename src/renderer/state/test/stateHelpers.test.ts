@@ -8,8 +8,8 @@ import {
   SinonStubbedInstance,
 } from "sinon";
 
-import MMSClient from "../../services/mms-client";
-import { Template } from "../../services/mms-client/types";
+import MetadataManagementService from "../../services/metadata-management-service";
+import { Template } from "../../services/metadata-management-service/types";
 import { setSuccessAlert, setWarningAlert } from "../feedback/actions";
 import {
   ensureDraftGetsSaved,
@@ -142,10 +142,10 @@ describe("State helpers", () => {
         mockNumberAnnotation,
       ],
     };
-    let mmsClient: SinonStubbedInstance<MMSClient>;
+    let mmsClient: SinonStubbedInstance<MetadataManagementService>;
 
     beforeEach(() => {
-      mmsClient = createStubInstance(MMSClient);
+      mmsClient = createStubInstance(MetadataManagementService);
       uploads = {
         [key]: {
           Age: 16,
@@ -172,7 +172,7 @@ describe("State helpers", () => {
       return expect(
         getApplyTemplateInfo(
           1,
-          (mmsClient as any) as MMSClient,
+          (mmsClient as any) as MetadataManagementService,
           stub(),
           mockBooleanAnnotation.annotationTypeId,
           uploads,
@@ -187,7 +187,7 @@ describe("State helpers", () => {
         uploads: uploadsResult,
       } = await getApplyTemplateInfo(
         1,
-        (mmsClient as any) as MMSClient,
+        (mmsClient as any) as MetadataManagementService,
         stub(),
         mockBooleanAnnotation.annotationTypeId,
         uploads,

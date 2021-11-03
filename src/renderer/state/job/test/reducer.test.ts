@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { JSSJobStatus } from "../../../services/job-status-client/types";
+import { JSSJobStatus } from "../../../services/job-status-service/types";
 import {
   mockSuccessfulUploadJob,
   mockWorkingAddMetadataJob,

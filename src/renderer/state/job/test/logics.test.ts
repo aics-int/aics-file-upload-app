@@ -2,7 +2,7 @@
 // import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
 // import FileManagementSystem from "../../../services/fms-client";
-// import JobStatusClient from "../../../services/job-status-client";
+// import JobStatusService from "../../../services/job-status-client";
 // import { JSSJob } from "../../../services/job-status-client/types";
 // import { UploadServiceFields } from "../../../services/types";
 // import { setErrorAlert, setInfoAlert } from "../../feedback/actions";
@@ -25,11 +25,11 @@
 
 // describe("Job logics", () => {
 //   const sandbox = createSandbox();
-//   let jssClient: SinonStubbedInstance<JobStatusClient>;
+//   let jssClient: SinonStubbedInstance<JobStatusService>;
 //   let fms: SinonStubbedInstance<FileManagementSystem>;
 
 //   beforeEach(() => {
-//     jssClient = createStubInstance(JobStatusClient);
+//     jssClient = createStubInstance(JobStatusService);
 //     fms = createStubInstance(FileManagementSystem);
 //     sandbox.replace(mockReduxLogicDeps, "jssClient", jssClient);
 //     sandbox.replace(mockReduxLogicDeps, "fms", fms);

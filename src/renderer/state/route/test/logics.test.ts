@@ -9,11 +9,11 @@ import {
 } from "sinon";
 
 import { AnnotationName } from "../../../constants";
-import FileManagementSystem from "../../../services/fms-client";
-import JobStatusClient from "../../../services/job-status-client";
-import { JSSJobStatus } from "../../../services/job-status-client/types";
+import FileManagementSystem from "../../../services/file-management-system";
+import JobStatusService from "../../../services/job-status-service";
+import { JSSJobStatus } from "../../../services/job-status-service/types";
 import LabkeyClient from "../../../services/labkey-client";
-import MMSClient from "../../../services/mms-client";
+import MetadataManagementService from "../../../services/metadata-management-service";
 import { requestFailed } from "../../actions";
 import { REQUEST_FAILED } from "../../constants";
 import { getAlert } from "../../feedback/selectors";
@@ -52,16 +52,16 @@ import Menu = Electron.Menu;
 
 describe("Route logics", () => {
   const sandbox = createSandbox();
-  let mmsClient: SinonStubbedInstance<MMSClient>;
+  let mmsClient: SinonStubbedInstance<MetadataManagementService>;
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
   let fms: SinonStubbedInstance<FileManagementSystem>;
-  let jssClient: SinonStubbedInstance<JobStatusClient>;
+  let jssClient: SinonStubbedInstance<JobStatusService>;
 
   beforeEach(() => {
-    mmsClient = createStubInstance(MMSClient);
+    mmsClient = createStubInstance(MetadataManagementService);
     labkeyClient = createStubInstance(LabkeyClient);
     fms = createStubInstance(FileManagementSystem);
-    jssClient = createStubInstance(JobStatusClient);
+    jssClient = createStubInstance(JobStatusService);
     sandbox.replace(mockReduxLogicDeps, "mmsClient", mmsClient);
     sandbox.replace(mockReduxLogicDeps, "labkeyClient", labkeyClient);
     sandbox.replace(mockReduxLogicDeps, "fms", fms);

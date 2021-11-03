@@ -14,10 +14,10 @@ import { AnnotationName } from "../constants";
 import {
   ApplicationInfoService,
   FileManagementSystem,
-  JobStatusClient,
-  MMSClient,
+  JobStatusService,
+  MetadataManagementService,
 } from "../services";
-import { JSSJob } from "../services/job-status-client/types";
+import { JSSJob } from "../services/job-status-service/types";
 import LabkeyClient from "../services/labkey-client";
 import {
   Annotation,
@@ -33,7 +33,10 @@ import {
   Lookup,
   Unit,
 } from "../services/labkey-client/types";
-import { Template, WellResponse } from "../services/mms-client/types";
+import {
+  Template,
+  WellResponse,
+} from "../services/metadata-management-service/types";
 import { LocalStorage } from "../types";
 
 import Process = CreateLogic.Config.Process;
@@ -80,10 +83,10 @@ export interface ReduxLogicExtraDependencies {
   fms: FileManagementSystem;
   getApplicationMenu: () => Menu | null;
   ipcRenderer: typeof ipcRenderer;
-  jssClient: JobStatusClient;
+  jssClient: JobStatusService;
   labkeyClient: LabkeyClient;
   logger: Logger;
-  mmsClient: MMSClient;
+  mmsClient: MetadataManagementService;
   readFile: (filePath: string, encoding?: string) => Promise<string | Buffer>;
   remote: Remote;
   storage: LocalStorage;

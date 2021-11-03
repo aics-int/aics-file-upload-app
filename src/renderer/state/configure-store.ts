@@ -17,9 +17,14 @@ import {
 import { createLogicMiddleware } from "redux-logic";
 
 import { TEMP_UPLOAD_STORAGE_KEY } from "../../shared/constants";
-import { JobStatusClient, LabkeyClient, MMSClient } from "../services";
-import { FileManagementSystem, FileStorageClient } from "../services";
-import ApplicationInfoService from "../services/application-info";
+import {
+  JobStatusService,
+  LabkeyClient,
+  MetadataManagementService,
+} from "../services";
+import { FileManagementSystem, FileStorageService } from "../services";
+import ApplicationInfoService from "../services/application-info-service";
+import ChunkedFileReader from "../services/file-management-system/ChunkedFileReader";
 
 import EnvironmentAwareStorage from "./EnvironmentAwareStorage";
 import { addEvent } from "./feedback/actions";
@@ -37,7 +42,6 @@ import {
   template,
   upload,
 } from "./";
-import ChunkedFileReader from "../services/fms-client/ChunkedFileReader";
 
 const readFile = promisify(fsReadFile);
 const writeFile = promisify(fsWriteFile);
@@ -79,8 +83,8 @@ const storage = new EnvironmentAwareStorage(new Store());
 axios.defaults.adapter = require("axios/lib/adapters/xhr");
 const httpClient = axios;
 const useCache = Boolean(process.env.ELECTRON_WEBPACK_USE_CACHE) || false;
-const jssClient = new JobStatusClient(httpClient, storage, useCache, "debug");
-const mmsClient = new MMSClient(httpClient, storage, useCache);
+const jssClient = new JobStatusService(httpClient, storage, useCache, "debug");
+const mmsClient = new MetadataManagementService(httpClient, storage, useCache);
 const labkeyClient = new LabkeyClient(httpClient, storage, useCache);
 const applicationInfoService = new ApplicationInfoService(
   httpClient,
@@ -91,7 +95,7 @@ export const reduxLogicDependencies: ReduxLogicExtraDependencies = {
   dialog: remote.dialog,
   fms: new FileManagementSystem({
     fileReader: new ChunkedFileReader(),
-    fss: new FileStorageClient(httpClient, storage),
+    fss: new FileStorageService(httpClient, storage),
     jss: jssClient,
     lk: labkeyClient,
     mms: mmsClient,

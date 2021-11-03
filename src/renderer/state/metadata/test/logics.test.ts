@@ -9,14 +9,14 @@ import {
 } from "sinon";
 
 import { AnnotationName } from "../../../constants";
-import FileManagementSystem from "../../../services/fms-client";
+import FileManagementSystem from "../../../services/file-management-system";
 import LabkeyClient from "../../../services/labkey-client";
 import {
   LabkeyPlateResponse,
   LabkeyTemplate,
   ScalarType,
 } from "../../../services/labkey-client/types";
-import MMSClient from "../../../services/mms-client";
+import MetadataManagementService from "../../../services/metadata-management-service";
 import { requestFailed } from "../../actions";
 import { SET_ALERT } from "../../feedback/constants";
 import {
@@ -63,12 +63,12 @@ describe("Metadata logics", () => {
 
   let fms: SinonStubbedInstance<FileManagementSystem>;
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
-  let mmsClient: SinonStubbedInstance<MMSClient>;
+  let mmsClient: SinonStubbedInstance<MetadataManagementService>;
 
   beforeEach(() => {
     fms = createStubInstance(FileManagementSystem);
     labkeyClient = createStubInstance(LabkeyClient);
-    mmsClient = createStubInstance(MMSClient);
+    mmsClient = createStubInstance(MetadataManagementService);
     sandbox.replace(mockReduxLogicDeps, "fms", fms);
     sandbox.replace(mockReduxLogicDeps, "labkeyClient", labkeyClient);
     sandbox.replace(mockReduxLogicDeps, "mmsClient", mmsClient);

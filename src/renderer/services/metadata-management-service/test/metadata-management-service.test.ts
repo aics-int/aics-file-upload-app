@@ -7,13 +7,13 @@ import {
   SinonStubbedInstance,
 } from "sinon";
 
-import MMSClient from "../";
+import MetadataManagementService from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
 import { LocalStorage } from "../../../types";
 import HttpCacheClient from "../../http-cache-client";
 
-describe("MMSClient", () => {
-  let mmsClient: MMSClient;
+describe("MetadataManagementService", () => {
+  let mmsClient: MetadataManagementService;
   let httpClient: SinonStubbedInstance<HttpCacheClient>;
   let storage: SinonStubbedInstance<EnvironmentAwareStorage>;
 
@@ -23,7 +23,7 @@ describe("MMSClient", () => {
     // Stub `get` specifically, since it is a class property and not on the prototype
     storage.get = stub();
 
-    mmsClient = new MMSClient(
+    mmsClient = new MetadataManagementService(
       (httpClient as any) as HttpCacheClient,
       (storage as any) as LocalStorage
     );

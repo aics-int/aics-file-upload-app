@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { orderBy } from "lodash";
 
 import { AnnotationName } from "../../../constants";
-import { TemplateAnnotation } from "../../../services/mms-client/types";
+import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
 import { UploadRequest } from "../../../services/types";
 import { Duration } from "../../../types";
 import {

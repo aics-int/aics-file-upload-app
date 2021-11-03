@@ -16,9 +16,9 @@
 // import { LabkeyClient } from "../../../services";
 // import FileManagementSystem from "../../../services/fms-client";
 // import { StartUploadResponse } from "../../../services/fss-client";
-// import JobStatusClient from "../../../services/job-status-client";
+// import JobStatusService from "../../../services/job-status-client";
 // import { ColumnType } from "../../../services/labkey-client/types";
-// import MMSClient from "../../../services/mms-client";
+// import MetadataManagementService from "../../../services/mms-client";
 // import { requestFailed } from "../../actions";
 // import { setErrorAlert } from "../../feedback/actions";
 // import { getAlert } from "../../feedback/selectors";
@@ -86,14 +86,14 @@
 // describe("Upload logics", () => {
 //   const sandbox = createSandbox();
 //   let fms: SinonStubbedInstance<FileManagementSystem>;
-//   let jssClient: SinonStubbedInstance<JobStatusClient>;
-//   let mmsClient: SinonStubbedInstance<MMSClient>;
+//   let jssClient: SinonStubbedInstance<JobStatusService>;
+//   let mmsClient: SinonStubbedInstance<MetadataManagementService>;
 //   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
 
 //   beforeEach(() => {
 //     fms = createStubInstance(FileManagementSystem);
-//     jssClient = createStubInstance(JobStatusClient);
-//     mmsClient = createStubInstance(MMSClient);
+//     jssClient = createStubInstance(JobStatusService);
+//     mmsClient = createStubInstance(MetadataManagementService);
 //     labkeyClient = createStubInstance(LabkeyClient);
 //     sandbox.replace(mockReduxLogicDeps, "fms", fms);
 //     sandbox.replace(mockReduxLogicDeps, "jssClient", jssClient);

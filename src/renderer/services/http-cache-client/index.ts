@@ -25,7 +25,7 @@ export default class HttpCacheClient {
     httpClient: HttpClient,
     localStorage: LocalStorage,
     useCache: boolean,
-    protocol: string = LIMS_PROTOCOL,
+    protocol: string = LIMS_PROTOCOL
   ) {
     this.httpClient = httpClient;
     this.localStorage = localStorage;

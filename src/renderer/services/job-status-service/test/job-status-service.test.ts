@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { createStubInstance, createSandbox, stub, useFakeTimers } from "sinon";
 
-import JobStatusClient from "../";
+import JobStatusService from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
 import { LocalStorage } from "../../../types";
 import HttpCacheClient from "../../http-cache-client";
@@ -25,9 +25,9 @@ const httpClient = (createStubInstance(
   HttpCacheClient
 ) as any) as HttpCacheClient;
 
-describe("JobStatusClient", () => {
+describe("JobStatusService", () => {
   const sandbox = createSandbox();
-  const jobStatusClient = new JobStatusClient(
+  const jobStatusClient = new JobStatusService(
     httpClient,
     (storage as any) as LocalStorage
   );

@@ -4,7 +4,7 @@ import { createSelector } from "reselect";
 import {
   IN_PROGRESS_STATUSES,
   JSSJob,
-} from "../../services/job-status-client/types";
+} from "../../services/job-status-service/types";
 import { getTemplateIdToName } from "../metadata/selectors";
 import { State, UploadSummaryTableRow } from "../types";
 

@@ -6,7 +6,7 @@ import { createSandbox, SinonStubbedInstance, createStubInstance } from "sinon";
 import selections from "../";
 import { feedback } from "../../";
 import { AnnotationName } from "../../../constants";
-import MMSClient from "../../../services/mms-client";
+import MetadataManagementService from "../../../services/metadata-management-service";
 import { getPage } from "../../route/selectors";
 import {
   createMockReduxStore,
@@ -32,10 +32,10 @@ describe("Selection logics", () => {
   const FILE_FULL_PATH = resolve(__dirname, TEST_FILES_DIR, FILE_NAME);
   const FOLDER_FULL_PATH = resolve(__dirname, TEST_FILES_DIR, FOLDER_NAME);
 
-  let mmsClient: SinonStubbedInstance<MMSClient>;
+  let mmsClient: SinonStubbedInstance<MetadataManagementService>;
 
   beforeEach(() => {
-    mmsClient = createStubInstance(MMSClient);
+    mmsClient = createStubInstance(MetadataManagementService);
     sandbox.replace(mockReduxLogicDeps, "mmsClient", mmsClient);
   });
 

@@ -5,7 +5,7 @@ import { Annotation } from "../../services/labkey-client/types";
 import {
   AnnotationMetadataRequest,
   Template,
-} from "../../services/mms-client/types";
+} from "../../services/metadata-management-service/types";
 import { TemplateDraft, UploadStateBranch } from "../types";
 
 import {

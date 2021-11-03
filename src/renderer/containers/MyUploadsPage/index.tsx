@@ -11,7 +11,7 @@ import { TOOLTIP_ENTER_DELAY, TOOLTIP_LEAVE_DELAY } from "../../constants";
 import {
   IN_PROGRESS_STATUSES,
   JSSJobStatus,
-} from "../../services/job-status-client/types";
+} from "../../services/job-status-service/types";
 import { getRequestsInProgress } from "../../state/feedback/selectors";
 import { getUploadsByTemplateUsage } from "../../state/job/selectors";
 import { startNewUpload, viewUploads } from "../../state/route/actions";

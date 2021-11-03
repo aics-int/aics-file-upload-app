@@ -26,11 +26,11 @@ const JOB_STATUS_CLIENT_LOGGER = "job-status-client";
 /***
  * Main class used by clients of this library to interact with JSS. Provides job create/read/update functionality.
  */
-export default class JobStatusClient extends HttpCacheClient {
+export default class JobStatusService extends HttpCacheClient {
   private readonly logger: ILogger;
 
   /***
-   * Create a JobStatusClient instance.
+   * Create a JobStatusService instance.
    * @param httpClient
    * @param storage
    * @param useCache
@@ -57,7 +57,7 @@ export default class JobStatusClient extends HttpCacheClient {
     const response = await this.post<AicsSuccessResponse<JSSJob>>(
       "/jss/1.0/job/",
       job,
-      JobStatusClient.getHttpRequestConfig()
+      JobStatusService.getHttpRequestConfig()
     );
     return response.data[0];
   }
@@ -78,7 +78,7 @@ export default class JobStatusClient extends HttpCacheClient {
     const response = await this.patch<AicsSuccessResponse<JSSJob>>(
       `/jss/1.0/job/${jobId}`,
       JSSRequestMapper.map(job, patchUpdateServiceFields),
-      JobStatusClient.getHttpRequestConfig()
+      JobStatusService.getHttpRequestConfig()
     );
     return response.data[0];
   }
@@ -115,7 +115,7 @@ export default class JobStatusClient extends HttpCacheClient {
     try {
       await this.get<AicsSuccessResponse<JSSJob>>(
         `/jss/1.0/job/${jobId}`,
-        JobStatusClient.getHttpRequestConfig()
+        JobStatusService.getHttpRequestConfig()
       );
     } catch (_) {
       return false;
@@ -131,7 +131,7 @@ export default class JobStatusClient extends HttpCacheClient {
     this.logger.debug(`Received get job request for jobId=${jobId}`);
     const response = await this.get<AicsSuccessResponse<JSSJob>>(
       `/jss/1.0/job/${jobId}`,
-      JobStatusClient.getHttpRequestConfig()
+      JobStatusService.getHttpRequestConfig()
     );
     return JSSResponseMapper.map(response.data[0]);
   }
@@ -145,7 +145,7 @@ export default class JobStatusClient extends HttpCacheClient {
     const response = await this.post<AicsSuccessResponse<JSSJob>>(
       `/jss/1.0/job/query`,
       JSSRequestMapper.map(query, true),
-      JobStatusClient.getHttpRequestConfig()
+      JobStatusService.getHttpRequestConfig()
     );
     return response.data.map((job: JSSJob) => JSSResponseMapper.map(job));
   }

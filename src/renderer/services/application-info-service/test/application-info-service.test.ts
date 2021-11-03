@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { createStubInstance, stub, SinonStubbedInstance } from "sinon";
 
-import ApplicationInfoService from "../";
+import ApplicationInfoService from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
 import { LocalStorage } from "../../../types";
 import HttpCacheClient from "../../http-cache-client";

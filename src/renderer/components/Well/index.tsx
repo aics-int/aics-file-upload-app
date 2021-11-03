@@ -2,7 +2,7 @@ import * as classNames from "classnames";
 import { first } from "lodash";
 import * as React from "react";
 
-import { CellPopulation } from "../../services/mms-client/types";
+import { CellPopulation } from "../../services/metadata-management-service/types";
 import { Well } from "../../state/selection/types";
 
 const styles = require("./style.pcss");

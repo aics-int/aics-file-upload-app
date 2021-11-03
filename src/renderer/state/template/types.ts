@@ -5,7 +5,7 @@ import {
   AnnotationMetadataRequest,
   Template,
   TemplateAnnotation,
-} from "../../services/mms-client/types";
+} from "../../services/metadata-management-service/types";
 import {
   AutoSaveAction,
   TemplateDraft,

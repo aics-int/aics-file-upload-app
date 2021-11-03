@@ -16,10 +16,10 @@ import { createLogic } from "redux-logic";
 
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
-import FileManagementSystem from "../../services/fms-client";
-import { JSSJob } from "../../services/job-status-client/types";
+import FileManagementSystem from "../../services/file-management-system";
+import { JSSJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
-import { Template } from "../../services/mms-client/types";
+import { Template } from "../../services/metadata-management-service/types";
 import { UploadRequest } from "../../services/types";
 import { determineFilesFromNestedPaths, splitTrimAndFilter } from "../../util";
 import { requestFailed } from "../actions";

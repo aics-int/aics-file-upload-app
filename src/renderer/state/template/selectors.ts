@@ -7,7 +7,7 @@ import {
   AnnotationType,
   ColumnType,
 } from "../../services/labkey-client/types";
-import { Template } from "../../services/mms-client/types";
+import { Template } from "../../services/metadata-management-service/types";
 import { getAnnotations, getAnnotationTypes } from "../metadata/selectors";
 import { AnnotationDraft, State, TemplateDraft } from "../types";
 

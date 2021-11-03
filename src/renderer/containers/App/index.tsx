@@ -13,7 +13,7 @@ import {
   SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
-import { JSSJob } from "../../services/job-status-client/types";
+import { JSSJob } from "../../services/job-status-service/types";
 import {
   addRequestToInProgress,
   checkForUpdate,

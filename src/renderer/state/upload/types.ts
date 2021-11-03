@@ -1,5 +1,5 @@
 import { AnnotationName } from "../../constants";
-import { JSSJob } from "../../services/job-status-client/types";
+import { JSSJob } from "../../services/job-status-service/types";
 import {
   AutoSaveAction,
   FileModel,

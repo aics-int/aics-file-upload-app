@@ -2,10 +2,7 @@ import { StateWithHistory } from "redux-undo";
 
 import { AnnotationName } from "../../constants";
 import { GridCell } from "../../entities";
-import {
-  JSSJob,
-  JSSJobStatus,
-} from "../../services/job-status-client/types";
+import { JSSJob, JSSJobStatus } from "../../services/job-status-service/types";
 import {
   Annotation,
   AnnotationLookup,
@@ -24,7 +21,7 @@ import {
   CellPopulation,
   Template,
   TemplateAnnotation,
-} from "../../services/mms-client/types";
+} from "../../services/metadata-management-service/types";
 import {
   feedback,
   job,

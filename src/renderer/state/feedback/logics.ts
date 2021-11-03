@@ -1,7 +1,7 @@
 import { createLogic } from "redux-logic";
 import { gt } from "semver";
 
-import ApplicationInfoService from "../../services/application-info";
+import ApplicationInfoService from "../../services/application-info-service";
 import { clearTemplateDraft } from "../template/actions";
 import {
   ReduxLogicDoneCb,

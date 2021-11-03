@@ -3,7 +3,7 @@ import { expect } from "chai";
 import {
   JSSJob,
   JSSJobStatus,
-} from "../../../services/job-status-client/types";
+} from "../../../services/job-status-service/types";
 import {
   mockFailedUploadJob,
   mockState,

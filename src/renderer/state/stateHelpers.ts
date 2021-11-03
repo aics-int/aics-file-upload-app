@@ -1,7 +1,10 @@
 import { difference, get, omit } from "lodash";
 
-import MMSClient from "../services/mms-client";
-import { Template, TemplateAnnotation } from "../services/mms-client/types";
+import MetadataManagementService from "../services/metadata-management-service";
+import {
+  Template,
+  TemplateAnnotation,
+} from "../services/metadata-management-service/types";
 import { timeout } from "../util";
 
 import { setSuccessAlert, setWarningAlert } from "./feedback/actions";
@@ -113,7 +116,7 @@ interface ApplyTemplateInfo {
 /***
  * Helper that gets the template by id from MMS and returns template and updated uploads
  * @param {number} templateId
- * @param {MMSClient} mmsClient
+ * @param {MetadataManagementService} mmsClient
  * @param {ReduxLogicNextCb} dispatch
  * @param {number} booleanAnnotationTypeId boolean annotation type id
  * @param {object | undefined} upload to apply template annotations to
@@ -123,7 +126,7 @@ interface ApplyTemplateInfo {
  */
 export const getApplyTemplateInfo = async (
   templateId: number,
-  mmsClient: MMSClient,
+  mmsClient: MetadataManagementService,
   dispatch: ReduxLogicNextCb,
   booleanAnnotationTypeId: number,
   upload?: UploadStateBranch,

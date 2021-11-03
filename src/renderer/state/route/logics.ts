@@ -12,7 +12,7 @@ import {
   MINUTE_AS_MS,
   AnnotationName,
 } from "../../constants";
-import { JSSJobStatus } from "../../services/job-status-client/types";
+import { JSSJobStatus } from "../../services/job-status-service/types";
 import LabkeyClient from "../../services/labkey-client";
 import {
   ColumnType,

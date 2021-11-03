@@ -1,7 +1,7 @@
 import { expect } from "chai";
 
 import { AnnotationName } from "../../../constants";
-import { JSSJobStatus } from "../../../services/job-status-client/types";
+import { JSSJobStatus } from "../../../services/job-status-service/types";
 import { ROW_COUNT_COLUMN } from "../../constants";
 import { mockJob, mockSelection, mockState } from "../../test/mocks";
 import {

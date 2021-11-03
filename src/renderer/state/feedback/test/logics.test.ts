@@ -6,9 +6,9 @@ import {
   restore,
 } from "sinon";
 
-import ApplicationInfoService from "../../../services/application-info";
+import ApplicationInfoService from "../../../services/application-info-service";
 import LabkeyClient from "../../../services/labkey-client";
-import MMSClient from "../../../services/mms-client";
+import MetadataManagementService from "../../../services/metadata-management-service";
 import { DEFAULT_TEMPLATE_DRAFT } from "../../template/constants";
 import { getTemplateDraft } from "../../template/selectors";
 import {
@@ -22,13 +22,13 @@ import { SET_ALERT } from "../constants";
 import { getTemplateEditorVisible } from "../selectors";
 
 describe("Feedback logics", () => {
-  let mmsClient: SinonStubbedInstance<MMSClient>,
+  let mmsClient: SinonStubbedInstance<MetadataManagementService>,
     labkeyClient: SinonStubbedInstance<LabkeyClient>,
     applicationInfoService: SinonStubbedInstance<ApplicationInfoService>;
   const sandbox = createSandbox();
 
   beforeEach(() => {
-    mmsClient = createStubInstance(MMSClient);
+    mmsClient = createStubInstance(MetadataManagementService);
     labkeyClient = createStubInstance(LabkeyClient);
     applicationInfoService = createStubInstance(ApplicationInfoService);
     sandbox.replace(mockReduxLogicDeps, "mmsClient", mmsClient);

@@ -6,7 +6,7 @@ import {
   TOOLTIP_ENTER_DELAY,
   TOOLTIP_LEAVE_DELAY,
 } from "../../../../constants";
-import { JSSJobStatus } from "../../../../services/job-status-client/types";
+import { JSSJobStatus } from "../../../../services/job-status-service/types";
 import { UploadSummaryTableRow } from "../../../../state/types";
 import { getPowerOf1000 } from "../../../../util";
 

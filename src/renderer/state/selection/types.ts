@@ -1,4 +1,7 @@
-import { CellPopulation, Solution } from "../../services/mms-client/types";
+import {
+  CellPopulation,
+  Solution,
+} from "../../services/metadata-management-service/types";
 import {
   AutoSaveAction,
   MassEditRow,

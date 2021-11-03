@@ -9,9 +9,9 @@ import {
   createStubInstance,
 } from "sinon";
 
-import { LabkeyClient, MMSClient } from "../../../services";
+import { LabkeyClient, MetadataManagementService } from "../../../services";
 import { ColumnType } from "../../../services/labkey-client/types";
-import { Template } from "../../../services/mms-client/types";
+import { Template } from "../../../services/metadata-management-service/types";
 import { requestFailed } from "../../actions";
 import { getAlert } from "../../feedback/selectors";
 import { receiveMetadata } from "../../metadata/actions";
@@ -56,11 +56,11 @@ import { getTemplateDraft } from "../selectors";
 
 describe("Template Logics", () => {
   const sandbox = createSandbox();
-  let mmsClient: SinonStubbedInstance<MMSClient>;
+  let mmsClient: SinonStubbedInstance<MetadataManagementService>;
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
 
   beforeEach(() => {
-    mmsClient = createStubInstance(MMSClient);
+    mmsClient = createStubInstance(MetadataManagementService);
     sandbox.replace(mockReduxLogicDeps, "mmsClient", mmsClient);
     labkeyClient = createStubInstance(LabkeyClient);
     sandbox.replace(mockReduxLogicDeps, "labkeyClient", labkeyClient);

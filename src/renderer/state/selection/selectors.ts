@@ -1,6 +1,6 @@
 import { createSelector } from "reselect";
 
-import { JSSJobStatus } from "../../services/job-status-client/types";
+import { JSSJobStatus } from "../../services/job-status-service/types";
 import { ROW_COUNT_COLUMN } from "../constants";
 import { MassEditRow, State } from "../types";
 

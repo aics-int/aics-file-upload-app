@@ -35,7 +35,7 @@ interface UploadChunkResponse {
 }
 
 export interface UploadStatusResponse {
-  chunkSize?: number; // Not in the FSS2 model yet, adding ahead of time as an optional field
+  chunkSize?: number; // TODO: Not in the FSS2 model yet, adding ahead of time as an optional field
   chunkStatuses: ChunkStatus[];
   uploadStatus: UploadStatus;
 }
@@ -52,23 +52,28 @@ interface FileRecord {
 }
 
 /**
- * TODO
+ * This acts as an interface for interacting with the File Storage Service (FSS).
  */
-export default class FileStorageClient extends HttpCacheClient {
+export default class FileStorageService extends HttpCacheClient {
   private static readonly ENDPOINT = "fss2/2.0";
-  private static readonly BASE_FILE_PATH = `${FileStorageClient.ENDPOINT}/file`;
-  private static readonly BASE_UPLOAD_PATH = `${FileStorageClient.ENDPOINT}/upload`;
+  private static readonly BASE_FILE_PATH = `${FileStorageService.ENDPOINT}/file`;
+  private static readonly BASE_UPLOAD_PATH = `${FileStorageService.ENDPOINT}/upload`;
 
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
     super(httpClient, localStorage, false, "https");
   }
 
+  /**
+   * This is the first step to an upload. Before the app can start sending
+   * chunks of the file to upload it must first make the service aware of the
+   * file itself.
+   */
   public registerUpload(
     fileName: string,
     fileSize: number,
     md5: string
   ): Promise<RegisterUploadResponse> {
-    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/registerUpload`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/registerUpload`;
     const postBody = {
       // Unfortunately FSS expects snake_case in all but one case (MD5)
       // so the conversion must be manual each request
@@ -83,21 +88,25 @@ export default class FileStorageClient extends HttpCacheClient {
     return this.post<RegisterUploadResponse>(
       url,
       postBody,
-      FileStorageClient.getHttpRequestConfig()
+      FileStorageService.getHttpRequestConfig()
     );
   }
 
+  /**
+   * This is an incremental upload act, after an upload has been registered
+   * the file can be send in chunked of pretermined size to the service.
+   */
   public sendUploadChunk(
     uploadId: string,
     chunkSize: number,
     chunkNumber: number,
     postBody: Uint8Array
   ): Promise<UploadChunkResponse> {
-    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/uploadChunk/${uploadId}/${chunkNumber}`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/uploadChunk/${uploadId}/${chunkNumber}`;
     const rangeStart = (chunkNumber - 1) * chunkSize;
     const rangeEnd = rangeStart + postBody.byteLength - 1;
     return this.post<UploadChunkResponse>(url, postBody, {
-      ...FileStorageClient.getHttpRequestConfig(),
+      ...FileStorageService.getHttpRequestConfig(),
       headers: {
         ...this.getHttpRequestConfig().headers,
         range: `bytes=${rangeStart}-${rangeEnd}`,
@@ -105,24 +114,40 @@ export default class FileStorageClient extends HttpCacheClient {
     });
   }
 
+  /**
+   * This is the final step to an upload. However, normally this is automatically
+   * performed by the service, this method need only be called for upload that have
+   * failed to finalize themselves.
+   */
+  public repeatFinalize(uploadId: string): Promise<UploadChunkResponse> {
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/finalize/${uploadId}`;
+    return this.patch<UploadChunkResponse>(url, undefined);
+  }
+
+  /**
+   * This cancels the upload if it exists and can be canceled from the
+   * service's perspective.
+   */
   public cancelUpload(uploadId: string): Promise<UploadStatusResponse> {
-    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/${uploadId}`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}`;
     return this.delete<UploadStatusResponse>(url, undefined);
   }
 
+  /**
+   * Returns the status of the upload, useful for determining how far
+   * along an upload is and/or if it is in progress.
+   */
   public getStatus(uploadId: string): Promise<UploadStatusResponse> {
-    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/${uploadId}`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}`;
     return this.get<UploadStatusResponse>(url);
   }
 
+  /**
+   * Returns the basic attributes of a file such as its stored location.
+   */
   public getFileAttributes(fileId: string): Promise<FileRecord> {
-    const url = `${FileStorageClient.BASE_FILE_PATH}/${fileId}`;
+    const url = `${FileStorageService.BASE_FILE_PATH}/${fileId}`;
     return this.get<FileRecord>(url);
-  }
-
-  public repeatFinalize(uploadId: string): Promise<UploadChunkResponse> {
-    const url = `${FileStorageClient.BASE_UPLOAD_PATH}/finalize/${uploadId}`;
-    return this.patch<UploadChunkResponse>(url, undefined);
   }
 
   // FSS returns responses in snake_case format

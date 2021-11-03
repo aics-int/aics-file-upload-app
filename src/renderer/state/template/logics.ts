@@ -5,7 +5,7 @@ import { OPEN_TEMPLATE_MENU_ITEM_CLICKED } from "../../../shared/constants";
 import {
   SaveTemplateRequest,
   TemplateAnnotation,
-} from "../../services/mms-client/types";
+} from "../../services/metadata-management-service/types";
 import { requestFailed } from "../actions";
 import { setAlert } from "../feedback/actions";
 import { OpenTemplateEditorAction } from "../feedback/types";

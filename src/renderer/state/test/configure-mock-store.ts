@@ -25,9 +25,13 @@ import {
   template,
   upload,
 } from "../";
-import { JobStatusClient, LabkeyClient, MMSClient } from "../../services";
-import ApplicationInfoService from "../../services/application-info";
-import FileManagementSystem from "../../services/fms-client";
+import {
+  JobStatusService,
+  LabkeyClient,
+  MetadataManagementService,
+} from "../../services";
+import ApplicationInfoService from "../../services/application-info-service";
+import FileManagementSystem from "../../services/file-management-system";
 import EnvironmentAwareStorage from "../EnvironmentAwareStorage";
 import { State } from "../types";
 
@@ -55,7 +59,7 @@ export interface ReduxLogicDependencies {
     on: SinonStub;
     send: SinonStub;
   };
-  jssClient: SinonStubbedInstance<JobStatusClient>;
+  jssClient: SinonStubbedInstance<JobStatusService>;
   labkeyClient: SinonStubbedInstance<LabkeyClient>;
   logger: {
     debug: SinonStub;
@@ -63,7 +67,7 @@ export interface ReduxLogicDependencies {
     info: SinonStub;
     warn: SinonStub;
   };
-  mmsClient: SinonStubbedInstance<MMSClient>;
+  mmsClient: SinonStubbedInstance<MetadataManagementService>;
   readFile: SinonStub;
   remote: {
     getCurrentWindow: SinonStub;
@@ -74,9 +78,9 @@ export interface ReduxLogicDependencies {
 
 const storage = createStubInstance(EnvironmentAwareStorage);
 const applicationInfoService = createStubInstance(ApplicationInfoService);
-const jssClient = createStubInstance(JobStatusClient);
+const jssClient = createStubInstance(JobStatusService);
 const labkeyClient = createStubInstance(LabkeyClient);
-const mmsClient = createStubInstance(MMSClient);
+const mmsClient = createStubInstance(MetadataManagementService);
 const fms = createStubInstance(FileManagementSystem);
 
 export const switchEnvMenuItem = {

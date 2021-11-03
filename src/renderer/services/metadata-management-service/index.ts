@@ -20,7 +20,7 @@ import {
 
 const mmsURL = "/metadata-management-service";
 
-export default class MMSClient extends HttpCacheClient {
+export default class MetadataManagementService extends HttpCacheClient {
   constructor(
     httpClient: HttpClient,
     localStorage: LocalStorage,

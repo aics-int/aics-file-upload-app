@@ -1,7 +1,7 @@
 import { isEqual } from "lodash";
 import { createSelector } from "reselect";
 
-import { JSSJob, JSSJobStatus } from "../../services/job-status-client/types";
+import { JSSJob, JSSJobStatus } from "../../services/job-status-service/types";
 import { getRequestsInProgress } from "../../state/feedback/selectors";
 import { getOriginalUpload } from "../../state/metadata/selectors";
 import { getSelectedUploads } from "../../state/selection/selectors";

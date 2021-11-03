@@ -1,4 +1,4 @@
-import { JSSJob } from "../../services/job-status-client/types";
+import { JSSJob } from "../../services/job-status-service/types";
 import { UploadProgressInfo } from "../types";
 
 export interface ReceiveJobsAction {

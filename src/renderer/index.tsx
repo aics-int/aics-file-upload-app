@@ -14,7 +14,7 @@ import { Provider } from "react-redux";
 
 import { APP_ID } from "./constants";
 import App from "./containers/App";
-import ApplicationInfoService from "./services/application-info";
+import ApplicationInfoService from "./services/application-info-service";
 import createReduxStore from "./state/configure-store";
 import { setSwitchEnvEnabled } from "./state/route/logics";
 
