@@ -130,7 +130,6 @@ export default class FileManagementSystem {
       }
 
       // Start job in FSS
-      // TODO: Would be useful if this returned future file path
       const registration = await this.fss.registerUpload(
         fileName,
         fileSize,

@@ -13,7 +13,9 @@ export class CancellationError extends Error {
 }
 
 /**
- * TODO
+ * File reader capable of reading a given file in chunks sending
+ * back said chunks in the specified callback or computing the chunks
+ * into an MD5
  */
 export default class ChunkedFileReader {
   // Time to delay any throttled callbacks
@@ -29,7 +31,12 @@ export default class ChunkedFileReader {
   } = {};
 
   /**
-   * TODO
+   * Calculates the MD5 hash of the file at the 'source'. Each chunk, 
+   * of 'chunkSize' size read will be sent back in the given
+   * 'onProgress' callback. 
+   * 
+   * The file read is tracked by the given 'uploadId' and may be
+   * cancelled at any time. 
    */
   public async calculateMD5(
     uploadId: string,
@@ -75,7 +82,13 @@ export default class ChunkedFileReader {
   }
 
   /**
-   * TODO
+   * Reads the given file at the 'source'. Each chunk, of 'chunkSize' size
+   * read will be sent back in the given 'onProgress' callback. The starting
+   * point for the file read may be offset from the first byte using the 'offset'
+   * parameter.
+   * 
+   * The file read is tracked by the given 'uploadId' and may be
+   * cancelled at any time. 
    */
   public async read(
     uploadId: string,
@@ -106,7 +119,8 @@ export default class ChunkedFileReader {
       // Send source bytes to destination and track progress
       stream.pipeline(readStream, progressStream, (error) => {
         if (error) {
-          delete this.uploadIdToStreamMap[uploadId];
+          // Ensure the streams close on error
+          this.cancel(uploadId, error);
           reject(error);
         } else {
           resolve();
@@ -117,17 +131,19 @@ export default class ChunkedFileReader {
     delete this.uploadIdToStreamMap[uploadId];
   }
 
-  // TODO
-  public cancel(uploadId: string) {
+  /**
+   * Cancel any ongoing file read or computation streams
+   * tied to the upload emitting the given error if
+   * relevant, the default error is a CancellationError.
+   */
+  public cancel(uploadId: string, error: Error = new CancellationError()) {
     if (uploadId in this.uploadIdToStreamMap) {
-      // TODO Why unpipe vs destroy
+      // Detach the read stream from the downstream streams first
       this.uploadIdToStreamMap[uploadId].readStream.unpipe();
-      const cancelledError = new CancellationError();
-      Object.values(this.uploadIdToStreamMap[uploadId]).forEach(
-        (fileStream) => {
-          fileStream?.destroy(cancelledError);
-        }
-      );
+      // Destroy the downstream streams emitting an error if possible
+      this.uploadIdToStreamMap[uploadId].progressStream?.destroy(error);
+      this.uploadIdToStreamMap[uploadId].hashStream?.destroy(error);
+      this.uploadIdToStreamMap[uploadId].writeStream?.destroy(error);
       delete this.uploadIdToStreamMap[uploadId];
     }
   }
