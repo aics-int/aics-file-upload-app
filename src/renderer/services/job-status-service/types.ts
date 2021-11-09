@@ -132,6 +132,16 @@ export interface UpdateJobRequest
   serviceFields?: Partial<UploadServiceFields>;
 }
 
+interface MongoFieldQuery {
+  $gt?: any;
+  $gte?: any;
+  $in?: any;
+  $lt?: any;
+  $lte?: any;
+  $ne?: any;
+  $nin?: any;
+}
+
 export interface JobQuery {
   created?: Date | MongoFieldQuery;
   jobId?: string | MongoFieldQuery;
@@ -148,16 +158,6 @@ export interface JobQuery {
   updateParent?: boolean | MongoFieldQuery;
   user: string | MongoFieldQuery;
   [id: string]: any;
-}
-
-export interface MongoFieldQuery {
-  $gt?: any;
-  $gte?: any;
-  $in?: any;
-  $lt?: any;
-  $lte?: any;
-  $ne?: any;
-  $nin?: any;
 }
 
 export enum JSSJobStatus {

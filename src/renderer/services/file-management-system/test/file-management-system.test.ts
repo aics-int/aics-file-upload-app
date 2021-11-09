@@ -55,7 +55,22 @@ describe("FileManagementSystem", () => {
   });
 
   describe("upload", () => {
-    it("TODO", () => {
+    it("uploads file", () => {
+      // TODO:
+      expect(true).to.be.true;
+    });
+
+    it("re-uses MD5 if not modified since last attempt", () => {
+      // TODO:
+      expect(true).to.be.true;
+    });
+
+    it("checks if file already exists in FMS", () => {
+      // TODO:
+      expect(true).to.be.true;
+    });
+
+    it("fails upload if error occurs during finalize", () => {
       // TODO:
       expect(true).to.be.true;
     });

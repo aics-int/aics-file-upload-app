@@ -6,19 +6,20 @@ import { ILogger } from "js-logger/src/types";
 import { throttle, uniq } from "lodash";
 import * as uuid from "uuid";
 
-import { JobStatusService, LabkeyClient, MetadataManagementService } from "..";
-import { metadata } from "../../state";
 import FileStorageService, {
   ChunkStatus,
   UploadStatus,
   UploadStatusResponse,
 } from "../file-storage-service";
+import JobStatusService from "../job-status-service";
 import {
   IN_PROGRESS_STATUSES,
   UploadJob,
   JSSJobStatus,
   UploadServiceFields,
 } from "../job-status-service/types";
+import LabkeyClient from "../labkey-client";
+import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
@@ -32,12 +33,8 @@ interface FileManagementClientConfig {
 }
 
 export interface UploadProgressInfo {
-  // Step 1 of upload
   md5BytesComputed?: number;
-
-  // Step 2 of upload
   bytesUploaded?: number;
-
   totalBytes: number;
 }
 
@@ -54,8 +51,11 @@ export default class FileManagementSystem {
   private readonly mms: MetadataManagementService;
   private readonly logger: ILogger;
 
-  // Creates JSS friendly unique ids
-  public static createUniqueId() {
+  /**
+   * Returns JSS friendly UUID to group files
+   * uploaded together
+   */
+  public static createUploadGroupId() {
     return uuid.v1().replace(/-/g, "");
   }
 
@@ -115,7 +115,7 @@ export default class FileManagementSystem {
 
       this.logger.debug(
         `Starting upload for ${fileName} with metadata ${JSON.stringify(
-          metadata
+          upload.serviceFields.files
         )}`
       );
 
@@ -240,8 +240,11 @@ export default class FileManagementSystem {
 
     // Start new upload jobs that will replace the current one
     const newJobServiceFields = {
+      calculatedMD5: upload.serviceFields.calculatedMD5,
+      lastModifiedInMS: upload.serviceFields.lastModifiedInMS,
       groupId:
-        upload.serviceFields?.groupId || FileManagementSystem.createUniqueId(),
+        upload.serviceFields?.groupId ||
+        FileManagementSystem.createUploadGroupId(),
       originalJobId: uploadId,
     };
 

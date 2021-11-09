@@ -198,7 +198,7 @@ const initiateUploadLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const groupId = FileManagementSystem.createUniqueId();
+    const groupId = FileManagementSystem.createUploadGroupId();
 
     const user = getSelectedUser(getState());
     const requests = getUploadRequests(getState());
@@ -955,7 +955,7 @@ const uploadWithoutMetadataLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const groupId = FileManagementSystem.createUniqueId();
+    const groupId = FileManagementSystem.createUploadGroupId();
 
     const user = getSelectedUser(deps.getState());
 

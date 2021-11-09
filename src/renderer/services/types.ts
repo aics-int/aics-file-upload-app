@@ -1,17 +1,10 @@
 import { AxiosRequestConfig } from "axios";
 
-export interface HeaderMap {
-  [key: string]: string;
-}
-
-export interface AicsResponse {
-  responseType: "SUCCESS" | "SERVER_ERROR" | "CLIENT_ERROR";
-}
-
-export interface AicsSuccessResponse<T> extends AicsResponse {
+export interface AicsSuccessResponse<T> {
   data: T[];
   totalCount: number;
   hasMore?: boolean;
+  responseType: "SUCCESS" | "SERVER_ERROR" | "CLIENT_ERROR";
   offset: number;
 }
 
@@ -52,7 +45,7 @@ interface FileMetadataBlock {
   [id: string]: any;
 }
 
-export interface ImageModelBase {
+interface ImageModelBase {
   channelId?: string;
   fovId?: number;
   positionIndex?: number;
