@@ -7,7 +7,7 @@ describe("BatchedTaskQueue", () => {
     // Arrange
     const taskOrder: number[] = [];
     const expected = [1, 2, 3, 4, 5];
-    const tasks = expected.map((order) => async () => {
+    const tasks = expected.map((order) => () => {
       taskOrder.push(order);
       return Promise.resolve(order);
     });

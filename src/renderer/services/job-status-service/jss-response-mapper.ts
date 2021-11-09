@@ -1,11 +1,11 @@
 import { get, values, forOwn, isPlainObject } from "lodash";
 
-import { JSSJob } from "./types";
+import { UploadJob } from "./types";
 
 const SERVICE_FIELD_NAME = "serviceFields";
 
 export default class JSSResponseMapper {
-  public static map(job: JSSJob): JSSJob {
+  public static map(job: UploadJob): UploadJob {
     const serviceFields = get(job, SERVICE_FIELD_NAME);
     if (!serviceFields) {
       return job;

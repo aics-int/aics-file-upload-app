@@ -1,18 +1,18 @@
-import { JSSJob } from "../../services/job-status-service/types";
-import { UploadProgressInfo } from "../types";
+import { UploadProgressInfo } from "../../services/file-management-system";
+import { UploadJob } from "../../services/job-status-service/types";
 
 export interface ReceiveJobsAction {
-  payload: JSSJob[];
+  payload: UploadJob[];
   type: string;
 }
 
 export interface ReceiveJobInsertAction {
-  payload: JSSJob;
+  payload: UploadJob;
   type: string;
 }
 
 export interface ReceiveJobUpdateAction {
-  payload: JSSJob;
+  payload: UploadJob;
   type: string;
 }
 

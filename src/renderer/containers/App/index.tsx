@@ -13,7 +13,7 @@ import {
   SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
-import { JSSJob } from "../../services/job-status-service/types";
+import { JSSJob, UploadJob } from "../../services/job-status-service/types";
 import {
   addRequestToInProgress,
   checkForUpdate,
@@ -94,20 +94,27 @@ export default function App() {
     eventSource.addEventListener("initialJobs", (event: MessageEvent) => {
       dispatch(removeRequestFromInProgress(AsyncRequest.GET_JOBS));
       const jobs = camelizeKeys(JSON.parse(event.data)) as JSSJob[];
+      // Separate user's other jobs from ones created by this app
       const uploadJobs = jobs.filter(
         (job) => job.serviceFields?.type === "upload"
-      );
+      ) as UploadJob[];
       dispatch(receiveJobs(uploadJobs));
     });
 
     eventSource.addEventListener("jobInsert", (event: MessageEvent) => {
       const job = camelizeKeys(JSON.parse(event.data)) as JSSJob;
-      dispatch(receiveJobInsert(job));
+      // Separate user's other jobs from ones created by this app
+      if (job.serviceFields?.type === "upload") {
+        dispatch(receiveJobInsert(job as UploadJob));
+      }
     });
 
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
       const jobChange = camelizeKeys(JSON.parse(event.data)) as JSSJob;
-      dispatch(receiveJobUpdate(jobChange));
+      // Separate user's other jobs from ones created by this app
+      if (jobChange.serviceFields?.type === "upload") {
+        dispatch(receiveJobUpdate(jobChange as UploadJob));
+      }
     });
 
     eventSource.onDisconnect(() =>

@@ -1,12 +1,11 @@
 import { get, omit, reduce } from "lodash";
 
-import {
-  BasicType,
-  JobQuery,
-  JSSServiceFields,
-  JSSUpdateJobRequest,
-  UpdateJobRequest,
-} from "./types";
+import { BasicType, JobQuery, ServiceFields, UpdateJobRequest } from "./types";
+
+interface FlattenedUpdateJobRequest
+  extends Omit<UpdateJobRequest, "serviceFields"> {
+  [key: string]: any;
+}
 
 const isBasicType = (value: any): value is BasicType => {
   const notObject = typeof value !== "object";
@@ -21,7 +20,7 @@ export default class JSSRequestMapper {
   public static map(
     job: UpdateJobRequest | JobQuery,
     isPatch = false
-  ): JSSUpdateJobRequest {
+  ): FlattenedUpdateJobRequest {
     const nonServiceFields = omit(job, SERVICE_FIELD_NAME);
     const serviceFields = get(job, SERVICE_FIELD_NAME);
     const flattenedServiceFields: any = serviceFields
@@ -35,11 +34,11 @@ export default class JSSRequestMapper {
   }
 
   private static flattenServiceFields(
-    rawServiceFields: JSSServiceFields,
+    rawServiceFields: ServiceFields,
     isPatch = false,
     updateKey = "service_fields",
-    fields: JSSServiceFields = {}
-  ): JSSServiceFields {
+    fields: ServiceFields = {}
+  ): ServiceFields {
     if (typeof rawServiceFields !== "object") {
       return {
         ...fields,
@@ -81,9 +80,9 @@ export default class JSSRequestMapper {
     rawList: any[],
     updateKey: string,
     isPatch = false
-  ): JSSServiceFields {
+  ): ServiceFields {
     return rawList.reduce(
-      (accum: JSSServiceFields, currentValue: any, i: number) => {
+      (accum: ServiceFields, currentValue: any, i: number) => {
         return {
           ...accum,
           ...JSSRequestMapper.flattenServiceFields(

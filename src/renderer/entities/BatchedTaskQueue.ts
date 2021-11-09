@@ -16,23 +16,32 @@ export default class BatchedTaskQueue<T> {
    * Runs the remaining tasks in the queue if any asynchronously.
    */
   public run(): Promise<T[]> {
-    return new Promise<T[]>((resolve) => {
+    if (!this.canRunNext()) {
+      return Promise.resolve(this.results);
+    }
+
+    return new Promise<T[]>((resolve, reject) => {
       // Run as many tasks as possible at once
       while (this.canRunNext()) {
+        // Grab next task
         const task = this.tasks[this.taskIndex];
+
+        // Increment position in task order
         this.taskIndex++;
 
         // Asynchronously kick off task
-        task().then((result) => {
-          this.results.push(result);
-          if (this.canRunNext()) {
-            // Recursive case: run another task
-            this.run();
-          } else {
-            // Base case: resolve with results array
-            resolve(this.results);
-          }
-        });
+        task()
+          .then((result) => {
+            this.results.push(result);
+            if (this.canRunNext()) {
+              // Recursive case: run another task
+              this.run().then(resolve).catch(reject);
+            } else {
+              // Base case: resolve with results array
+              resolve(this.results);
+            }
+          })
+          .catch(reject);
       }
     });
   }

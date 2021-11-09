@@ -1,7 +1,7 @@
 import { expect } from "chai";
 
 import JSSResponseMapper from "../jss-response-mapper";
-import { JSSJob, JSSUpdateJobRequest } from "../types";
+import { UploadJob, UpdateJobRequest } from "../types";
 
 import { mockJSSJob } from "./mocks";
 
@@ -13,7 +13,7 @@ describe("JSSResponseMapper", () => {
     });
     it("expands service fields", () => {
       const now = new Date();
-      const input: JSSJob = {
+      const input: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
           files: [
@@ -27,10 +27,8 @@ describe("JSSResponseMapper", () => {
                 filename: "file",
                 fileType: "image",
               },
-              fileType: "text",
             },
             {
-              fileType: "image",
               file: {
                 originalPath: "/path/to/file2",
                 filename: "file2",
@@ -42,52 +40,42 @@ describe("JSSResponseMapper", () => {
         },
       };
       const metadata = {
-        fileType: "text",
         file: {
           customField: {
             age: 15,
           },
+          fileType: "image",
           originalPath: "/path/to/file",
           filename: "file",
         },
         created: now,
       };
       const metadata2 = {
-        fileType: "image",
         file: {
+          fileType: "image",
           originalPath: "/path/to/file2",
           filename: "file2",
         },
       };
-      const expected: JSSUpdateJobRequest = {
+      const expected: UpdateJobRequest = {
         ...mockJSSJob,
         serviceFields: {
           files: [metadata, metadata2],
-          favorites: {
-            boolean: true,
-            color: "red",
-            fruit: {
-              "0": "Apple",
-              "2": "Banana",
-            },
-            number: 9,
-            date: now,
-            movies: ["Harry Potter", "Insomnia"],
-          },
+          type: "upload",
         },
       };
       const result = JSSResponseMapper.map(input);
       expect(result).to.deep.equals(expected);
     });
     it("converts file extension dummy '(dot)' with '.'", () => {
-      const input: JSSJob = {
+      const input: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
           files: [],
           type: "upload",
         },
       };
-      const expected: JSSJob = {
+      const expected: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
           files: [],
@@ -99,7 +87,7 @@ describe("JSSResponseMapper", () => {
     });
     it("preserves non service fields if service fields provided", () => {
       const currentStage = "copying";
-      const input: JSSJob = {
+      const input: UploadJob = {
         ...mockJSSJob,
         currentStage,
         serviceFields: {

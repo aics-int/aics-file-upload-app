@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import sinon, { createStubInstance } from "sinon";
+import sinon, { createStubInstance, SinonStub } from "sinon";
 
 import FileStorageService from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
@@ -45,7 +45,7 @@ describe("FileStorageService", () => {
         file_size: fileSize,
         MD5: md5,
       };
-      sinon.replace(httpClient, "post", postStub);
+      sinon.replace(httpClient, "post", postStub as SinonStub<any>);
 
       // Act
       const actual = await fss.registerUpload(fileName, fileSize, md5);
@@ -75,7 +75,7 @@ describe("FileStorageService", () => {
         data: [expectedResponse],
       };
       const postStub = sinon.stub().resolves(response);
-      sinon.replace(httpClient, "post", postStub);
+      sinon.replace(httpClient, "post", postStub as SinonStub<any>);
 
       // Act
       const actual = await fss.sendUploadChunk(

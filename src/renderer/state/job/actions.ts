@@ -1,5 +1,5 @@
-import { JSSJob } from "../../services/job-status-service/types";
-import { UploadProgressInfo } from "../types";
+import { UploadProgressInfo } from "../../services/file-management-system";
+import { UploadJob } from "../../services/job-status-service/types";
 import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
 import {
@@ -16,21 +16,21 @@ import {
   SetLastSelectedUploadAction,
 } from "./types";
 
-export function receiveJobs(uploadJobs: JSSJob[] = []): ReceiveJobsAction {
+export function receiveJobs(uploadJobs: UploadJob[] = []): ReceiveJobsAction {
   return {
     payload: uploadJobs,
     type: RECEIVE_JOBS,
   };
 }
 
-export function receiveJobInsert(job: JSSJob): ReceiveJobInsertAction {
+export function receiveJobInsert(job: UploadJob): ReceiveJobInsertAction {
   return {
     payload: job,
     type: RECEIVE_JOB_INSERT,
   };
 }
 
-export function receiveJobUpdate(job: JSSJob): ReceiveJobUpdateAction {
+export function receiveJobUpdate(job: UploadJob): ReceiveJobUpdateAction {
   return {
     payload: job,
     type: RECEIVE_JOB_UPDATE,

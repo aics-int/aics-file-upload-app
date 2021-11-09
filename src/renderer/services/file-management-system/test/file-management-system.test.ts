@@ -1,23 +1,17 @@
 import { expect } from "chai";
-import sinon from "sinon";
-
-import FileManagementSystem from "..";
-import {
-  FileStorageService,
-  JobStatusService,
-  LabkeyClient,
-  MetadataManagementService,
-} from "../..";
-import ChunkedFileReader from "../ChunkedFileReader";
+import * as sinon from "sinon";
 
 describe("FileManagementSystem", () => {
-  const fms = new FileManagementSystem({
-    fileReader: sinon.stub(ChunkedFileReader) as any,
-    fss: sinon.stub(FileStorageService) as any,
-    jss: sinon.stub(JobStatusService) as any,
-    lk: sinon.stub(LabkeyClient) as any,
-    mms: sinon.stub(MetadataManagementService) as any,
-  });
+  // const fms = new FileManagementSystem(
+  //   {
+  //     fileReader: sinon.stub(ChunkedFileReader) as any,
+  //     fss: sinon.stub(FileStorageService) as any,
+  //     jss: sinon.stub(JobStatusService) as any,
+  //     lk: sinon.stub(LabkeyClient) as any,
+  //     mms: sinon.stub(MetadataManagementService) as any,
+  //   },
+  //   sinon.stub(Logger)
+  // );
 
   afterEach(() => {
     sinon.resetHistory();

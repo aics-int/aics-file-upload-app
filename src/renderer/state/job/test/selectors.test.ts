@@ -1,7 +1,7 @@
 import { expect } from "chai";
 
 import {
-  JSSJob,
+  UploadJob,
   JSSJobStatus,
 } from "../../../services/job-status-service/types";
 import {
@@ -65,12 +65,12 @@ describe("Job selectors", () => {
 
     it("hides any jobs that are duplicates of the original", () => {
       // Arrange
-      const mockReplacedJob1: JSSJob = {
+      const mockReplacedJob1: UploadJob = {
         ...mockFailedUploadJob,
         created: new Date("Oct 2, 2020 03:24:00"),
         jobId: "replacement1",
       };
-      const mockReplacedJob2: JSSJob = {
+      const mockReplacedJob2: UploadJob = {
         ...mockFailedUploadJob,
         created: new Date("Oct 3, 2020 03:24:00"),
         jobId: "replacement2",
@@ -80,7 +80,7 @@ describe("Job selectors", () => {
           originalJobId: mockReplacedJob1.jobId,
         },
       };
-      const expectedJob: JSSJob = {
+      const expectedJob: UploadJob = {
         ...mockFailedUploadJob,
         created: new Date("Oct 1, 2020 03:24:00"),
         serviceFields: {

@@ -1,4 +1,4 @@
-import { JSSJob } from "../../services/job-status-service/types";
+import { UploadJob } from "../../services/job-status-service/types";
 import { Page, UploadStateBranch } from "../types";
 
 import {
@@ -54,7 +54,7 @@ export function selectView(view: Page): SelectViewAction {
   };
 }
 
-export function viewUploads(uploads: JSSJob[]): ViewUploadsAction {
+export function viewUploads(uploads: UploadJob[]): ViewUploadsAction {
   return {
     payload: uploads,
     type: VIEW_UPLOADS,

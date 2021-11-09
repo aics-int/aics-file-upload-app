@@ -16,8 +16,10 @@ import { createLogic } from "redux-logic";
 
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
-import FileManagementSystem from "../../services/file-management-system";
-import { JSSJob } from "../../services/job-status-service/types";
+import FileManagementSystem, {
+  UploadProgressInfo,
+} from "../../services/file-management-system";
+import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
 import { UploadRequest } from "../../services/types";
@@ -201,7 +203,7 @@ const initiateUploadLogic = createLogic({
     const user = getSelectedUser(getState());
     const requests = getUploadRequests(getState());
 
-    let uploads: JSSJob[];
+    let uploads: UploadJob[];
     try {
       uploads = await Promise.all(
         requests.map((request) =>
@@ -222,15 +224,10 @@ const initiateUploadLogic = createLogic({
     dispatch(initiateUploadSucceeded(action.payload));
 
     const uploadTasks = uploads.map((upload) => async () => {
-      const name = upload.jobName as string;
+      const name = upload.jobName;
       try {
-        const onProgress = (completedBytes: number, totalBytes: number) => {
-          dispatch(
-            updateUploadProgressInfo(upload.jobId, {
-              completedBytes,
-              totalBytes,
-            })
-          );
+        const onProgress = (progress: UploadProgressInfo) => {
+          dispatch(updateUploadProgressInfo(upload.jobId, progress));
         };
         await fms.upload(upload, onProgress);
         dispatch(uploadSucceeded(name));
@@ -315,12 +312,9 @@ const retryUploadsLogic = createLogic({
         try {
           const onProgress = (
             uploadId: string,
-            completedBytes: number,
-            totalBytes: number
+            progress: UploadProgressInfo
           ) => {
-            dispatch(
-              updateUploadProgressInfo(uploadId, { completedBytes, totalBytes })
-            );
+            dispatch(updateUploadProgressInfo(uploadId, progress));
           };
           await fms.retry(upload.jobId, onProgress);
         } catch (e) {
@@ -965,7 +959,7 @@ const uploadWithoutMetadataLogic = createLogic({
 
     const user = getSelectedUser(deps.getState());
 
-    let uploads: JSSJob[];
+    let uploads: UploadJob[];
     try {
       const filePaths = await determineFilesFromNestedPaths(
         deps.action.payload
@@ -1003,16 +997,10 @@ const uploadWithoutMetadataLogic = createLogic({
     }
 
     const uploadTasks = uploads.map((upload) => async () => {
-      const name = upload.jobName as string;
+      const name = upload.jobName;
       try {
-        const onProgress = (completedBytes: number, totalBytes: number) => {
-          console.log("progress");
-          dispatch(
-            updateUploadProgressInfo(upload.jobId, {
-              completedBytes,
-              totalBytes,
-            })
-          );
+        const onProgress = (progress: UploadProgressInfo) => {
+          dispatch(updateUploadProgressInfo(upload.jobId, progress));
         };
         await deps.fms.upload(upload, onProgress);
         dispatch(uploadSucceeded(name));

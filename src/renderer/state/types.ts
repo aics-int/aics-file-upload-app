@@ -17,7 +17,8 @@ import {
   JobStatusService,
   MetadataManagementService,
 } from "../services";
-import { JSSJob } from "../services/job-status-service/types";
+import { UploadProgressInfo } from "../services/file-management-system";
+import { UploadJob } from "../services/job-status-service/types";
 import LabkeyClient from "../services/labkey-client";
 import {
   Annotation,
@@ -184,18 +185,12 @@ export interface FeedbackStateBranch {
   visibleModals: ModalName[];
 }
 
-export interface UploadProgressInfo {
-  completedBytes: number;
-  totalBytes: number;
-  // timeLeft: number; // TODO later
-}
-
 export interface JobStateBranch {
-  // Parent job representing an upload of a batch of files
-  uploadJobs: JSSJob[];
-  // mapping between  jobIds and their upload progress
+  // JSS Jobs representing individual file uploads
+  uploadJobs: UploadJob[];
+  // mapping between uploadIds and their upload progress
   copyProgress: {
-    [jobId: string]: UploadProgressInfo;
+    [uploadId: string]: UploadProgressInfo;
   };
   lastSelectedUpload?: { id: string; index: number };
 }
@@ -286,7 +281,7 @@ export interface UploadRowTableId {
 
 export interface UploadTabSelections {
   cellAtDragStart?: UploadKeyValue;
-  uploads: JSSJob[];
+  uploads: UploadJob[];
   massEditRow?: MassEditRow;
   rowsSelectedForDragEvent?: UploadRowTableId[];
   rowsSelectedForMassEdit?: string[];
@@ -405,7 +400,7 @@ export interface RequestFailedAction {
 }
 
 // Matches a Job but the created date is represented as a string
-export interface UploadSummaryTableRow extends JSSJob {
+export interface UploadSummaryTableRow extends UploadJob {
   fileId?: string;
   filePath?: string;
   template?: string;

@@ -1,4 +1,4 @@
-import { JSSJob } from "../../services/job-status-service/types";
+import { UploadJob } from "../../services/job-status-service/types";
 import { Page, UploadStateBranch } from "../types";
 
 export interface AppPageConfig {
@@ -28,7 +28,7 @@ export interface SelectViewAction {
 }
 
 export interface ViewUploadsAction {
-  payload: JSSJob[];
+  payload: UploadJob[];
   type: string;
 }
 

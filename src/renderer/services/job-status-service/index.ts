@@ -10,7 +10,12 @@ import { AicsSuccessResponse, HttpClient } from "../types";
 
 import JSSRequestMapper from "./jss-request-mapper";
 import JSSResponseMapper from "./jss-response-mapper";
-import { CreateJobRequest, JobQuery, JSSJob, UpdateJobRequest } from "./types";
+import {
+  CreateJobRequest,
+  JobQuery,
+  UploadJob,
+  UpdateJobRequest,
+} from "./types";
 
 const logLevelMap: { [logLevel: string]: ILogLevel } = Object.freeze({
   debug: Logger.DEBUG,
@@ -52,9 +57,9 @@ export default class JobStatusService extends HttpCacheClient {
    * Creates a job and returns created job
    * @param job
    */
-  public async createJob<T = any>(job: CreateJobRequest): Promise<JSSJob> {
+  public async createJob<T = any>(job: CreateJobRequest): Promise<UploadJob> {
     this.logger.debug("Received create job request", job);
-    const response = await this.post<AicsSuccessResponse<JSSJob>>(
+    const response = await this.post<AicsSuccessResponse<UploadJob>>(
       "/jss/1.0/job/",
       job,
       JobStatusService.getHttpRequestConfig()
@@ -73,9 +78,9 @@ export default class JobStatusService extends HttpCacheClient {
     jobId: string,
     job: UpdateJobRequest,
     patchUpdateServiceFields = true
-  ): Promise<JSSJob> {
+  ): Promise<UploadJob> {
     this.logger.debug(`Received update job request for jobId=${jobId}`, job);
-    const response = await this.patch<AicsSuccessResponse<JSSJob>>(
+    const response = await this.patch<AicsSuccessResponse<UploadJob>>(
       `/jss/1.0/job/${jobId}`,
       JSSRequestMapper.map(job, patchUpdateServiceFields),
       JobStatusService.getHttpRequestConfig()
@@ -113,7 +118,7 @@ export default class JobStatusService extends HttpCacheClient {
   public async existsById(jobId: string): Promise<boolean> {
     this.logger.debug(`Received get job exists request for jobId=${jobId}`);
     try {
-      await this.get<AicsSuccessResponse<JSSJob>>(
+      await this.get<AicsSuccessResponse<UploadJob>>(
         `/jss/1.0/job/${jobId}`,
         JobStatusService.getHttpRequestConfig()
       );
@@ -127,9 +132,9 @@ export default class JobStatusService extends HttpCacheClient {
    * Get job by id
    * @param jobId corresponding id for job
    */
-  public async getJob(jobId: string): Promise<JSSJob> {
+  public async getJob(jobId: string): Promise<UploadJob> {
     this.logger.debug(`Received get job request for jobId=${jobId}`);
-    const response = await this.get<AicsSuccessResponse<JSSJob>>(
+    const response = await this.get<AicsSuccessResponse<UploadJob>>(
       `/jss/1.0/job/${jobId}`,
       JobStatusService.getHttpRequestConfig()
     );
@@ -140,14 +145,14 @@ export default class JobStatusService extends HttpCacheClient {
    * Get jobs matching mongoDB query
    * @param query query to be passed to mongoDB for finding matching jobs
    */
-  public async getJobs(query: JobQuery): Promise<JSSJob[]> {
+  public async getJobs(query: JobQuery): Promise<UploadJob[]> {
     this.logger.debug(`Received get jobs request with query`, query);
-    const response = await this.post<AicsSuccessResponse<JSSJob>>(
+    const response = await this.post<AicsSuccessResponse<UploadJob>>(
       `/jss/1.0/job/query`,
       JSSRequestMapper.map(query, true),
       JobStatusService.getHttpRequestConfig()
     );
-    return response.data.map((job: JSSJob) => JSSResponseMapper.map(job));
+    return response.data.map((job: UploadJob) => JSSResponseMapper.map(job));
   }
 
   // JSS expects properties of requests to be in snake_case format and returns responses in snake_case format as well

@@ -3,7 +3,7 @@ import { createSelector } from "reselect";
 
 import {
   IN_PROGRESS_STATUSES,
-  JSSJob,
+  UploadJob,
 } from "../../services/job-status-service/types";
 import { getTemplateIdToName } from "../metadata/selectors";
 import { State, UploadSummaryTableRow } from "../types";
@@ -15,22 +15,11 @@ export const getLastSelectedUpload = (state: State) =>
 
 export const getJobIdToUploadJobMap = createSelector(
   [getUploadJobs],
-  (jobs): Map<string, JSSJob> =>
+  (jobs): Map<string, UploadJob> =>
     jobs.reduce((map, job) => {
       map.set(job.jobId, job);
       return map;
-    }, new Map<string, JSSJob>())
-);
-
-export const getFssUploadIdToUploadJobMap = createSelector(
-  [getUploadJobs],
-  (jobs): Map<string, JSSJob> =>
-    jobs.reduce((map, job) => {
-      if (job.serviceFields?.fssUploadId) {
-        map.set(job.serviceFields?.fssUploadId, job);
-      }
-      return map;
-    }, new Map<string, JSSJob>())
+    }, new Map<string, UploadJob>())
 );
 
 export const getUploadsByTemplateUsage = createSelector(
@@ -60,13 +49,12 @@ export const getUploadsByTemplateUsage = createSelector(
           created: new Date(job.created),
           modified: new Date(job.modified),
           progress: jobIdToCopyProgress[job.jobId],
-          fileId:
-            job.serviceFields?.result?.map((file) => file.fileId).join(", ") ||
-            job.serviceFields?.fssUploadId,
-          filePath:
-            job.serviceFields?.result
-              ?.map((file) => file.readPath)
-              .join(", ") || job.serviceFields?.fmsFilePath,
+          fileId: job.serviceFields?.result
+            ?.map((file) => file.fileId)
+            .join(", "),
+          filePath: job.serviceFields?.result
+            ?.map((file) => file.readPath)
+            .join(", "),
           template:
             templateIdToName[
               job.serviceFields?.files?.[0]?.customMetadata?.templateId || 0
@@ -89,6 +77,6 @@ export const getUploadsByTemplateUsage = createSelector(
 // to the files
 export const getIsSafeToExit = createSelector(
   [getUploadJobs],
-  (uploadJobs: JSSJob[]): boolean =>
+  (uploadJobs: UploadJob[]): boolean =>
     !uploadJobs.some((job) => IN_PROGRESS_STATUSES.includes(job.status))
 );

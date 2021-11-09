@@ -2,7 +2,10 @@ import { StateWithHistory } from "redux-undo";
 
 import { AnnotationName } from "../../constants";
 import { GridCell } from "../../entities";
-import { JSSJob, JSSJobStatus } from "../../services/job-status-service/types";
+import {
+  JSSJobStatus,
+  UploadJob,
+} from "../../services/job-status-service/types";
 import {
   Annotation,
   AnnotationLookup,
@@ -171,10 +174,10 @@ export const mockWell: Well = {
   wellId: 1,
 };
 
-export const mockJob: JSSJob = {
+export const mockJob: UploadJob = {
   created: new Date(),
   jobId: "1340202",
-  jobName: "Upload Job created by FSS",
+  jobName: "Upload JobUploadJobed by FSS",
   modified: new Date(),
   originationHost: "dev-aics-fup-001",
   service: "aicsfiles-js",
@@ -391,7 +394,7 @@ export const mockSelectedWells: GridCell[] = [
   new GridCell(1, 1),
 ];
 
-export const mockSuccessfulUploadJob: JSSJob = {
+export const mockSuccessfulUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Completed",
   jobId: "123434234",
@@ -417,7 +420,7 @@ export const mockSuccessfulUploadJob: JSSJob = {
   user: "test_user",
 };
 
-export const mockWorkingUploadJob: JSSJob = {
+export const mockWorkingUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Copying files",
   jobId: "2222222222",
@@ -433,12 +436,12 @@ export const mockWorkingUploadJob: JSSJob = {
   user: "test_user",
 };
 
-export const mockWaitingUploadJob: JSSJob = {
+export const mockWaitingUploadJob: UploadJob = {
   ...mockWorkingUploadJob,
   status: JSSJobStatus.WAITING,
 };
 
-export const mockFailedUploadJob: JSSJob = {
+export const mockFailedUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Copy error",
   jobId: "3333333333",
@@ -471,34 +474,6 @@ export const mockFailedUploadJob: JSSJob = {
   },
   status: JSSJobStatus.FAILED,
   user: "test_user",
-};
-
-const mockAddMetadataJob: JSSJob = {
-  created: new Date(),
-  currentStage: "Complete",
-  jobId: "addMetadataJobId",
-  jobName: "Add Metadata job 1",
-  modified: new Date(),
-  serviceFields: {
-    files: [],
-    type: "add_metadata",
-  },
-  status: JSSJobStatus.WAITING,
-  user: "test_user",
-};
-
-export const mockWorkingAddMetadataJob: JSSJob = {
-  ...mockAddMetadataJob,
-  jobId: "addMetadataJobId3",
-  parentId: "2222222222",
-  status: JSSJobStatus.WORKING,
-};
-
-export const mockFailedAddMetadataJob: JSSJob = {
-  ...mockAddMetadataJob,
-  jobId: "addMetadataJobId4",
-  parentId: "3333333333",
-  status: JSSJobStatus.FAILED,
 };
 
 export const mockAnnotationTypes: AnnotationType[] = [

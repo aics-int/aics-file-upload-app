@@ -1,7 +1,10 @@
 import { FSSResponseFile, UploadRequest } from "../types";
 
-export interface ServiceFields {
-  // TODO: Need to handle backwards compatible views of jobs with results fields from FSS
+export interface UploadServiceFields {
+  // Separates the jobs created by this app out from others
+  type: "upload";
+
+  // Contains the result of the upload
   result?: FSSResponseFile[];
 
   // If user decides to cancel an upload, the app sets this value to true.
@@ -13,12 +16,6 @@ export interface ServiceFields {
   // the exception caught.
   error?: string;
 
-  // DEPRECATED
-  // Previously this app tracked each part of the upload using different jobs
-  // assigned different "types", however this is no longer how this app works
-  // and all jobs that do not have type "upload" can be ignored.
-  type: "upload" | "copy" | "copy_child" | "add_metadata";
-
   // Metadata for the upload file at the time of upload saved
   // to the job to avoid losing it in the event of a failure.
   // Set as an array of potentially > 1 values to be backwards
@@ -26,18 +23,10 @@ export interface ServiceFields {
   // of this app.
   files: UploadRequest[];
 
-  // TODO:
-  fileSize?: number;
-
-  // TODO: Not JSSJob (JSSJob -> UploadJob; fssUpload -> FSSJob)
-  fssUpload?: JSSJob;
-
-  // TODO: ????
+  // Unique ID for tracking the upload according to FSS
   fssUploadId?: string;
 
-  fmsFilePath?: string;
-
-  // TODO: ????
+  // TODO: See if we can't get this from the upload GET from FSS
   fssUploadChunkSize?: number;
 
   // Identifies the upload as part of a larger group of uploads
@@ -64,9 +53,6 @@ export interface ServiceFields {
   // More than 1 job should only be present in uploads made by old versions of this app.
   replacementJobIds?: string[];
 
-  // Tracks how many bytes have been read for the MD5 calculation.
-  bytesProcessedForMD5?: number;
-
   // This object is filled in by processes [services] that run after the initial upload
   // upload clients like this one can gain insight into processes run on the file
   // after upload, for example the FMS Mongo ETL. Property added after 08/02/21.
@@ -82,57 +68,9 @@ export interface ServiceFields {
   };
 }
 
-export interface JobBase {
-  // Array of child ids of this job.  Optional, supplied by client
-  childIds?: string[];
-
-  // Name of the most recent host to update the status of the job.  Optional, supplied by client
-  currentHost?: string;
-
-  // The name of the current stage of the job, for processes that want to track more than status.
-  // Optional, supplied by client
-  currentStage?: string;
-
-  // Human friendly name of the job, if any. Optional, supplied by client
-  jobName?: string;
-
-  // Host that created the job.  Optional, supplied by client
-  originationHost?: string;
-
-  // Id of the parent job, or parent process, of this job (if any).  Optional, supplied by client
-  parentId?: string;
-
-  // Name of the service that created or owns this job.  Optional, supplied by client
-  service?: string;
-
-  // Additional properties required by a specific job or job type.  Optional, supplied by client
-  serviceFields: ServiceFields;
-
-  // The status of this job.  Required, supplied by client.
-  status: JSSJobStatus;
-
-  // If this value is set, and the job has a parent_id, when the status of this job is changed,
-  // the parent will be checked for a possible update; if all the children are advanced to a given status,
-  // the parent will be advanced.  Optional, supplied by client
-  updateParent?: boolean;
-
-  // Identifier for the user associated with the job.  Required, supplied by client.
-  user: string;
-}
-
-export interface CreateJobRequest extends JobBase {
-  // Unique ID of the job. May be supplied by the client, or will be created by JSS
-  jobId?: string;
-}
-
-export interface UpdateJobRequest {
-  jobName?: string;
-
+export interface JSSJob {
   // Array of child ids of this job.
   childIds?: string[];
-
-  // Additional properties required by a specific job or job type.
-  serviceFields?: Partial<ServiceFields>;
 
   // Name of the most recent host to update the status of the job.
   currentHost?: string;
@@ -140,27 +78,58 @@ export interface UpdateJobRequest {
   // The name of the current stage of the job, for processes that want to track more than status.
   currentStage?: string;
 
-  // The status of this job.
-  status?: JSSJobStatus;
-}
-
-export interface JSSUpdateJobRequest extends JSSServiceFields {
-  jobName?: string;
-  childIds?: string[];
-  currentHost?: string;
-  currentStage?: string;
-  status?: JSSJobStatus;
-}
-
-export interface JSSJob extends JobBase {
-  // Datestamp for when the job was originally created.  Required, created by JSS
+  // Datetime job was created
   created: Date;
 
-  // Unique ID of the job. May be supplied by the client, or will be created by JSS
+  // Unique ID for job
   jobId: string;
 
-  // Datestamp for when the job was last modified.  Required, created by JSS
+  // Human friendly name of the job, if any.
+  jobName?: string;
+
+  // Datetime job was last updated
   modified: Date;
+
+  // Host that created the job.
+  originationHost?: string;
+
+  // Id of the parent job, or parent process, of this job (if any).
+  parentId?: string;
+
+  // Name of the service that created or owns this job.
+  service?: string;
+
+  // Additional properties required by a specific job or job type.
+  serviceFields?: ServiceFields;
+
+  // The status of this job.
+  status: JSSJobStatus;
+
+  // If this value is set, and the job has a parent_id, when the status of this job is changed,
+  // the parent will be checked for a possible update; if all the children are advanced to a given status,
+  // the parent will be advanced.
+  updateParent?: boolean;
+
+  // Identifier for the user associated with the job.
+  user: string;
+}
+
+export interface UploadJob extends JSSJob {
+  jobName: string;
+  serviceFields: UploadServiceFields;
+}
+
+export interface CreateJobRequest
+  extends Omit<UploadJob, "jobId" | "created" | "modified"> {
+  jobId?: string;
+}
+
+export interface UpdateJobRequest
+  extends Omit<
+    Partial<UploadJob>,
+    "jobId" | "created" | "modified" | "user" | "serviceFields"
+  > {
+  serviceFields?: Partial<UploadServiceFields>;
 }
 
 export interface JobQuery {
@@ -219,6 +188,6 @@ export const JOB_STATUSES = [
 ];
 
 export type BasicType = boolean | number | string | Date | undefined | null;
-export interface JSSServiceFields {
+export interface ServiceFields {
   [key: string]: any;
 }

@@ -51,6 +51,9 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
   let content: React.ReactNode;
   if (JSSJobStatus.SUCCEEDED === props.value) {
+    // Though an upload has a successful status there may be post upload
+    // processes that have yet to complete which would make this upload
+    // effectively incomplete
     const etlProcess =
       props.row.original.serviceFields?.postUploadProcessing?.etl;
     if (etlProcess?.status === JSSJobStatus.SUCCEEDED) {
@@ -58,11 +61,14 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
         <Icon className={styles.success} type="check-circle" theme="filled" />
       );
     } else {
+      // Switch the incomplete status tooltip depending on if the post upload
+      // has yet to run vs if it has failed
       if (etlProcess?.status === JSSJobStatus.FAILED) {
         tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the FMS File Explorer. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess.status_detail}`;
       } else {
         tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the FMS File Explorer if it isn't already`;
       }
+
       content = (
         <Icon
           className={styles.success}
@@ -84,27 +90,28 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       />
     );
   } else {
-    const md5BytesRead = props.row.original.progress?.completedBytes || 0;
-    const bytesCompleted =
-      (props.row.original.serviceFields?.calculatedMD5 &&
-        props.row.original.progress?.completedBytes) ||
-      0;
-    const totalBytes = props.row.original.progress?.totalBytes || 0;
+    const { md5BytesComputed = 0, bytesUploaded = 0, totalBytes = 0 } =
+      props.row.original.progress || {};
 
     let step = Step.ONE;
-    if (bytesCompleted === totalBytes) {
+    let bytesCompletedForStep = md5BytesComputed;
+    // If all bytes have been uploaded then the upload is on the last step
+    if (bytesUploaded === totalBytes) {
       step = Step.THREE;
-    } else if (bytesCompleted) {
+      bytesCompletedForStep = (totalBytes || 1) / 2;
+    } else if (bytesUploaded || md5BytesComputed === totalBytes) {
+      // If any bytes are uploaded or if step 1 has completed then the upload
+      // is on the second step
       step = Step.TWO;
+      bytesCompletedForStep = bytesUploaded;
     }
+
+    let progressForStep = 0;
+    if (bytesCompletedForStep) {
+      progressForStep = Math.floor((bytesCompletedForStep / totalBytes) * 100);
+    }
+
     tooltip = `${tooltip} - ${STEP_INFO[step]}`;
-
-    const bytesReadForStep = bytesCompleted || md5BytesRead;
-    const progressForStep =
-      totalBytes === bytesReadForStep
-        ? 100
-        : Math.floor(totalBytes / bytesReadForStep);
-
     content = (
       <>
         <Progress
@@ -114,9 +121,9 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
           status="active"
         />
         <div className={styles.activeInfo}>
-          <p>Step {step} of 3</p>
+          <p>Step {step + 1} of 3</p>
           <p>
-            {getBytesDisplay(bytesCompleted || md5BytesRead)} /{" "}
+            {getBytesDisplay(bytesCompletedForStep)} /{" "}
             {getBytesDisplay(totalBytes)}
           </p>
         </div>

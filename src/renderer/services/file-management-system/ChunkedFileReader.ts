@@ -31,12 +31,12 @@ export default class ChunkedFileReader {
   } = {};
 
   /**
-   * Calculates the MD5 hash of the file at the 'source'. Each chunk, 
+   * Calculates the MD5 hash of the file at the 'source'. Each chunk,
    * of 'chunkSize' size read will be sent back in the given
-   * 'onProgress' callback. 
-   * 
+   * 'onProgress' callback.
+   *
    * The file read is tracked by the given 'uploadId' and may be
-   * cancelled at any time. 
+   * cancelled at any time.
    */
   public async calculateMD5(
     uploadId: string,
@@ -46,26 +46,32 @@ export default class ChunkedFileReader {
     const readStream = fs.createReadStream(source);
     const hashStream = crypto.createHash("md5").setEncoding("hex");
     let bytesCopied = 0;
+
+    // Throttle the progress callback to avoid overwhelming during fast reads
     const throttledOnProgress = throttle(
       onProgress,
       ChunkedFileReader.THROTTLE_DELAY_IN_MS
     );
+
+    // Create progress stream for sending updates while reading
     const progressStream = new stream.Transform({
       transform(chunk, _, callback) {
         bytesCopied += chunk.length;
         throttledOnProgress(bytesCopied);
-        this.push(chunk);
-        callback();
+        callback(null, chunk);
       },
     });
 
+    // Add streams to mapping of in progress reads
     this.uploadIdToStreamMap[uploadId] = {
       readStream,
       hashStream,
       progressStream,
     };
 
+    // Wait for stream pipeline to finish
     await new Promise<void>((resolve, reject) => {
+      // Create a pipeline sending updating on each chunk read
       stream.pipeline(readStream, progressStream, hashStream, (error) => {
         if (error) {
           delete this.uploadIdToStreamMap[uploadId];
@@ -76,6 +82,10 @@ export default class ChunkedFileReader {
       });
     });
 
+    // Send any remaining progress updates before returning
+    throttledOnProgress.flush();
+
+    // Remove streams from in progress mapping
     delete this.uploadIdToStreamMap[uploadId];
 
     return hashStream.read();
@@ -86,9 +96,9 @@ export default class ChunkedFileReader {
    * read will be sent back in the given 'onProgress' callback. The starting
    * point for the file read may be offset from the first byte using the 'offset'
    * parameter.
-   * 
+   *
    * The file read is tracked by the given 'uploadId' and may be
-   * cancelled at any time. 
+   * cancelled at any time.
    */
   public async read(
     uploadId: string,
@@ -98,23 +108,27 @@ export default class ChunkedFileReader {
     offset: number
   ): Promise<void> {
     const readStream = fs.createReadStream(source, {
+      // Offset the start byte by the offset param
       start: offset,
+      // Control the amount of bytes we read at a time
       highWaterMark: chunkSize,
     });
+
     const progressStream = new stream.Transform({
       transform(chunk, _, callback) {
-        onProgress(chunk).then(() => {
-          this.push(chunk);
-          callback();
-        });
+        onProgress(chunk)
+          .then(() => callback())
+          .catch((err) => callback(err));
       },
     });
 
+    // Add streams to mapping of in progress reads
     this.uploadIdToStreamMap[uploadId] = {
       readStream,
       progressStream,
     };
 
+    // Wait for stream pipeline to finish
     await new Promise<void>((resolve, reject) => {
       // Send source bytes to destination and track progress
       stream.pipeline(readStream, progressStream, (error) => {
@@ -128,6 +142,7 @@ export default class ChunkedFileReader {
       });
     });
 
+    // Remove streams from in progress mapping
     delete this.uploadIdToStreamMap[uploadId];
   }
 

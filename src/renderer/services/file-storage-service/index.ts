@@ -55,12 +55,12 @@ interface FileRecord {
  * This acts as an interface for interacting with the File Storage Service (FSS).
  */
 export default class FileStorageService extends HttpCacheClient {
-  private static readonly ENDPOINT = "fss2/2.0";
+  private static readonly ENDPOINT = "fss/2.0";
   private static readonly BASE_FILE_PATH = `${FileStorageService.ENDPOINT}/file`;
   private static readonly BASE_UPLOAD_PATH = `${FileStorageService.ENDPOINT}/upload`;
 
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
-    super(httpClient, localStorage, false, "https");
+    super(httpClient, localStorage, false, "http", "dev-aics-chp-002", 8080);
   }
 
   /**
@@ -100,10 +100,10 @@ export default class FileStorageService extends HttpCacheClient {
     uploadId: string,
     chunkSize: number,
     chunkNumber: number,
+    rangeStart: number,
     postBody: Uint8Array
   ): Promise<UploadChunkResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/uploadChunk/${uploadId}/${chunkNumber}`;
-    const rangeStart = (chunkNumber - 1) * chunkSize;
     const rangeEnd = rangeStart + postBody.byteLength - 1;
     return this.post<UploadChunkResponse>(url, postBody, {
       ...FileStorageService.getHttpRequestConfig(),

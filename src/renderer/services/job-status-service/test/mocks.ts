@@ -3,7 +3,7 @@ import { stub } from "sinon";
 
 import {
   CreateJobRequest,
-  JSSJob,
+  UploadJob,
   JSSJobStatus,
   UpdateJobRequest,
 } from "../types";
@@ -25,7 +25,8 @@ export const mockUpdateJobRequest: UpdateJobRequest = {
   status: JSSJobStatus.WAITING,
 };
 
-export const mockJSSJob: JSSJob = {
+export const mockJSSJob: UploadJob = {
+  jobName: "mockJob",
   created: new Date("2019-06-18T15:31:45.610+0000"),
   jobId: "ae64e5c79d244d93a962aac50159ecc0",
   modified: new Date("2019-06-18T15:31:45.610+0000"),

@@ -1,9 +1,10 @@
 import { createLogic } from "redux-logic";
 
+import { UploadProgressInfo } from "../../services/file-management-system";
 import {
   FAILED_STATUSES,
   IN_PROGRESS_STATUSES,
-  JSSJob,
+  UploadJob,
   JSSJobStatus,
 } from "../../services/job-status-service/types";
 import { setErrorAlert, setInfoAlert } from "../feedback/actions";
@@ -44,12 +45,9 @@ export const handleAbandonedJobsLogic = createLogic({
 
           const onProgress = (
             uploadId: string,
-            completedBytes: number,
-            totalBytes: number
+            progress: UploadProgressInfo
           ) => {
-            dispatch(
-              updateUploadProgressInfo(uploadId, { completedBytes, totalBytes })
-            );
+            dispatch(updateUploadProgressInfo(uploadId, progress));
           };
           await fms.retry(abandonedUpload.jobId, onProgress);
         } catch (e) {
@@ -69,7 +67,7 @@ export const handleAbandonedJobsLogic = createLogic({
 // The File Upload App considers a job to be successful and complete when
 // the upload job itself as well as the FMS Mongo ETL post upload process
 // have a successful status
-function isJobSuccessfulAndComplete(job?: JSSJob): boolean {
+function isUploadSuccessfulAndComplete(job?: UploadJob): boolean {
   return (
     job?.status === JSSJobStatus.SUCCEEDED &&
     job?.serviceFields?.postUploadProcessing?.etl?.status ===
@@ -89,11 +87,11 @@ const receiveJobUpdateLogics = createLogic({
   ) => {
     const { payload: updatedJob } = action;
     const jobName = updatedJob.jobName || "";
-    const previousJob: JSSJob = ctx.previousJob;
+    const previousJob: UploadJob = ctx.previousJob;
 
     if (
-      isJobSuccessfulAndComplete(updatedJob) &&
-      !isJobSuccessfulAndComplete(previousJob)
+      isUploadSuccessfulAndComplete(updatedJob) &&
+      !isUploadSuccessfulAndComplete(previousJob)
     ) {
       dispatch(uploadSucceeded(jobName));
     } else if (
@@ -115,7 +113,7 @@ const receiveJobUpdateLogics = createLogic({
     { action, ctx, getState }: ReduxLogicTransformDependencies,
     next: ReduxLogicNextCb
   ) => {
-    const updatedJob: JSSJob = action.payload;
+    const updatedJob: UploadJob = action.payload;
     const jobIdToJobMap = getJobIdToUploadJobMap(getState());
     ctx.previousJob = jobIdToJobMap.get(updatedJob.jobId);
     next(action);

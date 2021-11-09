@@ -3,7 +3,6 @@ import { expect } from "chai";
 import { JSSJobStatus } from "../../../services/job-status-service/types";
 import {
   mockSuccessfulUploadJob,
-  mockWorkingAddMetadataJob,
   mockWorkingUploadJob,
 } from "../../test/mocks";
 import {
@@ -53,20 +52,17 @@ describe("job reducer", () => {
         ...initialState,
         uploadJobs: [mockWorkingUploadJob],
       };
-      const result = reducer(
-        state,
-        receiveJobUpdate(mockWorkingAddMetadataJob)
-      );
+      const result = reducer(state, receiveJobUpdate(mockWorkingUploadJob));
       expect(result).to.deep.equal(state);
     });
   });
   describe("updateUploadProgressInfo", () => {
     it("adds progress info for a jobId without overwriting other progress info", () => {
-      const newProgress = { completedBytes: 1, totalBytes: 2 };
+      const newProgress = { md5BytesComputed: 1, totalBytes: 2 };
       const result = reducer(
         {
           ...initialState,
-          copyProgress: { abc: { completedBytes: 0, totalBytes: 100 } },
+          copyProgress: { abc: { md5BytesComputed: 0, totalBytes: 100 } },
         },
         updateUploadProgressInfo("def", newProgress)
       );

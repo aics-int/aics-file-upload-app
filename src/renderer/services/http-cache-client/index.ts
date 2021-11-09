@@ -1,7 +1,6 @@
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 
 import {
-  DEFAULT_USERNAME,
   LIMS_HOST,
   LIMS_PORT,
   LIMS_PROTOCOL,
@@ -20,16 +19,22 @@ export default class HttpCacheClient {
   private httpClient: HttpClient;
   private localStorage: LocalStorage;
   private readonly protocol: string;
+  private readonly host?: string;
+  private readonly port?: number;
 
   constructor(
     httpClient: HttpClient,
     localStorage: LocalStorage,
     useCache: boolean,
-    protocol: string = LIMS_PROTOCOL
+    protocol: string = LIMS_PROTOCOL,
+    host?: string,
+    port?: number
   ) {
     this.httpClient = httpClient;
     this.localStorage = localStorage;
     this.protocol = protocol;
+    this.host = host;
+    this.port = port;
     this.get = this.get.bind(this);
     this.post = this.post.bind(this);
     this.put = this.put.bind(this);
@@ -175,8 +180,9 @@ export default class HttpCacheClient {
   }
 
   protected getHttpRequestConfig = (): AxiosRequestConfig => {
-    const userSettings = this.localStorage.get(USER_SETTINGS_KEY);
-    const username = userSettings?.username || DEFAULT_USERNAME;
+    // TODO: Revert
+    // const userSettings = this.localStorage.get(USER_SETTINGS_KEY);
+    // const username = userSettings?.username || DEFAULT_USERNAME;
     return {
       headers: {
         "Content-Type": "application/json",
@@ -196,11 +202,11 @@ export default class HttpCacheClient {
     const userSettings: LimsSettings | undefined = this.localStorage.get(
       USER_SETTINGS_KEY
     );
-    let host = LIMS_HOST;
-    let port = LIMS_PORT;
+    let host = this.host || LIMS_HOST;
+    let port = this.port || LIMS_PORT;
     if (userSettings?.limsHost && userSettings?.limsPort) {
-      host = userSettings.limsHost;
-      port = userSettings.limsPort;
+      host = this.host || userSettings.limsHost;
+      port = this.port || userSettings.limsPort;
     }
     return `${this.protocol}://${host}:${port}`;
   }
