@@ -110,7 +110,7 @@ export default class ChunkedFileReader {
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
       start: offset,
-      // Control the amount of bytes we read at a time
+      // Control the MAX amount of bytes we read at a time
       highWaterMark: chunkSize,
     });
 

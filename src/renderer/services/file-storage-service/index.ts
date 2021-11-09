@@ -98,7 +98,6 @@ export default class FileStorageService extends HttpCacheClient {
    */
   public sendUploadChunk(
     uploadId: string,
-    chunkSize: number,
     chunkNumber: number,
     rangeStart: number,
     postBody: Uint8Array
@@ -108,8 +107,9 @@ export default class FileStorageService extends HttpCacheClient {
     return this.post<UploadChunkResponse>(url, postBody, {
       ...FileStorageService.getHttpRequestConfig(),
       headers: {
-        ...this.getHttpRequestConfig().headers,
+        "Content-Type": "application/octet-stream",
         range: `bytes=${rangeStart}-${rangeEnd}`,
+        "X-User-Id": "seanm", // TODO Revert: username,
       },
     });
   }

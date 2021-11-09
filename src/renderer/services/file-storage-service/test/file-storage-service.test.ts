@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import sinon, { createStubInstance, SinonStub } from "sinon";
+import { createSandbox, SinonStub } from "sinon";
 
 import FileStorageService from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
@@ -7,8 +7,12 @@ import { LocalStorage } from "../../../types";
 import HttpCacheClient from "../../http-cache-client";
 
 describe("FileStorageService", () => {
-  const storage = createStubInstance(EnvironmentAwareStorage);
-  const httpClient = createStubInstance(HttpCacheClient);
+  // TODO: Can we use default sandbox here?
+  const sandbox = createSandbox();
+  const storage = sandbox.createStubInstance(EnvironmentAwareStorage);
+  const httpClient = sandbox.createStubInstance(HttpCacheClient);
+  // Stub `get` specifically, since it is a class property and not on the prototype
+  storage.get = sandbox.stub();
 
   const fss = new FileStorageService(
     (httpClient as any) as HttpCacheClient,
@@ -16,11 +20,11 @@ describe("FileStorageService", () => {
   );
 
   afterEach(() => {
-    sinon.resetHistory();
+    sandbox.resetHistory();
   });
 
   after(() => {
-    sinon.restore();
+    sandbox.restore();
   });
 
   describe("registerUpload", () => {
@@ -32,9 +36,9 @@ describe("FileStorageService", () => {
       };
       const response = {
         status: 200,
-        data: [expectedResponse],
+        data: expectedResponse,
       };
-      const postStub = sinon.stub().resolves(response);
+      const postStub = sandbox.stub().resolves(response);
       const fileName = "my_cool_czi.czi";
       const fileSize = 13941234;
       const md5 = "13249012341234";
@@ -45,7 +49,7 @@ describe("FileStorageService", () => {
         file_size: fileSize,
         MD5: md5,
       };
-      sinon.replace(httpClient, "post", postStub as SinonStub<any>);
+      sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
       // Act
       const actual = await fss.registerUpload(fileName, fileSize, md5);
@@ -53,7 +57,7 @@ describe("FileStorageService", () => {
       // Assert
       expect(actual).to.deep.equal(expectedResponse);
       const actualPostBody = postStub.firstCall.args[1];
-      expect(actualPostBody).to.equal(expectedPostBody);
+      expect(actualPostBody).to.deep.equal(expectedPostBody);
     });
   });
 
@@ -72,23 +76,22 @@ describe("FileStorageService", () => {
       };
       const response = {
         status: 200,
-        data: [expectedResponse],
+        data: expectedResponse,
       };
-      const postStub = sinon.stub().resolves(response);
-      sinon.replace(httpClient, "post", postStub as SinonStub<any>);
+      httpClient.post.resolves(response);
 
       // Act
       const actual = await fss.sendUploadChunk(
         uploadId,
-        chunkSize,
         chunkNumber,
+        rangeStart,
         postBody
       );
 
       // Assert
       expect(actual).to.deep.equal(expectedResponse);
-      const actualRange = postStub.firstCall.args[2]?.headers?.range;
-      expect(actualRange).to.equal(expectedRange);
+      const actualRange = httpClient.post.firstCall.args[2]?.headers?.range;
+      expect(actualRange).to.deep.equal(expectedRange);
     });
   });
 });

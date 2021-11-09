@@ -228,9 +228,10 @@ export default class FileManagementSystem {
           const { size: fileSize } = await fs.promises.stat(
             upload.serviceFields.files?.[0]?.file.originalPath
           );
-          return await this.resume(upload, fssStatus, (bytesUploaded) =>
+          await this.resume(upload, fssStatus, (bytesUploaded) =>
             onProgress(uploadId, { bytesUploaded, totalBytes: fileSize })
           );
+          return;
         }
       } catch (error) {
         // No-op: This check is just an attempt to resume, still able to recover from here
@@ -276,9 +277,10 @@ export default class FileManagementSystem {
           }
 
           // Perform upload with new job and current job's metadata, forgoing the current job
-          return await this.upload(newUpload, (progress) =>
+          await this.upload(newUpload, (progress) =>
             onProgress(newUpload.jobId, progress)
           );
+          return;
         } catch (error) {
           // Catch exceptions to allow other jobs to run before re-throwing the error
           return { error };
@@ -434,7 +436,6 @@ export default class FileManagementSystem {
       chunkNumber += 1;
       await this.fss.sendUploadChunk(
         uploadId,
-        chunkSize,
         chunkNumber,
         bytesUploaded,
         chunk
