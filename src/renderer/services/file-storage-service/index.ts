@@ -42,8 +42,8 @@ export interface UploadStatusResponse {
 
 interface FileRecord {
   addedToLabkey: boolean;
-  archivePath: string;
-  cloudPath: string;
+  archivePath?: string;
+  cloudPath?: string;
   fileId: string;
   fileName: string;
   fileSize: number;

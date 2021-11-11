@@ -1,8 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import Logger from "js-logger";
-import { ILogger } from "js-logger/src/types";
 import { throttle, uniq } from "lodash";
 import * as uuid from "uuid";
 
@@ -49,7 +47,6 @@ export default class FileManagementSystem {
   private readonly jss: JobStatusService;
   private readonly lk: LabkeyClient;
   private readonly mms: MetadataManagementService;
-  private readonly logger: ILogger;
 
   /**
    * Returns JSS friendly UUID to group files
@@ -59,16 +56,12 @@ export default class FileManagementSystem {
     return uuid.v1().replace(/-/g, "");
   }
 
-  public constructor(
-    config: FileManagementClientConfig,
-    logger: ILogger = Logger.get("fms")
-  ) {
+  public constructor(config: FileManagementClientConfig) {
     this.fileReader = config.fileReader;
     this.fss = config.fss;
     this.jss = config.jss;
     this.lk = config.lk;
     this.mms = config.mms;
-    this.logger = logger;
   }
 
   /**
@@ -102,7 +95,6 @@ export default class FileManagementSystem {
     upload: UploadJob,
     onProgress: (progress: UploadProgressInfo) => void
   ): Promise<void> {
-    this.logger.time(upload.jobName || "");
     try {
       // Grab file details
       const source = upload.serviceFields.files[0]?.file.originalPath;
@@ -111,13 +103,8 @@ export default class FileManagementSystem {
         size: fileSize,
         mtime: fileLastModified,
       } = await fs.promises.stat(source);
+      // TODO: I don't think this is ms since EPOCH
       const fileLastModifiedInMs = fileLastModified.getMilliseconds();
-
-      this.logger.debug(
-        `Starting upload for ${fileName} with metadata ${JSON.stringify(
-          upload.serviceFields.files
-        )}`
-      );
 
       // Calculate MD5 ahead of submission, re-use from job if possible. Only potentially available
       // on job if this upload is being re-submitted like for a retry. Avoid reusing MD5 if the file
@@ -163,7 +150,6 @@ export default class FileManagementSystem {
       });
 
       // Wait for upload
-      this.logger.debug(`Beginning chunked upload to FSS for ${fileName}`);
       await this.uploadInChunks(
         registration.uploadId,
         source,
@@ -178,15 +164,13 @@ export default class FileManagementSystem {
       if (!(error instanceof CancellationError)) {
         // Fail job in JSS with error
         const errMsg = `Something went wrong uploading ${upload.jobName}. Details: ${error?.message}`;
-        this.logger.error(errMsg);
+        console.error(errMsg);
         await this.jss.updateJob(upload.jobId, {
           status: JSSJobStatus.FAILED,
           serviceFields: { error: errMsg },
         });
         throw error;
       }
-    } finally {
-      this.logger.timeEnd(upload.jobName || "");
     }
   }
 
@@ -293,8 +277,8 @@ export default class FileManagementSystem {
 
     // Evaluate the results throwing the first error seen (if any)
     results.forEach((result) => {
-      const errorCase = result as { error: Error };
-      if (errorCase.error) {
+      const errorCase = result as { error?: Error };
+      if (errorCase?.error) {
         throw errorCase.error;
       }
     });
@@ -389,7 +373,7 @@ export default class FileManagementSystem {
         );
         await this.uploadInChunks(
           upload.jobId,
-          upload.serviceFields.files[0]?.file.originalPath,
+          upload.serviceFields.files[0].file.originalPath,
           upload.serviceFields.fssUploadChunkSize,
           onProgress,
           lastChunkNumber
@@ -404,7 +388,7 @@ export default class FileManagementSystem {
     } catch (error) {
       // Fail job in JSS with error
       const errMsg = `Something went wrong resuming ${upload.jobName}. Details: ${error?.message}`;
-      this.logger.error(errMsg);
+      console.error(errMsg);
       await this.jss.updateJob(upload.jobId, {
         status: JSSJobStatus.FAILED,
         serviceFields: { error: errMsg },
@@ -468,9 +452,6 @@ export default class FileManagementSystem {
     upload: UploadJob,
     fssUploadId: string
   ): Promise<void> {
-    // TODO: Remove this
-    throw new Error("Not yet implemented finalize step");
-
     // TODO: Wait for file to exist by polling... something?
     // TODO: remove this though
     const finalizeResponse = await this.fss.repeatFinalize(fssUploadId);

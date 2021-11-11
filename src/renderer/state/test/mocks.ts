@@ -177,7 +177,7 @@ export const mockWell: Well = {
 export const mockJob: UploadJob = {
   created: new Date(),
   jobId: "1340202",
-  jobName: "Upload JobUploadJobed by FSS",
+  jobName: "test_file.txt",
   modified: new Date(),
   originationHost: "dev-aics-fup-001",
   service: "aicsfiles-js",
