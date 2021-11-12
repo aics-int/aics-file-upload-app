@@ -1,9 +1,6 @@
 import { FSSResponseFile, UploadRequest } from "../types";
 
 export interface UploadServiceFields {
-  // Separates the jobs created by this app out from others
-  type: "upload";
-
   // Contains the result of the upload
   result?: FSSResponseFile[];
 
@@ -114,8 +111,15 @@ export interface JSSJob {
   user: string;
 }
 
+// Useful for tracking which service owns any given JSS Job
+export enum Service {
+  FILE_UPLOAD_APP = "file-upload-app",
+  FILE_STORAGE_SERVICE = "file-storage-service-2",
+}
+
 export interface UploadJob extends JSSJob {
   jobName: string;
+  service: Service.FILE_UPLOAD_APP;
   serviceFields: UploadServiceFields;
 }
 

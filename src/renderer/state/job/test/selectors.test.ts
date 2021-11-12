@@ -88,7 +88,6 @@ describe("Job selectors", () => {
           lastModifiedInMS: new Date().getMilliseconds(),
           calculatedMD5: "123412341234",
           originalJobId: mockReplacedJob2.jobId,
-          type: "upload",
         },
       };
 

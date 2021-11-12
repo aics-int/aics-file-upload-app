@@ -1,5 +1,6 @@
 import { AnyAction } from "redux";
 
+import { Service, UploadJob } from "../../services/job-status-service/types";
 import { JobStateBranch, TypeToDescriptionMap } from "../types";
 import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 import { makeReducer } from "../util";
@@ -57,11 +58,15 @@ const actionToConfigMap: TypeToDescriptionMap<JobStateBranch> = {
       state: JobStateBranch,
       { payload: updatedJob }: ReceiveJobUpdateAction
     ): JobStateBranch => {
+      if (updatedJob.service !== Service.FILE_UPLOAD_APP) {
+        return state;
+      }
+
       return {
         ...state,
         uploadJobs: state.uploadJobs.map((job) =>
           job.jobId === updatedJob.jobId ? updatedJob : job
-        ),
+        ) as UploadJob[],
       };
     },
   },

@@ -54,7 +54,6 @@ describe("Job logics", () => {
               file: { fileType: "image", originalPath: "test_path" },
             },
           ],
-          type: "upload",
         },
       };
     });
@@ -94,7 +93,7 @@ describe("Job logics", () => {
       expect(actions.list).to.deep.equal([
         action,
         setInfoAlert(
-          `Upload "${waitingAbandonedJob.jobName}" was abandoned and will now be retried.`
+          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
         ),
       ]);
     });
@@ -114,7 +113,7 @@ describe("Job logics", () => {
       expect(actions.list).to.deep.equal([
         receiveJobs([waitingAbandonedJob]),
         setInfoAlert(
-          'Upload "abandoned_job" was abandoned and will now be retried.'
+          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
         ),
       ]);
     });
@@ -136,7 +135,7 @@ describe("Job logics", () => {
       expect(actions.list).to.deep.equal([
         receiveJobs([waitingAbandonedJob]),
         setInfoAlert(
-          `Upload "${waitingAbandonedJob.jobName}" was abandoned and will now be retried.`
+          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
         ),
         setErrorAlert(
           `Retry for upload "${waitingAbandonedJob.jobName}" failed: ${errorMessage}`
@@ -144,7 +143,7 @@ describe("Job logics", () => {
       ]);
     });
 
-    it("dispatches setErrorAlert if fms.retryUpload fails", async () => {
+    it("dispatches setErrorAlert if fms.retry fails", async () => {
       const {
         actions,
         logicMiddleware,
@@ -161,7 +160,7 @@ describe("Job logics", () => {
       expect(actions.list).to.deep.equal([
         receiveJobs([waitingAbandonedJob]),
         setInfoAlert(
-          'Upload "abandoned_job" was abandoned and will now be retried.'
+          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
         ),
         setErrorAlert('Retry for upload "abandoned_job" failed: Error'),
       ]);
@@ -177,6 +176,10 @@ describe("Job logics", () => {
           uploadJobs: [mockWorkingUploadJob],
         },
       };
+    });
+
+    it("completes upload if FSS job with file id comes along", () => {
+      // TODO:
     });
 
     it("dispatches no additional actions if the job is in progress", async () => {
@@ -250,7 +253,6 @@ describe("Job logics", () => {
         serviceFields: {
           ...mockFailedUploadJob.serviceFields,
           error: "foo",
-          type: "upload",
         },
       });
 

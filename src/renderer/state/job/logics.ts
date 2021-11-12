@@ -6,6 +6,8 @@ import {
   IN_PROGRESS_STATUSES,
   UploadJob,
   JSSJobStatus,
+  JSSJob,
+  Service,
 } from "../../services/job-status-service/types";
 import { setErrorAlert, setInfoAlert } from "../feedback/actions";
 import {
@@ -18,7 +20,7 @@ import { uploadFailed, uploadSucceeded } from "../upload/actions";
 
 import { updateUploadProgressInfo } from "./actions";
 import { RECEIVE_JOB_UPDATE, RECEIVE_JOBS } from "./constants";
-import { getJobIdToUploadJobMap } from "./selectors";
+import { getJobIdToUploadJobMap, getUploadJobs } from "./selectors";
 import { ReceiveJobsAction, ReceiveJobUpdateAction } from "./types";
 
 export const handleAbandonedJobsLogic = createLogic({
@@ -39,7 +41,7 @@ export const handleAbandonedJobsLogic = createLogic({
       abandonedUploads.map(async (abandonedUpload) => {
         try {
           // Alert user to abandoned job
-          const info = `Upload "${abandonedUpload.jobName}" was abandoned and will now be retried.`;
+          const info = `Checking to see if "${abandonedUpload.jobName}" was abandoned and can be resumed or retried.`;
           logger.info(info);
           dispatch(setInfoAlert(info));
 
@@ -67,7 +69,7 @@ export const handleAbandonedJobsLogic = createLogic({
 // The File Upload App considers a job to be successful and complete when
 // the upload job itself as well as the FMS Mongo ETL post upload process
 // have a successful status
-function isUploadSuccessfulAndComplete(job?: UploadJob): boolean {
+function isUploadSuccessfulAndComplete(job?: JSSJob): boolean {
   return (
     job?.status === JSSJobStatus.SUCCEEDED &&
     job?.serviceFields?.postUploadProcessing?.etl?.status ===
@@ -77,9 +79,11 @@ function isUploadSuccessfulAndComplete(job?: UploadJob): boolean {
 
 // When the app receives a job update, it will also alert the user if the job update means that a upload succeeded or failed.
 const receiveJobUpdateLogics = createLogic({
-  process: (
+  process: async (
     {
       action,
+      fms,
+      getState,
       ctx,
     }: ReduxLogicProcessDependenciesWithAction<ReceiveJobUpdateAction>,
     dispatch: ReduxLogicNextCb,
@@ -87,14 +91,27 @@ const receiveJobUpdateLogics = createLogic({
   ) => {
     const { payload: updatedJob } = action;
     const jobName = updatedJob.jobName || "";
-    const previousJob: UploadJob = ctx.previousJob;
+    const previousJob: UploadJob | undefined = ctx.previousJob;
 
-    if (
+    if (updatedJob.service === Service.FILE_STORAGE_SERVICE) {
+      const jobs = getUploadJobs(getState());
+      const uploadJob = jobs.find(
+        (job) => job.serviceFields?.fssUploadId === updatedJob.jobId
+      );
+      if (
+        updatedJob.serviceFields?.fileId &&
+        uploadJob &&
+        uploadJob.status !== JSSJobStatus.SUCCEEDED
+      ) {
+        await fms.complete(uploadJob, updatedJob.serviceFields?.fileId);
+      }
+    } else if (
       isUploadSuccessfulAndComplete(updatedJob) &&
       !isUploadSuccessfulAndComplete(previousJob)
     ) {
       dispatch(uploadSucceeded(jobName));
     } else if (
+      previousJob &&
       FAILED_STATUSES.includes(updatedJob.status) &&
       !FAILED_STATUSES.includes(previousJob.status) &&
       !updatedJob.serviceFields?.cancelled

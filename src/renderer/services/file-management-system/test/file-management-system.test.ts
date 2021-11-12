@@ -4,7 +4,7 @@ import * as path from "path";
 
 import { expect } from "chai";
 import { noop } from "lodash";
-import { createSandbox } from "sinon";
+import { createSandbox, SinonStubbedInstance } from "sinon";
 
 import FileManagementSystem from "..";
 import {
@@ -14,28 +14,25 @@ import {
   MetadataManagementService,
 } from "../..";
 import { mockJob } from "../../../state/test/mocks";
-import { UploadStatus } from "../../file-storage-service";
-import { JSSJobStatus, UploadJob } from "../../job-status-service/types";
+import { UploadStage, UploadStatus } from "../../file-storage-service";
+import {
+  JSSJob,
+  JSSJobStatus,
+  UploadJob,
+} from "../../job-status-service/types";
 import ChunkedFileReader from "../ChunkedFileReader";
 
 describe("FileManagementSystem", () => {
   const sandbox = createSandbox();
-  const fileReader = sandbox.createStubInstance(ChunkedFileReader);
-  const fss = sandbox.createStubInstance(FileStorageService);
-  const jss = sandbox.createStubInstance(JobStatusService);
-  const lk = sandbox.createStubInstance(LabkeyClient);
-  const mms = sandbox.createStubInstance(MetadataManagementService);
-
-  const fms = new FileManagementSystem({
-    fileReader: fileReader as any,
-    fss: fss as any,
-    jss: jss as any,
-    lk: lk as any,
-    mms: mms as any,
-  });
+  let fileReader: SinonStubbedInstance<ChunkedFileReader>;
+  let fss: SinonStubbedInstance<FileStorageService>;
+  let jss: SinonStubbedInstance<JobStatusService>;
+  let lk: SinonStubbedInstance<LabkeyClient>;
+  let mms: SinonStubbedInstance<MetadataManagementService>;
+  let fms: FileManagementSystem;
   const testFilePath = path.resolve(os.tmpdir(), "md5-test.txt");
 
-  beforeEach(async () => {
+  before(async () => {
     // Generate file with 2MB of "random" bytes
     await fs.promises.writeFile(
       testFilePath,
@@ -43,13 +40,28 @@ describe("FileManagementSystem", () => {
     );
   });
 
-  afterEach(async () => {
-    sandbox.resetHistory();
-    await fs.promises.unlink(testFilePath);
+  beforeEach(() => {
+    fileReader = sandbox.createStubInstance(ChunkedFileReader);
+    fss = sandbox.createStubInstance(FileStorageService);
+    jss = sandbox.createStubInstance(JobStatusService);
+    lk = sandbox.createStubInstance(LabkeyClient);
+    mms = sandbox.createStubInstance(MetadataManagementService);
+
+    fms = new FileManagementSystem({
+      fileReader: fileReader as any,
+      fss: fss as any,
+      jss: jss as any,
+      lk: lk as any,
+      mms: mms as any,
+    });
   });
 
-  after(() => {
+  afterEach(() => {
     sandbox.restore();
+  });
+
+  after(async () => {
+    await fs.promises.unlink(testFilePath);
   });
 
   describe("initiateUpload", () => {
@@ -72,7 +84,6 @@ describe("FileManagementSystem", () => {
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
-          type: "upload",
           files: [
             {
               file: {
@@ -83,24 +94,9 @@ describe("FileManagementSystem", () => {
           ],
         },
       };
-      const fileId = "12343124";
-      const localPath = "/some/path/into/fms/at/test_file.txt";
       fileReader.calculateMD5.resolves(md5);
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.repeatFinalize.resolves({
-        fileId,
-        chunkNumber: 14,
-        uploadId: upload.jobId,
-      });
-      fss.getFileAttributes.resolves({
-        fileId,
-        localPath,
-        addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
-        md5: "",
-      });
 
       // Act
       await fms.upload(upload, noop);
@@ -113,26 +109,7 @@ describe("FileManagementSystem", () => {
           md5
         )
       ).to.be.true;
-      expect(
-        mms.createFileMetadata.calledOnceWithExactly(
-          fileId,
-          upload.serviceFields.files[0]
-        )
-      ).to.be.true;
-      expect(
-        jss.updateJob.calledWithExactly(upload.jobId, {
-          status: JSSJobStatus.SUCCEEDED,
-          serviceFields: {
-            result: [
-              {
-                fileId,
-                fileName: path.basename(localPath),
-                readPath: localPath,
-              },
-            ],
-          },
-        })
-      ).to.be.true;
+      expect(fileReader.read.calledOnce).to.be.true;
     });
 
     it("re-uses MD5 if not modified since last attempt", async () => {
@@ -141,7 +118,6 @@ describe("FileManagementSystem", () => {
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
-          type: "upload",
           files: [
             {
               file: {
@@ -179,14 +155,13 @@ describe("FileManagementSystem", () => {
       expect(fileReader.calculateMD5.called).to.be.false;
     });
 
-    it("fails upload if error occurs during finalize", async () => {
+    it("fails upload if error occurs during read", async () => {
       // Arrange
-      const error = "Test failure during finalize";
+      const error = "Test failure during read";
       const md5 = "09k2341234k";
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
-          type: "upload",
           files: [
             {
               file: {
@@ -200,7 +175,7 @@ describe("FileManagementSystem", () => {
       fileReader.calculateMD5.resolves(md5);
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.repeatFinalize.rejects(new Error(error));
+      fileReader.read.rejects(new Error(error));
 
       // Act
       await expect(fms.upload(upload, noop)).to.be.rejectedWith(Error);
@@ -213,7 +188,6 @@ describe("FileManagementSystem", () => {
           md5
         )
       ).to.be.true;
-      expect(mms.createFileMetadata.called).to.be.false;
       expect(
         jss.updateJob.calledWithExactly(upload.jobId, {
           status: JSSJobStatus.FAILED,
@@ -222,6 +196,7 @@ describe("FileManagementSystem", () => {
           },
         })
       ).to.be.true;
+      expect(fileReader.read.calledOnce).to.be.true;
     });
   });
 
@@ -231,7 +206,6 @@ describe("FileManagementSystem", () => {
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
-          type: "upload",
           files: [
             {
               file: {
@@ -276,7 +250,6 @@ describe("FileManagementSystem", () => {
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
-          type: "upload",
           files: [
             {
               file: {
@@ -326,7 +299,6 @@ describe("FileManagementSystem", () => {
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
-          type: "upload",
           files: [
             {
               file: {
@@ -372,59 +344,51 @@ describe("FileManagementSystem", () => {
       expect(jss.createJob.getCalls()).to.be.lengthOf(2);
     });
 
-    it("resumes sending chunks for an upload with an active FSS status", async () => {
-      // Arrange
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          type: "upload",
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
+    [UploadStage.ADDING_CHUNKS, UploadStage.WAITING_FOR_FIRST_CHUNK].forEach(
+      (stage) => {
+        it(`resumes sending chunks for an upload with an active FSS status for stage ${stage}`, async () => {
+          // Arrange
+          const upload: UploadJob = {
+            ...mockJob,
+            serviceFields: {
+              files: [
+                {
+                  file: {
+                    fileType: "text",
+                    originalPath: testFilePath,
+                  },
+                },
+              ],
+              fssUploadId: "234124141",
+              fssUploadChunkSize: 13,
             },
-          ],
-          fssUploadId: "234124141",
-          fssUploadChunkSize: 13,
-        },
-      };
-      const fileId = "12343124";
-      const localPath = "/some/path/into/fms/at/test_file.txt";
-      jss.getJob.resolves(upload);
-      fss.getStatus.resolves({
-        uploadStatus: UploadStatus.WORKING,
-        chunkStatuses: [],
-      });
-      fss.repeatFinalize.resolves({
-        fileId,
-        chunkNumber: 14,
-        uploadId: upload.jobId,
-      });
-      fss.getFileAttributes.resolves({
-        fileId,
-        localPath,
-        addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
-        md5: "",
-      });
+          };
+          const fssUpload: JSSJob = {
+            ...mockJob,
+            currentStage: stage,
+          };
+          jss.getJob.onFirstCall().resolves(upload);
+          fss.getStatus.resolves({
+            uploadStatus: UploadStatus.WORKING,
+            chunkStatuses: [],
+          });
+          jss.getJob.onSecondCall().resolves(fssUpload);
 
-      // Act
-      await fms.retry("mockUploadId", noop);
+          // Act
+          await fms.retry("mockUploadId", noop);
 
-      // Assert
-      expect(jss.createJob.called).to.be.false;
-      expect(fileReader.read.calledOnce).to.be.true;
-    });
+          // Assert
+          expect(jss.createJob.called).to.be.false;
+          expect(fileReader.read.calledOnce).to.be.true;
+        });
+      }
+    );
 
     it("resumes an upload that just needs finalizing", async () => {
       // Arrange
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
-          type: "upload",
           files: [
             {
               file: {

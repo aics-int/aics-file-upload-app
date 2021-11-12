@@ -4,6 +4,7 @@ import { AnnotationName } from "../../constants";
 import { GridCell } from "../../entities";
 import {
   JSSJobStatus,
+  Service,
   UploadJob,
 } from "../../services/job-status-service/types";
 import {
@@ -180,10 +181,9 @@ export const mockJob: UploadJob = {
   jobName: "test_file.txt",
   modified: new Date(),
   originationHost: "dev-aics-fup-001",
-  service: "aicsfiles-js",
+  service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     files: [],
-    type: "upload",
   },
   status: JSSJobStatus.WAITING,
   updateParent: false,
@@ -400,13 +400,13 @@ export const mockSuccessfulUploadJob: UploadJob = {
   jobId: "123434234",
   jobName: "mockJob1",
   modified: new Date(),
+  service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     result: [
       { fileId: "cat", fileName: "cat", readPath: "cat" },
       { fileId: "dog", fileName: "cat", readPath: "cat" },
     ],
     files: [],
-    type: "upload",
     postUploadProcessing: {
       etl: {
         service: "fms-mongo-etl",
@@ -426,11 +426,11 @@ export const mockWorkingUploadJob: UploadJob = {
   jobId: "2222222222",
   jobName: "mockWorkingUploadJob",
   modified: new Date(),
+  service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     files: [],
     lastModifiedInMS: new Date().getMilliseconds(),
     calculatedMD5: "12341243",
-    type: "upload",
   },
   status: JSSJobStatus.WORKING,
   user: "test_user",
@@ -447,6 +447,7 @@ export const mockFailedUploadJob: UploadJob = {
   jobId: "3333333333",
   jobName: "mockFailedUploadJob",
   modified: new Date(),
+  service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     files: [
       {
@@ -470,7 +471,6 @@ export const mockFailedUploadJob: UploadJob = {
     ],
     lastModifiedInMS: new Date().getMilliseconds(),
     calculatedMD5: "12341234",
-    type: "upload",
   },
   status: JSSJobStatus.FAILED,
   user: "test_user",

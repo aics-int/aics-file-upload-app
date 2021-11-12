@@ -18,23 +18,14 @@ interface LimsSettings {
 export default class HttpCacheClient {
   private httpClient: HttpClient;
   private localStorage: LocalStorage;
-  private readonly protocol: string;
-  private readonly host?: string;
-  private readonly port?: number;
 
   constructor(
     httpClient: HttpClient,
     localStorage: LocalStorage,
-    useCache: boolean,
-    protocol: string = LIMS_PROTOCOL,
-    host?: string,
-    port?: number
+    useCache: boolean
   ) {
     this.httpClient = httpClient;
     this.localStorage = localStorage;
-    this.protocol = protocol;
-    this.host = host;
-    this.port = port;
     this.get = this.get.bind(this);
     this.post = this.post.bind(this);
     this.put = this.put.bind(this);
@@ -202,13 +193,14 @@ export default class HttpCacheClient {
     const userSettings: LimsSettings | undefined = this.localStorage.get(
       USER_SETTINGS_KEY
     );
-    let host = this.host || LIMS_HOST;
-    let port = this.port || LIMS_PORT;
+    let host = LIMS_HOST;
+    let port = LIMS_PORT;
+    const protocol = LIMS_PROTOCOL;
     if (userSettings?.limsHost && userSettings?.limsPort) {
-      host = this.host || userSettings.limsHost;
-      port = this.port || userSettings.limsPort;
+      host = userSettings.limsHost;
+      port = userSettings.limsPort;
     }
-    return `${this.protocol}://${host}:${port}`;
+    return `${protocol}://${host}:${port}`;
   }
 
   private checkCache = async <T = any>(

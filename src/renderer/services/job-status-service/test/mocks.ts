@@ -6,6 +6,7 @@ import {
   UploadJob,
   JSSJobStatus,
   UpdateJobRequest,
+  Service,
 } from "../types";
 
 export const mockCreateJobRequest: CreateJobRequest = {
@@ -14,9 +15,9 @@ export const mockCreateJobRequest: CreateJobRequest = {
   originationHost: "kitchen",
   status: JSSJobStatus.WAITING,
   currentStage: "started",
+  service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     files: [],
-    type: "upload",
   },
 };
 
@@ -32,9 +33,9 @@ export const mockJSSJob: UploadJob = {
   modified: new Date("2019-06-18T15:31:45.610+0000"),
   status: JSSJobStatus.WAITING,
   user: "demo",
+  service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     files: [],
-    type: "upload",
   },
 };
 

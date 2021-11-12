@@ -1,5 +1,5 @@
 import { UploadProgressInfo } from "../../services/file-management-system";
-import { UploadJob } from "../../services/job-status-service/types";
+import { JSSJob, UploadJob } from "../../services/job-status-service/types";
 
 export interface ReceiveJobsAction {
   payload: UploadJob[];
@@ -12,7 +12,7 @@ export interface ReceiveJobInsertAction {
 }
 
 export interface ReceiveJobUpdateAction {
-  payload: UploadJob;
+  payload: JSSJob;
   type: string;
 }
 

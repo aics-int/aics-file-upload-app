@@ -15,6 +15,7 @@ import {
   JobQuery,
   UploadJob,
   UpdateJobRequest,
+  JSSJob,
 } from "./types";
 
 const logLevelMap: { [logLevel: string]: ILogLevel } = Object.freeze({
@@ -57,7 +58,7 @@ export default class JobStatusService extends HttpCacheClient {
    * Creates a job and returns created job
    * @param job
    */
-  public async createJob<T = any>(job: CreateJobRequest): Promise<UploadJob> {
+  public async createJob(job: CreateJobRequest): Promise<UploadJob> {
     this.logger.debug("Received create job request", job);
     const response = await this.post<AicsSuccessResponse<UploadJob>>(
       "/jss/1.0/job/",
@@ -88,29 +89,6 @@ export default class JobStatusService extends HttpCacheClient {
     return response.data[0];
   }
 
-  // TODO: Deprecate?
-  /**
-   * Wait for upload job from FSS to exist in JSS to prevent
-   * a race condition when trying to create child jobs. Ideally this
-   * would not be necessary if the app interacted with JSS asynchronously
-   * more detail in FUA-218 - Sean M 02/11/21
-   * @param jobId
-   */
-  public async waitForJobToExist(jobId: string): Promise<void> {
-    let attempts = 11;
-    let jobExists = await this.existsById(jobId);
-    // Continously try to see if the job exists up to 11 times over ~1 minute
-    while (!jobExists) {
-      if (attempts <= 0) {
-        throw new Error("unable to verify upload job started, try again");
-      }
-      attempts--;
-      // Wait 5 seconds before trying again to give JSS room to breathe
-      await new Promise((r) => setTimeout(r, 5 * 1_000));
-      jobExists = await this.existsById(jobId);
-    }
-  }
-
   /***
    * Returns true if job exists in JSS
    * @param jobId corresponding id for job
@@ -132,7 +110,7 @@ export default class JobStatusService extends HttpCacheClient {
    * Get job by id
    * @param jobId corresponding id for job
    */
-  public async getJob(jobId: string): Promise<UploadJob> {
+  public async getJob(jobId: string): Promise<JSSJob> {
     this.logger.debug(`Received get job request for jobId=${jobId}`);
     const response = await this.get<AicsSuccessResponse<UploadJob>>(
       `/jss/1.0/job/${jobId}`,
@@ -145,7 +123,7 @@ export default class JobStatusService extends HttpCacheClient {
    * Get jobs matching mongoDB query
    * @param query query to be passed to mongoDB for finding matching jobs
    */
-  public async getJobs(query: JobQuery): Promise<UploadJob[]> {
+  public async getJobs(query: JobQuery): Promise<JSSJob[]> {
     this.logger.debug(`Received get jobs request with query`, query);
     const response = await this.post<AicsSuccessResponse<UploadJob>>(
       `/jss/1.0/job/query`,

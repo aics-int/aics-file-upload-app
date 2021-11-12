@@ -6,6 +6,7 @@ import * as uuid from "uuid";
 
 import FileStorageService, {
   ChunkStatus,
+  UploadStage,
   UploadStatus,
   UploadStatusResponse,
 } from "../file-storage-service";
@@ -15,6 +16,7 @@ import {
   UploadJob,
   JSSJobStatus,
   UploadServiceFields,
+  Service,
 } from "../job-status-service/types";
 import LabkeyClient from "../labkey-client";
 import MetadataManagementService from "../metadata-management-service";
@@ -75,12 +77,11 @@ export default class FileManagementSystem {
   ): Promise<UploadJob> {
     return this.jss.createJob({
       jobName: path.basename(metadata.file.originalPath),
-      service: "file-upload-app",
+      service: Service.FILE_UPLOAD_APP,
       status: JSSJobStatus.WAITING,
       user,
       serviceFields: {
         files: [metadata],
-        type: "upload",
         ...serviceFields,
       },
     });
@@ -156,9 +157,6 @@ export default class FileManagementSystem {
         registration.chunkSize,
         (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       );
-
-      // Add metadata and complete tracker job
-      await this.finalizeUpload(upload, registration.uploadId);
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -175,6 +173,30 @@ export default class FileManagementSystem {
   }
 
   /**
+   * Finishes the remaining work to finalize the upload after
+   * FSS's portion has been completed asynchronously
+   */
+  public async complete(upload: UploadJob, fileId: string): Promise<void> {
+    // Add metadata to file via MMS
+    await this.mms.createFileMetadata(fileId, upload.serviceFields.files[0]);
+
+    // Complete tracker job and add the local file path to it for ease of viewing
+    const { localPath } = await this.fss.getFileAttributes(fileId);
+    await this.jss.updateJob(upload.jobId, {
+      status: JSSJobStatus.SUCCEEDED,
+      serviceFields: {
+        result: [
+          {
+            fileId,
+            fileName: path.basename(localPath),
+            readPath: localPath,
+          },
+        ],
+      },
+    });
+  }
+
+  /**
    * Attempts to retry the upload for the given failed job. The job will not
    * be reused, but will instead be replaced.
    *
@@ -187,10 +209,8 @@ export default class FileManagementSystem {
     uploadId: string,
     onProgress: (uploadId: string, progress: UploadProgressInfo) => void
   ): Promise<void> {
-    console.info(`Retrying upload for jobId=${uploadId}.`);
-
     // Request job from JSS & validate if it is retryable
-    const upload = await this.jss.getJob(uploadId);
+    const upload = (await this.jss.getJob(uploadId)) as UploadJob;
 
     // Avoid attempting to retry a successful job, should be an update in that case
     if (upload.status === JSSJobStatus.SUCCEEDED) {
@@ -200,25 +220,20 @@ export default class FileManagementSystem {
     }
 
     // Attempt to resume an ongoing upload if possible before scraping this one entirely
-    if (upload.serviceFields.fssUploadId) {
+    const { fssUploadId } = upload.serviceFields;
+    if (fssUploadId) {
       try {
-        const fssStatus = await this.fss.getStatus(
-          upload.serviceFields.fssUploadId
-        );
+        const fssStatus = await this.fss.getStatus(fssUploadId);
         if (
           fssStatus.uploadStatus === UploadStatus.WORKING ||
           fssStatus.uploadStatus === UploadStatus.COMPLETE
         ) {
-          const { size: fileSize } = await fs.promises.stat(
-            upload.serviceFields.files?.[0]?.file.originalPath
-          );
-          await this.resume(upload, fssStatus, (bytesUploaded) =>
-            onProgress(uploadId, { bytesUploaded, totalBytes: fileSize })
-          );
+          await this.resume(upload, fssStatus, onProgress);
           return;
         }
       } catch (error) {
-        // No-op: This check is just an attempt to resume, still able to recover from here
+        // Cancel FSS upload to retry again from scratch
+        await this.fss.cancelUpload(fssUploadId);
       }
     }
 
@@ -335,65 +350,61 @@ export default class FileManagementSystem {
   private async resume(
     upload: UploadJob,
     fssStatus: UploadStatusResponse,
-    onProgress: (bytesUploaded: number) => void
+    onProgress: (uploadId: string, progress: UploadProgressInfo) => void
   ): Promise<void> {
-    // Update status in case resume process goes smoothly
-    await this.jss.updateJob(upload.jobId, {
-      status: JSSJobStatus.RETRYING,
-    });
+    const { fssUploadChunkSize, fssUploadId } = upload.serviceFields;
 
-    try {
-      const { fssUploadId } = upload.serviceFields;
-      // Shouldn't occur, but kept for type safety
-      if (!fssUploadId) {
-        throw new Error(
-          "Upload missing vital information about upload ID to send to server"
-        );
-      }
+    // Skip trying to resume if there is no FSS upload to check
+    if (fssUploadId) {
+      // Retrive job FSS uses to track its upload portion
+      const fssUpload = await this.jss.getJob(fssUploadId);
 
       if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
-        // TODO: CHeck if it needs to be repeated?
-        // TODO: When should we do then vs retry?
-        // if (needs to be repeated?) {
-        // await this.fss.repeatFinalize(upload.serviceFields.fssUploadId);
-        // }
+        // If an FSS upload status is complete it has performed everything
+        // it needs to and may just need the client to finish its portion
+        const { fileId } = fssUpload?.serviceFields || {};
+
+        // If there is no file ID the add to LabKey step may have yet to complete
+        if (fileId) {
+          await this.complete(upload, fileId);
+        }
       } else if (fssStatus.uploadStatus === UploadStatus.WORKING) {
-        // TODO: This field should soon come from the getStatus endpoint of FSS
         // Shouldn't occur, but kept for type safety
-        if (!upload.serviceFields.fssUploadChunkSize) {
+        if (!fssUploadChunkSize) {
           throw new Error(
             "Upload missing vital information about chunk size to send to server"
           );
         }
+
+        // Update status to reflect the resume going smoothly
+        await this.jss.updateJob(upload.jobId, {
+          status: JSSJobStatus.RETRYING,
+        });
 
         // If FSS is still available to continue receiving chunks of this upload
         // simply continue sending the chunks
         const lastChunkNumber = fssStatus.chunkStatuses.findIndex(
           (status) => status !== ChunkStatus.COMPLETE
         );
-        await this.uploadInChunks(
-          upload.jobId,
-          upload.serviceFields.files[0].file.originalPath,
-          upload.serviceFields.fssUploadChunkSize,
-          onProgress,
-          lastChunkNumber
-        );
-      } else {
-        // Shouldn't occur, but just in case
-        throw new Error("Unable to resume a failed upload");
-      }
 
-      // Add metadata and complete tracker job
-      await this.finalizeUpload(upload, fssUploadId);
-    } catch (error) {
-      // Fail job in JSS with error
-      const errMsg = `Something went wrong resuming ${upload.jobName}. Details: ${error?.message}`;
-      console.error(errMsg);
-      await this.jss.updateJob(upload.jobId, {
-        status: JSSJobStatus.FAILED,
-        serviceFields: { error: errMsg },
-      });
-      throw error;
+        // FSS may already have all the chunks it needs and is asynchronously
+        // comparing the MD5 hash
+        if (
+          fssUpload.currentStage === UploadStage.ADDING_CHUNKS ||
+          fssUpload.currentStage === UploadStage.WAITING_FOR_FIRST_CHUNK
+        ) {
+          const { originalPath } = upload.serviceFields.files[0].file;
+          const { size: fileSize } = await fs.promises.stat(originalPath);
+          await this.uploadInChunks(
+            fssUploadId,
+            originalPath,
+            fssUploadChunkSize,
+            (bytesUploaded) =>
+              onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
+            lastChunkNumber
+          );
+        }
+      }
     }
   }
 
@@ -442,37 +453,5 @@ export default class FileManagementSystem {
 
     // Ensure final progress events are sent
     throttledOnProgress.flush();
-  }
-
-  /**
-   * Finishes the remaining work to finalize the upload after
-   * FSS's portion has been completed
-   */
-  private async finalizeUpload(
-    upload: UploadJob,
-    fssUploadId: string
-  ): Promise<void> {
-    // TODO: Wait for file to exist by polling... something?
-    // TODO: remove this though
-    const finalizeResponse = await this.fss.repeatFinalize(fssUploadId);
-    const fileId = finalizeResponse.fileId as string;
-
-    // Add metadata to file via MMS
-    await this.mms.createFileMetadata(fileId, upload.serviceFields.files[0]);
-
-    // Complete tracker job and add the local file path to it for ease of viewing
-    const { localPath } = await this.fss.getFileAttributes(fileId);
-    await this.jss.updateJob(upload.jobId, {
-      status: JSSJobStatus.SUCCEEDED,
-      serviceFields: {
-        result: [
-          {
-            fileId,
-            fileName: path.basename(localPath),
-            readPath: localPath,
-          },
-        ],
-      },
-    });
   }
 }

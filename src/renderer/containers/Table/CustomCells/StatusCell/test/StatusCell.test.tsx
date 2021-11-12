@@ -151,6 +151,6 @@ describe("<StatusCell />", () => {
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
       "WORKING - Step 3 of 3: Adding metadata"
     );
-    expect(wrapper.find(Progress).prop("percent")).to.equal(50);
+    expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });
 });

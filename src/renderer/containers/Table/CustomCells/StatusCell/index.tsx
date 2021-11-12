@@ -95,19 +95,25 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
     let step = Step.ONE;
     let bytesCompletedForStep = md5BytesComputed;
+    let displayForStep = getBytesDisplay(bytesCompletedForStep);
+    let totalForStep = getBytesDisplay(totalBytes);
     // If all bytes have been uploaded then the upload is on the last step
     if (bytesUploaded === totalBytes) {
       step = Step.THREE;
-      bytesCompletedForStep = (totalBytes || 1) / 2;
+      bytesCompletedForStep = 0;
+      displayForStep = "0";
+      totalForStep = "1";
     } else if (bytesUploaded || md5BytesComputed === totalBytes) {
       // If any bytes are uploaded or if step 1 has completed then the upload
       // is on the second step
       step = Step.TWO;
       bytesCompletedForStep = bytesUploaded;
+      displayForStep = getBytesDisplay(bytesCompletedForStep);
+      totalForStep = getBytesDisplay(totalBytes);
     }
 
     let progressForStep = 0;
-    if (bytesCompletedForStep) {
+    if (bytesCompletedForStep && totalBytes) {
       progressForStep = Math.floor((bytesCompletedForStep / totalBytes) * 100);
     }
 
@@ -123,8 +129,7 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
         <div className={styles.activeInfo}>
           <p>Step {step + 1} of 3</p>
           <p>
-            {getBytesDisplay(bytesCompletedForStep)} /{" "}
-            {getBytesDisplay(totalBytes)}
+            {displayForStep} / {totalForStep}
           </p>
         </div>
       </>

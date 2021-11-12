@@ -36,7 +36,6 @@ describe("JSSResponseMapper", () => {
               },
             },
           ],
-          type: "upload",
         },
       };
       const metadata = {
@@ -61,7 +60,6 @@ describe("JSSResponseMapper", () => {
         ...mockJSSJob,
         serviceFields: {
           files: [metadata, metadata2],
-          type: "upload",
         },
       };
       const result = JSSResponseMapper.map(input);
@@ -72,14 +70,12 @@ describe("JSSResponseMapper", () => {
         ...mockJSSJob,
         serviceFields: {
           files: [],
-          type: "upload",
         },
       };
       const expected: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
           files: [],
-          type: "upload",
         },
       };
       const result = JSSResponseMapper.map(input);
@@ -92,7 +88,6 @@ describe("JSSResponseMapper", () => {
         currentStage,
         serviceFields: {
           files: [],
-          type: "upload",
         },
       };
       const result = JSSResponseMapper.map(input);

@@ -21,6 +21,11 @@ export enum ChunkStatus {
   COMPLETE = "Complete",
 }
 
+export enum UploadStage {
+  WAITING_FOR_FIRST_CHUNK = "WAITING_FOR_FIRST_CHUNK",
+  ADDING_CHUNKS = "ADDING_CHUNKS",
+}
+
 // RESPONSE TYPES
 interface RegisterUploadResponse {
   uploadId: string; // ID for tracking upload
@@ -55,12 +60,12 @@ interface FileRecord {
  * This acts as an interface for interacting with the File Storage Service (FSS).
  */
 export default class FileStorageService extends HttpCacheClient {
-  private static readonly ENDPOINT = "fss/2.0";
+  private static readonly ENDPOINT = "fss2/2.0";
   private static readonly BASE_FILE_PATH = `${FileStorageService.ENDPOINT}/file`;
   private static readonly BASE_UPLOAD_PATH = `${FileStorageService.ENDPOINT}/upload`;
 
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
-    super(httpClient, localStorage, false, "http", "dev-aics-chp-002", 8080);
+    super(httpClient, localStorage, false);
   }
 
   /**

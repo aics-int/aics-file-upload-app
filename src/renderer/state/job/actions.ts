@@ -1,5 +1,5 @@
 import { UploadProgressInfo } from "../../services/file-management-system";
-import { UploadJob } from "../../services/job-status-service/types";
+import { JSSJob, UploadJob } from "../../services/job-status-service/types";
 import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
 import {
@@ -30,7 +30,7 @@ export function receiveJobInsert(job: UploadJob): ReceiveJobInsertAction {
   };
 }
 
-export function receiveJobUpdate(job: UploadJob): ReceiveJobUpdateAction {
+export function receiveJobUpdate(job: JSSJob): ReceiveJobUpdateAction {
   return {
     payload: job,
     type: RECEIVE_JOB_UPDATE,

@@ -1,6 +1,9 @@
 import { expect } from "chai";
 
-import { JSSJobStatus } from "../../../services/job-status-service/types";
+import {
+  JSSJobStatus,
+  Service,
+} from "../../../services/job-status-service/types";
 import {
   mockSuccessfulUploadJob,
   mockWorkingUploadJob,
@@ -32,7 +35,25 @@ describe("job reducer", () => {
     });
   });
   describe("receiveJobUpdate", () => {
-    it("replaces job with matching jobId in uploadJobs if serviceFields.type = 'upload", () => {
+    it("returns same state if FSS job", () => {
+      // Arrange
+      const state = {
+        ...initialState,
+        uploadJobs: [mockWorkingUploadJob, mockSuccessfulUploadJob],
+      };
+      const updatedJob = {
+        ...mockWorkingUploadJob,
+        service: Service.FILE_STORAGE_SERVICE,
+      };
+
+      // Act
+      const result = reducer(state, receiveJobUpdate(updatedJob));
+
+      // Assert
+      expect(result).to.equal(state);
+    });
+
+    it("replaces job with matching jobId in uploadJobs", () => {
       const updatedJob = {
         ...mockWorkingUploadJob,
         status: JSSJobStatus.SUCCEEDED,

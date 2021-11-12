@@ -81,7 +81,6 @@ import {
   saveUploadDraftSuccess,
   updateUploads,
   uploadFailed,
-  uploadSucceeded,
 } from "./actions";
 import {
   ADD_UPLOAD_FILES,
@@ -224,18 +223,16 @@ const initiateUploadLogic = createLogic({
     dispatch(initiateUploadSucceeded(action.payload));
 
     const uploadTasks = uploads.map((upload) => async () => {
-      const name = upload.jobName;
       try {
         const onProgress = (progress: UploadProgressInfo) => {
           dispatch(updateUploadProgressInfo(upload.jobId, progress));
         };
         await fms.upload(upload, onProgress);
-        dispatch(uploadSucceeded(name));
       } catch (error) {
         dispatch(
           uploadFailed(
             `Something went wrong while uploading your files. Details: ${error?.message}`,
-            name
+            upload.jobName
           )
         );
       }
@@ -1003,7 +1000,6 @@ const uploadWithoutMetadataLogic = createLogic({
           dispatch(updateUploadProgressInfo(upload.jobId, progress));
         };
         await deps.fms.upload(upload, onProgress);
-        dispatch(uploadSucceeded(name));
       } catch (error) {
         dispatch(
           uploadFailed(
