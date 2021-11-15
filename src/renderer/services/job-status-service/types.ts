@@ -23,7 +23,9 @@ export interface UploadServiceFields {
   // Unique ID for tracking the upload according to FSS
   fssUploadId?: string;
 
-  // TODO: See if we can't get this from the upload GET from FSS
+  // In the event an upload is resumed the chunk size requested by FSS
+  // initially may not still be around in which case it will be helpful
+  // to store it here to access as needed
   fssUploadChunkSize?: number;
 
   // Identifies the upload as part of a larger group of uploads

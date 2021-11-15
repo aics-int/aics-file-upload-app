@@ -104,8 +104,7 @@ export default class FileManagementSystem {
         size: fileSize,
         mtime: fileLastModified,
       } = await fs.promises.stat(source);
-      // TODO: I don't think this is ms since EPOCH
-      const fileLastModifiedInMs = fileLastModified.getMilliseconds();
+      const fileLastModifiedInMs = fileLastModified.getTime();
 
       // Calculate MD5 ahead of submission, re-use from job if possible. Only potentially available
       // on job if this upload is being re-submitted like for a retry. Avoid reusing MD5 if the file
@@ -222,18 +221,24 @@ export default class FileManagementSystem {
     // Attempt to resume an ongoing upload if possible before scraping this one entirely
     const { fssUploadId } = upload.serviceFields;
     if (fssUploadId) {
+      let fssStatus;
       try {
-        const fssStatus = await this.fss.getStatus(fssUploadId);
-        if (
-          fssStatus.uploadStatus === UploadStatus.WORKING ||
-          fssStatus.uploadStatus === UploadStatus.COMPLETE
-        ) {
+        fssStatus = await this.fss.getStatus(fssUploadId);
+      } catch (error) {
+        // No-op: move on if this failed
+      }
+
+      if (
+        fssStatus?.uploadStatus === UploadStatus.WORKING ||
+        fssStatus?.uploadStatus === UploadStatus.COMPLETE
+      ) {
+        try {
           await this.resume(upload, fssStatus, onProgress);
           return;
+        } catch (error) {
+          // Cancel FSS upload to retry again from scratch
+          await this.fss.cancelUpload(fssUploadId);
         }
-      } catch (error) {
-        // Cancel FSS upload to retry again from scratch
-        await this.fss.cancelUpload(fssUploadId);
       }
     }
 
@@ -304,7 +309,9 @@ export default class FileManagementSystem {
    * in progress or that have been copied into FMS.
    */
   public async cancel(uploadId: string): Promise<void> {
-    const { status, ...job } = await this.jss.getJob(uploadId);
+    const { status, ...upload } = (await this.jss.getJob(
+      uploadId
+    )) as UploadJob;
 
     // Job must be in progress in order to cancel
     if (!IN_PROGRESS_STATUSES.includes(status)) {
@@ -317,18 +324,25 @@ export default class FileManagementSystem {
     this.fileReader.cancel(uploadId);
 
     // If we haven't saved the FSS Job ID this either failed miserably or hasn't progressed much
-    if (job.serviceFields?.fssUploadId) {
-      const { uploadStatus } = await this.fss.getStatus(
-        job.serviceFields?.fssUploadId
-      );
-
-      // If FSS has completed the upload it is too late to cancel
-      if (uploadStatus === UploadStatus.COMPLETE) {
-        throw new Error(`Upload has progressed too far to be canceled`);
+    let fssStatus;
+    const { fssUploadId } = upload.serviceFields;
+    if (fssUploadId) {
+      try {
+        fssStatus = await this.fss.getStatus(fssUploadId);
+      } catch (error) {
+        // No-op: Unnecessary to care why this failed if it did fail,
+        // assume upload is in a bad state and continue failing it
       }
 
-      // Cancel upload in FSS
-      await this.fss.cancelUpload(job.serviceFields.fssUploadId);
+      if (fssStatus) {
+        // If FSS has completed the upload it is too late to cancel
+        if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
+          throw new Error(`Upload has progressed too far to be canceled`);
+        }
+
+        // Cancel upload in FSS
+        await this.fss.cancelUpload(fssUploadId);
+      }
     }
 
     // Update the job to provide feedback

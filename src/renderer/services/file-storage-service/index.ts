@@ -40,7 +40,6 @@ interface UploadChunkResponse {
 }
 
 export interface UploadStatusResponse {
-  chunkSize?: number; // TODO: Not in the FSS2 model yet, adding ahead of time as an optional field
   chunkStatuses: ChunkStatus[];
   uploadStatus: UploadStatus;
 }

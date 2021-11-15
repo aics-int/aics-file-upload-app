@@ -126,7 +126,7 @@ describe("FileManagementSystem", () => {
               },
             },
           ],
-          lastModifiedInMS: lastModified.getMilliseconds(),
+          lastModifiedInMS: lastModified.getTime(),
           calculatedMD5: "123094123412",
         },
       };

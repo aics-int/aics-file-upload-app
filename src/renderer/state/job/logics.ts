@@ -93,22 +93,33 @@ const receiveJobUpdateLogics = createLogic({
     const jobName = updatedJob.jobName || "";
     const previousJob: UploadJob | undefined = ctx.previousJob;
 
+    // Check if the JSS job that came in as an update is from FSS
     if (updatedJob.service === Service.FILE_STORAGE_SERVICE) {
       const jobs = getUploadJobs(getState());
+      // Find the upload job currently being tracked that this FSS job
+      // corresponds to
       const uploadJob = jobs.find(
         (job) => job.serviceFields?.fssUploadId === updatedJob.jobId
       );
+
+      // If a JSS job update comes in for a non-successful upload the user is tracking
+      // and the update contains a file id then that signifies that FSS has finished its
+      // portion of the upload and now the app must finish its portion.
+      // Only non-successful uploads are completed since that upload
+      // has already been completed by a client.
       if (
         updatedJob.serviceFields?.fileId &&
         uploadJob &&
         uploadJob.status !== JSSJobStatus.SUCCEEDED
       ) {
-        await fms.complete(uploadJob, updatedJob.serviceFields?.fileId);
+        await fms.complete(uploadJob, updatedJob.serviceFields.fileId);
       }
     } else if (
       isUploadSuccessfulAndComplete(updatedJob) &&
       !isUploadSuccessfulAndComplete(previousJob)
     ) {
+      // If the previous job was not successful and complete then the new
+      // update shows that is it is then announce to the user that it has completed
       dispatch(uploadSucceeded(jobName));
     } else if (
       previousJob &&

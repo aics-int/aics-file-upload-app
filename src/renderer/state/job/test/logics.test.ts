@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
 import { FileManagementSystem, JobStatusService } from "../../../services";
-import { UploadJob } from "../../../services/job-status-service/types";
+import { Service, UploadJob } from "../../../services/job-status-service/types";
 import { setErrorAlert, setInfoAlert } from "../../feedback/actions";
 import {
   createMockReduxStore,
@@ -98,7 +98,7 @@ describe("Job logics", () => {
       ]);
     });
 
-    it("finds and retries one abandoned job with children", async () => {
+    it("finds and retries one abandoned job", async () => {
       const {
         actions,
         logicMiddleware,
@@ -178,8 +178,40 @@ describe("Job logics", () => {
       };
     });
 
-    it("completes upload if FSS job with file id comes along", () => {
-      // TODO:
+    it("completes upload if FSS job with file id comes along", async () => {
+      // Arrange
+      const uploadId = "9023141234";
+      const state = {
+        ...mockState,
+        job: {
+          ...mockState.job,
+          uploadJobs: [
+            {
+              ...mockWorkingUploadJob,
+              serviceFields: {
+                ...mockWorkingUploadJob.serviceFields,
+                fssUploadId: uploadId,
+              },
+            },
+          ],
+        },
+      };
+      const { logicMiddleware, store } = createMockReduxStore(state);
+      const upload = {
+        ...mockWorkingUploadJob,
+        jobId: uploadId,
+        service: Service.FILE_STORAGE_SERVICE,
+        serviceFields: {
+          fileId: "12903123",
+        },
+      };
+
+      // Act
+      store.dispatch(receiveJobUpdate(upload));
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(fms.complete.calledOnce).to.be.true;
     });
 
     it("dispatches no additional actions if the job is in progress", async () => {

@@ -7,7 +7,6 @@ import { LocalStorage } from "../../../types";
 import HttpCacheClient from "../../http-cache-client";
 
 describe("FileStorageService", () => {
-  // TODO: Can we use default sandbox here?
   const sandbox = createSandbox();
   const storage = sandbox.createStubInstance(EnvironmentAwareStorage);
   const httpClient = sandbox.createStubInstance(HttpCacheClient);
