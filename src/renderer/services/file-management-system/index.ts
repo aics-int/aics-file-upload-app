@@ -154,6 +154,7 @@ export default class FileManagementSystem {
         registration.uploadId,
         source,
         registration.chunkSize,
+        upload.user,
         (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       );
     } catch (error) {
@@ -371,7 +372,15 @@ export default class FileManagementSystem {
     // Skip trying to resume if there is no FSS upload to check
     if (fssUploadId) {
       // Retrive job FSS uses to track its upload portion
-      const fssUpload = await this.jss.getJob(fssUploadId);
+      let fssUpload;
+      try {
+        fssUpload = await this.jss.getJob(fssUploadId);
+      } catch (error) {
+        // Because FSS uses a queue to interact with JSS this job
+        // may not exist even though the upload is in progress
+        // in which case the app can just wait it out
+        return;
+      }
 
       if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
         // If an FSS upload status is complete it has performed everything
@@ -413,6 +422,7 @@ export default class FileManagementSystem {
             fssUploadId,
             originalPath,
             fssUploadChunkSize,
+            upload.user,
             (bytesUploaded) =>
               onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
             lastChunkNumber
@@ -426,9 +436,10 @@ export default class FileManagementSystem {
    * Uploads the given file to FSS in chunks asynchronously using a NodeJS.
    */
   private async uploadInChunks(
-    uploadId: string,
+    fssUploadId: string,
     source: string,
     chunkSize: number,
+    user: string,
     onProgress: (bytesUploaded: number) => void,
     initialChunkNumber = 0
   ): Promise<void> {
@@ -447,10 +458,11 @@ export default class FileManagementSystem {
     const onChunkRead = async (chunk: Uint8Array): Promise<void> => {
       chunkNumber += 1;
       await this.fss.sendUploadChunk(
-        uploadId,
+        fssUploadId,
         chunkNumber,
         bytesUploaded,
-        chunk
+        chunk,
+        user
       );
       bytesUploaded += chunk.byteLength;
       throttledOnProgress(bytesUploaded);
@@ -458,7 +470,7 @@ export default class FileManagementSystem {
 
     // Read in file
     await this.fileReader.read(
-      uploadId,
+      fssUploadId,
       source,
       onChunkRead,
       chunkSize,

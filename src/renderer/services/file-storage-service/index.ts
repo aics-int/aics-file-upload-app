@@ -104,7 +104,8 @@ export default class FileStorageService extends HttpCacheClient {
     uploadId: string,
     chunkNumber: number,
     rangeStart: number,
-    postBody: Uint8Array
+    postBody: Uint8Array,
+    user: string
   ): Promise<UploadChunkResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/uploadChunk/${uploadId}/${chunkNumber}`;
     const rangeEnd = rangeStart + postBody.byteLength - 1;
@@ -112,8 +113,8 @@ export default class FileStorageService extends HttpCacheClient {
       ...FileStorageService.getHttpRequestConfig(),
       headers: {
         "Content-Type": "application/octet-stream",
-        range: `bytes=${rangeStart}-${rangeEnd}`,
-        "X-User-Id": "seanm", // TODO Revert: username,
+        Range: `bytes=${rangeStart}-${rangeEnd}`,
+        "X-User-Id": user,
       },
     });
   }
