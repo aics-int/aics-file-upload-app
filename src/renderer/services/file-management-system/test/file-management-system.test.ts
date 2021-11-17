@@ -92,6 +92,7 @@ describe("FileManagementSystem", () => {
               },
             },
           ],
+          type: "upload",
         },
       };
       fileReader.calculateMD5.resolves(md5);
@@ -128,6 +129,7 @@ describe("FileManagementSystem", () => {
           ],
           lastModifiedInMS: lastModified.getTime(),
           calculatedMD5: "123094123412",
+          type: "upload",
         },
       };
       const fileId = "12343124";
@@ -170,6 +172,7 @@ describe("FileManagementSystem", () => {
               },
             },
           ],
+          type: "upload",
         },
       };
       fileReader.calculateMD5.resolves(md5);
@@ -214,6 +217,7 @@ describe("FileManagementSystem", () => {
               },
             },
           ],
+          type: "upload",
         },
       };
       const fileId = "12343124";
@@ -259,6 +263,7 @@ describe("FileManagementSystem", () => {
             },
           ],
           fssUploadId: "234124141",
+          type: "upload",
         },
       };
       const fileId = "12343124";
@@ -313,6 +318,7 @@ describe("FileManagementSystem", () => {
               },
             },
           ],
+          type: "upload",
         },
       };
       const fileId = "12343124";
@@ -361,6 +367,7 @@ describe("FileManagementSystem", () => {
               ],
               fssUploadId: "234124141",
               fssUploadChunkSize: 13,
+              type: "upload",
             },
           };
           const fssUpload: JSSJob = {
@@ -398,6 +405,7 @@ describe("FileManagementSystem", () => {
             },
           ],
           fssUploadId: "234124141",
+          type: "upload",
         },
       };
       const fileId = "12343124";

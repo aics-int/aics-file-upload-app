@@ -18,6 +18,7 @@ export const mockCreateJobRequest: CreateJobRequest = {
   service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     files: [],
+    type: "upload",
   },
 };
 
@@ -36,6 +37,7 @@ export const mockJSSJob: UploadJob = {
   service: Service.FILE_UPLOAD_APP,
   serviceFields: {
     files: [],
+    type: "upload",
   },
 };
 

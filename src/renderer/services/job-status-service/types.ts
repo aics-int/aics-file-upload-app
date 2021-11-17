@@ -65,6 +65,10 @@ export interface UploadServiceFields {
       modified: Date;
     };
   };
+
+  // A marker we have used for upload jobs in the past that we are now stuck with
+  // hopefully eventually we can fully rely on using something like the 'service' field
+  type: "upload";
 }
 
 export interface JSSJob {
@@ -121,7 +125,6 @@ export enum Service {
 
 export interface UploadJob extends JSSJob {
   jobName: string;
-  service: Service.FILE_UPLOAD_APP;
   serviceFields: UploadServiceFields;
 }
 

@@ -98,10 +98,9 @@ export default function App() {
     eventSource.addEventListener("initialJobs", (event: MessageEvent) => {
       dispatch(removeRequestFromInProgress(AsyncRequest.GET_JOBS));
       const jobs = camelizeKeys(JSON.parse(event.data)) as JSSJob[];
-      // TODO: Verify this is the service of all JSS jobs back to 2018/2019
       // Separate user's other jobs from ones created by this app
       const uploadJobs = jobs.filter(
-        (job) => job.service === Service.FILE_UPLOAD_APP
+        (job) => job.serviceFields?.type === "upload"
       ) as UploadJob[];
       dispatch(receiveJobs(uploadJobs));
     });
@@ -109,7 +108,7 @@ export default function App() {
     eventSource.addEventListener("jobInsert", (event: MessageEvent) => {
       const job = camelizeKeys(JSON.parse(event.data)) as JSSJob;
       // Separate user's other jobs from ones created by this app
-      if (job.service === Service.FILE_UPLOAD_APP) {
+      if (job.serviceFields?.type === "upload") {
         dispatch(receiveJobInsert(job as UploadJob));
       }
     });
@@ -117,7 +116,11 @@ export default function App() {
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
       const job = camelizeKeys(JSON.parse(event.data)) as JSSJob;
       // Separate user's other jobs from ones created by this app
-      if (job.service && job.service in Service) {
+      // and those created by FSS
+      if (
+        job.serviceFields?.type === "upload" ||
+        job.service === Service.FILE_STORAGE_SERVICE
+      ) {
         dispatch(receiveJobUpdate(job));
       }
     });

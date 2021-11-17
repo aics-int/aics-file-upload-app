@@ -82,6 +82,7 @@ export default class FileManagementSystem {
       user,
       serviceFields: {
         files: [metadata],
+        type: "upload",
         ...serviceFields,
       },
     });
