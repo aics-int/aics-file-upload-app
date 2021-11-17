@@ -84,12 +84,13 @@ describe("FileStorageService", () => {
         uploadId,
         chunkNumber,
         rangeStart,
-        postBody
+        postBody,
+        "testUser"
       );
 
       // Assert
       expect(actual).to.deep.equal(expectedResponse);
-      const actualRange = httpClient.post.firstCall.args[2]?.headers?.range;
+      const actualRange = httpClient.post.firstCall.args[2]?.headers?.Range;
       expect(actualRange).to.deep.equal(expectedRange);
     });
   });
