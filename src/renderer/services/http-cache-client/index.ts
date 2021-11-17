@@ -1,6 +1,7 @@
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 
 import {
+  DEFAULT_USERNAME,
   LIMS_HOST,
   LIMS_PORT,
   LIMS_PROTOCOL,
@@ -170,14 +171,13 @@ export default class HttpCacheClient {
     return this.checkCache(key, action);
   }
 
-  protected getHttpRequestConfig = (): AxiosRequestConfig => {
-    // TODO: Revert
-    // const userSettings = this.localStorage.get(USER_SETTINGS_KEY);
-    // const username = userSettings?.username || DEFAULT_USERNAME;
+  private getHttpRequestConfig = (): AxiosRequestConfig => {
+    const userSettings = this.localStorage.get(USER_SETTINGS_KEY);
+    const username = userSettings?.username || DEFAULT_USERNAME;
     return {
       headers: {
         "Content-Type": "application/json",
-        "X-User-Id": "seanm", // TODO Revert: username,
+        "X-User-Id": username,
       },
     };
   };
