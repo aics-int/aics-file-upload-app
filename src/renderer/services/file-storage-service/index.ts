@@ -88,6 +88,11 @@ export default class FileStorageService extends HttpCacheClient {
       // eslint-disable-next-line @typescript-eslint/camelcase
       file_size: fileSize,
       MD5: md5,
+      // TODO: should_be_in_cloud should not be false after testing is complete
+      // Unfortunately FSS expects snake_case in all but one case (MD5)
+      // so the conversion must be manual each request
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      should_be_in_cloud: false,
     };
     return this.post<RegisterUploadResponse>(
       url,

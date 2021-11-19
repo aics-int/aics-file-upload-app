@@ -15,6 +15,7 @@ import {
 import StatusBar from "../../components/StatusBar";
 import {
   JSSJob,
+  JSSJobStatus,
   Service,
   UploadJob,
 } from "../../services/job-status-service/types";
@@ -32,6 +33,7 @@ import {
   getSetMountPointNotificationVisible,
 } from "../../state/feedback/selectors";
 import {
+  receiveFSSJobCompletionUpdate,
   receiveJobInsert,
   receiveJobs,
   receiveJobUpdate,
@@ -99,8 +101,11 @@ export default function App() {
       dispatch(removeRequestFromInProgress(AsyncRequest.GET_JOBS));
       const jobs = camelizeKeys(JSON.parse(event.data)) as JSSJob[];
       // Separate user's other jobs from ones created by this app
+      // also filter out any replaced jobs
       const uploadJobs = jobs.filter(
-        (job) => job.serviceFields?.type === "upload"
+        (job) =>
+          job.serviceFields?.type === "upload" &&
+          !job.serviceFields?.replacementJobIds
       ) as UploadJob[];
       dispatch(receiveJobs(uploadJobs));
     });
@@ -115,13 +120,16 @@ export default function App() {
 
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
       const job = camelizeKeys(JSON.parse(event.data)) as JSSJob;
-      // Separate user's other jobs from ones created by this app
-      // and those created by FSS
+      // An FSS job update is only important to us when it is signaling
+      // the addition of the fileId i.e. FSS's completion or has failed
       if (
-        job.serviceFields?.type === "upload" ||
-        job.service === Service.FILE_STORAGE_SERVICE
+        job.service === Service.FILE_STORAGE_SERVICE &&
+        (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED)
       ) {
-        dispatch(receiveJobUpdate(job));
+        dispatch(receiveFSSJobCompletionUpdate(job));
+      } else if (job.serviceFields?.type === "upload") {
+        // Otherwise separate user's other jobs from ones created by this app
+        dispatch(receiveJobUpdate(job as UploadJob));
       }
     });
 

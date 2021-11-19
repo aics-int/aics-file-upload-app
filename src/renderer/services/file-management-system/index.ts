@@ -92,6 +92,9 @@ export default class FileManagementSystem {
    * Uploads the file at the given path and metadata.
    * Sends upload in chunks reporting the total bytes
    * read on each chunk submission.
+   * Does not complete the upload, FSS must do some work asynchronously
+   * before we can do so. This app will track the FSS upload job to
+   * determine when it is time to complete the upload.
    */
   public async upload(
     upload: UploadJob,
@@ -164,10 +167,7 @@ export default class FileManagementSystem {
         // Fail job in JSS with error
         const errMsg = `Something went wrong uploading ${upload.jobName}. Details: ${error?.message}`;
         console.error(errMsg);
-        await this.jss.updateJob(upload.jobId, {
-          status: JSSJobStatus.FAILED,
-          serviceFields: { error: errMsg },
-        });
+        await this.failUpload(upload.jobId, errMsg);
         throw error;
       }
     }
@@ -178,23 +178,43 @@ export default class FileManagementSystem {
    * FSS's portion has been completed asynchronously
    */
   public async complete(upload: UploadJob, fileId: string): Promise<void> {
-    // Add metadata to file via MMS
-    await this.mms.createFileMetadata(fileId, upload.serviceFields.files[0]);
+    try {
+      // Add metadata to file via MMS
+      const metadata = upload.serviceFields.files[0];
+      const metadataWithUploadId = {
+        ...metadata,
+        file: {
+          ...metadata.file,
+          jobId: upload.jobId,
+        },
+      };
+      await this.mms.createFileMetadata(fileId, metadataWithUploadId);
 
-    // Complete tracker job and add the local file path to it for ease of viewing
-    const { localPath } = await this.fss.getFileAttributes(fileId);
-    await this.jss.updateJob(upload.jobId, {
-      status: JSSJobStatus.SUCCEEDED,
-      serviceFields: {
-        result: [
-          {
-            fileId,
-            fileName: path.basename(localPath),
-            readPath: localPath,
+      // Complete tracker job and add the local file path to it for ease of viewing
+      const { localPath } = await this.fss.getFileAttributes(fileId);
+      await this.jss.updateJob(
+        upload.jobId,
+        {
+          status: JSSJobStatus.SUCCEEDED,
+          serviceFields: {
+            result: [
+              {
+                fileId,
+                fileName: path.basename(localPath),
+                readPath: localPath,
+              },
+            ],
           },
-        ],
-      },
-    });
+        },
+        false
+      );
+    } catch (error) {
+      await this.failUpload(
+        upload.jobId,
+        `Something went wrong trying to complete this app's portion of the upload. Details: ${error?.message}`
+      );
+      throw error;
+    }
   }
 
   /**
@@ -269,16 +289,20 @@ export default class FileManagementSystem {
 
           try {
             // Update the current job with information about the replacement
-            await this.jss.updateJob(uploadId, {
-              status: JSSJobStatus.FAILED,
-              serviceFields: {
-                error: `This job has been replaced with Job ID: ${newUpload.jobId}`,
-                replacementJobIds: uniq([
-                  ...(upload?.serviceFields?.replacementJobIds || []),
-                  newUpload.jobId,
-                ]),
+            await this.jss.updateJob(
+              uploadId,
+              {
+                status: JSSJobStatus.FAILED,
+                serviceFields: {
+                  error: `This job has been replaced with Job ID: ${newUpload.jobId}`,
+                  replacementJobIds: uniq([
+                    ...(upload?.serviceFields?.replacementJobIds || []),
+                    newUpload.jobId,
+                  ]),
+                },
               },
-            });
+              false
+            );
           } catch (error) {
             // Cancel the new job if unable to update the old one
             await this.cancel(newUpload.jobId);
@@ -348,9 +372,23 @@ export default class FileManagementSystem {
     }
 
     // Update the job to provide feedback
+    await this.failUpload(uploadId, "Cancelled by user", true);
+  }
+
+  /**
+   * Marks the given upload as a failure
+   */
+  public async failUpload(
+    uploadId: string,
+    error: string,
+    cancelled = false
+  ): Promise<void> {
     await this.jss.updateJob(uploadId, {
       status: JSSJobStatus.FAILED,
-      serviceFields: { cancelled: true, error: "Cancelled by user" },
+      serviceFields: {
+        cancelled,
+        error,
+      },
     });
   }
 

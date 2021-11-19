@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { receiveJobs } from "../../job/actions";
+import { receiveFSSJobCompletionUpdate, receiveJobs } from "../../job/actions";
 import {
   receiveAnnotationUsage,
   requestAnnotationUsage,
@@ -25,6 +25,7 @@ import {
   mockSuccessfulUploadJob,
   mockTemplateDraft,
   mockWellUpload,
+  mockWorkingUploadJob,
 } from "../../test/mocks";
 import { AlertType, AsyncRequest, FeedbackStateBranch } from "../../types";
 import {
@@ -336,6 +337,39 @@ describe("feedback reducer", () => {
       );
       expect(!result.requestsInProgress.includes(AsyncRequest.GET_JOBS)).to.be
         .true;
+    });
+  });
+  describe("receiveFSSJobCompletionUpdate", () => {
+    it("adds async request to progress", () => {
+      // Arrange
+      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockWorkingUploadJob.jobId}-${mockWorkingUploadJob.status}`;
+
+      // Act
+      const actual = reducer(
+        initialState,
+        receiveFSSJobCompletionUpdate(mockWorkingUploadJob)
+      );
+
+      // Assert
+      expect(actual.requestsInProgress).to.deep.equal([expectedRequest]);
+    });
+
+    it("does not add duplicate requests", () => {
+      // Arrange
+      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockWorkingUploadJob.jobId}-${mockWorkingUploadJob.status}`;
+      const state = {
+        ...initialState,
+        requestsInProgress: [expectedRequest],
+      };
+
+      // Act
+      const actual = reducer(
+        state,
+        receiveFSSJobCompletionUpdate(mockWorkingUploadJob)
+      );
+
+      // Assert
+      expect(actual.requestsInProgress).to.deep.equal([expectedRequest]);
     });
   });
   describe("initiateUpload", () => {

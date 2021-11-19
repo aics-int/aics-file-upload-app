@@ -3,8 +3,14 @@ import { AnyAction } from "redux";
 
 import { OPEN_TEMPLATE_MENU_ITEM_CLICKED } from "../../../shared/constants";
 import { REQUEST_FAILED } from "../constants";
-import { RECEIVE_JOBS } from "../job/constants";
-import { ReceiveJobsAction } from "../job/types";
+import {
+  RECEIVE_FSS_JOB_COMPLETION_UPDATE,
+  RECEIVE_JOBS,
+} from "../job/constants";
+import {
+  ReceiveFSSJobCompletionUpdateAction,
+  ReceiveJobsAction,
+} from "../job/types";
 import {
   GET_BARCODE_SEARCH_RESULTS,
   GET_OPTIONS_FOR_LOOKUP,
@@ -240,6 +246,23 @@ const actionToConfigMap: TypeToDescriptionMap<FeedbackStateBranch> = {
         requestsInProgress: addRequestToInProgress(state, action.payload),
       };
     },
+  },
+  [RECEIVE_FSS_JOB_COMPLETION_UPDATE]: {
+    accepts: (
+      action: AnyAction
+    ): action is ReceiveFSSJobCompletionUpdateAction =>
+      action.type === RECEIVE_FSS_JOB_COMPLETION_UPDATE,
+    perform: (
+      state: FeedbackStateBranch,
+      { payload: fssUpload }: ReceiveFSSJobCompletionUpdateAction
+    ): FeedbackStateBranch => ({
+      ...state,
+      // Create special key per upload to de-duplicate them
+      requestsInProgress: addRequestToInProgress(
+        state,
+        `${AsyncRequest.COMPLETE_UPLOAD}-${fssUpload.jobId}-${fssUpload.status}`
+      ),
+    }),
   },
   [REMOVE_REQUEST_IN_PROGRESS]: {
     accepts: (action: AnyAction): action is RemoveRequestInProgressAction =>

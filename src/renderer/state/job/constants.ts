@@ -11,6 +11,10 @@ export const RECEIVE_JOB_UPDATE = makeConstant(
   BRANCH_NAME,
   "receive-job-update"
 );
+export const RECEIVE_FSS_JOB_COMPLETION_UPDATE = makeConstant(
+  BRANCH_NAME,
+  "receive-fss-job-completion-update"
+);
 export const SET_LAST_SELECTED_UPLOAD = makeConstant(
   BRANCH_NAME,
   "set-last-selected-upload"

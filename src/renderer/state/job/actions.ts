@@ -7,6 +7,7 @@ import {
   RECEIVE_JOB_UPDATE,
   RECEIVE_JOBS,
   SET_LAST_SELECTED_UPLOAD,
+  RECEIVE_FSS_JOB_COMPLETION_UPDATE,
 } from "./constants";
 import {
   ReceiveJobsAction,
@@ -14,6 +15,7 @@ import {
   UpdateUploadProgressInfoAction,
   ReceiveJobUpdateAction,
   SetLastSelectedUploadAction,
+  ReceiveFSSJobCompletionUpdateAction,
 } from "./types";
 
 export function receiveJobs(uploadJobs: UploadJob[] = []): ReceiveJobsAction {
@@ -30,10 +32,19 @@ export function receiveJobInsert(job: UploadJob): ReceiveJobInsertAction {
   };
 }
 
-export function receiveJobUpdate(job: JSSJob): ReceiveJobUpdateAction {
+export function receiveJobUpdate(job: UploadJob): ReceiveJobUpdateAction {
   return {
     payload: job,
     type: RECEIVE_JOB_UPDATE,
+  };
+}
+
+export function receiveFSSJobCompletionUpdate(
+  job: JSSJob
+): ReceiveFSSJobCompletionUpdateAction {
+  return {
+    payload: job,
+    type: RECEIVE_FSS_JOB_COMPLETION_UPDATE,
   };
 }
 

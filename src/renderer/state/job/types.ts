@@ -12,6 +12,11 @@ export interface ReceiveJobInsertAction {
 }
 
 export interface ReceiveJobUpdateAction {
+  payload: UploadJob;
+  type: string;
+}
+
+export interface ReceiveFSSJobCompletionUpdateAction {
   payload: JSSJob;
   type: string;
 }

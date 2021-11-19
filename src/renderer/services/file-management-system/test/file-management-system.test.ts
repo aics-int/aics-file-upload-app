@@ -13,7 +13,7 @@ import {
   LabkeyClient,
   MetadataManagementService,
 } from "../..";
-import { mockJob } from "../../../state/test/mocks";
+import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
 import { UploadStage, UploadStatus } from "../../file-storage-service";
 import {
   JSSJob,
@@ -196,6 +196,7 @@ describe("FileManagementSystem", () => {
           status: JSSJobStatus.FAILED,
           serviceFields: {
             error: `Something went wrong uploading ${upload.jobName}. Details: ${error}`,
+            cancelled: false,
           },
         })
       ).to.be.true;
@@ -435,6 +436,21 @@ describe("FileManagementSystem", () => {
       // Assert
       expect(jss.createJob.called).to.be.false;
       expect(fileReader.read.called).to.be.false;
+    });
+  });
+
+  describe("complete", () => {
+    it("fails upload job on error", async () => {
+      // Arrange
+      mms.createFileMetadata.rejects(new Error("Test failure"));
+
+      // Act
+      await expect(
+        fms.complete(mockWorkingUploadJob, "90124124")
+      ).to.be.rejectedWith(Error);
+
+      // Assert
+      expect(jss.updateJob.calledOnce).to.be.true;
     });
   });
 

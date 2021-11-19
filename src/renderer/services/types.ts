@@ -42,6 +42,7 @@ interface FileMetadataBlock {
   originalPath: string;
   fileName?: string;
   fileType: string;
+  jobId?: string;
   [id: string]: any;
 }
 
