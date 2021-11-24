@@ -20,6 +20,11 @@ export class CancellationError extends Error {
 export default class ChunkedFileReader {
   // Time to delay any throttled callbacks
   public static readonly THROTTLE_DELAY_IN_MS = 200;
+  // The highWaterMark which deteremines the chunk sizes read by the reader
+  // is largely a maximum not a guaranteed amount. On the first chunk read
+  // the chunk size will be 1128 bytes instead of the highWaterMark max
+  public static readonly FIRST_CHUNK_LENGTH_MAX = 1128;
+
   // Map of uploadIds to streams to allow cancellations/cleanup
   private readonly uploadIdToStreamMap: {
     [jobId: string]: {
