@@ -491,43 +491,14 @@ export default class FileManagementSystem {
       ChunkedFileReader.THROTTLE_DELAY_IN_MS
     );
 
-    // Determine the bytes uploaded thus far by the number of chunks uploaded so far
-    // adjust for the special chunk size emitted by the first chunk read
-    let bytesUploaded = 0;
-    if (initialChunkNumber > 0) {
-      bytesUploaded +=
-        ChunkedFileReader.FIRST_CHUNK_LENGTH_MAX +
-        (initialChunkNumber - 1) * chunkSize;
-    }
-
     // Prepare a callback to send each chunk to FSS on each file
-    // chunk read and send the progress to the onProgress callback
-    const { size: fileSize } = await fs.promises.stat(source);
+    // chunk read and send that progress to the onProgress callback
     const onChunkRead = async (chunk: Uint8Array): Promise<void> => {
-      // It is important that the app guarantees a certain chunk size both for FSS's benefit
-      // but for its own in the event it needs to resume a previously ongoing upload it would
-      // need to know the exact byte to pick back up at
-      const remainingBytes = fileSize - bytesUploaded;
-      if (chunk.byteLength !== remainingBytes) {
-        const isFirstChunk = chunkNumber === initialChunkNumber;
-        if (isFirstChunk) {
-          // For the first chunk in the file read the stream buffer should be
-          // a special maximum size determined by the reader due to underlying
-          // constraints by NodeJS
-          if (chunk.byteLength !== ChunkedFileReader.FIRST_CHUNK_LENGTH_MAX) {
-            throw new Error(
-              `Expected chunk length to be ${ChunkedFileReader.FIRST_CHUNK_LENGTH_MAX} for first chunk in the read but was ${chunk.byteLength}`
-            );
-          }
-        } else if (chunk.byteLength !== chunkSize) {
-          // Chunk size is valid if it is the requested chunk size from FSS after the first chunk
-          throw new Error(
-            `Expected chunk length to be ${chunkSize} as requested by FSS but was ${chunk.byteLength}`
-          );
-        }
-      }
-
+      // Increment chunk number for next chunk upload
       chunkNumber += 1;
+
+      // Upload chunk
+      const bytesUploaded = chunkSize * chunkNumber;
       await this.fss.sendUploadChunk(
         fssUploadId,
         chunkNumber,
@@ -535,7 +506,8 @@ export default class FileManagementSystem {
         chunk,
         user
       );
-      bytesUploaded += chunk.byteLength;
+
+      // Submit progress to callback
       throttledOnProgress(bytesUploaded);
     };
 
@@ -545,7 +517,7 @@ export default class FileManagementSystem {
       source,
       onChunkRead,
       chunkSize,
-      bytesUploaded
+      chunkSize * initialChunkNumber
     );
 
     // Ensure final progress events are sent
