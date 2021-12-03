@@ -129,7 +129,7 @@ export default class FileStorageService extends HttpCacheClient {
    * performed by the service, this method need only be called for upload that have
    * failed to finalize themselves.
    */
-  public repeatFinalize(uploadId: string): Promise<UploadChunkResponse> {
+  public finalize(uploadId: string): Promise<UploadChunkResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/finalize/${uploadId}`;
     return this.patch<UploadChunkResponse>(url, undefined);
   }

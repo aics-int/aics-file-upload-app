@@ -198,7 +198,7 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
     const isDuplicateUpdate = requestsInProgress.includes(keyForRequest);
     const isSuccessfulAndInLabKey =
       fssUpload.status === JSSJobStatus.SUCCEEDED &&
-      fssUpload.serviceFields?.addedToLabkey &&
+      fssUpload.serviceFields?.addedToLabkey === JSSJobStatus.SUCCEEDED &&
       fssUpload.serviceFields?.fileId;
     if (
       !isDuplicateUpdate &&

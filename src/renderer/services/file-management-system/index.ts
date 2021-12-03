@@ -161,6 +161,9 @@ export default class FileManagementSystem {
         upload.user,
         (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       );
+
+      // Trigger asynchrous finalize step in FSS
+      await this.fss.finalize(registration.uploadId);
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -424,10 +427,10 @@ export default class FileManagementSystem {
       if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
         // If an FSS upload status is complete it has performed everything
         // it needs to and may just need the client to finish its portion
-        const { fileId } = fssUpload?.serviceFields || {};
+        const { fileId, addedToLabkey } = fssUpload?.serviceFields || {};
 
         // If there is no file ID the add to LabKey step may have yet to complete
-        if (fileId) {
+        if (fileId && addedToLabkey === JSSJobStatus.SUCCEEDED) {
           await this.complete(upload, fileId);
         }
       } else if (fssStatus.uploadStatus === UploadStatus.WORKING) {
@@ -494,20 +497,20 @@ export default class FileManagementSystem {
     // Prepare a callback to send each chunk to FSS on each file
     // chunk read and send that progress to the onProgress callback
     const onChunkRead = async (chunk: Uint8Array): Promise<void> => {
-      // Increment chunk number for next chunk upload
-      chunkNumber += 1;
-
       // Upload chunk
-      const bytesUploaded = chunkSize * chunkNumber;
       await this.fss.sendUploadChunk(
         fssUploadId,
-        chunkNumber,
-        bytesUploaded,
+        chunkNumber + 1,
+        chunkSize * chunkNumber,
         chunk,
         user
       );
 
+      // Increment chunk number for next chunk upload
+      chunkNumber += 1;
+
       // Submit progress to callback
+      const bytesUploaded = chunkSize * chunkNumber;
       throttledOnProgress(bytesUploaded);
     };
 

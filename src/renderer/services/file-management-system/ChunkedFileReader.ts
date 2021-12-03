@@ -128,42 +128,59 @@ export default class ChunkedFileReader {
     // size expectation between reads
     let excessBytes = new Uint8Array();
 
-    let bytesRead = 0;
+    let bytesRead = offset;
     const { size: fileSize } = await fs.promises.stat(source);
     const progressStream = new stream.Transform({
       transform(chunk: Uint8Array, _, callback) {
-        bytesRead += chunk.byteLength;
-        const isLastChunk = fileSize === bytesRead;
-        const totalBytes = Buffer.concat([excessBytes, chunk]);
+        try {
+          bytesRead += chunk.byteLength;
+          const totalBytes = Buffer.concat([excessBytes, chunk]);
 
-        // Split the total chunks currently in memory here into chunks
-        // of equal sizing equal to the given chunk size specification
-        const chunks: Uint8Array[] = [];
-        for (let i = 0; i < totalBytes.byteLength / chunkSize; i++) {
-          const chunkRangeStart = i * chunkSize;
-          const chunkRangeEnd = chunkRangeStart + chunkSize;
-          chunks.push(totalBytes.slice(chunkRangeStart, chunkRangeEnd));
+          // Split the total chunks currently in memory here into chunks
+          // of equal sizing equal to the given chunk size specification
+          const chunks: Uint8Array[] = [];
+          for (
+            let i = 0;
+            i < Math.floor(totalBytes.byteLength / chunkSize);
+            i++
+          ) {
+            const chunkRangeStart = i * chunkSize;
+            const chunkRangeEnd = chunkRangeStart + chunkSize;
+            chunks.push(totalBytes.slice(chunkRangeStart, chunkRangeEnd));
+          }
+
+          // Make note of the excess bytes from this chunk read that will
+          // need to be carried over into the next read
+          excessBytes = totalBytes.slice(
+            totalBytes.byteLength - (totalBytes.byteLength % chunkSize)
+          );
+
+          // If this in the last chunk read add the excess bytes to the chunks to send off
+          const isLastChunk = fileSize === bytesRead;
+          if (isLastChunk && excessBytes.byteLength > 0) {
+            chunks.push(excessBytes);
+          }
+
+          // If the chunk reads are too small to meet our chunk size there is no
+          // progress update to send yet
+          if (chunks.length === 0) {
+            callback();
+          } else {
+            // Otherwise, run each chunk progress update consecutively
+            // failing at the first failure
+            const progressUpdates = chunks.map((c) => () => onProgress(c));
+            const progressUpdateQueue = new BatchedTaskQueue(
+              progressUpdates,
+              1
+            );
+            progressUpdateQueue
+              .run()
+              .then(() => callback())
+              .catch((err) => callback(err));
+          }
+        } catch (err) {
+          callback(err);
         }
-
-        // The excess bytes for a chunk read are those remaining from any that met the chunksize
-        // NodeJS streams do not guarantee a certain minimum byte size hence this is necessary
-        // to guarantee consistent chunk sizing
-        excessBytes = totalBytes.slice(
-          totalBytes.byteLength - (totalBytes.byteLength % chunkSize)
-        );
-
-        // If this in the last chunk read add the excess bytes to the chunks to send off
-        if (isLastChunk) {
-          chunks.push(excessBytes);
-        }
-
-        // Run each chunk progress update consecutively failing at the first failure
-        const progressUpdates = chunks.map((c) => () => onProgress(c));
-        const queue = new BatchedTaskQueue(progressUpdates, 1);
-        queue
-          .run()
-          .then(() => callback())
-          .catch((err) => callback(err));
       },
     });
 

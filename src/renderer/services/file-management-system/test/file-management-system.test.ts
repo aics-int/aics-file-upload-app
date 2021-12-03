@@ -95,9 +95,10 @@ describe("FileManagementSystem", () => {
           type: "upload",
         },
       };
+      const uploadId = "091234124";
       fileReader.calculateMD5.resolves(md5);
       lk.fileExistsByNameAndMD5.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
 
       // Act
       await fms.upload(upload, noop);
@@ -111,6 +112,7 @@ describe("FileManagementSystem", () => {
         )
       ).to.be.true;
       expect(fileReader.read.calledOnce).to.be.true;
+      expect(fss.finalize.calledOnceWithExactly(uploadId)).to.be.true;
     });
 
     it("re-uses MD5 if not modified since last attempt", async () => {
@@ -136,7 +138,7 @@ describe("FileManagementSystem", () => {
       const localPath = "/some/path/into/fms/at/test_file.txt";
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.repeatFinalize.resolves({
+      fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
         uploadId: upload.jobId,
@@ -228,7 +230,7 @@ describe("FileManagementSystem", () => {
       fileReader.calculateMD5.resolves("09k2341234k");
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.repeatFinalize.resolves({
+      fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
         uploadId: upload.jobId,
@@ -278,7 +280,7 @@ describe("FileManagementSystem", () => {
       fileReader.calculateMD5.resolves("09k2341234k");
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.repeatFinalize.resolves({
+      fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
         uploadId: upload.jobId,
@@ -329,7 +331,7 @@ describe("FileManagementSystem", () => {
       fileReader.calculateMD5.resolves("09k2341234k");
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.repeatFinalize.resolves({
+      fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
         uploadId: upload.jobId,
@@ -416,7 +418,7 @@ describe("FileManagementSystem", () => {
         uploadStatus: UploadStatus.COMPLETE,
         chunkStatuses: [],
       });
-      fss.repeatFinalize.resolves({
+      fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
         uploadId: upload.jobId,

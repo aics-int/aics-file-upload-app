@@ -295,7 +295,7 @@ describe("Job logics", () => {
       ...mockSuccessfulUploadJob,
       jobId: fssUploadId,
       serviceFields: {
-        addedToLabkey: true,
+        addedToLabkey: JSSJobStatus.SUCCEEDED,
         fileId: "9203414",
       },
     };
@@ -385,7 +385,7 @@ describe("Job logics", () => {
         ...successfulFSSUpload,
         serviceFields: {
           ...successfulFSSUpload.serviceFields,
-          addedToLabkey: false,
+          addedToLabkey: JSSJobStatus.FAILED,
         },
       };
 

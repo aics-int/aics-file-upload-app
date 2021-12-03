@@ -13,16 +13,16 @@ describe("ChunkedFileReader", () => {
   const testDir = path.resolve(os.tmpdir(), "chunked-file-reader-test");
   const testFilePath = path.resolve(testDir, "md5-test.txt");
 
-  beforeEach(async () => {
+  before(async () => {
     await fs.promises.mkdir(testDir);
-    // Generate file with 50MB of "random" bytes
+    // Generate file with 2MB of "random" bytes
     await fs.promises.writeFile(
       testFilePath,
       Buffer.allocUnsafe(1024 * 1024 * 2)
     );
   });
 
-  afterEach(async () => {
+  after(async () => {
     await fs.promises.rmdir(testDir, { recursive: true });
   });
 
@@ -101,17 +101,30 @@ describe("ChunkedFileReader", () => {
       await fileReader.read(mockUploadId, testFilePath, onProgress, 100, 0);
     });
 
-    it("sends expected amount of bytes to callback", async () => {
+    it("sends expected amount and size of bytes to callback", async () => {
       // Arrange
       const { size: expectedBytes } = await fs.promises.stat(testFilePath);
       let totalBytesRead = 0;
+      const chunkSize = 1000;
       const onProgress = (chunk: Uint8Array) => {
         totalBytesRead += chunk.byteLength;
+        const isLastChunk = totalBytesRead === expectedBytes;
+        if (isLastChunk) {
+          expect(chunk.byteLength).to.equal(expectedBytes % chunkSize);
+        } else {
+          expect(chunk.byteLength).to.equal(chunkSize);
+        }
         return Promise.resolve();
       };
 
       // Act
-      await fileReader.read(mockUploadId, testFilePath, onProgress, 1000, 0);
+      await fileReader.read(
+        mockUploadId,
+        testFilePath,
+        onProgress,
+        chunkSize,
+        0
+      );
 
       // Assert
       expect(totalBytesRead).to.equal(expectedBytes);
