@@ -1018,6 +1018,7 @@ const uploadWithoutMetadataLogic = createLogic({
     done();
   },
   type: UPLOAD_WITHOUT_METADATA,
+  warnTimeout: 0,
 });
 
 export default [

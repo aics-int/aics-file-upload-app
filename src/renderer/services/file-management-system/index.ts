@@ -448,9 +448,12 @@ export default class FileManagementSystem {
 
         // If FSS is still available to continue receiving chunks of this upload
         // simply continue sending the chunks
-        const lastChunkNumber = fssStatus.chunkStatuses.findIndex(
+        let lastChunkNumber = fssStatus.chunkStatuses.findIndex(
           (status) => status !== ChunkStatus.COMPLETE
         );
+        if (lastChunkNumber === -1) {
+          lastChunkNumber = fssStatus.chunkStatuses.length;
+        }
 
         // FSS may already have all the chunks it needs and is asynchronously
         // comparing the MD5 hash

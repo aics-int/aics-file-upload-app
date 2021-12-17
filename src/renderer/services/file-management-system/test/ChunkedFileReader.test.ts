@@ -162,16 +162,17 @@ describe("ChunkedFileReader", () => {
   });
 
   describe("cancel", () => {
-    it("cancels MD5 calculations", async () => {
+    it("cancels with default error", async () => {
       // Arrange
       const calculateMD5 = (uploadId: string) =>
         fileReader.calculateMD5(uploadId, testFilePath, noop);
       const promise = calculateMD5(mockUploadId);
 
       // Act
-      fileReader.cancel(mockUploadId);
+      const wasCancelled = fileReader.cancel(mockUploadId);
 
       // Assert
+      expect(wasCancelled).to.be.true;
       await expect(promise).to.be.rejectedWith(CancellationError);
 
       // (sanity-check) Does not reject non-canceled calculations
@@ -180,24 +181,7 @@ describe("ChunkedFileReader", () => {
       );
     });
 
-    it("cancels reads", async () => {
-      // Arrange
-      const onProgress = () => Promise.resolve();
-      const read = (uploadId: string) =>
-        fileReader.read(uploadId, testFilePath, onProgress, 1000, 0);
-      const promise = read(mockUploadId);
-
-      // Act
-      fileReader.cancel(mockUploadId);
-
-      // Assert
-      await expect(promise).to.be.rejectedWith(CancellationError);
-
-      // (sanity-check) Does not reject non-canceled reads
-      await expect(read("12903123")).to.not.be.rejectedWith(CancellationError);
-    });
-
-    it("cancels md5 calculation with custom error", async () => {
+    it("cancels with custom error", async () => {
       // Arrange
       const error = new Error("my special error");
       const calculateMD5 = (uploadId: string) =>
@@ -205,31 +189,14 @@ describe("ChunkedFileReader", () => {
       const promise = calculateMD5(mockUploadId);
 
       // Act
-      fileReader.cancel(mockUploadId, error);
+      const wasCancelled = fileReader.cancel(mockUploadId, error);
 
       // Assert
+      expect(wasCancelled).to.be.true;
       await expect(promise).to.be.rejectedWith(error);
 
       // (sanity-check) Does not reject non-canceled calculations
       await expect(calculateMD5("12903123")).to.not.be.rejectedWith(error);
-    });
-
-    it("cancels read with custom error", async () => {
-      // Arrange
-      const error = new Error("my special error");
-      const onProgress = () => Promise.resolve();
-      const read = (uploadId: string) =>
-        fileReader.read(uploadId, testFilePath, onProgress, 1000, 0);
-      const promise = read(mockUploadId);
-
-      // Act
-      fileReader.cancel(mockUploadId, error);
-
-      // Assert
-      await expect(promise).to.be.rejectedWith(error);
-
-      // (sanity-check) Does not reject non-canceled reads
-      await expect(read("12903123")).to.not.be.rejectedWith(error);
     });
   });
 });

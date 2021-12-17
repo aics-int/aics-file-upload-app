@@ -213,8 +213,12 @@ export default class ChunkedFileReader {
    * tied to the upload emitting the given error if
    * relevant, the default error is a CancellationError.
    */
-  public cancel(uploadId: string, error: Error = new CancellationError()) {
-    if (uploadId in this.uploadIdToStreamMap) {
+  public cancel(
+    uploadId: string,
+    error: Error = new CancellationError()
+  ): boolean {
+    const isUploadTracked = uploadId in this.uploadIdToStreamMap;
+    if (isUploadTracked) {
       // Detach the read stream from the downstream streams first
       this.uploadIdToStreamMap[uploadId].readStream.unpipe();
       // Destroy the downstream streams emitting an error if possible
@@ -223,5 +227,6 @@ export default class ChunkedFileReader {
       this.uploadIdToStreamMap[uploadId].writeStream?.destroy(error);
       delete this.uploadIdToStreamMap[uploadId];
     }
+    return isUploadTracked;
   }
 }

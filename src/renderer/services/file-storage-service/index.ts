@@ -59,7 +59,7 @@ interface FileRecord {
  * This acts as an interface for interacting with the File Storage Service (FSS).
  */
 export default class FileStorageService extends HttpCacheClient {
-  private static readonly ENDPOINT = "fss2/2.0";
+  private static readonly ENDPOINT = "fss2/v3.0";
   private static readonly BASE_FILE_PATH = `${FileStorageService.ENDPOINT}/file`;
   private static readonly BASE_UPLOAD_PATH = `${FileStorageService.ENDPOINT}/upload`;
 
@@ -77,7 +77,7 @@ export default class FileStorageService extends HttpCacheClient {
     fileSize: number,
     md5: string
   ): Promise<RegisterUploadResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/registerUpload`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
     const postBody = {
       // Unfortunately FSS expects snake_case in all but one case (MD5)
       // so the conversion must be manual each request
@@ -88,11 +88,6 @@ export default class FileStorageService extends HttpCacheClient {
       // eslint-disable-next-line @typescript-eslint/camelcase
       file_size: fileSize,
       MD5: md5,
-      // TODO: should_be_in_cloud should not be false after testing is complete
-      // Unfortunately FSS expects snake_case in all but one case (MD5)
-      // so the conversion must be manual each request
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      should_be_in_cloud: false,
     };
     return this.post<RegisterUploadResponse>(
       url,
@@ -112,7 +107,7 @@ export default class FileStorageService extends HttpCacheClient {
     postBody: Uint8Array,
     user: string
   ): Promise<UploadChunkResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/uploadChunk/${uploadId}/${chunkNumber}`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/chunk/${chunkNumber}`;
     const rangeEnd = rangeStart + postBody.byteLength - 1;
     return this.post<UploadChunkResponse>(url, postBody, {
       ...FileStorageService.getHttpRequestConfig(),
@@ -130,7 +125,7 @@ export default class FileStorageService extends HttpCacheClient {
    * failed to finalize themselves.
    */
   public finalize(uploadId: string): Promise<UploadChunkResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/finalize/${uploadId}`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize`;
     return this.patch<UploadChunkResponse>(url, undefined);
   }
 

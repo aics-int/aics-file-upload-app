@@ -47,8 +47,6 @@ describe("FileStorageService", () => {
         // eslint-disable-next-line @typescript-eslint/camelcase
         file_size: fileSize,
         MD5: md5,
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        should_be_in_cloud: false,
       };
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
