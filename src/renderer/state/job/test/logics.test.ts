@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
 import { FileManagementSystem, JobStatusService } from "../../../services";
+import { FSSUpload } from "../../../services/file-storage-service";
 import {
   IN_PROGRESS_STATUSES,
   JSSJobStatus,
@@ -291,11 +292,11 @@ describe("Job logics", () => {
         ],
       },
     };
-    const successfulFSSUpload = {
+    const successfulFSSUpload: FSSUpload = {
       ...mockSuccessfulUploadJob,
       jobId: fssUploadId,
       serviceFields: {
-        addedToLabkey: JSSJobStatus.SUCCEEDED,
+        addedToLabkey: { status: JSSJobStatus.SUCCEEDED },
         fileId: "9203414",
       },
     };
@@ -385,7 +386,9 @@ describe("Job logics", () => {
         ...successfulFSSUpload,
         serviceFields: {
           ...successfulFSSUpload.serviceFields,
-          addedToLabkey: JSSJobStatus.FAILED,
+          addedToLabkey: {
+            status: JSSJobStatus.FAILED,
+          },
         },
       };
 
@@ -411,6 +414,7 @@ describe("Job logics", () => {
         const fssUpload = {
           ...successfulFSSUpload,
           status,
+          serviceFields: {},
         };
 
         // Act

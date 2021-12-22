@@ -21,6 +21,7 @@ import {
 } from "../../template/actions";
 import {
   mockFailedUploadJob,
+  mockFSSUploadJob,
   mockMMSTemplate,
   mockSuccessfulUploadJob,
   mockTemplateDraft,
@@ -347,7 +348,7 @@ describe("feedback reducer", () => {
       // Act
       const actual = reducer(
         initialState,
-        receiveFSSJobCompletionUpdate(mockWorkingUploadJob)
+        receiveFSSJobCompletionUpdate(mockFSSUploadJob)
       );
 
       // Assert
@@ -365,7 +366,7 @@ describe("feedback reducer", () => {
       // Act
       const actual = reducer(
         state,
-        receiveFSSJobCompletionUpdate(mockWorkingUploadJob)
+        receiveFSSJobCompletionUpdate(mockFSSUploadJob)
       );
 
       // Assert

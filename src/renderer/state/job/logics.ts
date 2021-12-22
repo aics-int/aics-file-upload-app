@@ -166,7 +166,10 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
         fssUpload.status === JSSJobStatus.SUCCEEDED &&
         matchingUploadJob.status !== JSSJobStatus.SUCCEEDED
       ) {
-        await fms.complete(matchingUploadJob, fssUpload.serviceFields?.fileId);
+        await fms.complete(
+          matchingUploadJob,
+          fssUpload.serviceFields?.fileId as string
+        );
       } else if (
         fssUpload.status === JSSJobStatus.FAILED &&
         matchingUploadJob.status !== JSSJobStatus.FAILED
@@ -198,7 +201,8 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
     const isDuplicateUpdate = requestsInProgress.includes(keyForRequest);
     const isSuccessfulAndInLabKey =
       fssUpload.status === JSSJobStatus.SUCCEEDED &&
-      fssUpload.serviceFields?.addedToLabkey === JSSJobStatus.SUCCEEDED &&
+      fssUpload.serviceFields?.addedToLabkey?.status ===
+        JSSJobStatus.SUCCEEDED &&
       fssUpload.serviceFields?.fileId;
     if (
       !isDuplicateUpdate &&

@@ -1,5 +1,6 @@
 import { UploadProgressInfo } from "../../services/file-management-system";
-import { JSSJob, UploadJob } from "../../services/job-status-service/types";
+import { FSSUpload } from "../../services/file-storage-service";
+import { UploadJob } from "../../services/job-status-service/types";
 import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
 import {
@@ -40,7 +41,7 @@ export function receiveJobUpdate(job: UploadJob): ReceiveJobUpdateAction {
 }
 
 export function receiveFSSJobCompletionUpdate(
-  job: JSSJob
+  job: FSSUpload
 ): ReceiveFSSJobCompletionUpdateAction {
   return {
     payload: job,

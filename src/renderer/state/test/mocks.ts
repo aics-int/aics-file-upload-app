@@ -2,6 +2,7 @@ import { StateWithHistory } from "redux-undo";
 
 import { AnnotationName } from "../../constants";
 import { GridCell } from "../../entities";
+import { FSSUpload } from "../../services/file-storage-service";
 import {
   JSSJobStatus,
   Service,
@@ -419,6 +420,28 @@ export const mockSuccessfulUploadJob: UploadJob = {
     type: "upload",
   },
   status: JSSJobStatus.SUCCEEDED,
+  user: "test_user",
+};
+
+export const mockFSSUploadJob: FSSUpload = {
+  created: new Date(),
+  currentStage: "ADDING CHUNKS",
+  jobId: "3333333333FSS",
+  jobName: "mockFSSUploadJob",
+  modified: new Date(),
+  service: Service.FILE_STORAGE_SERVICE,
+  serviceFields: {
+    fileId: "82beaf0460384911b6d6293fb333c4b0",
+    addedToLabkey: {
+      status: JSSJobStatus.SUCCEEDED,
+      statusDetail: ""
+    },
+    publishedToSns: {
+      status: JSSJobStatus.SUCCEEDED,
+      statusDetail: ""
+    }
+  },
+  status: JSSJobStatus.WORKING,
   user: "test_user",
 };
 

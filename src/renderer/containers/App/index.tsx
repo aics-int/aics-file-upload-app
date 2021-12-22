@@ -13,6 +13,7 @@ import {
   SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
+import { FSSUpload } from "../../services/file-storage-service";
 import {
   JSSJob,
   JSSJobStatus,
@@ -126,7 +127,7 @@ export default function App() {
         job.service === Service.FILE_STORAGE_SERVICE &&
         (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED)
       ) {
-        dispatch(receiveFSSJobCompletionUpdate(job));
+        dispatch(receiveFSSJobCompletionUpdate(job as FSSUpload));
       } else if (job.serviceFields?.type === "upload") {
         // Otherwise separate user's other jobs from ones created by this app
         dispatch(receiveJobUpdate(job as UploadJob));
