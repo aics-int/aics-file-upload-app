@@ -26,7 +26,6 @@ import {
   mockSuccessfulUploadJob,
   mockTemplateDraft,
   mockWellUpload,
-  mockWorkingUploadJob,
 } from "../../test/mocks";
 import { AlertType, AsyncRequest, FeedbackStateBranch } from "../../types";
 import {
