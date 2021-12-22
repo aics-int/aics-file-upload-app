@@ -162,7 +162,6 @@ export default class FileManagementSystem {
         upload.user,
         (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       );
-
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {

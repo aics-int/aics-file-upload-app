@@ -434,12 +434,12 @@ export const mockFSSUploadJob: FSSUpload = {
     fileId: "82beaf0460384911b6d6293fb333c4b0",
     addedToLabkey: {
       status: JSSJobStatus.SUCCEEDED,
-      statusDetail: ""
+      statusDetail: "",
     },
     publishedToSns: {
       status: JSSJobStatus.SUCCEEDED,
-      statusDetail: ""
-    }
+      statusDetail: "",
+    },
   },
   status: JSSJobStatus.WORKING,
   user: "test_user",
