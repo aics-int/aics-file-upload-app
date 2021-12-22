@@ -343,7 +343,7 @@ describe("feedback reducer", () => {
   describe("receiveFSSJobCompletionUpdate", () => {
     it("adds async request to progress", () => {
       // Arrange
-      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockWorkingUploadJob.jobId}-${mockWorkingUploadJob.status}`;
+      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockFSSUploadJob.jobId}-${mockFSSUploadJob.status}`;
 
       // Act
       const actual = reducer(
@@ -357,7 +357,7 @@ describe("feedback reducer", () => {
 
     it("does not add duplicate requests", () => {
       // Arrange
-      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockWorkingUploadJob.jobId}-${mockWorkingUploadJob.status}`;
+      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockFSSUploadJob.jobId}-${mockFSSUploadJob.status}`;
       const state = {
         ...initialState,
         requestsInProgress: [expectedRequest],
