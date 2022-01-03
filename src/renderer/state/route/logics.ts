@@ -1,6 +1,3 @@
-import { existsSync } from "fs";
-import { platform } from "os";
-
 import { Menu, MenuItem } from "electron";
 import { groupBy, isEmpty, uniq } from "lodash";
 import { AnyAction } from "redux";
@@ -27,12 +24,8 @@ import {
   UploadRequest,
 } from "../../services/types";
 import { Duration } from "../../types";
-import { makePosixPathCompatibleWithPlatform } from "../../util";
 import { requestFailed } from "../actions";
-import {
-  openSetMountPointNotification,
-  setErrorAlert,
-} from "../feedback/actions";
+import { setErrorAlert } from "../feedback/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
   getAnnotationLookups,
@@ -43,7 +36,6 @@ import {
   getLookups,
   getUploadHistory,
 } from "../metadata/selectors";
-import { getMountPoint } from "../setting/selectors";
 import { ensureDraftGetsSaved, getApplyTemplateInfo } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import {
@@ -119,7 +111,6 @@ export const resetHistoryActions = stateBranchHistory.flatMap((history) => [
 // from redux-undo.
 export const handleStartingNewUploadJob = (
   logger: Logger,
-  state: State,
   getApplicationMenu: () => Menu | null
 ): AnyAction[] => {
   const actions: AnyAction[] = [
@@ -127,16 +118,9 @@ export const handleStartingNewUploadJob = (
     clearUploadDraft(),
     clearUploadHistory(),
   ];
-  const isMountedAsExpected = existsSync(
-    makePosixPathCompatibleWithPlatform("/allen/aics", platform())
-  );
   const menu = getApplicationMenu();
   if (menu) {
     setSwitchEnvEnabled(menu, false, logger);
-  }
-  const mountPoint = getMountPoint(state);
-  if (!isMountedAsExpected && !mountPoint) {
-    actions.push(openSetMountPointNotification());
   }
 
   return actions;
@@ -344,9 +328,7 @@ const viewUploadsLogic = createLogic({
     try {
       // Open the upload tab and make sure application menu gets updated and redux-undo histories reset.
       dispatch(
-        batchActions(
-          handleStartingNewUploadJob(logger, state, getApplicationMenu)
-        )
+        batchActions(handleStartingNewUploadJob(logger, getApplicationMenu))
       );
 
       // Second, we fetch the file metadata

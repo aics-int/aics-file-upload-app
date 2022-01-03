@@ -1,5 +1,5 @@
 import "@aics/aics-react-labkey/dist/styles.css";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { ipcRenderer, remote } from "electron";
 import { camelizeKeys } from "humps";
 import * as React from "react";
@@ -28,11 +28,7 @@ import {
   setErrorAlert,
   setSuccessAlert,
 } from "../../state/feedback/actions";
-import {
-  getAlert,
-  getRecentEvent,
-  getSetMountPointNotificationVisible,
-} from "../../state/feedback/selectors";
+import { getAlert, getRecentEvent } from "../../state/feedback/selectors";
 import {
   receiveFSSJobCompletionUpdate,
   receiveJobInsert,
@@ -47,7 +43,6 @@ import {
 import { getPage } from "../../state/route/selectors";
 import {
   gatherSettings,
-  setMountPoint,
   openEnvironmentDialog,
 } from "../../state/setting/actions";
 import { getLimsUrl, getLoggedInUser } from "../../state/setting/selectors";
@@ -78,9 +73,6 @@ export default function App() {
   const user = useSelector(getLoggedInUser);
   const page = useSelector(getPage);
   const recentEvent = useSelector(getRecentEvent);
-  const setMountPointNotificationVisible = useSelector(
-    getSetMountPointNotificationVisible
-  );
 
   // Request initial data
   useEffect(() => {
@@ -227,21 +219,6 @@ export default function App() {
       dispatch(clearAlert());
     }
   }, [alert, dispatch]);
-
-  useEffect(() => {
-    if (setMountPointNotificationVisible) {
-      notification.open({
-        description:
-          "Click this notification to manually set the allen mount point",
-        duration: 0,
-        message: "Could not find allen mount point (/allen/aics).",
-        onClick: () => {
-          notification.destroy();
-          dispatch(setMountPoint());
-        },
-      });
-    }
-  }, [setMountPointNotificationVisible, dispatch]);
 
   return (
     <div className={styles.container}>

@@ -39,14 +39,6 @@ export interface RemoveRequestInProgressAction {
   payload: AsyncRequest | string;
 }
 
-export interface OpenSetMountPointNotificationAction {
-  type: string;
-}
-
-export interface CloseSetMountPointNotificationAction {
-  type: string;
-}
-
 export interface AddEventAction {
   type: string;
   payload: {

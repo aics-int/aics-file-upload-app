@@ -1,12 +1,9 @@
-import { Button, Modal } from "antd";
+import { Modal } from "antd";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { setMountPoint, updateSettings } from "../../state/setting/actions";
-import {
-  getEditableSettings,
-  getMountPoint,
-} from "../../state/setting/selectors";
+import { updateSettings } from "../../state/setting/actions";
+import { getEditableSettings } from "../../state/setting/selectors";
 import {
   AlertType,
   EnabledNotifications,
@@ -55,7 +52,6 @@ const notificationSettingsItems = [
 
 export default function SettingsModal({ visible }: { visible: boolean }) {
   const dispatch = useDispatch();
-  const mountPoint = useSelector(getMountPoint);
   const editableSettings = useSelector(getEditableSettings);
   const [settingsDraft, setSettingsDraft] = React.useState<
     Partial<SettingStateBranch>
@@ -113,20 +109,6 @@ export default function SettingsModal({ visible }: { visible: boolean }) {
           onChange={(checked) => changeEnabledNotification(checked, type)}
         />
       ))}
-      <hr />
-      <h3>Advanced Settings</h3>
-      <div className={styles.toggleLabel}>Update</div>
-      <div className={styles.settingsContainer}>
-        <div className={styles.settingLabel}>Allen Drive Mount Point</div>
-        <div className={styles.toggle}>
-          {mountPoint}{" "}
-          <Button
-            className={styles.mountPointButton}
-            icon="edit"
-            onClick={() => dispatch(setMountPoint())}
-          />
-        </div>
-      </div>
     </Modal>
   );
 }

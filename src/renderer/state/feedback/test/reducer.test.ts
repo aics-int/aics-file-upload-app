@@ -5,11 +5,7 @@ import {
   receiveAnnotationUsage,
   requestAnnotationUsage,
 } from "../../metadata/actions";
-import {
-  resetUpload,
-  viewUploads,
-  viewUploadsSucceeded,
-} from "../../route/actions";
+import { viewUploads, viewUploadsSucceeded } from "../../route/actions";
 import { openTemplateEditor } from "../../selection/actions";
 import {
   clearTemplateDraft,
@@ -51,9 +47,7 @@ import {
   clearUploadError,
   closeModal,
   closeNotificationCenter,
-  closeSetMountPointNotification,
   openModal,
-  openSetMountPointNotification,
   removeRequestFromInProgress,
   setAlert,
   setDeferredAction,
@@ -177,24 +171,6 @@ describe("feedback reducer", () => {
       expect(result.events.length).to.equal(1);
     });
   });
-  describe("openSetMountPointNotification", () => {
-    it("sets setMountPointNotificationVisible to true", () => {
-      const result = reducer(initialState, openSetMountPointNotification());
-      expect(result.setMountPointNotificationVisible).to.be.true;
-    });
-  });
-  describe("closeSetMountPointNotification", () => {
-    it("sets setMountPointNotificationVisible to false", () => {
-      const result = reducer(
-        {
-          ...initialState,
-          setMountPointNotificationVisible: true,
-        },
-        closeSetMountPointNotification()
-      );
-      expect(result.setMountPointNotificationVisible).to.be.false;
-    });
-  });
   describe("openModal", () => {
     it("adds modalName to visibleModals", () => {
       const result = reducer(initialState, openModal("openTemplate"));
@@ -247,20 +223,6 @@ describe("feedback reducer", () => {
         clearDeferredAction()
       );
       expect(result.deferredAction).to.be.undefined;
-    });
-  });
-  describe("resetUpload", () => {
-    it("closes setMountPointNotification", () => {
-      const result = reducer(
-        {
-          ...initialState,
-          setMountPointNotificationVisible: true,
-          uploadError: "foo",
-        },
-        resetUpload()
-      );
-      expect(result.setMountPointNotificationVisible).to.be.false;
-      expect(result.uploadError).to.be.undefined;
     });
   });
   describe("clearUploadError", () => {

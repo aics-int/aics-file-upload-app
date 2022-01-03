@@ -93,20 +93,6 @@ export const getTextWidth = (font: string, text: string) => {
   return canvasContext.measureText(text).width;
 };
 
-export function makePosixPathCompatibleWithPlatform(
-  path: string,
-  platform: string
-): string {
-  let updatedPath = path;
-  // Replace forward-slashes with back-slashes on Windows
-  if (platform === "win32") {
-    updatedPath = path.replace(/\//g, "\\");
-    if (updatedPath.startsWith("\\allen")) {
-      updatedPath = `\\${updatedPath}`;
-    }
-  }
-  return updatedPath;
-}
 export const timeout = (ms: number) =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);

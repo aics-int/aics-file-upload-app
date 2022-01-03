@@ -108,9 +108,7 @@ import {
   CLEAR_UPLOAD_ERROR,
   CLOSE_MODAL,
   CLOSE_NOTIFICATION_CENTER,
-  CLOSE_SET_MOUNT_POINT_NOTIFICATION,
   OPEN_MODAL,
-  OPEN_SET_MOUNT_POINT_NOTIFICATION,
   REMOVE_REQUEST_IN_PROGRESS,
   SET_ALERT,
   SET_DEFERRED_ACTION,
@@ -126,9 +124,7 @@ import {
   ClearUploadErrorAction,
   CloseModalAction,
   CloseNotificationCenter,
-  CloseSetMountPointNotificationAction,
   OpenModalAction,
-  OpenSetMountPointNotificationAction,
   OpenTemplateEditorAction,
   RemoveRequestInProgressAction,
   SetAlertAction,
@@ -165,7 +161,6 @@ export const initialState: FeedbackStateBranch = {
   events: [],
   isLoading: false,
   requestsInProgress: [],
-  setMountPointNotificationVisible: false,
   tutorialTooltip: TutorialStep.MASS_EDIT,
   uploadError: undefined,
   visibleModals: [],
@@ -287,26 +282,6 @@ const actionToConfigMap: TypeToDescriptionMap<FeedbackStateBranch> = {
       };
     },
   },
-  [OPEN_SET_MOUNT_POINT_NOTIFICATION]: {
-    accepts: (
-      action: AnyAction
-    ): action is OpenSetMountPointNotificationAction =>
-      action.type === OPEN_SET_MOUNT_POINT_NOTIFICATION,
-    perform: (state: FeedbackStateBranch) => ({
-      ...state,
-      setMountPointNotificationVisible: true,
-    }),
-  },
-  [CLOSE_SET_MOUNT_POINT_NOTIFICATION]: {
-    accepts: (
-      action: AnyAction
-    ): action is CloseSetMountPointNotificationAction =>
-      action.type === CLOSE_SET_MOUNT_POINT_NOTIFICATION,
-    perform: (state: FeedbackStateBranch) => ({
-      ...state,
-      setMountPointNotificationVisible: false,
-    }),
-  },
   [OPEN_MODAL]: {
     accepts: (action: AnyAction): action is OpenModalAction =>
       action.type === OPEN_MODAL,
@@ -359,7 +334,6 @@ const actionToConfigMap: TypeToDescriptionMap<FeedbackStateBranch> = {
       action.type === RESET_UPLOAD,
     perform: (state: FeedbackStateBranch) => ({
       ...state,
-      setMountPointNotificationVisible: false,
       uploadError: undefined,
     }),
   },

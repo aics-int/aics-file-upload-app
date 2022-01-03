@@ -24,8 +24,6 @@ export const getRequestsInProgressContains = (
 export const getEvents = (state: State) => state.feedback.events;
 export const getDeferredAction = (state: State) =>
   state.feedback.deferredAction;
-export const getSetMountPointNotificationVisible = (state: State) =>
-  state.feedback.setMountPointNotificationVisible;
 export const getTemplateEditorVisible = (state: State) =>
   !!state.feedback.visibleModals.find((m: ModalName) => m === "templateEditor");
 export const getTutorialStep = (state: State) => state.feedback.tutorialTooltip;

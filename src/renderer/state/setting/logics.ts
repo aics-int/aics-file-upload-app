@@ -1,5 +1,3 @@
-import { basename } from "path";
-
 import { find, map } from "lodash";
 import { createLogic } from "redux-logic";
 
@@ -8,11 +6,9 @@ import {
   USER_SETTINGS_KEY,
 } from "../../../shared/constants";
 import { LimsUrl } from "../../../shared/types";
-import { closeSetMountPointNotification, setAlert } from "../feedback/actions";
-import { getSetMountPointNotificationVisible } from "../feedback/selectors";
+import { setAlert } from "../feedback/actions";
 import {
   AlertType,
-  ReduxLogicDoneCb,
   ReduxLogicNextCb,
   ReduxLogicProcessDependencies,
   ReduxLogicRejectCb,
@@ -20,46 +16,22 @@ import {
 } from "../types";
 import { batchActions } from "../util";
 
-import { updateSettings } from "./actions";
 import {
   GATHER_SETTINGS,
   OPEN_ENVIRONMENT_DIALOG,
-  SET_MOUNT_POINT,
   UPDATE_SETTINGS,
 } from "./constants";
-import { getMountPoint } from "./selectors";
 
 export const updateSettingsLogic = createLogic({
-  process: (
-    { ctx, getState }: ReduxLogicProcessDependencies,
-    dispatch: ReduxLogicNextCb,
-    done: ReduxLogicDoneCb
-  ) => {
-    const state = getState();
-    const mountPoint = getMountPoint(state);
-
-    if (mountPoint && mountPoint !== ctx.mountPoint) {
-      dispatch(
-        setAlert({
-          message: "Mount point successfully set and saved to your settings",
-          type: AlertType.SUCCESS,
-        })
-      );
-    }
-
-    done();
-  },
   type: UPDATE_SETTINGS,
   validate: (
-    { action, ctx, getState, storage }: ReduxLogicTransformDependencies,
+    { action, storage }: ReduxLogicTransformDependencies,
     next: ReduxLogicNextCb,
     reject: ReduxLogicRejectCb
   ) => {
     try {
       // payload is a partial of the Setting State branch so it could be undefined.
       if (action.payload) {
-        ctx.mountPoint = getMountPoint(getState());
-
         map(action.payload, (value: any, key: string) => {
           storage.set(`${USER_SETTINGS_KEY}.${key}`, value);
         });
@@ -141,44 +113,6 @@ const gatherSettingsLogic = createLogic({
   type: GATHER_SETTINGS,
 });
 
-const setMountPointLogic = createLogic({
-  process: async (
-    { dialog, getState }: ReduxLogicProcessDependencies,
-    dispatch: ReduxLogicNextCb,
-    done: ReduxLogicDoneCb
-  ) => {
-    if (getSetMountPointNotificationVisible(getState())) {
-      dispatch(closeSetMountPointNotification());
-    }
-
-    const { filePaths: folders } = await dialog.showOpenDialog({
-      properties: ["openDirectory"],
-      title: "Browse to the folder that is mounted to /allen/aics",
-    });
-    if (folders?.length > 0) {
-      const folder = basename(folders[0]);
-      if (folder !== "aics") {
-        dispatch(
-          setAlert({
-            message: 'Folder selected was not named "aics"',
-            type: AlertType.ERROR,
-          })
-        );
-      } else {
-        dispatch(updateSettings({ mountPoint: folders[0] }));
-        dispatch(
-          setAlert({
-            message: "Successfully set the allen mount point",
-            type: AlertType.SUCCESS,
-          })
-        );
-      }
-    }
-    done();
-  },
-  type: SET_MOUNT_POINT,
-});
-
 const openEnvironmentDialogLogic = createLogic({
   process: async (
     { dialog, storage, remote }: ReduxLogicProcessDependencies,
@@ -233,7 +167,6 @@ const openEnvironmentDialogLogic = createLogic({
 
 export default [
   gatherSettingsLogic,
-  setMountPointLogic,
   openEnvironmentDialogLogic,
   updateSettingsLogic,
 ];

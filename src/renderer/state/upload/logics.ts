@@ -782,7 +782,7 @@ const openUploadLogic = createLogic({
     dispatch(
       batchActions([
         replaceUpload(ctx.filePath, ctx.draft),
-        ...handleStartingNewUploadJob(logger, getState(), getApplicationMenu),
+        ...handleStartingNewUploadJob(logger, getApplicationMenu),
       ])
     );
 

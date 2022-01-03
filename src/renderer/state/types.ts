@@ -180,7 +180,6 @@ export interface FeedbackStateBranch {
   events: AppEvent[];
   isLoading: boolean;
   requestsInProgress: string[];
-  setMountPointNotificationVisible: boolean;
   tutorialTooltip?: TutorialStep;
   uploadError?: string;
   visibleModals: ModalName[];
@@ -329,7 +328,6 @@ export interface EnabledNotifications {
 
 export interface SettingStateBranch extends LimsUrl {
   metadataColumns: string[];
-  mountPoint?: string;
   // if true show hints on how to use the grid to enter data
   showUploadHint: boolean;
   showTemplateHint: boolean;

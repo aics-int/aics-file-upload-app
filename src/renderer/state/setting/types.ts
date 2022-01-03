@@ -10,10 +10,6 @@ export interface GatherSettingsAction {
   type: string;
 }
 
-export interface SetMountPointAction {
-  type: string;
-}
-
 export interface OpenEnvironmentDialogAction {
   type: string;
 }

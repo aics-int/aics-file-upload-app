@@ -17,9 +17,7 @@ import {
   CLEAR_UPLOAD_ERROR,
   CLOSE_MODAL,
   CLOSE_NOTIFICATION_CENTER,
-  CLOSE_SET_MOUNT_POINT_NOTIFICATION,
   OPEN_MODAL,
-  OPEN_SET_MOUNT_POINT_NOTIFICATION,
   REMOVE_REQUEST_IN_PROGRESS,
   SET_ALERT,
   SET_DEFERRED_ACTION,
@@ -36,9 +34,7 @@ import {
   ClearUploadErrorAction,
   CloseModalAction,
   CloseNotificationCenter,
-  CloseSetMountPointNotificationAction,
   OpenModalAction,
-  OpenSetMountPointNotificationAction,
   RemoveRequestInProgressAction,
   SetAlertAction,
   SetDeferredActionAction,
@@ -147,18 +143,6 @@ export function addEvent(
       type,
     },
     type: ADD_EVENT,
-  };
-}
-
-export function openSetMountPointNotification(): OpenSetMountPointNotificationAction {
-  return {
-    type: OPEN_SET_MOUNT_POINT_NOTIFICATION,
-  };
-}
-
-export function closeSetMountPointNotification(): CloseSetMountPointNotificationAction {
-  return {
-    type: CLOSE_SET_MOUNT_POINT_NOTIFICATION,
   };
 }
 

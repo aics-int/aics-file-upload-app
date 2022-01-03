@@ -5,7 +5,6 @@ import { State } from "../types";
 export const getLimsHost = (state: State) => state.setting.limsHost;
 export const getLimsPort = (state: State) => state.setting.limsPort;
 export const getLimsProtocol = (state: State) => state.setting.limsProtocol;
-export const getMountPoint = (state: State) => state.setting.mountPoint;
 export const getShowUploadHint = (state: State) => state.setting.showUploadHint;
 export const getShowTemplateHint = (state: State) =>
   state.setting.showTemplateHint;
