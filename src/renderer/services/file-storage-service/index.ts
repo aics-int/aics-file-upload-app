@@ -4,7 +4,21 @@ import { castArray } from "lodash";
 
 import { LocalStorage } from "../../types";
 import HttpCacheClient from "../http-cache-client";
+import { JSSJob, JSSJobStatus } from "../job-status-service/types";
 import { HttpClient } from "../types";
+
+interface FSSServiceField {
+  status: JSSJobStatus;
+  statusDetail?: string;
+}
+
+export interface FSSUpload extends JSSJob {
+  serviceFields: {
+    addedToLabkey?: FSSServiceField;
+    publishedToSns?: FSSServiceField;
+    fileId?: string;
+  };
+}
 
 export enum UploadStatus {
   WORKING = "WORKING", // as expected, in process

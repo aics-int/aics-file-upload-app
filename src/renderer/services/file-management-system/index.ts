@@ -6,6 +6,7 @@ import * as uuid from "uuid";
 
 import FileStorageService, {
   ChunkStatus,
+  FSSUpload,
   UploadStage,
   UploadStatus,
   UploadStatusResponse,
@@ -161,9 +162,6 @@ export default class FileManagementSystem {
         upload.user,
         (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       );
-
-      // Trigger asynchrous finalize step in FSS
-      await this.fss.finalize(registration.uploadId);
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -416,7 +414,7 @@ export default class FileManagementSystem {
       // Retrive job FSS uses to track its upload portion
       let fssUpload;
       try {
-        fssUpload = await this.jss.getJob(fssUploadId);
+        fssUpload = (await this.jss.getJob(fssUploadId)) as FSSUpload;
       } catch (error) {
         // Because FSS uses a queue to interact with JSS this job
         // may not exist even though the upload is in progress
@@ -427,10 +425,10 @@ export default class FileManagementSystem {
       if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
         // If an FSS upload status is complete it has performed everything
         // it needs to and may just need the client to finish its portion
-        const { fileId, addedToLabkey } = fssUpload?.serviceFields || {};
+        const { fileId, addedToLabkey } = fssUpload.serviceFields;
 
         // If there is no file ID the add to LabKey step may have yet to complete
-        if (fileId && addedToLabkey === JSSJobStatus.SUCCEEDED) {
+        if (fileId && addedToLabkey?.status === JSSJobStatus.SUCCEEDED) {
           await this.complete(upload, fileId);
         }
       } else if (fssStatus.uploadStatus === UploadStatus.WORKING) {
@@ -528,5 +526,8 @@ export default class FileManagementSystem {
 
     // Ensure final progress events are sent
     throttledOnProgress.flush();
+
+    // Trigger asynchrous finalize step in FSS
+    await this.fss.finalize(fssUploadId);
   }
 }

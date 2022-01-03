@@ -21,11 +21,11 @@ import {
 } from "../../template/actions";
 import {
   mockFailedUploadJob,
+  mockFSSUploadJob,
   mockMMSTemplate,
   mockSuccessfulUploadJob,
   mockTemplateDraft,
   mockWellUpload,
-  mockWorkingUploadJob,
 } from "../../test/mocks";
 import { AlertType, AsyncRequest, FeedbackStateBranch } from "../../types";
 import {
@@ -342,12 +342,12 @@ describe("feedback reducer", () => {
   describe("receiveFSSJobCompletionUpdate", () => {
     it("adds async request to progress", () => {
       // Arrange
-      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockWorkingUploadJob.jobId}-${mockWorkingUploadJob.status}`;
+      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockFSSUploadJob.jobId}-${mockFSSUploadJob.status}`;
 
       // Act
       const actual = reducer(
         initialState,
-        receiveFSSJobCompletionUpdate(mockWorkingUploadJob)
+        receiveFSSJobCompletionUpdate(mockFSSUploadJob)
       );
 
       // Assert
@@ -356,7 +356,7 @@ describe("feedback reducer", () => {
 
     it("does not add duplicate requests", () => {
       // Arrange
-      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockWorkingUploadJob.jobId}-${mockWorkingUploadJob.status}`;
+      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockFSSUploadJob.jobId}-${mockFSSUploadJob.status}`;
       const state = {
         ...initialState,
         requestsInProgress: [expectedRequest],
@@ -365,7 +365,7 @@ describe("feedback reducer", () => {
       // Act
       const actual = reducer(
         state,
-        receiveFSSJobCompletionUpdate(mockWorkingUploadJob)
+        receiveFSSJobCompletionUpdate(mockFSSUploadJob)
       );
 
       // Assert
