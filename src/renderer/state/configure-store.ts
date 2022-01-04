@@ -2,7 +2,7 @@ import { readFile as fsReadFile, writeFile as fsWriteFile } from "fs";
 import { promisify } from "util";
 
 import axios from "axios";
-import axiosRetry from 'axios-retry';
+import axiosRetry from "axios-retry";
 import { ipcRenderer, remote } from "electron";
 import * as Store from "electron-store";
 import * as Logger from "js-logger";
@@ -82,11 +82,11 @@ const storage = new EnvironmentAwareStorage(new Store());
 // issues with Electron and/or Node running on
 // Linux (https://github.com/electron/electron/issues/10570).
 axios.defaults.adapter = require("axios/lib/adapters/xhr");
-axiosRetry(axios, { 
-  retries: 3, 
-  retryDelay: () => 10000, //10 seconds
-  retryCondition: (error) => error.response?.status == 502}
-);
+axiosRetry(axios, {
+  retries: 3,
+  retryDelay: () => 10000,
+  retryCondition: (error) => error.response?.status === 502,
+});
 const httpClient = axios;
 const useCache = Boolean(process.env.ELECTRON_WEBPACK_USE_CACHE) || false;
 const jssClient = new JobStatusService(httpClient, storage, useCache, "debug");
