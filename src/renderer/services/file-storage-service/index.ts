@@ -6,6 +6,7 @@ import { LocalStorage } from "../../types";
 import HttpCacheClient from "../http-cache-client";
 import { JSSJob, JSSJobStatus } from "../job-status-service/types";
 import { HttpClient } from "../types";
+import{ FSS2_ENDPOINT } from "../../../shared/constants"
 
 interface FSSServiceField {
   status: JSSJobStatus;
@@ -73,9 +74,8 @@ interface FileRecord {
  * This acts as an interface for interacting with the File Storage Service (FSS).
  */
 export default class FileStorageService extends HttpCacheClient {
-  private static readonly ENDPOINT = "fss2/v3.0";
-  private static readonly BASE_FILE_PATH = `${FileStorageService.ENDPOINT}/file`;
-  private static readonly BASE_UPLOAD_PATH = `${FileStorageService.ENDPOINT}/upload`;
+  private static readonly BASE_FILE_PATH = `${FSS2_ENDPOINT}/file`;
+  private static readonly BASE_UPLOAD_PATH = `${FSS2_ENDPOINT}/upload`;
 
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
     super(httpClient, localStorage, false);

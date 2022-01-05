@@ -31,6 +31,7 @@ import EnvironmentAwareStorage from "./EnvironmentAwareStorage";
 import { addEvent } from "./feedback/actions";
 import { getCurrentUploadFilePath } from "./metadata/selectors";
 import { AlertType, ReduxLogicExtraDependencies, State } from "./types";
+import { FSS2_ENDPOINT } from "../../shared/constants";
 
 import {
   enableBatching,
@@ -81,11 +82,17 @@ const storage = new EnvironmentAwareStorage(new Store());
 // when using the `XMLHttpRequest` adapter. This may be due to some unresolved
 // issues with Electron and/or Node running on
 // Linux (https://github.com/electron/electron/issues/10570).
+const resourcesValidForRetryPaths: any[] = [
+  FSS2_ENDPOINT,
+]
 axios.defaults.adapter = require("axios/lib/adapters/xhr");
 axiosRetry(axios, {
   retries: 3,
   retryDelay: () => 10000,
-  retryCondition: (error) => error.response?.status === 502,
+  retryCondition: (error) => {
+    return (error.response?.status === 502) &&
+      (resourcesValidForRetryPaths.filter(resourcePath => resourcesValidForRetryPaths.includes(resourcePath)).length > 0);
+  },
 });
 const httpClient = axios;
 const useCache = Boolean(process.env.ELECTRON_WEBPACK_USE_CACHE) || false;

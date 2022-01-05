@@ -50,3 +50,6 @@ export const DEFAULT_USERNAME = userInfo().username;
 export const USER_SETTINGS_KEY = "userSettings";
 export const TEMP_UPLOAD_STORAGE_KEY = "upload";
 export const PREFERRED_TEMPLATE_ID = "templateId";
+
+// Resource base paths
+export const FSS2_ENDPOINT = "fss2/v3.0";
