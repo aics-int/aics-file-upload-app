@@ -2,11 +2,11 @@ import axios, { AxiosRequestConfig } from "axios";
 import { camelizeKeys } from "humps";
 import { castArray } from "lodash";
 
+import { FSS2_ENDPOINT } from "../../../shared/constants";
 import { LocalStorage } from "../../types";
 import HttpCacheClient from "../http-cache-client";
 import { JSSJob, JSSJobStatus } from "../job-status-service/types";
 import { HttpClient } from "../types";
-import{ FSS2_ENDPOINT } from "../../../shared/constants"
 
 interface FSSServiceField {
   status: JSSJobStatus;
