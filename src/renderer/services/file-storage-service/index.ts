@@ -73,10 +73,9 @@ interface FileRecord {
  * This acts as an interface for interacting with the File Storage Service (FSS).
  */
 export default class FileStorageService extends HttpCacheClient {
-  private static readonly ENDPOINT = "fss2/v3.0";
+  public static readonly ENDPOINT = "fss2/v3.0";
   private static readonly BASE_FILE_PATH = `${FileStorageService.ENDPOINT}/file`;
   private static readonly BASE_UPLOAD_PATH = `${FileStorageService.ENDPOINT}/upload`;
-
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
     super(httpClient, localStorage, false);
   }
