@@ -89,7 +89,7 @@ axiosRetry(axios, {
   retryCondition: (error) =>
     error.response?.status === 502 &&
     resourcesValidForRetryPaths.filter((resourcePath) =>
-      resourcesValidForRetryPaths.includes(resourcePath)
+      error.request.responseURL.includes(resourcePath)
     ).length > 0,
 });
 const httpClient = axios;
