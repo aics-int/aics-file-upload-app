@@ -81,14 +81,14 @@ const storage = new EnvironmentAwareStorage(new Store());
 // when using the `XMLHttpRequest` adapter. This may be due to some unresolved
 // issues with Electron and/or Node running on
 // Linux (https://github.com/electron/electron/issues/10570).
-const resourcesValidForRetryPaths: any[] = [FileStorageService.ENDPOINT];
 axios.defaults.adapter = require("axios/lib/adapters/xhr");
+const resourcesValidForRetryPaths = [FileStorageService.ENDPOINT];
 axiosRetry(axios, {
   retries: 3,
   retryDelay: () => 10000,
   retryCondition: (error) =>
     error.response?.status === 502 &&
-    resourcesValidForRetryPaths.filter((resourcePath) =>
+    resourcesValidForRetryPaths.filter((resourcePath: any) =>
       error.request.responseURL.includes(resourcePath)
     ).length > 0,
 });
