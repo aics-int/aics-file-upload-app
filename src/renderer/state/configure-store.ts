@@ -17,7 +17,7 @@ import {
 } from "redux";
 import { createLogicMiddleware } from "redux-logic";
 
-import { FSS2_ENDPOINT, TEMP_UPLOAD_STORAGE_KEY } from "../../shared/constants";
+import { TEMP_UPLOAD_STORAGE_KEY } from "../../shared/constants";
 import {
   JobStatusService,
   LabkeyClient,
@@ -81,7 +81,7 @@ const storage = new EnvironmentAwareStorage(new Store());
 // when using the `XMLHttpRequest` adapter. This may be due to some unresolved
 // issues with Electron and/or Node running on
 // Linux (https://github.com/electron/electron/issues/10570).
-const resourcesValidForRetryPaths: any[] = [FSS2_ENDPOINT];
+const resourcesValidForRetryPaths: any[] = [FileStorageService.ENDPOINT];
 axios.defaults.adapter = require("axios/lib/adapters/xhr");
 axiosRetry(axios, {
   retries: 3,
