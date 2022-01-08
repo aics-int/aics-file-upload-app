@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as path from "path";
 
 import {
@@ -14,6 +15,7 @@ import {
 import { isDate, isMoment } from "moment";
 import { createLogic } from "redux-logic";
 
+import { RendererProcessEvents } from "../../../shared/constants";
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 import FileManagementSystem, {
@@ -266,7 +268,6 @@ export const cancelUploadsLogic = createLogic({
     {
       action,
       fms,
-      logger,
     }: ReduxLogicProcessDependenciesWithAction<CancelUploadAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -278,7 +279,6 @@ export const cancelUploadsLogic = createLogic({
           await fms.cancel(job.jobId);
           dispatch(cancelUploadSucceeded(job.jobName || ""));
         } catch (e) {
-          logger.error(`Cancel upload failed`, e);
           dispatch(
             cancelUploadFailed(
               job.jobName || "",
@@ -298,7 +298,6 @@ const retryUploadsLogic = createLogic({
     {
       action,
       fms,
-      logger,
     }: ReduxLogicProcessDependenciesWithAction<RetryUploadAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -316,7 +315,6 @@ const retryUploadsLogic = createLogic({
           await fms.retry(upload.jobId, onProgress);
         } catch (e) {
           const error = `Retry upload ${upload.jobName} failed: ${e.message}`;
-          logger.error(`Retry for jobId=${upload.jobId} failed`, e);
           dispatch(uploadFailed(error, upload.jobName || ""));
         }
       })
@@ -630,23 +628,25 @@ const updateUploadLogic = createLogic({
       // Avoid re-querying for the imaging sessions if this
       // plate barcode has been selected before
       if (!Object.keys(plateBarcodeToPlates).includes(plateBarcode)) {
-        const imagingSessionsForPlateBarcode = await deps.labkeyClient.findImagingSessionsByPlateBarcode(
-          plateBarcode
-        );
-        const imagingSessionsWithPlateInfo: PlateAtImagingSession[] = await Promise.all(
-          imagingSessionsForPlateBarcode.map(async (is) => {
-            const { wells } = await deps.mmsClient.getPlate(
-              plateBarcode,
-              is["ImagingSessionId"]
-            );
+        const imagingSessionsForPlateBarcode =
+          await deps.labkeyClient.findImagingSessionsByPlateBarcode(
+            plateBarcode
+          );
+        const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
+          await Promise.all(
+            imagingSessionsForPlateBarcode.map(async (is) => {
+              const { wells } = await deps.mmsClient.getPlate(
+                plateBarcode,
+                is["ImagingSessionId"]
+              );
 
-            return {
-              wells,
-              imagingSessionId: is["ImagingSessionId"],
-              name: is["ImagingSessionId/Name"],
-            };
-          })
-        );
+              return {
+                wells,
+                imagingSessionId: is["ImagingSessionId"],
+                name: is["ImagingSessionId/Name"],
+              };
+            })
+          );
 
         // If the barcode has no imaging sessions, find info of plate without
         if (!imagingSessionsWithPlateInfo.length) {
@@ -669,7 +669,6 @@ const updateUploadLogic = createLogic({
     {
       action,
       getState,
-      logger,
     }: ReduxLogicTransformDependenciesWithAction<UpdateUploadAction>,
     next: ReduxLogicNextCb
   ) => {
@@ -696,7 +695,7 @@ const updateUploadLogic = createLogic({
           });
         }
       } catch (e) {
-        logger.error(
+        console.error(
           "Something went wrong while updating metadata: ",
           e.message
         );
@@ -772,8 +771,6 @@ const openUploadLogic = createLogic({
   process: (
     {
       ctx,
-      logger,
-      getApplicationMenu,
       getState,
     }: ReduxLogicProcessDependenciesWithAction<OpenUploadDraftAction>,
     dispatch: ReduxLogicNextCb,
@@ -782,7 +779,7 @@ const openUploadLogic = createLogic({
     dispatch(
       batchActions([
         replaceUpload(ctx.filePath, ctx.draft),
-        ...handleStartingNewUploadJob(logger, getApplicationMenu),
+        ...handleStartingNewUploadJob(),
       ])
     );
 
@@ -834,7 +831,7 @@ const openUploadLogic = createLogic({
     next: ReduxLogicNextCb,
     reject: ReduxLogicRejectCb
   ) => {
-    const { action, ctx, dialog, getState, readFile } = deps;
+    const { action, ctx, getState } = deps;
     try {
       const { cancelled } = await ensureDraftGetsSaved(
         deps,
@@ -851,12 +848,15 @@ const openUploadLogic = createLogic({
     }
 
     try {
-      const { filePaths } = await dialog.showOpenDialog({
-        filters: [{ name: "JSON", extensions: ["json"] }],
-        properties: ["openFile"],
-      });
-      if (filePaths && filePaths[0]) {
-        ctx.filePath = filePaths[0];
+      const filePath = await deps.ipcRenderer.invoke(
+        RendererProcessEvents.SHOW_DIALOG,
+        {
+          filters: [{ name: "JSON", extensions: ["json"] }],
+          properties: ["openFile"],
+        }
+      );
+      if (filePath) {
+        ctx.filePath = filePath;
       } else {
         // user cancelled
         reject({ type: "ignore" });
@@ -867,7 +867,7 @@ const openUploadLogic = createLogic({
     }
 
     try {
-      ctx.draft = JSON.parse((await readFile(ctx.filePath, "utf8")) as string);
+      ctx.draft = JSON.parse(await fs.promises.readFile(ctx.filePath, "utf8"));
       const selectedUploads = getSelectedUploads(ctx.draft);
       if (selectedUploads.length) {
         // If selectedUploads exists on the draft, we know that the upload has been submitted before

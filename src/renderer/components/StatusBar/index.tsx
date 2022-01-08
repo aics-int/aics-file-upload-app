@@ -1,6 +1,5 @@
 import { Button } from "antd";
-import * as classNames from "classnames";
-import * as logger from "js-logger";
+import classNames from "classnames";
 import * as React from "react";
 
 import { AppEvent } from "../../state/types";
@@ -39,21 +38,6 @@ const getStatusMessage = (event?: AppEvent) => {
   return `${event.message} ${time}`;
 };
 
-const copyStatusToClipboard = (message: string) => async () => {
-  const { state }: PermissionStatus = await navigator.permissions
-    // casting since type definitions are not accurate
-    .query({ name: "clipboard-write" as PermissionName });
-  if (state === "granted" || state === "prompt") {
-    try {
-      await navigator.clipboard.writeText(message);
-    } catch (e) {
-      logger.error(`Could not copy text to your clipboard: ${e.message}`);
-    }
-  } else {
-    logger.error("Did not have correct permissions to copy to clipboard");
-  }
-};
-
 export interface StatusBarProps {
   className?: string;
   event?: AppEvent;
@@ -73,7 +57,7 @@ const StatusBar: React.FunctionComponent<StatusBarProps> = (props) => {
         {statusMessage !== "" && (
           <Button
             className={styles.copy}
-            onClick={copyStatusToClipboard(statusMessage)}
+            onClick={() => navigator.clipboard.writeText(statusMessage)}
             size="small"
             type="link"
           >

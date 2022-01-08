@@ -7,7 +7,6 @@ import {
   useSortBy,
   useBlockLayout,
   useResizeColumns,
-  TableInstance,
   SortByFn,
   Row,
 } from "react-table";
@@ -78,7 +77,7 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
     [columnDefinitions, hasSubmitBeenAttempted]
   );
 
-  const tableInstance: TableInstance<UploadTableRow> = useTable(
+  const tableInstance = useTable<UploadTableRow>(
     {
       columns,
       data,

@@ -1,10 +1,8 @@
-import { readFile as fsReadFile, writeFile as fsWriteFile } from "fs";
-import { promisify } from "util";
+import * as fs from "fs";
 
 import axios from "axios";
-import { ipcRenderer, remote } from "electron";
-import * as Store from "electron-store";
-import * as Logger from "js-logger";
+import { ipcRenderer } from "electron";
+import ElectronStore from "electron-store";
 import { forEach, isNil } from "lodash";
 import * as moment from "moment";
 import {
@@ -43,9 +41,6 @@ import {
   upload,
 } from "./";
 
-const readFile = promisify(fsReadFile);
-const writeFile = promisify(fsWriteFile);
-
 const reducers = {
   feedback: feedback.reducer,
   job: job.reducer,
@@ -68,7 +63,7 @@ const logics = [
   ...upload.logics,
 ];
 
-const storage = new EnvironmentAwareStorage(new Store());
+const storage = new EnvironmentAwareStorage(new ElectronStore());
 // Configure Axios to use the `XMLHttpRequest` adapter. Axios uses either
 // `XMLHttpRequest` or Node's `http` module, depending on the environment it is
 // running in. See more info here: https://github.com/axios/axios/issues/552.
@@ -83,7 +78,7 @@ const storage = new EnvironmentAwareStorage(new Store());
 axios.defaults.adapter = require("axios/lib/adapters/xhr");
 const httpClient = axios;
 const useCache = Boolean(process.env.ELECTRON_WEBPACK_USE_CACHE) || false;
-const jssClient = new JobStatusService(httpClient, storage, useCache, "debug");
+const jssClient = new JobStatusService(httpClient, storage, useCache);
 const mmsClient = new MetadataManagementService(httpClient, storage, useCache);
 const labkeyClient = new LabkeyClient(httpClient, storage, useCache);
 const applicationInfoService = new ApplicationInfoService(
@@ -92,7 +87,6 @@ const applicationInfoService = new ApplicationInfoService(
   false
 );
 export const reduxLogicDependencies: ReduxLogicExtraDependencies = {
-  dialog: remote.dialog,
   fms: new FileManagementSystem({
     fileReader: new ChunkedFileReader(),
     fss: new FileStorageService(httpClient, storage),
@@ -100,17 +94,12 @@ export const reduxLogicDependencies: ReduxLogicExtraDependencies = {
     lk: labkeyClient,
     mms: mmsClient,
   }),
-  getApplicationMenu: () => remote.Menu.getApplicationMenu(),
   ipcRenderer,
   jssClient,
   labkeyClient,
-  logger: Logger,
   applicationInfoService,
   mmsClient,
-  readFile,
-  remote,
   storage,
-  writeFile,
 };
 
 const autoSaver = (store: any) => (next: any) => async (action: AnyAction) => {
@@ -120,7 +109,10 @@ const autoSaver = (store: any) => (next: any) => async (action: AnyAction) => {
     const currentUploadFilePath = getCurrentUploadFilePath(nextState);
     if (currentUploadFilePath) {
       try {
-        await writeFile(currentUploadFilePath, JSON.stringify(nextState));
+        await fs.promises.writeFile(
+          currentUploadFilePath,
+          JSON.stringify(nextState)
+        );
       } catch (e) {
         return next(
           addEvent(
@@ -150,11 +142,8 @@ const storageWriter = () => (next: any) => (action: AnyAction) => {
   if (action.writeToStore && action.updates) {
     forEach(action.updates, (value: any, key: string) => {
       if (isNil(value)) {
-        Logger.info(`Deleting key=${key} from local storage`);
         storage.delete(key);
       } else {
-        Logger.info(`Writing to local storage for key: ${key}, and value:`);
-        Logger.info(JSON.stringify(value));
         storage.set(key, value);
       }
     });

@@ -6,16 +6,15 @@ export type LocalStorageGet<T = any> = (<Key extends keyof T>(
 ) => any) &
   MemoizedFunction;
 
-export interface LocalStorage<T = any> {
+type Storage = Record<any, any>;
+type Key = keyof Storage;
+export interface LocalStorage<T = Storage> {
   clear: () => void;
-  delete: <Key extends keyof T>(key: Key) => void;
+  delete: (key: Key) => void;
   get: LocalStorageGet<T>;
-  has: <Key extends keyof T>(key: Key) => boolean;
-  reset: <Key extends keyof T>(...keys: Key[]) => void;
-  set: <Key extends keyof T>(
-    keyOrObject: Key | Partial<T>,
-    value?: T[Key]
-  ) => void;
+  has: (key: Key) => boolean;
+  reset: (...keys: Key[]) => void;
+  set: (keyOrObject: Key | Partial<T>, value?: T[Key]) => void;
 }
 
 export interface Duration {

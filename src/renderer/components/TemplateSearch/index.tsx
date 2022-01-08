@@ -1,5 +1,5 @@
 import { Divider, Icon, Select, Form, Alert } from "antd";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { sortBy } from "lodash";
 import { ReactNode } from "react";
 import * as React from "react";

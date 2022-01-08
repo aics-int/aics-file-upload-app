@@ -30,10 +30,9 @@ const styles = require("./styles.pcss");
 
 interface Props {
   title?: string;
-  onContextMenu: (
+  getContextMenuItems: (
     row: Row<UploadSummaryTableRow>,
-    onCloseCallback: () => void
-  ) => void;
+  ) => React.ReactNode;
   onSelect: (
     rows: Row<UploadSummaryTableRow>[],
     isDeselecting: boolean
@@ -64,7 +63,7 @@ const COLUMNS: Column<UploadSummaryTableRow>[] = [
   },
   {
     accessor: "created",
-    Cell: function Cell(props) {
+    Cell: function Cell(props: CellProps<UploadSummaryTableRow>) {
       return (
         <ReadOnlyCell
           {...props}
@@ -150,41 +149,40 @@ export default function UploadTable(props: Props) {
     [props.onSelect]
   );
 
-  const tableInstance: TableInstance<UploadSummaryTableRow> = useTable<
-    UploadSummaryTableRow
-  >(
-    {
-      columns,
-      data,
-      // Defines the default column properties, can be overriden per column
-      defaultColumn: {
-        Cell: ReadOnlyCell,
-        Header: DefaultHeader,
-        Filter: Filter({ type: FilterType.TEXT }),
-        minWidth: 30,
-        maxWidth: 1000,
-        width: 200,
-        sortType: SortType.DEFAULT,
+  const tableInstance: TableInstance<UploadSummaryTableRow> =
+    useTable<UploadSummaryTableRow>(
+      {
+        columns,
+        data,
+        // Defines the default column properties, can be overriden per column
+        defaultColumn: {
+          Cell: ReadOnlyCell,
+          Header: DefaultHeader,
+          Filter: Filter({ type: FilterType.TEXT }),
+          minWidth: 30,
+          maxWidth: 1000,
+          width: 200,
+          sortType: SortType.DEFAULT,
+        },
+        getRowId: (row) => row.jobId,
+        // Prevents sorts from reseting after data is modified
+        autoResetSortBy: false,
+        // Prevents filters from reseting after data is modified
+        autoResetFilters: false,
+        // Prevent selections from resetting after data is modified
+        autoResetSelectedRows: false,
+        // Extra filter types -> their implementations
+        filterTypes: FILTER_TYPES,
+        // Extra sort types -> their implementations
+        sortTypes: SORT_TYPES,
       },
-      getRowId: (row) => row.jobId,
-      // Prevents sorts from reseting after data is modified
-      autoResetSortBy: false,
-      // Prevents filters from reseting after data is modified
-      autoResetFilters: false,
-      // Prevent selections from resetting after data is modified
-      autoResetSelectedRows: false,
-      // Extra filter types -> their implementations
-      filterTypes: FILTER_TYPES,
-      // Extra sort types -> their implementations
-      sortTypes: SORT_TYPES,
-    },
-    // optional plugins
-    useFilters,
-    useSortBy,
-    useRowSelect,
-    useBlockLayout, // Makes element widths adjustable
-    useResizeColumns
-  );
+      // optional plugins
+      useFilters,
+      useSortBy,
+      useRowSelect,
+      useBlockLayout, // Makes element widths adjustable
+      useResizeColumns
+    );
 
   return (
     <div className={styles.container}>
@@ -192,7 +190,7 @@ export default function UploadTable(props: Props) {
       <Table
         className={styles.tableContainer}
         tableInstance={tableInstance}
-        onContextMenu={props.onContextMenu}
+        getContextMenuItems={props.getContextMenuItems}
       />
       {!tableInstance.rows.length && (
         <div className={styles.emptyContainer}>

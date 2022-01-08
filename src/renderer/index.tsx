@@ -1,13 +1,11 @@
-import "core-js/es6/map";
-import "core-js/es6/promise";
-import "core-js/es6/set";
+import "core-js/actual/promise";
+import "core-js/actual/array/map";
+import "core-js/actual/set";
 import FrontendInsights, {
   LogLevel,
   reduxMiddleware,
 } from "@aics/frontend-insights";
 import AmplitudeNodePlugin from "@aics/frontend-insights-plugin-amplitude-node";
-import { remote } from "electron";
-import * as Logger from "js-logger";
 import * as React from "react";
 import { render } from "react-dom";
 import { Provider } from "react-redux";
@@ -16,7 +14,6 @@ import { APP_ID } from "./constants";
 import App from "./containers/App";
 import ApplicationInfoService from "./services/application-info-service";
 import createReduxStore from "./state/configure-store";
-import { setSwitchEnvEnabled } from "./state/route/logics";
 
 // Application analytics/metrics
 const frontendInsights = new FrontendInsights(
@@ -62,9 +59,4 @@ if (appContainer) {
   appContainer.ondragleave = returnFalse;
   appContainer.ondragend = returnFalse;
   appContainer.ondrop = returnFalse;
-}
-
-const menu = remote.Menu.getApplicationMenu();
-if (menu) {
-  setSwitchEnvEnabled(menu, true, Logger);
 }

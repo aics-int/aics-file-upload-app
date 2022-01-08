@@ -23,7 +23,7 @@ describe("ChunkedFileReader", () => {
   });
 
   after(async () => {
-    await fs.promises.rmdir(testDir, { recursive: true });
+    await fs.promises.rm(testDir, { recursive: true });
   });
 
   describe("calculateMD5", () => {

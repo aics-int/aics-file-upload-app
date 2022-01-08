@@ -24,8 +24,8 @@ describe("MetadataManagementService", () => {
     storage.get = stub();
 
     mmsClient = new MetadataManagementService(
-      (httpClient as any) as HttpCacheClient,
-      (storage as any) as LocalStorage
+      httpClient as any as HttpCacheClient,
+      storage as any as LocalStorage
     );
   });
 

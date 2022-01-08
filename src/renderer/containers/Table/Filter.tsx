@@ -22,7 +22,7 @@ interface Props {
  * to enable filtering. The component returned is dependent on the type prop given.
  */
 export default function Filter(props: Props) {
-  return function FilterComponent<T extends {}>(filterProps: FilterProps<T>) {
+  return function FilterComponent<T extends Record<string, any>>(filterProps: FilterProps<T>) {
     let content: React.ReactNode;
     if (props.type === FilterType.DATE) {
       content = (

@@ -70,13 +70,11 @@ describe("Job logics", () => {
     });
 
     it("does not do anything if no abandoned jobs", async () => {
-      const {
-        actions,
-        logicMiddleware,
-        store,
-      } = createMockReduxStore(mockState, logicDeps, [
-        handleAbandonedJobsLogic,
-      ]);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        logicDeps,
+        [handleAbandonedJobsLogic]
+      );
 
       store.dispatch(
         receiveJobs([mockFailedUploadJob, mockSuccessfulUploadJob])
@@ -90,13 +88,11 @@ describe("Job logics", () => {
     });
 
     it("finds and retries any job that didn't get past the add metadata step", async () => {
-      const {
-        actions,
-        logicMiddleware,
-        store,
-      } = createMockReduxStore(mockState, logicDeps, [
-        handleAbandonedJobsLogic,
-      ]);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        logicDeps,
+        [handleAbandonedJobsLogic]
+      );
       const action = receiveJobs([mockFailedUploadJob, waitingAbandonedJob]);
 
       store.dispatch(action);
@@ -110,13 +106,11 @@ describe("Job logics", () => {
     });
 
     it("finds and retries one abandoned job", async () => {
-      const {
-        actions,
-        logicMiddleware,
-        store,
-      } = createMockReduxStore(mockState, logicDeps, [
-        handleAbandonedJobsLogic,
-      ]);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        logicDeps,
+        [handleAbandonedJobsLogic]
+      );
 
       store.dispatch(receiveJobs([waitingAbandonedJob]));
 
@@ -130,13 +124,11 @@ describe("Job logics", () => {
     });
 
     it("sets error alert if an error is thrown", async () => {
-      const {
-        actions,
-        logicMiddleware,
-        store,
-      } = createMockReduxStore(mockState, logicDeps, [
-        handleAbandonedJobsLogic,
-      ]);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        logicDeps,
+        [handleAbandonedJobsLogic]
+      );
       const errorMessage = "retry failure!";
       fms.retry.onFirstCall().rejects(new Error(errorMessage));
 
@@ -155,13 +147,11 @@ describe("Job logics", () => {
     });
 
     it("dispatches setErrorAlert if fms.retry fails", async () => {
-      const {
-        actions,
-        logicMiddleware,
-        store,
-      } = createMockReduxStore(mockState, logicDeps, [
-        handleAbandonedJobsLogic,
-      ]);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        logicDeps,
+        [handleAbandonedJobsLogic]
+      );
 
       fms.retry.rejects(new Error("Error"));
 
@@ -317,7 +307,7 @@ describe("Job logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      expect(fms.complete.calledOnce).to.be.true;
+      expect(fms.complete).to.have.been.calledOnce;
       expect(
         actions.list.filter(
           (action) => action.type === RECEIVE_FSS_JOB_COMPLETION_UPDATE
@@ -343,7 +333,7 @@ describe("Job logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      expect(fms.failUpload.calledOnce).to.be.true;
+      expect(fms.failUpload).to.have.been.calledOnce;
       expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
         .true;
     });

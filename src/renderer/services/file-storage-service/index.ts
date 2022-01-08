@@ -95,11 +95,9 @@ export default class FileStorageService extends HttpCacheClient {
     const postBody = {
       // Unfortunately FSS expects snake_case in all but one case (MD5)
       // so the conversion must be manual each request
-      // eslint-disable-next-line @typescript-eslint/camelcase
       file_name: fileName,
       // Unfortunately FSS expects snake_case in all but one case (MD5)
       // so the conversion must be manual each request
-      // eslint-disable-next-line @typescript-eslint/camelcase
       file_size: fileSize,
       MD5: md5,
     };

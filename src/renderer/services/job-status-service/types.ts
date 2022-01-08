@@ -60,7 +60,7 @@ export interface UploadServiceFields {
       service: string;
       status: JSSJobStatus;
       status_detail?: string;
-      service_fields?: {};
+      service_fields?: object;
       created: Date;
       modified: Date;
     };

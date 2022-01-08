@@ -18,8 +18,8 @@ describe("ApplicationInfoService", () => {
     storage.get = stub();
 
     applicationInfoService = new ApplicationInfoService(
-      (httpClient as any) as HttpCacheClient,
-      (storage as any) as LocalStorage,
+      httpClient as any as HttpCacheClient,
+      storage as any as LocalStorage,
       false
     );
   });
@@ -28,13 +28,9 @@ describe("ApplicationInfoService", () => {
     it("returns newest version found", async () => {
       const newestVersion = "v2.3.1";
       httpClient.get.resolves({
-        data: [
-          "v1.6.2",
-          newestVersion,
-          "v2.0.0",
-          "v0.9.9",
-          "v1.8.0",
-        ].map((name) => ({ name })),
+        data: ["v1.6.2", newestVersion, "v2.0.0", "v0.9.9", "v1.8.0"].map(
+          (name) => ({ name })
+        ),
       });
 
       const result = await applicationInfoService.getNewestApplicationVersion();

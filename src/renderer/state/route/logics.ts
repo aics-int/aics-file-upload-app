@@ -1,4 +1,3 @@
-import { Menu, MenuItem } from "electron";
 import { groupBy, isEmpty, uniq } from "lodash";
 import { AnyAction } from "redux";
 import { createLogic } from "redux-logic";
@@ -40,7 +39,6 @@ import { ensureDraftGetsSaved, getApplyTemplateInfo } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import {
   AsyncRequest,
-  Logger,
   Page,
   PlateAtImagingSession,
   PlateBarcodeToPlates,
@@ -66,34 +64,6 @@ import { resetUpload, selectPage, viewUploadsSucceeded } from "./actions";
 import { CLOSE_UPLOAD, START_NEW_UPLOAD, VIEW_UPLOADS } from "./constants";
 import { Upload, ViewUploadsAction } from "./types";
 
-// have to cast here because Electron's typings for MenuItem is incomplete
-const getFileMenu = (menu: Menu): MenuItem | undefined =>
-  menu.items.find(
-    (menuItem: MenuItem) => menuItem.label.toLowerCase() === "file"
-  );
-
-export const setSwitchEnvEnabled = (
-  menu: Menu,
-  enabled: boolean,
-  logger: Logger
-): void => {
-  const fileMenu = getFileMenu(menu);
-  if (!fileMenu || !fileMenu.submenu) {
-    logger.error("Could not update application menu");
-    return;
-  }
-
-  const switchEnvironmentMenuItem = fileMenu.submenu.items.find(
-    (menuItem: MenuItem) =>
-      menuItem.label.toLowerCase() === "switch environment"
-  );
-  if (switchEnvironmentMenuItem) {
-    switchEnvironmentMenuItem.enabled = enabled;
-  } else {
-    logger.error("Could not update application menu");
-  }
-};
-
 const stateBranchHistory = [
   {
     clearHistory: clearUploadHistory,
@@ -109,25 +79,14 @@ export const resetHistoryActions = stateBranchHistory.flatMap((history) => [
 // Returns common actions needed because we share the upload tab between upload drafts for now
 // Some of these actions cannot be done in the reducer because they are handled by a higher-order reducer
 // from redux-undo.
-export const handleStartingNewUploadJob = (
-  logger: Logger,
-  getApplicationMenu: () => Menu | null
-): AnyAction[] => {
-  const actions: AnyAction[] = [
-    selectPage(Page.UploadWithTemplate),
-    clearUploadDraft(),
-    clearUploadHistory(),
-  ];
-  const menu = getApplicationMenu();
-  if (menu) {
-    setSwitchEnvEnabled(menu, false, logger);
-  }
-
-  return actions;
-};
+export const handleStartingNewUploadJob = (): AnyAction[] => [
+  selectPage(Page.UploadWithTemplate),
+  clearUploadDraft(),
+  clearUploadHistory(),
+];
 
 const resetUploadLogic = createLogic({
-  type: [CLOSE_UPLOAD, START_NEW_UPLOAD],
+  type: [CLOSE_UPLOAD, START_NEW_UPLOAD] as string[],
   validate: async (
     deps: ReduxLogicTransformDependencies,
     next: ReduxLogicNextCb,
@@ -249,28 +208,26 @@ function convertUploadRequestsToUploadStateBranch(
             });
             break;
           case ColumnType.DURATION:
-            values = values.map(
-              (v: string): Duration => {
-                let remainingMs = parseInt(v);
+            values = values.map((v: string): Duration => {
+              let remainingMs = parseInt(v);
 
-                function calculateUnit(unitAsMs: number, useFloor = true) {
-                  const numUnit = useFloor
-                    ? Math.floor(remainingMs / unitAsMs)
-                    : remainingMs / unitAsMs;
-                  if (numUnit > 0) {
-                    remainingMs -= numUnit * unitAsMs;
-                  }
-                  return numUnit;
+              function calculateUnit(unitAsMs: number, useFloor = true) {
+                const numUnit = useFloor
+                  ? Math.floor(remainingMs / unitAsMs)
+                  : remainingMs / unitAsMs;
+                if (numUnit > 0) {
+                  remainingMs -= numUnit * unitAsMs;
                 }
-
-                const days = calculateUnit(DAY_AS_MS);
-                const hours = calculateUnit(HOUR_AS_MS);
-                const minutes = calculateUnit(MINUTE_AS_MS);
-                const seconds = calculateUnit(1000, false);
-
-                return { days, hours, minutes, seconds };
+                return numUnit;
               }
-            );
+
+              const days = calculateUnit(DAY_AS_MS);
+              const hours = calculateUnit(HOUR_AS_MS);
+              const minutes = calculateUnit(MINUTE_AS_MS);
+              const seconds = calculateUnit(1000, false);
+
+              return { days, hours, minutes, seconds };
+            });
         }
 
         return {
@@ -315,10 +272,8 @@ const viewUploadsLogic = createLogic({
   process: async (
     {
       ctx,
-      getApplicationMenu,
       getState,
       labkeyClient,
-      logger,
       mmsClient,
     }: ReduxLogicProcessDependenciesWithAction<ViewUploadsAction>,
     dispatch: ReduxLogicNextCb,
@@ -327,9 +282,7 @@ const viewUploadsLogic = createLogic({
     const state = getState();
     try {
       // Open the upload tab and make sure application menu gets updated and redux-undo histories reset.
-      dispatch(
-        batchActions(handleStartingNewUploadJob(logger, getApplicationMenu))
-      );
+      dispatch(batchActions(handleStartingNewUploadJob()));
 
       // Second, we fetch the file metadata
       const { requests, fileIds } = ctx as {
@@ -389,23 +342,25 @@ const viewUploadsLogic = createLogic({
           // Avoid re-querying for the imaging sessions if this
           // plate barcode has been selected before
           if (!Object.keys(plateBarcodeToPlates).includes(plate.BarCode)) {
-            const imagingSessionsForPlateBarcode = await labkeyClient.findImagingSessionsByPlateBarcode(
-              plate.BarCode
-            );
-            const imagingSessionsWithPlateInfo: PlateAtImagingSession[] = await Promise.all(
-              imagingSessionsForPlateBarcode.map(async (is) => {
-                const { wells } = await mmsClient.getPlate(
-                  plate.BarCode,
-                  is["ImagingSessionId"]
-                );
+            const imagingSessionsForPlateBarcode =
+              await labkeyClient.findImagingSessionsByPlateBarcode(
+                plate.BarCode
+              );
+            const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
+              await Promise.all(
+                imagingSessionsForPlateBarcode.map(async (is) => {
+                  const { wells } = await mmsClient.getPlate(
+                    plate.BarCode,
+                    is["ImagingSessionId"]
+                  );
 
-                return {
-                  wells,
-                  imagingSessionId: is["ImagingSessionId"],
-                  name: is["ImagingSessionId/Name"],
-                };
-              })
-            );
+                  return {
+                    wells,
+                    imagingSessionId: is["ImagingSessionId"],
+                    name: is["ImagingSessionId/Name"],
+                  };
+                })
+              );
 
             // If the barcode has no imaging sessions, find info of plate without
             if (!imagingSessionsWithPlateInfo.length) {

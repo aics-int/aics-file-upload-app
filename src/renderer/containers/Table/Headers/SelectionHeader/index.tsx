@@ -12,7 +12,7 @@ const styles = require("./styles.pcss");
   This renders a checkbox that controls the selection state
   of every row
 */
-export default function SelectionHeader<T extends {}>(props: HeaderProps<T>) {
+export default function SelectionHeader<T extends Record<string, any>>(props: HeaderProps<T>) {
   const dispatch = useDispatch();
   const checkBoxProps = props.getToggleAllRowsSelectedProps();
 

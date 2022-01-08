@@ -49,31 +49,16 @@ export interface LocalStorageStub {
 
 export interface ReduxLogicDependencies {
   applicationInfoService: SinonStubbedInstance<ApplicationInfoService>;
-  dialog: {
-    showMessageBox: SinonStub;
-    showOpenDialog: SinonStub;
-  };
   fms: SinonStubbedInstance<FileManagementSystem>;
-  getApplicationMenu: SinonStub;
   ipcRenderer: {
+    invoke: SinonStub;
     on: SinonStub;
     send: SinonStub;
   };
   jssClient: SinonStubbedInstance<JobStatusService>;
   labkeyClient: SinonStubbedInstance<LabkeyClient>;
-  logger: {
-    debug: SinonStub;
-    error: SinonStub;
-    info: SinonStub;
-    warn: SinonStub;
-  };
   mmsClient: SinonStubbedInstance<MetadataManagementService>;
-  readFile: SinonStub;
-  remote: {
-    getCurrentWindow: SinonStub;
-  };
   storage: SinonStubbedInstance<EnvironmentAwareStorage>;
-  writeFile: SinonStub;
 }
 
 const storage = createStubInstance(EnvironmentAwareStorage);
@@ -83,65 +68,20 @@ const labkeyClient = createStubInstance(LabkeyClient);
 const mmsClient = createStubInstance(MetadataManagementService);
 const fms = createStubInstance(FileManagementSystem);
 
-export const switchEnvMenuItem = {
-  enabled: true,
-  label: "Switch Environment",
-};
-
-export const getApplicationMenu = stub().returns({
-  items: [
-    {
-      enabled: true,
-      label: "File",
-      submenu: {
-        items: [
-          { enabled: true, label: "New" },
-          { enabled: true, label: "Open" },
-          switchEnvMenuItem,
-        ],
-      },
-    },
-  ],
-});
-
-export const dialog = {
-  showMessageBox: stub(),
-  showOpenDialog: stub(),
-  showSaveDialog: stub(),
-};
-
-export const logger = {
-  debug: stub(),
-  error: stub(),
-  info: stub(),
-  time: stub(),
-  timeEnd: stub(),
-  warn: stub(),
-};
-
 export const ipcRenderer = {
+  invoke: stub(),
   on: stub(),
   send: stub(),
 };
 
-export const remote = {
-  getCurrentWindow: stub(),
-};
-
 export const mockReduxLogicDeps: ReduxLogicDependencies = {
   applicationInfoService,
-  dialog,
   fms,
-  getApplicationMenu,
   ipcRenderer,
   jssClient,
   labkeyClient,
-  logger,
   mmsClient,
-  readFile: stub().resolves("foo"),
-  remote,
   storage,
-  writeFile: stub().resolves(),
 };
 
 const reducers = {
@@ -191,10 +131,8 @@ export function createMockReduxStore(
     logics = allLogics;
   }
   // redux-logic middleware
-  const logicMiddleware: LogicMiddleware<
-    State,
-    ReduxLogicDependencies
-  > = createLogicMiddleware(logics);
+  const logicMiddleware: LogicMiddleware<State, ReduxLogicDependencies> =
+    createLogicMiddleware(logics);
   logicMiddleware.addDeps(reduxLogicDependencies);
 
   // action tracking middleware

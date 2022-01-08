@@ -1,7 +1,7 @@
 import * as fs from "fs";
 
-import { Icon, Input, Modal, Tooltip } from "antd";
-import { OpenDialogOptions, remote } from "electron";
+import { Dropdown, Icon, Input, Menu, Modal, Tooltip } from "antd";
+import { OpenDialogOptions } from "electron";
 import { castArray } from "lodash";
 import React from "react";
 import { useDispatch } from "react-redux";
@@ -31,29 +31,21 @@ const openDialogOptions: OpenDialogOptions = {
   title: "Open Text file",
 };
 
-function getContextMenuItems(dispatch: Dispatch, props: Props, notes: string) {
-  return remote.Menu.buildFromTemplate([
-    {
-      click: () => {
-        navigator.clipboard.writeText(notes);
+function getContextMenuItems(dispatch: Dispatch, props: Props, notes?: string) {
+  return (
+    <Menu>
+      <Menu.Item key="1" disabled={!notes} onClick={() => {
+        navigator.clipboard.writeText(notes || "");
         dispatch(
           updateUpload(props.row.id, {
             [props.column.id]: undefined,
           })
         );
-      },
-      enabled: !!notes,
-      label: "Cut",
-    },
-    {
-      click: () => {
-        navigator.clipboard.writeText(notes);
-      },
-      enabled: !!notes,
-      label: "Copy",
-    },
-    {
-      click: async () => {
+      }}>Cut</Menu.Item>
+      <Menu.Item key="2" disabled={!notes} onClick={() => {
+        navigator.clipboard.writeText(notes || "");
+      }}>Copy</Menu.Item>
+      <Menu.Item key="3" disabled={!notes} onClick={async () => {
         const pastedText = await navigator.clipboard.readText();
         const trimmedText = pastedText.trim();
         dispatch(
@@ -61,21 +53,16 @@ function getContextMenuItems(dispatch: Dispatch, props: Props, notes: string) {
             [props.column.id]: trimmedText ? [trimmedText] : undefined,
           })
         );
-      },
-      label: "Paste",
-    },
-    {
-      click: () => {
+      }}>Paste</Menu.Item>
+      <Menu.Item key="4" disabled={!notes} onClick={() => {
         dispatch(
           updateUpload(props.row.id, {
             [props.column.id]: undefined,
           })
         );
-      },
-      enabled: !!notes,
-      label: "Delete",
-    },
-  ]);
+      }}>Delete</Menu.Item>
+    </Menu>
+  );
 }
 
 async function readTextFile(
@@ -148,11 +135,6 @@ function NotesCell(props: Props) {
     setNotes(props.value ? castArray(props.value) : []);
   }
 
-  const onContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    getContextMenuItems(dispatch, props, note || "").popup();
-  };
-
   return (
     <>
       <Modal
@@ -203,14 +185,15 @@ function NotesCell(props: Props) {
         mouseEnterDelay={TOOLTIP_ENTER_DELAY}
         mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
       >
-        <div className={styles.alignCenter} onContextMenu={onContextMenu}>
+        {/* TODO: Test */}
+        <Dropdown overlay={getContextMenuItems(dispatch, props, note)} trigger={['contextMenu']}>
           {(!props.column.isReadOnly || notes) && (
             <Icon
               onClick={() => setIsModalOpen(true)}
               type={note ? "file-text" : "plus-circle"}
             />
           )}
-        </div>
+        </Dropdown>
       </Tooltip>
     </>
   );

@@ -2,7 +2,7 @@ import { isEmpty, trim } from "lodash";
 import { AnyAction } from "redux";
 import { createLogic } from "redux-logic";
 
-import { OPEN_CREATE_PLATE_STANDALONE } from "../../../shared/constants";
+import { RendererProcessEvents } from "../../../shared/constants";
 import {
   Annotation,
   AnnotationLookup,
@@ -44,7 +44,6 @@ const createBarcodeLogic = createLogic({
       action,
       getState,
       ipcRenderer,
-      logger,
       mmsClient,
     }: ReduxLogicProcessDependenciesWithAction<CreateBarcodeAction>,
     dispatch: ReduxLogicNextCb,
@@ -60,7 +59,7 @@ const createBarcodeLogic = createLogic({
       } = action.payload;
       const barcode = await mmsClient.createBarcode(prefixId);
       ipcRenderer.send(
-        OPEN_CREATE_PLATE_STANDALONE,
+        RendererProcessEvents.OPEN_CREATE_PLATE_STANDALONE,
         limsHost,
         limsPort,
         barcode,
@@ -69,7 +68,6 @@ const createBarcodeLogic = createLogic({
       );
     } catch (ex) {
       const error = "Could not create barcode: " + ex.message;
-      logger.error(error);
       dispatch(
         setAlert({
           type: AlertType.ERROR,
@@ -84,7 +82,7 @@ const createBarcodeLogic = createLogic({
 
 const requestMetadataLogic = createLogic({
   process: async (
-    { labkeyClient, logger }: ReduxLogicProcessDependencies,
+    { labkeyClient }: ReduxLogicProcessDependencies,
     dispatch: (action: AnyAction) => void,
     done: () => void
   ) => {
@@ -129,7 +127,7 @@ const requestMetadataLogic = createLogic({
         })
       );
     } catch (e) {
-      logger.error(e.message);
+      console.error(e.message);
       dispatch(
         requestFailed(
           `Failed to retrieve metadata: ${e.message}`,
@@ -169,7 +167,7 @@ const getBarcodeSearchResultsLogic = createLogic({
   debounce: 500,
   latest: true,
   process: async (
-    { action, labkeyClient, logger }: ReduxLogicProcessDependencies,
+    { action, labkeyClient }: ReduxLogicProcessDependencies,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
@@ -186,7 +184,7 @@ const getBarcodeSearchResultsLogic = createLogic({
       );
     } catch (e) {
       const error = `Could not retrieve barcode search results: ${e.message}`;
-      logger.error(error);
+      console.error(error);
       dispatch(requestFailed(error, AsyncRequest.GET_BARCODE_SEARCH_RESULTS));
     }
     done();
@@ -219,7 +217,6 @@ const requestOptionsForLookupLogic = createLogic({
       action: { payload },
       getState,
       labkeyClient,
-      logger,
     }: ReduxLogicProcessDependenciesWithAction<GetOptionsForLookupAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -235,11 +232,10 @@ const requestOptionsForLookupLogic = createLogic({
       ({ name }) => name.toLowerCase() === lookupAnnotationName.toLowerCase()
     );
     if (annotation) {
-      const annotationLookup:
-        | AnnotationLookup
-        | undefined = annotationLookups.find(
-        (al) => al.annotationId === annotation.annotationId
-      );
+      const annotationLookup: AnnotationLookup | undefined =
+        annotationLookups.find(
+          (al) => al.annotationId === annotation.annotationId
+        );
       if (annotationLookup) {
         lookup = lookups.find(
           ({ lookupId }) => lookupId === annotationLookup.lookupId
@@ -278,7 +274,6 @@ const requestOptionsForLookupLogic = createLogic({
       );
     } catch (e) {
       const error = `Could not retrieve options for lookup annotation: ${e.message}`;
-      logger.error(error);
       dispatch(requestFailed(error, AsyncRequest.GET_OPTIONS_FOR_LOOKUP));
     }
     done();
@@ -306,7 +301,7 @@ const requestOptionsForLookupLogic = createLogic({
 
 const requestTemplatesLogicLogic = createLogic({
   process: async (
-    { labkeyClient, logger }: ReduxLogicProcessDependencies,
+    { labkeyClient }: ReduxLogicProcessDependencies,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
@@ -318,7 +313,6 @@ const requestTemplatesLogicLogic = createLogic({
       dispatch(receiveMetadata({ templates }, AsyncRequest.GET_TEMPLATES));
     } catch (e) {
       const error = `Could not retrieve templates: ${e.message}`;
-      logger.error(error);
       dispatch(requestFailed(error, AsyncRequest.GET_TEMPLATES));
     }
     done();

@@ -13,7 +13,7 @@ const styles = require("./styles.pcss");
   This component renders an interactive header rendered by default for
   all react-tables.
 */
-export default function DefaultHeader<T extends {}>({
+export default function DefaultHeader<T extends Record<string, any>>({
   column,
   name,
 }: HeaderProps<T>) {

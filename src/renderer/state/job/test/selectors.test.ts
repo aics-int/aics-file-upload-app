@@ -36,10 +36,8 @@ describe("Job selectors", () => {
       const jobs = [...nonEmptyJobStateBranch.uploadJobs];
 
       // Act
-      const {
-        uploadsWithTemplates,
-        uploadsWithoutTemplates,
-      } = getUploadsByTemplateUsage(state);
+      const { uploadsWithTemplates, uploadsWithoutTemplates } =
+        getUploadsByTemplateUsage(state);
 
       // Assert
       expect(uploadsWithTemplates).to.be.lengthOf(1);
@@ -93,16 +91,14 @@ describe("Job selectors", () => {
       };
 
       // Act
-      const {
-        uploadsWithTemplates,
-        uploadsWithoutTemplates,
-      } = getUploadsByTemplateUsage({
-        ...mockState,
-        job: {
-          ...mockState.job,
-          uploadJobs: [expectedJob, mockReplacedJob1, mockReplacedJob2],
-        },
-      });
+      const { uploadsWithTemplates, uploadsWithoutTemplates } =
+        getUploadsByTemplateUsage({
+          ...mockState,
+          job: {
+            ...mockState.job,
+            uploadJobs: [expectedJob, mockReplacedJob1, mockReplacedJob2],
+          },
+        });
 
       // Assert
       expect(uploadsWithTemplates).to.be.lengthOf(0);

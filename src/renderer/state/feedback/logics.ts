@@ -21,7 +21,8 @@ const checkForUpdateLogic = createLogic({
   ) => {
     try {
       const currentVersion = ApplicationInfoService.getApplicationVersion();
-      const newestVersion = await applicationInfoService.getNewestApplicationVersion();
+      const newestVersion =
+        await applicationInfoService.getNewestApplicationVersion();
       if (gt(newestVersion, currentVersion)) {
         const confluencePage =
           "http://confluence.corp.alleninstitute.org/display/SF/File+Upload+Application";

@@ -73,7 +73,7 @@ describe("FileManagementSystem", () => {
       );
 
       // Assert
-      expect(jss.createJob.calledOnce).to.be.true;
+      expect(jss.createJob).to.have.been.calledOnce;
     });
   });
 
@@ -104,14 +104,14 @@ describe("FileManagementSystem", () => {
       await fms.upload(upload, noop);
 
       // Assert
-      expect(fileReader.calculateMD5.calledOnce).to.be.true;
+      expect(fileReader.calculateMD5).to.have.been.calledOnce;
       expect(
         lk.fileExistsByNameAndMD5.calledOnceWithExactly(
           path.basename(testFilePath),
           md5
         )
       ).to.be.true;
-      expect(fileReader.read.calledOnce).to.be.true;
+      expect(fileReader.read).to.have.been.calledOnce;
       expect(fss.finalize.calledOnceWithExactly(uploadId)).to.be.true;
     });
 
@@ -186,7 +186,7 @@ describe("FileManagementSystem", () => {
       await expect(fms.upload(upload, noop)).to.be.rejectedWith(Error);
 
       // Assert
-      expect(fileReader.calculateMD5.calledOnce).to.be.true;
+      expect(fileReader.calculateMD5).to.have.been.calledOnce;
       expect(
         lk.fileExistsByNameAndMD5.calledOnceWithExactly(
           path.basename(testFilePath),
@@ -202,7 +202,7 @@ describe("FileManagementSystem", () => {
           },
         })
       ).to.be.true;
-      expect(fileReader.read.calledOnce).to.be.true;
+      expect(fileReader.read).to.have.been.calledOnce;
     });
   });
 
@@ -249,7 +249,7 @@ describe("FileManagementSystem", () => {
 
       // Assert
       expect(fss.getStatus.called).to.be.false;
-      expect(jss.createJob.calledOnce).to.be.true;
+      expect(jss.createJob).to.have.been.calledOnce;
     });
 
     it("creates new upload if fss upload not in progress (able to resume)", async () => {
@@ -298,8 +298,8 @@ describe("FileManagementSystem", () => {
       await fms.retry("mockUploadId", noop);
 
       // Assert
-      expect(fss.getStatus.calledOnce).to.be.true;
-      expect(jss.createJob.calledOnce).to.be.true;
+      expect(fss.getStatus).to.have.been.calledOnce;
+      expect(jss.createJob).to.have.been.calledOnce;
     });
 
     it("creates multiple new uploads for backwards compatibility", async () => {
@@ -389,7 +389,7 @@ describe("FileManagementSystem", () => {
 
           // Assert
           expect(jss.createJob.called).to.be.false;
-          expect(fileReader.read.calledOnce).to.be.true;
+          expect(fileReader.read).to.have.been.calledOnce;
         });
       }
     );
@@ -452,7 +452,7 @@ describe("FileManagementSystem", () => {
       ).to.be.rejectedWith(Error);
 
       // Assert
-      expect(jss.updateJob.calledOnce).to.be.true;
+      expect(jss.updateJob).to.have.been.calledOnce;
     });
   });
 
@@ -478,8 +478,8 @@ describe("FileManagementSystem", () => {
       await fms.cancel(mockUploadId);
 
       // Assert
-      expect(fileReader.cancel.calledOnce).to.be.true;
-      expect(fss.cancelUpload.calledOnce).to.be.true;
+      expect(fileReader.cancel).to.have.been.calledOnce;
+      expect(fss.cancelUpload).to.have.been.calledOnce;
     });
 
     it("sets job status to FAILED with cancellation flag", async () => {

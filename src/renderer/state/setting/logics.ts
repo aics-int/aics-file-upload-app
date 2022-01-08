@@ -3,6 +3,7 @@ import { createLogic } from "redux-logic";
 
 import {
   PREFERRED_TEMPLATE_ID,
+  RendererProcessEvents,
   USER_SETTINGS_KEY,
 } from "../../../shared/constants";
 import { LimsUrl } from "../../../shared/types";
@@ -55,7 +56,7 @@ export const updateSettingsLogic = createLogic({
 
 const gatherSettingsLogic = createLogic({
   validate: async (
-    { action, logger, labkeyClient, storage }: ReduxLogicTransformDependencies,
+    { action, labkeyClient, storage }: ReduxLogicTransformDependencies,
     next: ReduxLogicNextCb,
     reject: ReduxLogicRejectCb
   ) => {
@@ -65,7 +66,6 @@ const gatherSettingsLogic = createLogic({
       const userSettings = storage.get(USER_SETTINGS_KEY);
       if (!userSettings) {
         reject({ type: "ignore" });
-        logger.debug("no user settings found");
         return;
       }
 
@@ -115,16 +115,19 @@ const gatherSettingsLogic = createLogic({
 
 const openEnvironmentDialogLogic = createLogic({
   process: async (
-    { dialog, storage, remote }: ReduxLogicProcessDependencies,
+    { ipcRenderer, storage }: ReduxLogicProcessDependencies,
     dispatch,
     done
   ) => {
-    const { response: buttonIndex } = await dialog.showMessageBox({
-      buttons: ["Cancel", "Local", "Staging", "Production"],
-      cancelId: 0,
-      message: "Switch environment?",
-      type: "question",
-    });
+    const buttonIndex = await ipcRenderer.invoke(
+      RendererProcessEvents.SHOW_MESSAGE_BOX,
+      {
+        buttons: ["Cancel", "Local", "Staging", "Production"],
+        cancelId: 0,
+        message: "Switch environment?",
+        type: "question",
+      }
+    );
     if (buttonIndex > 0) {
       const urlMap: { [index: number]: LimsUrl } = {
         1: {
@@ -158,7 +161,7 @@ const openEnvironmentDialogLogic = createLogic({
         );
       }
       // Reload the app with the newly selected environment
-      remote.getCurrentWindow().reload();
+      ipcRenderer.send(RendererProcessEvents.REFRESH);
     }
     done();
   },

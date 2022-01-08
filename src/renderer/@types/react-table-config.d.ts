@@ -46,45 +46,45 @@ declare module "react-table" {
       UseSortByOptions<D>,
       Record<string, any> {}
 
-  export interface Hooks<D extends object = {}>
+  export interface Hooks<D extends object>
     extends UseExpandedHooks<D>,
       UseRowSelectHooks<D>,
       UseSortByHooks<D> {}
 
-  export interface TableInstance<D extends object = {}>
+  export interface TableInstance<D extends object>
     extends UseExpandedInstanceProps<D>,
       UseRowSelectInstanceProps<D>,
       UseFiltersInstanceProps<D>,
       UseSortByInstanceProps<D> {}
 
-  export interface TableState<D extends object = {}>
+  export interface TableState<D extends object>
     extends UseExpandedState<D>,
       UseResizeColumnsState<D>,
       UseRowSelectState<D>,
       UseFiltersState<D>,
       UseSortByState<D> {}
 
-  export interface ColumnInterface<D extends object = {}>
+  export interface ColumnInterface<D extends object>
     extends UseResizeColumnsColumnOptions<D>,
       UseSortByColumnOptions<D>,
       UseFiltersColumnOptions<D>,
       CustomColumnProps {}
 
-  export interface ColumnInstance<D extends object = {}>
+  export interface ColumnInstance<D extends object>
     extends UseResizeColumnsColumnProps<D>,
       UseSortByColumnProps<D>,
       UseFiltersColumnProps<D>,
       CustomColumnProps {}
 
-  export interface Cell<D extends object = {}, V = any>
+  export interface Cell<D extends object>
     extends UseGroupByCellProps<D>,
       UseRowStateCellProps<D> {}
 
-  export interface HeaderGroup<D extends object = {}>
+  export interface HeaderGroup<D extends object>
     extends UseSortByColumnProps<D>,
       UseFiltersColumnProps<D> {}
 
-  export interface Row<D extends object = {}>
+  export interface Row<D extends object>
     extends UseExpandedRowProps<D>,
       UseRowSelectRowProps<D> {}
 }

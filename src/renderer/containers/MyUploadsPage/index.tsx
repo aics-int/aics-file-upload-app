@@ -1,5 +1,4 @@
-import { Button, Dropdown, Spin, Tooltip } from "antd";
-import { remote } from "electron";
+import { Button, Dropdown, Menu, Spin, Tooltip } from "antd";
 import { isEmpty, uniqBy } from "lodash";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -42,21 +41,19 @@ export default function MyUploadsPage() {
     UploadSummaryTableRow[]
   >([]);
 
-  const [
-    areSelectedUploadsAllFailed,
-    areSelectedUploadsAllInProgress,
-  ] = React.useMemo(() => {
-    const selectedAllFailedUploads = selectedUploads.every(
-      (upload) => upload.status === JSSJobStatus.FAILED
-    );
-    let selectedAllInProgressUploads = false;
-    if (!selectedAllFailedUploads) {
-      selectedAllInProgressUploads = selectedUploads.every((upload) =>
-        IN_PROGRESS_STATUSES.includes(upload.status)
+  const [areSelectedUploadsAllFailed, areSelectedUploadsAllInProgress] =
+    React.useMemo(() => {
+      const selectedAllFailedUploads = selectedUploads.every(
+        (upload) => upload.status === JSSJobStatus.FAILED
       );
-    }
-    return [selectedAllFailedUploads, selectedAllInProgressUploads];
-  }, [selectedUploads]);
+      let selectedAllInProgressUploads = false;
+      if (!selectedAllFailedUploads) {
+        selectedAllInProgressUploads = selectedUploads.every((upload) =>
+          IN_PROGRESS_STATUSES.includes(upload.status)
+        );
+      }
+      return [selectedAllFailedUploads, selectedAllInProgressUploads];
+    }, [selectedUploads]);
 
   // Wrap as callback to avoid unnecessary renders due to referential equality between
   // onSelect references in TableRow
@@ -88,26 +85,24 @@ export default function MyUploadsPage() {
     setSelectedUploads([]);
   }
 
-  function onContextMenu(
-    row: Row<UploadSummaryTableRow>,
-    onCloseCallback: () => void
-  ) {
-    remote.Menu.buildFromTemplate([
-      {
-        label: "View",
-        click: () => dispatch(viewUploads([row.original])),
-      },
-      {
-        label: "Retry",
-        enabled: row.original.status === JSSJobStatus.FAILED,
-        click: () => dispatch(retryUploads([row.original])),
-      },
-      {
-        label: "Cancel",
-        enabled: IN_PROGRESS_STATUSES.includes(row.original.status),
-        click: () => dispatch(cancelUploads([row.original])),
-      },
-    ]).popup({ callback: onCloseCallback });
+  function getContextMenuItems(row: Row<UploadSummaryTableRow>) {
+    const onRowView = () => {
+      dispatch(viewUploads([row.original]));
+    }
+    const onRowRetry = () => {
+      dispatch(retryUploads([row.original]))
+    }
+    const onRowCancel = () => {
+      dispatch(cancelUploads([row.original]))
+    }
+  
+    return (
+      <Menu>
+        <Menu.Item onClick={onRowView}>View</Menu.Item>
+        <Menu.Item disabled={row.original.status !== JSSJobStatus.FAILED} onClick={onRowRetry}>Retry</Menu.Item>
+        <Menu.Item disabled={!IN_PROGRESS_STATUSES.includes(row.original.status)} onClick={onRowCancel}>Cancel</Menu.Item>
+      </Menu>
+    )
   }
 
   function onUploadWithoutTemplate(filePaths: string[]) {
@@ -202,14 +197,14 @@ export default function MyUploadsPage() {
                 <UploadTable
                   title="Uploads Missing Metadata Templates"
                   uploads={uploadsWithoutTemplates}
-                  onContextMenu={onContextMenu}
+                  getContextMenuItems={getContextMenuItems}
                   onSelect={onSelect}
                 />
               )}
               <UploadTable
                 title="Uploads With Metadata Templates"
                 uploads={uploadsWithTemplates}
-                onContextMenu={onContextMenu}
+                getContextMenuItems={getContextMenuItems}
                 onSelect={onSelect}
               />
             </>

@@ -1,4 +1,3 @@
-import { OPEN_TEMPLATE_MENU_ITEM_CLICKED } from "../../../shared/constants";
 import { OpenTemplateEditorAction } from "../feedback/types";
 import { MassEditRow } from "../types";
 
@@ -9,6 +8,7 @@ import {
   CLOSE_SUB_FILE_SELECTION_MODAL,
   LOAD_FILES,
   OPEN_SUB_FILE_SELECTION_MODAL,
+  OPEN_TEMPLATE_EDITOR,
   REMOVE_ROW_FROM_DRAG_EVENT,
   START_CELL_DRAG,
   START_MASS_EDIT,
@@ -112,7 +112,7 @@ export function openTemplateEditor(
 ): OpenTemplateEditorAction {
   return {
     payload: templateId,
-    type: OPEN_TEMPLATE_MENU_ITEM_CLICKED,
+    type: OPEN_TEMPLATE_EDITOR,
   };
 }
 

@@ -10,30 +10,21 @@ module.exports = {
     tsconfigRootDir: __dirname,
     project: ["./tsconfig.json"],
   },
-  plugins: ["@typescript-eslint", "import", "no-only-tests"],
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended",
-    "prettier/@typescript-eslint",
-    "prettier/react",
-    "plugin:prettier/recommended",
-    "plugin:@fintechstudios/chai-as-promised/recommended"
-  ],
+  plugins: ["@typescript-eslint", "import", "no-only-tests", "react-hooks"],
+  extends: ["plugin:@typescript-eslint/recommended", "plugin:react/recommended", "prettier"],
   settings: {
     react: {
       version: "detect",
     },
   },
   rules: {
-    "@typescript-eslint/no-var-requires": "off",
-    "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
-    "react/prop-types": "off",
-    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/explicit-member-accessibility": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": ["error"],
+    "@typescript-eslint/no-var-requires": "off",
+    "eqeqeq": ["error", "always"],
     "import/order": ["error", {
       "alphabetize": {
         order: "asc",
@@ -42,8 +33,9 @@ module.exports = {
       "newlines-between": "always",
       "groups": ["builtin", "external", "parent", "sibling", "index"],
     }],
-    "eqeqeq": ["error", "always"],
-    "react-hooks/exhaustive-deps": "error",
     "no-only-tests/no-only-tests": "error",
-  },
+    "react/prop-types": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+},
 };

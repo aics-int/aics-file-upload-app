@@ -665,9 +665,8 @@ describe("Upload selectors", () => {
         },
         template: mockTemplateStateBranchWithAppliedTemplate,
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "/path/to/file3" })]: mockWellUpload[
-            getUploadRowKey({ file: "/path/to/file3" })
-          ],
+          [getUploadRowKey({ file: "/path/to/file3" })]:
+            mockWellUpload[getUploadRowKey({ file: "/path/to/file3" })],
         }),
       });
       expect(jobName).to.deep.equal(["file3"]);
@@ -1013,7 +1012,7 @@ describe("Upload selectors", () => {
     let goodUploadRow: FileModel;
     const getValidations = (
       annotationToTest: TemplateAnnotation,
-      value: any
+      value: string | string[] | number[]
     ) => {
       return getUploadKeyToAnnotationErrorMap({
         ...nonEmptyStateForInitiatingUpload,

@@ -1,5 +1,8 @@
+import * as fs from "fs";
+
 import { difference, get, omit } from "lodash";
 
+import { RendererProcessEvents } from "../../shared/constants";
 import MetadataManagementService from "../services/metadata-management-service";
 import {
   Template,
@@ -188,26 +191,31 @@ export const ensureDraftGetsSaved = async (
   const DISCARD_BUTTON_INDEX = 1;
   const SAVE_UPLOAD_DRAFT_BUTTON_INDEX = 2;
 
-  const { dialog, getState, writeFile } = deps;
+  const { getState } = deps;
 
   // if currentUploadFilePath is set, user is working on a upload draft that
   // they have saved before. Now we just need to save to that file.
   if (currentUploadFilePath) {
-    await writeFile(currentUploadFilePath, JSON.stringify(getState()));
+    await fs.promises.writeFile(
+      currentUploadFilePath,
+      JSON.stringify(getState())
+    );
     return { cancelled: false, filePath: currentUploadFilePath };
   } else if (canSaveUploadDraft) {
     // figure out if user wants to save their draft before we replace it
     let buttonIndex = SAVE_UPLOAD_DRAFT_BUTTON_INDEX;
     if (!skipWarningDialog) {
-      const { response } = await dialog.showMessageBox({
-        buttons: ["Cancel", "Discard", "Save Upload Draft"],
-        cancelId: CANCEL_BUTTON_INDEX,
-        defaultId: SAVE_UPLOAD_DRAFT_BUTTON_INDEX,
-        message: "Your draft will be discarded unless you save it.",
-        title: "Warning",
-        type: "question",
-      });
-      buttonIndex = response;
+      buttonIndex = await deps.ipcRenderer.invoke(
+        RendererProcessEvents.SHOW_MESSAGE_BOX,
+        {
+          buttons: ["Cancel", "Discard", "Save Upload Draft"],
+          cancelId: CANCEL_BUTTON_INDEX,
+          defaultId: SAVE_UPLOAD_DRAFT_BUTTON_INDEX,
+          message: "Your draft will be discarded unless you save it.",
+          title: "Warning",
+          type: "question",
+        }
+      );
     }
 
     if (buttonIndex === DISCARD_BUTTON_INDEX) {
@@ -219,12 +227,16 @@ export const ensureDraftGetsSaved = async (
     } else if (buttonIndex === SAVE_UPLOAD_DRAFT_BUTTON_INDEX) {
       try {
         // Save Upload Draft
-        const { filePath } = await dialog.showSaveDialog({
-          title: "Save Upload Draft",
-          filters: [{ name: "JSON", extensions: ["json"] }],
-        });
+        const filePath = await deps.ipcRenderer.invoke(
+          RendererProcessEvents.SHOW_SAVE_DIALOG,
+          {
+            title: "Save Upload Draft",
+            filters: [{ name: "JSON", extensions: ["json"] }],
+          }
+        );
+
         if (filePath) {
-          await writeFile(filePath, JSON.stringify(getState()));
+          await fs.promises.writeFile(filePath, JSON.stringify(getState()));
         }
 
         return {

@@ -1,22 +1,21 @@
 import * as path from "path";
 import { format as formatUrl } from "url";
 
-import { app, BrowserWindow, Event, ipcMain } from "electron";
-import installExtension, {
-  REACT_DEVELOPER_TOOLS,
-} from "electron-devtools-installer";
+import { app, BrowserWindow, dialog, Event, ipcMain } from "electron";
+import ElectronStore from "electron-store";
 import { autoUpdater } from "electron-updater";
 
 import {
   LIMS_PROTOCOL,
-  OPEN_CREATE_PLATE_STANDALONE,
-  PLATE_CREATED,
-  SAFELY_CLOSE_WINDOW,
+  MainProcessEvents,
+  RendererProcessEvents,
 } from "../shared/constants";
 
 import { setMenu } from "./menu";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
+
+ElectronStore.initRenderer();
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let mainWindow: BrowserWindow | undefined;
@@ -25,9 +24,7 @@ function createMainWindow() {
   const window = new BrowserWindow({
     height: 750,
     webPreferences: {
-      // We use the remote module in the renderer process so added this property
-      // to disable the warning how this property will be required in the future to use the remote module
-      enableRemoteModule: true,
+      contextIsolation: false,
       // Allows us to load LabKey which uses jQuery which does not play well with NodeJS:
       // https://www.electronjs.org/docs/faq#i-can-not-use-jqueryrequirejsmeteorangularjs-in-electron
       nodeIntegration: true,
@@ -43,7 +40,7 @@ function createMainWindow() {
   setMenu(webContents);
 
   if (isDevelopment) {
-    installExtension(REACT_DEVELOPER_TOOLS);
+    // installExtension(REACT_DEVELOPER_TOOLS);
     window.webContents.openDevTools();
   }
 
@@ -61,7 +58,7 @@ function createMainWindow() {
 
   window.on("close", (e: Event) => {
     e.preventDefault();
-    window.webContents.send(SAFELY_CLOSE_WINDOW);
+    window.webContents.send(MainProcessEvents.SAFELY_CLOSE_WINDOW);
   });
 
   window.on("closed", () => {
@@ -102,8 +99,12 @@ app.on("ready", () => {
   autoUpdater.checkForUpdatesAndNotify();
 });
 
+ipcMain.on(RendererProcessEvents.CLOSE_WINDOW, () => {
+  app.exit();
+});
+
 ipcMain.on(
-  OPEN_CREATE_PLATE_STANDALONE,
+  RendererProcessEvents.OPEN_CREATE_PLATE_STANDALONE,
   (
     event: any,
     limsHost: string,
@@ -138,9 +139,58 @@ ipcMain.on(
         const imagingSessionId = new URLSearchParams(childURL.search).get(
           "ImagingSessionId"
         );
-        event.sender.send(PLATE_CREATED, uploadKey, barcode, imagingSessionId);
+        event.sender.send(
+          MainProcessEvents.PLATE_CREATED,
+          uploadKey,
+          barcode,
+          imagingSessionId
+        );
         child.close();
       }
     });
+  }
+);
+
+ipcMain.on(RendererProcessEvents.REFRESH, () => {
+  app.relaunch();
+  app.quit();
+});
+
+ipcMain.handle(
+  RendererProcessEvents.SHOW_DIALOG,
+  async (_, options: Electron.OpenDialogOptions) => {
+    const currentWindow = BrowserWindow.getFocusedWindow();
+    if (!currentWindow) {
+      return undefined;
+    }
+    const { filePaths } = await dialog.showOpenDialog(currentWindow, options);
+    return filePaths;
+  }
+);
+
+ipcMain.handle(
+  RendererProcessEvents.SHOW_MESSAGE_BOX,
+  async (_, options: Electron.MessageBoxOptions) => {
+    const currentWindow = BrowserWindow.getFocusedWindow();
+    if (!currentWindow) {
+      return undefined;
+    }
+    const { response: buttonIndex } = await dialog.showMessageBox(
+      currentWindow,
+      options
+    );
+    return buttonIndex;
+  }
+);
+
+ipcMain.on(
+  RendererProcessEvents.SHOW_SAVE_DIALOG,
+  async (_, options: Electron.SaveDialogOptions) => {
+    const currentWindow = BrowserWindow.getFocusedWindow();
+    if (!currentWindow) {
+      return undefined;
+    }
+    const { filePath } = await dialog.showSaveDialog(currentWindow, options);
+    return filePath;
   }
 );

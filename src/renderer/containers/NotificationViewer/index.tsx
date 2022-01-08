@@ -1,5 +1,5 @@
 import { Badge, Icon, Modal } from "antd";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import * as moment from "moment";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";

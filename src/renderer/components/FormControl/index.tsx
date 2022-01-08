@@ -1,5 +1,5 @@
 import { Icon, Tooltip } from "antd";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { ReactNode, ReactNodeArray } from "react";
 import * as React from "react";
 

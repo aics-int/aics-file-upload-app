@@ -37,7 +37,7 @@ describe("HttpCacheClient", () => {
   it("doesn't use cache if useCache is false", async () => {
     const httpCacheClient = new HttpCacheClient(
       httpClient,
-      (storage as any) as LocalStorage,
+      storage as any as LocalStorage,
       false
     );
     await httpCacheClient.get(url);
@@ -54,7 +54,7 @@ describe("HttpCacheClient", () => {
   it("uses cache if useCache is true", async () => {
     const httpCacheClient = new HttpCacheClient(
       httpClient,
-      (storage as any) as LocalStorage,
+      storage as any as LocalStorage,
       true
     );
     await httpCacheClient.get(url);
@@ -71,7 +71,7 @@ describe("HttpCacheClient", () => {
   it("makes http request if useCache=false and returns response.data", async () => {
     const httpCacheClient = new HttpCacheClient(
       httpClient,
-      (storage as any) as LocalStorage,
+      storage as any as LocalStorage,
       false
     );
     const result = await httpCacheClient.get(url);
@@ -82,7 +82,7 @@ describe("HttpCacheClient", () => {
     storage.get.withArgs(`GET ${limsURL}${url}`).returns(data2);
     const httpCacheClient = new HttpCacheClient(
       httpClient,
-      (storage as any) as LocalStorage,
+      storage as any as LocalStorage,
       true
     );
     const result = await httpCacheClient.get(url);
@@ -91,7 +91,7 @@ describe("HttpCacheClient", () => {
   it("makes http request if cache does not exist and useCache=true", async () => {
     const httpCacheClient = new HttpCacheClient(
       httpClient,
-      (storage as any) as LocalStorage,
+      storage as any as LocalStorage,
       true
     );
     const result = await httpCacheClient.get(url);
@@ -103,7 +103,7 @@ describe("HttpCacheClient", () => {
       .returns({ limsHost: "prod", limsPort: 1234 });
     const httpCacheClient = new HttpCacheClient(
       httpClient,
-      (storage as any) as LocalStorage,
+      storage as any as LocalStorage,
       false
     );
     await httpCacheClient.get(url);
@@ -114,7 +114,7 @@ describe("HttpCacheClient", () => {
     storage.get.withArgs(USER_SETTINGS_KEY).returns(undefined);
     const httpCacheClient = new HttpCacheClient(
       httpClient,
-      (storage as any) as LocalStorage,
+      storage as any as LocalStorage,
       false
     );
     await httpCacheClient.get(url);

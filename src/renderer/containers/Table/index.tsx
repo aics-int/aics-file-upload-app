@@ -10,10 +10,10 @@ import TableRow from "./TableRow";
 
 const styles = require("./styles.pcss");
 
-interface Props<T extends {}> {
+interface Props<T extends Record<string, any>> {
   className?: string;
   tableInstance: TableInstance<T>;
-  onContextMenu?: (row: Row<T>, onCloseCallback: () => void) => void;
+  getContextMenuItems?: (row: Row<T>) => React.ReactNode;
   dragAndDropOptions?: {
     id: string;
     onRowDragEnd: (result: DropResult) => void;
@@ -40,8 +40,8 @@ function getScrollBarWidth(): number {
   properties of the column definition supplied for that column or
   by the defaultColumn properties supplied to react-table.
 */
-export default function Table<T extends {}>(props: Props<T>) {
-  const { className, tableInstance, onContextMenu } = props;
+export default function Table<T extends Record<string, any>>(props: Props<T>) {
+  const { className, tableInstance, getContextMenuItems } = props;
 
   const scrollBarSize = React.useMemo(() => getScrollBarWidth(), []);
 
@@ -98,7 +98,7 @@ export default function Table<T extends {}>(props: Props<T>) {
                 data={{
                   rows,
                   prepareRow,
-                  onContextMenu,
+                  getContextMenuItems,
                   draggableProps,
                   draggableState,
                   dropSourceId: props.dragAndDropOptions?.id,
@@ -114,7 +114,7 @@ export default function Table<T extends {}>(props: Props<T>) {
                     itemData={{
                       rows,
                       prepareRow,
-                      onContextMenu,
+                      getContextMenuItems,
                       dropSourceId: props.dragAndDropOptions?.id,
                     }}
                     itemCount={tableInstance.rows.length}

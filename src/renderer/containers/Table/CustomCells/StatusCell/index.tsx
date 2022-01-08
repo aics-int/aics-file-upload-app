@@ -90,8 +90,11 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       />
     );
   } else {
-    const { md5BytesComputed = 0, bytesUploaded = 0, totalBytes = 0 } =
-      props.row.original.progress || {};
+    const {
+      md5BytesComputed = 0,
+      bytesUploaded = 0,
+      totalBytes = 0,
+    } = props.row.original.progress || {};
 
     let step = Step.ONE;
     let bytesCompletedForStep = md5BytesComputed;

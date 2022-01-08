@@ -1,10 +1,4 @@
-import {
-  ipcRenderer,
-  Menu,
-  MessageBoxOptions,
-  OpenDialogOptions,
-  Remote,
-} from "electron";
+import { ipcRenderer, MessageBoxOptions, OpenDialogOptions } from "electron";
 import { AnyAction } from "redux";
 import { CreateLogic } from "redux-logic/definitions/logic";
 import { StateWithHistory } from "redux-undo";
@@ -56,15 +50,6 @@ export interface BatchedAction {
   payload: AnyAction[];
 }
 
-export interface Logger {
-  debug: (...x: any[]) => void;
-  error: (...x: any[]) => void;
-  info: (...x: any[]) => void;
-  time: (timerName: string) => void;
-  timeEnd: (timerName: string) => void;
-  warn: (...x: any[]) => void;
-}
-
 export interface Dialog {
   showOpenDialog(
     options: OpenDialogOptions
@@ -80,18 +65,12 @@ export interface Dialog {
 export interface ReduxLogicExtraDependencies {
   applicationInfoService: ApplicationInfoService;
   ctx?: any;
-  dialog: Dialog;
   fms: FileManagementSystem;
-  getApplicationMenu: () => Menu | null;
   ipcRenderer: typeof ipcRenderer;
   jssClient: JobStatusService;
   labkeyClient: LabkeyClient;
-  logger: Logger;
   mmsClient: MetadataManagementService;
-  readFile: (filePath: string, encoding?: string) => Promise<string | Buffer>;
-  remote: Remote;
   storage: LocalStorage;
-  writeFile: (filePath: string, content: string | Buffer) => Promise<void>;
 }
 
 export type ReduxLogicProcessDependencies = Process.DepObj<
@@ -100,9 +79,8 @@ export type ReduxLogicProcessDependencies = Process.DepObj<
   ReduxLogicExtraDependencies,
   undefined
 >;
-export type ReduxLogicProcessDependenciesWithAction<
-  Action extends AnyAction
-> = Process.DepObj<State, Action, ReduxLogicExtraDependencies>;
+export type ReduxLogicProcessDependenciesWithAction<Action extends AnyAction> =
+  Process.DepObj<State, Action, ReduxLogicExtraDependencies>;
 export type ReduxLogicTransformDependencies = DepObj<
   State,
   AnyAction,

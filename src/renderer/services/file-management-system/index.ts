@@ -105,10 +105,8 @@ export default class FileManagementSystem {
       // Grab file details
       const source = upload.serviceFields.files[0]?.file.originalPath;
       const fileName = path.basename(source);
-      const {
-        size: fileSize,
-        mtime: fileLastModified,
-      } = await fs.promises.stat(source);
+      const { size: fileSize, mtime: fileLastModified } =
+        await fs.promises.stat(source);
       const fileLastModifiedInMs = fileLastModified.getTime();
 
       // Calculate MD5 ahead of submission, re-use from job if possible. Only potentially available

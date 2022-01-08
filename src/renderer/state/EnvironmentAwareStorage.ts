@@ -1,4 +1,4 @@
-import * as Store from "electron-store";
+import ElectronStore from "electron-store";
 import { isNil, isPlainObject, memoize } from "lodash";
 import * as hash from "object-hash";
 
@@ -11,18 +11,21 @@ import {
 } from "../../shared/constants";
 import { LocalStorage } from "../types";
 
+type Storage = Record<any, any>;
+type Key = keyof Storage;
+
 /**
  * Wrapper for electron-store's default class. Scopes reads and writes to environmental settings using LIMS URL values
  * and username
  */
-export class EnvironmentAwareStorage<T = any> implements LocalStorage<T> {
+export class EnvironmentAwareStorage<T = Storage> implements LocalStorage<T> {
   public protocol: string = LIMS_PROTOCOL;
   public host: string = LIMS_HOST;
   public port: string = LIMS_PORT;
   public user: string = DEFAULT_USERNAME;
-  private store: Store;
+  private store: ElectronStore<Storage>;
 
-  constructor(store: Store) {
+  constructor(store: ElectronStore) {
     this.store = store;
   }
 
@@ -32,15 +35,12 @@ export class EnvironmentAwareStorage<T = any> implements LocalStorage<T> {
    * If an object, second arg is ignored.
    * @param value. Corresponding value for key defined in first arg
    */
-  public set<Key extends keyof T>(
-    keyOrObject: Key | Partial<T>,
-    value?: T[Key]
-  ) {
+  public set(keyOrObject: Key | Partial<T>, value?: T[Key]) {
     const prefixedKeys = new Set<Key>();
     if (isPlainObject(keyOrObject)) {
       const objectWithPrefixes: any = {};
       for (const [key, value] of Object.entries(keyOrObject)) {
-        const prefixedKey = this.getPrefixedKey<Key>(key as Key);
+        const prefixedKey = this.getPrefixedKey(key);
         prefixedKeys.add(prefixedKey);
         objectWithPrefixes[prefixedKey] = value;
       }
@@ -49,9 +49,9 @@ export class EnvironmentAwareStorage<T = any> implements LocalStorage<T> {
       !isNil(value) &&
       (typeof keyOrObject === "string" || typeof keyOrObject === "number")
     ) {
-      const prefixedKey = this.getPrefixedKey<Key>(keyOrObject);
+      const prefixedKey = this.getPrefixedKey(keyOrObject);
       prefixedKeys.add(prefixedKey);
-      this.store.set(prefixedKey, value);
+      this.store.set(prefixedKey as string, value);
     } else {
       throw new Error(
         "Expected first argument to be an object, string, or number."
@@ -68,24 +68,22 @@ export class EnvironmentAwareStorage<T = any> implements LocalStorage<T> {
    * @param key. key of local storage JSON object. Can use dot notation to access nested properties.
    * @param defaultValue. optional default value if key is not found
    */
-  public get = memoize(
-    <Key extends keyof T>(key: Key, defaultValue?: T[Key]): T[Key] => {
-      if (defaultValue) {
-        return this.store.get<Key>(this.getPrefixedKey<Key>(key), defaultValue);
-      }
-      return this.store.get<Key>(this.getPrefixedKey<Key>(key));
+  public get = memoize((key: Key, defaultValue?: T[Key]): T[Key] => {
+    if (defaultValue) {
+      return this.store.get<Key>(this.getPrefixedKey(key), defaultValue);
     }
-  );
+    return this.store.get<Key>(this.getPrefixedKey(key));
+  });
 
-  public delete<Key extends keyof T>(key: Key): void {
-    this.store.delete<Key>(this.getPrefixedKey<Key>(key));
+  public delete(key: Key): void {
+    this.store.delete<Key>(this.getPrefixedKey(key));
   }
 
-  public has<Key extends keyof T>(key: Key): boolean {
+  public has(key: Key): boolean {
     return this.store.has<Key>(this.getPrefixedKey(key));
   }
 
-  public reset<Key extends keyof T>(...keys: Key[]) {
+  public reset(...keys: Key[]) {
     this.store.reset<Key>(...keys.map((k: Key) => this.getPrefixedKey(k)));
   }
 
@@ -93,7 +91,7 @@ export class EnvironmentAwareStorage<T = any> implements LocalStorage<T> {
     this.store.clear();
   }
 
-  private getPrefixedKey<Key extends keyof T>(key: Key): Key {
+  private getPrefixedKey(key: Key): Key {
     return `${key}`.startsWith(USER_SETTINGS_KEY)
       ? key
       : (`${this.prefix}.${key}` as Key);

@@ -67,7 +67,7 @@ export const getCanRedoUpload = createSelector(
 export const getCanUndoUpload = createSelector(
   [getCurrentUploadIndex],
   (currentUploadIndex) => {
-    return currentUploadIndex > 0;
+    return currentUploadIndex !== undefined && currentUploadIndex > 0;
   }
 );
 
@@ -110,11 +110,16 @@ const convertToUploadJobRow = (
 
 // there will be metadata for files, each subImage in a file, each channel in a file, and every combo
 // of subImages + channels
-const getFileToMetadataMap = createSelector([getUpload], (uploads): {
-  [file: string]: FileModel[];
-} => {
-  return groupBy(values(uploads), ({ file }: FileModel) => file);
-});
+const getFileToMetadataMap = createSelector(
+  [getUpload],
+  (
+    uploads
+  ): {
+    [file: string]: FileModel[];
+  } => {
+    return groupBy(values(uploads), ({ file }: FileModel) => file);
+  }
+);
 
 const getChannelOnlyRows = (allMetadataForFile: FileModel[]) => {
   const channelMetadata = allMetadataForFile.filter(isChannelOnlyRow);
@@ -290,9 +295,8 @@ export const getUploadKeyToAnnotationErrorMap = createSelector(
                       templateAnnotation.annotationOptions
                     ).join(", ");
                     if (invalidValues) {
-                      const expected = templateAnnotation.annotationOptions.join(
-                        ", "
-                      );
+                      const expected =
+                        templateAnnotation.annotationOptions.join(", ");
                       annotationToErrorMap[
                         annotationName
                       ] = `${invalidValues} did not match any of the expected values: ${expected}`;
@@ -352,12 +356,8 @@ export const getUploadKeyToAnnotationErrorMap = createSelector(
                       annotationName
                     ] = `Only one Duration value may be present`;
                   } else if (value.length === 1) {
-                    const {
-                      days,
-                      hours,
-                      minutes,
-                      seconds,
-                    } = value[0] as Duration;
+                    const { days, hours, minutes, seconds } =
+                      value[0] as Duration;
 
                     if (
                       [days, hours, minutes, seconds].some(
@@ -449,9 +449,10 @@ export const getUploadValidationErrors = createSelector(
       fileToAnnotationHasValueMap,
       (annotationHasValueMap: { [key: string]: boolean }, file: string) => {
         const fileName = basename(file);
-        const requiredAnnotationsThatDontHaveValues = requiredAnnotations.filter(
-          (annotation) => !annotationHasValueMap[annotation]
-        );
+        const requiredAnnotationsThatDontHaveValues =
+          requiredAnnotations.filter(
+            (annotation) => !annotationHasValueMap[annotation]
+          );
         if (annotationHasValueMap[AnnotationName.PLATE_BARCODE]) {
           if (!annotationHasValueMap[AnnotationName.IMAGING_SESSION]) {
             const plateBarcode = rows.find((r) => r.file === file)?.[
@@ -472,9 +473,8 @@ export const getUploadValidationErrors = createSelector(
         }
 
         if (requiredAnnotationsThatDontHaveValues.length) {
-          const requiredAnnotationsMissingNames = requiredAnnotationsThatDontHaveValues.join(
-            ", "
-          );
+          const requiredAnnotationsMissingNames =
+            requiredAnnotationsThatDontHaveValues.join(", ");
           errors.push(
             `"${fileName}" is missing the following required annotations: ${requiredAnnotationsMissingNames}`
           );

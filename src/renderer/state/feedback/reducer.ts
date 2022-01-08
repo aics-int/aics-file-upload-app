@@ -1,7 +1,6 @@
 import { uniq, without } from "lodash";
 import { AnyAction } from "redux";
 
-import { OPEN_TEMPLATE_MENU_ITEM_CLICKED } from "../../../shared/constants";
 import { REQUEST_FAILED } from "../constants";
 import {
   RECEIVE_FSS_JOB_COMPLETION_UPDATE,
@@ -39,6 +38,7 @@ import {
   ViewUploadsSucceededAction,
   ResetUploadAction,
 } from "../route/types";
+import { OPEN_TEMPLATE_EDITOR } from "../selection/constants";
 import { clearTemplateDraft } from "../template/actions";
 import {
   CREATE_ANNOTATION,
@@ -298,9 +298,9 @@ const actionToConfigMap: TypeToDescriptionMap<FeedbackStateBranch> = {
       visibleModals: without(state.visibleModals, action.payload),
     }),
   },
-  [OPEN_TEMPLATE_MENU_ITEM_CLICKED]: {
+  [OPEN_TEMPLATE_EDITOR]: {
     accepts: (action: AnyAction): action is OpenTemplateEditorAction =>
-      action.type === OPEN_TEMPLATE_MENU_ITEM_CLICKED,
+      action.type === OPEN_TEMPLATE_EDITOR,
     perform: (
       state: FeedbackStateBranch,
       { payload }: OpenTemplateEditorAction

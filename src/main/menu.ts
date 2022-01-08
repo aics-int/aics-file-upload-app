@@ -1,14 +1,7 @@
 import electron, { dialog, Menu, shell } from "electron";
 
-import {
-  OPEN_OPEN_TEMPLATE_MODAL,
-  OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED,
-  OPEN_SETTINGS_EDITOR,
-  OPEN_TEMPLATE_MENU_ITEM_CLICKED,
-  SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED,
-  SCHEMA_SYNONYM,
-  SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED,
-} from "../shared/constants";
+import { MainProcessEvents, SCHEMA_SYNONYM } from "../shared/constants";
+
 import BrowserWindow = Electron.BrowserWindow;
 import MenuItemConstructorOptions = Electron.MenuItemConstructorOptions;
 import WebContents = Electron.WebContents;
@@ -23,7 +16,7 @@ const isMac = process.platform === "darwin";
  * @param webContents WebContents object from main BrowserWindow. Used for sending events to renderer process.
  */
 export const setMenu = (webContents: WebContents) => {
-  const template = ([
+  const template = [
     ...(isMac
       ? [
           {
@@ -49,7 +42,10 @@ export const setMenu = (webContents: WebContents) => {
           label: "New",
           submenu: [
             {
-              click: () => webContents.send(OPEN_TEMPLATE_MENU_ITEM_CLICKED),
+              click: () =>
+                webContents.send(
+                  MainProcessEvents.OPEN_TEMPLATE_MENU_ITEM_CLICKED
+                ),
               label: SCHEMA_SYNONYM,
             },
           ],
@@ -60,11 +56,14 @@ export const setMenu = (webContents: WebContents) => {
             {
               accelerator: "CommandOrControl+O",
               click: () =>
-                webContents.send(OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED),
+                webContents.send(
+                  MainProcessEvents.OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED
+                ),
               label: "Upload Draft",
             },
             {
-              click: () => webContents.send(OPEN_OPEN_TEMPLATE_MODAL),
+              click: () =>
+                webContents.send(MainProcessEvents.OPEN_OPEN_TEMPLATE_MODAL),
               label: SCHEMA_SYNONYM,
             },
           ],
@@ -72,19 +71,25 @@ export const setMenu = (webContents: WebContents) => {
         { type: "separator" },
         {
           accelerator: "CommandOrControl+S",
-          click: () => webContents.send(SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED),
+          click: () =>
+            webContents.send(
+              MainProcessEvents.SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED
+            ),
           label: "Save",
         },
         { type: "separator" },
         {
           accelerator:
             process.platform === "darwin" ? "Command+," : "Ctrl+Alt+S",
-          click: () => webContents.send(OPEN_SETTINGS_EDITOR),
+          click: () => webContents.send(MainProcessEvents.OPEN_SETTINGS_EDITOR),
           label: "Settings",
         },
         { type: "separator" },
         {
-          click: () => webContents.send(SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED),
+          click: () =>
+            webContents.send(
+              MainProcessEvents.SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED
+            ),
           enabled: true,
           label: "Switch environment",
         },
@@ -168,7 +173,7 @@ export const setMenu = (webContents: WebContents) => {
         },
       ],
     },
-  ] as any) as Array<MenuItemConstructorOptions | MenuItem>;
+  ] as any as Array<MenuItemConstructorOptions | MenuItem>;
   // Casting is necessary to avoid having to cast each role value from string to a union string type
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
