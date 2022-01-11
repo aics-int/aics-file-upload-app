@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { mount } from "enzyme";
+import { noop } from "lodash";
 import * as React from "react";
 import { Provider } from "react-redux";
 
@@ -11,8 +12,8 @@ describe("<TemplateSearch />", () => {
   // Removes warning from antd component being tested
   before(() => {
     window.matchMedia = () => ({ 
-      addListener: () => {}, 
-      removeListener: () => {},
+      addListener: noop, 
+      removeListener: noop,
     } as any);
   });
 
