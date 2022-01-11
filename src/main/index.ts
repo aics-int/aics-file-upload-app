@@ -2,8 +2,10 @@ import * as path from "path";
 import { format as formatUrl } from "url";
 
 import { app, BrowserWindow, dialog, Event, ipcMain } from "electron";
+import installExtension, { REACT_DEVELOPER_TOOLS } from "electron-devtools-installer";
 import ElectronStore from "electron-store";
 import { autoUpdater } from "electron-updater";
+import 'source-map-support/register'
 
 import {
   LIMS_PROTOCOL,
@@ -40,12 +42,29 @@ function createMainWindow() {
   setMenu(webContents);
 
   if (isDevelopment) {
-    // installExtension(REACT_DEVELOPER_TOOLS);
-    window.webContents.openDevTools();
-  }
+    installExtension(REACT_DEVELOPER_TOOLS)
+      .then((name: string) => {
+          console.log(`Added extension: ${name}`);
 
-  if (isDevelopment) {
-    window.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
+          if (!mainWindow) {
+              throw new Error("mainWindow not defined");
+          }
+
+          mainWindow
+              .loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`)
+              .then(() => {
+                  if (mainWindow) {
+                      mainWindow.webContents.openDevTools();
+                  }
+              })
+              .catch((error: Error) => {
+                  console.error("Failed to load from webpack-dev-server", error);
+              });
+      })
+      .catch((err: Error) =>
+          console.error("An error occurred loading React Dev Tools: ", err)
+      )
+      .finally(() => window.webContents.openDevTools());
   } else {
     window.loadURL(
       formatUrl({
@@ -152,8 +171,10 @@ ipcMain.on(
 );
 
 ipcMain.on(RendererProcessEvents.REFRESH, () => {
-  app.relaunch();
-  app.quit();
+  const currentWindow = BrowserWindow.getFocusedWindow();
+  if (currentWindow) {
+    currentWindow.reload();
+  }
 });
 
 ipcMain.handle(

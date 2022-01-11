@@ -1,3 +1,4 @@
+import { ProfileFilled, SettingFilled, UploadOutlined } from "@ant-design/icons";
 import { ipcRenderer } from "electron";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -44,7 +45,7 @@ export default function NavigationBar() {
     <div className={styles.container}>
       <NotificationViewer isSelected={view === Page.Notifications} />
       <NavigationButton
-        icon="upload"
+        icon={(props) => <UploadOutlined {...props} />}
         isSelected={[Page.UploadWithTemplate, Page.NewUploadButton].includes(
           view
         )}
@@ -52,15 +53,13 @@ export default function NavigationBar() {
         title={isUploadJobInProgress ? "Current Upload" : "+Upload"}
       />
       <NavigationButton
-        icon="profile"
-        iconTheme="filled"
+        icon={(props) => <ProfileFilled {...props} />}
         isSelected={view === Page.MyUploads}
         onSelect={() => dispatch(selectPage(Page.MyUploads))}
         title="My Uploads"
       />
       <NavigationButton
-        icon="setting"
-        iconTheme="filled"
+        icon={(props) => <SettingFilled {...props} />}
         isSelected={view === Page.Settings}
         onSelect={() => dispatch(selectView(Page.Settings))}
         title="Settings"

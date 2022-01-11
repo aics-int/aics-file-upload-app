@@ -13,7 +13,7 @@ const styles = require("./styles.pcss");
 interface Props<T extends Record<string, any>> {
   className?: string;
   tableInstance: TableInstance<T>;
-  getContextMenuItems?: (row: Row<T>) => React.ReactNode;
+  getContextMenuItems?: (row: Row<T>) => React.ReactElement;
   dragAndDropOptions?: {
     id: string;
     onRowDragEnd: (result: DropResult) => void;

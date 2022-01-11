@@ -32,7 +32,7 @@ interface Props {
   title?: string;
   getContextMenuItems: (
     row: Row<UploadSummaryTableRow>,
-  ) => React.ReactNode;
+  ) => React.ReactElement;
   onSelect: (
     rows: Row<UploadSummaryTableRow>[],
     isDeselecting: boolean

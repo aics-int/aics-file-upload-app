@@ -1,3 +1,4 @@
+import { DeleteOutlined } from "@ant-design/icons";
 import { Button, DatePicker } from "antd";
 import moment from "moment";
 import React, { useState } from "react";
@@ -59,7 +60,7 @@ export default function DateEditor({
           <div className={styles.footer}>
             <Button
               className={styles.clearButton}
-              icon="delete"
+              icon={<DeleteOutlined />}
               onClick={() => setValue(undefined)}
               id={CLEAR_BUTTON}
             >

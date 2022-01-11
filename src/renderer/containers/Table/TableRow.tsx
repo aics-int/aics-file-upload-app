@@ -17,7 +17,7 @@ export const DRAG_HANDLER_COLUMN = "--";
 interface Props<T extends Record<string, any>> extends Row<T> {
   draggableState: DraggableStateSnapshot;
   draggableProps: DraggableProvided;
-  getContextMenuItems?: (row: Row<T>) => React.ReactNode;
+  getContextMenuItems?: (row: Row<T>) => React.ReactElement;
   rowStyle?: React.CSSProperties;
 }
 
@@ -107,7 +107,7 @@ interface ItemData<T extends Record<string, any>> {
   draggableState?: DraggableStateSnapshot;
   draggableProps?: DraggableProvided;
   dropSourceId?: string;
-  getContextMenuItems?: (row: Row<T>) => React.ReactNode;
+  getContextMenuItems?: (row: Row<T>) => React.ReactElement;
   prepareRow: (row: Row<T>) => void;
   rows: Row<T>[];
 }

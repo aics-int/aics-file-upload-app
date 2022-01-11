@@ -1,4 +1,5 @@
-import { Divider, Icon, Menu, Tooltip } from "antd";
+import { PlusCircleOutlined } from "@ant-design/icons";
+import { Divider, Menu, Tooltip } from "antd";
 import SubMenu from "antd/lib/menu/SubMenu";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -87,7 +88,7 @@ export default function PlateBarcodeCell(
                   key="create-barcode"
                   title={
                     <>
-                      <Icon className={styles.icon} type="plus-circle" />
+                      <PlusCircleOutlined className={styles.icon} />
                       <span className={styles.text}>
                         Create {props.column.id}
                       </span>
@@ -116,7 +117,7 @@ export default function PlateBarcodeCell(
             </>
           </div>
         )}
-        mode="default"
+        mode="tags"
         optionsLoadingOverride={isLoading}
         optionsOverride={barcodeSearchResults}
         placeholder="Search..."

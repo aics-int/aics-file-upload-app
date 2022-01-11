@@ -17,13 +17,6 @@
   font-size: var(--extra-large);
 }
 
-.settings-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 30px;
-}
-
 .settings-title {
   font-size: var(--large);
 }
@@ -31,4 +24,25 @@
 .toggle-label {
   text-align: right;
   font-weight: bold;
+}
+
+.settings-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.setting-label {
+  display: flex;
+  align-items: center;
+
+  & .icon {
+    margin-right: 10px;
+  }
+}
+
+.toggle {
+  text-align: right;
+  width: 150px;
 }

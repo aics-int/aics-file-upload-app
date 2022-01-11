@@ -1,4 +1,5 @@
-import { Button, Icon } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { Button } from "antd";
 import classNames from "classnames";
 import { OpenDialogOptions, ipcRenderer } from "electron";
 import { isEmpty } from "lodash";
@@ -98,7 +99,7 @@ export default function DragAndDrop(props: DragAndDropProps) {
     const dragAndDropPrompt = (
       <div className={styles.content}>
         <>
-          <Icon type="upload" className={styles.uploadIcon} />
+          <UploadOutlined className={styles.uploadIcon} />
           <div>Drag&nbsp;and&nbsp;Drop</div>
           <div>- or -</div>
           <Button disabled={!props.openDialogOptions} onClick={onBrowse}>

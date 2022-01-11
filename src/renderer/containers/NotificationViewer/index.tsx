@@ -1,4 +1,5 @@
-import { Badge, Icon, Modal } from "antd";
+import { BellFilled, SettingFilled } from "@ant-design/icons";
+import { Badge, Modal } from "antd";
 import classNames from "classnames";
 import * as moment from "moment";
 import * as React from "react";
@@ -60,9 +61,7 @@ export default function NotificationViewer({
   const modalHeader = (
     <div className={styles.modalHeader}>
       Notifications
-      <Icon
-        type="setting"
-        theme="filled"
+      <SettingFilled
         onClick={() => dispatch(selectView(Page.Settings))}
       />
     </div>
@@ -71,8 +70,7 @@ export default function NotificationViewer({
     <>
       <Badge count={unreadEventsCount} offset={[-8, 8]}>
         <NavigationButton
-          icon="bell"
-          iconTheme="filled"
+          icon={(props) => <BellFilled {...props} />}
           isSelected={isSelected}
           onSelect={() => dispatch(selectView(Page.Notifications))}
           title="Notifications"

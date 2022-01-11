@@ -1,4 +1,5 @@
-import { Button, Icon } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
+import { Button } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -59,7 +60,7 @@ export default function PageFooter(props: Props) {
         {isUploadInProgress ? (
           <>
             Loading&nbsp;
-            <Icon type="loading" spin={true} />
+            <LoadingOutlined spin={true} />
           </>
         ) : selectedUploads.length ? (
           "Update"

@@ -101,4 +101,11 @@ module.exports = {
   output: {
     globalObject: "this",
   },
+  stats: {
+    children: false,
+    env: true,
+    errors: true,
+    errorDetails: true,
+    version: true,
+}
 };

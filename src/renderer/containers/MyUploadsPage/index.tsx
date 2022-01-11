@@ -1,3 +1,4 @@
+import { FileSearchOutlined, PlusOutlined, RedoOutlined, StopOutlined } from "@ant-design/icons";
 import { Button, Dropdown, Menu, Spin, Tooltip } from "antd";
 import { isEmpty, uniqBy } from "lodash";
 import * as React from "react";
@@ -139,7 +140,7 @@ export default function MyUploadsPage() {
                   className={styles.tableToolBarButton}
                   onClick={onView}
                   disabled={isEmpty(selectedUploads)}
-                  icon="file-search"
+                  icon={<FileSearchOutlined />}
                 >
                   View
                 </Button>
@@ -155,7 +156,7 @@ export default function MyUploadsPage() {
                   disabled={
                     isEmpty(selectedUploads) || !areSelectedUploadsAllFailed
                   }
-                  icon="redo"
+                  icon={<RedoOutlined />}
                 >
                   Retry
                 </Button>
@@ -171,7 +172,7 @@ export default function MyUploadsPage() {
                   disabled={
                     isEmpty(selectedUploads) || !areSelectedUploadsAllInProgress
                   }
-                  icon="stop"
+                  icon={<StopOutlined />}
                 >
                   Cancel
                 </Button>
@@ -182,7 +183,7 @@ export default function MyUploadsPage() {
               overlay={dropdownMenu}
               trigger={["click", "hover"]}
             >
-              <Button icon="plus">Upload</Button>
+              <Button icon={<PlusOutlined />}>Upload</Button>
             </Dropdown>
           </div>
         </div>

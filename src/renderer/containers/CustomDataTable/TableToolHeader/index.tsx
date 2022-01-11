@@ -1,3 +1,4 @@
+import { DeleteOutlined, EditOutlined, RedoOutlined, UndoOutlined } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
 import { isEmpty } from "lodash";
 import React from "react";
@@ -51,7 +52,7 @@ export default function TableToolHeader(props: Props) {
         <Button
           onClick={() => dispatch(jumpToUpload(-1))}
           disabled={!canUndo}
-          icon="undo"
+          icon={<UndoOutlined />}
           type="link"
         />
       </Tooltip>
@@ -63,7 +64,7 @@ export default function TableToolHeader(props: Props) {
         <Button
           onClick={() => dispatch(jumpToUpload(1))}
           disabled={!canRedo}
-          icon="redo"
+          icon={<RedoOutlined />}
           type="link"
         />
       </Tooltip>
@@ -81,7 +82,7 @@ export default function TableToolHeader(props: Props) {
           <Button
             onClick={() => dispatch(startMassEdit(selectedRowIds))}
             disabled={isEmpty(props.selectedRows)}
-            icon="edit"
+            icon={<EditOutlined />}
             type="link"
           />
         </Tooltip>
@@ -94,7 +95,7 @@ export default function TableToolHeader(props: Props) {
         <Button
           onClick={() => dispatch(removeUploads(selectedRowIds))}
           disabled={isEmpty(props.selectedRows) || isExistingUpload}
-          icon="delete"
+          icon={<DeleteOutlined />}
           type="link"
         />
       </Tooltip>

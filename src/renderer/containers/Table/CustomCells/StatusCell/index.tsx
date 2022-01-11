@@ -1,4 +1,5 @@
-import { Icon, Progress, Tooltip } from "antd";
+import { CheckCircleFilled, CloseCircleFilled, QuestionCircleFilled } from "@ant-design/icons";
+import { Progress, Tooltip } from "antd";
 import * as React from "react";
 import { CellProps } from "react-table";
 
@@ -58,7 +59,7 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       props.row.original.serviceFields?.postUploadProcessing?.etl;
     if (etlProcess?.status === JSSJobStatus.SUCCEEDED) {
       content = (
-        <Icon className={styles.success} type="check-circle" theme="filled" />
+        <CheckCircleFilled className={styles.success} />
       );
     } else {
       // Switch the incomplete status tooltip depending on if the post upload
@@ -70,23 +71,19 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       }
 
       content = (
-        <Icon
+        <QuestionCircleFilled
           className={styles.success}
-          type="question-circle"
-          theme="filled"
         />
       );
     }
   } else if (JSSJobStatus.FAILED === props.value) {
     content = (
-      <Icon className={styles.failed} type="close-circle" theme="filled" />
+      <CloseCircleFilled className={styles.failed} />
     );
   } else if (JSSJobStatus.UNRECOVERABLE === props.value) {
     content = (
-      <Icon
+      <CloseCircleFilled
         className={styles.unrecoverable}
-        type="close-circle"
-        theme="filled"
       />
     );
   } else {

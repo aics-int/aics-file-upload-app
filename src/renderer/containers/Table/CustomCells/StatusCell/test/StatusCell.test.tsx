@@ -1,4 +1,5 @@
-import { Icon, Progress, Tooltip } from "antd";
+import Icon from "@ant-design/icons";
+import { Progress, Tooltip } from "antd";
 import { expect } from "chai";
 import { mount } from "enzyme";
 import * as React from "react";

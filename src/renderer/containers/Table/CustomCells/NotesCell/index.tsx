@@ -1,6 +1,7 @@
 import * as fs from "fs";
 
-import { Dropdown, Icon, Input, Menu, Modal, Tooltip } from "antd";
+import { FileTextOutlined, FormOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import { Dropdown, Input, Menu, Modal, Tooltip } from "antd";
 import { OpenDialogOptions } from "electron";
 import { castArray } from "lodash";
 import React from "react";
@@ -45,7 +46,7 @@ function getContextMenuItems(dispatch: Dispatch, props: Props, notes?: string) {
       <Menu.Item key="2" disabled={!notes} onClick={() => {
         navigator.clipboard.writeText(notes || "");
       }}>Copy</Menu.Item>
-      <Menu.Item key="3" disabled={!notes} onClick={async () => {
+      <Menu.Item key="3" onClick={async () => {
         const pastedText = await navigator.clipboard.readText();
         const trimmedText = pastedText.trim();
         dispatch(
@@ -165,10 +166,9 @@ function NotesCell(props: Props) {
         ) : (
           <>
             {!props.column.isReadOnly && (
-              <Icon
+              <FormOutlined
+                className={styles.formIcon}
                 onClick={() => setIsEditing(true)}
-                style={{ float: "right" }}
-                type="form"
               />
             )}
             {/* New line formatting might be important for viewing, so preserve it in view */}
@@ -188,10 +188,10 @@ function NotesCell(props: Props) {
         {/* TODO: Test */}
         <Dropdown overlay={getContextMenuItems(dispatch, props, note)} trigger={['contextMenu']}>
           {(!props.column.isReadOnly || notes) && (
-            <Icon
-              onClick={() => setIsModalOpen(true)}
-              type={note ? "file-text" : "plus-circle"}
-            />
+            note ?
+              <FileTextOutlined className={styles.iconDisplay} onClick={() => setIsModalOpen(true)} />
+              :
+              <PlusCircleOutlined className={styles.iconDisplay} onClick={() => setIsModalOpen(true)} />
           )}
         </Dropdown>
       </Tooltip>

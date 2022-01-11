@@ -32,7 +32,7 @@ export default function DropdownEditor({
       allowClear
       defaultOpen
       className={styles.defaultInput}
-      mode={disableMultiSelect ? "default" : "multiple"}
+      mode={disableMultiSelect ? undefined : "multiple"}
       onBlur={handleCommit}
       onInputKeyDown={createEnterKeyHandler(handleCommit)}
       onChange={(v: string[]) => setValue(v)}

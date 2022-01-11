@@ -11,7 +11,7 @@ describe("FileStorageService", () => {
   const storage = sandbox.createStubInstance(EnvironmentAwareStorage);
   const httpClient = sandbox.createStubInstance(HttpCacheClient);
   // Stub `get` specifically, since it is a class property and not on the prototype
-  storage.get = sandbox.stub();
+  storage.get = sandbox.stub() as any;
 
   const fss = new FileStorageService(
     httpClient as any as HttpCacheClient,

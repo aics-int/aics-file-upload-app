@@ -1,8 +1,8 @@
+import { DeleteOutlined, DragOutlined, EditOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Alert,
   Button,
   Checkbox,
-  Icon,
   Input,
   Modal,
   Popover,
@@ -233,7 +233,7 @@ function TemplateEditorModal(props: Props) {
       </div>
       <Button
         className={styles.createAnnotationButton}
-        icon="plus"
+        icon={<PlusOutlined />}
         onClick={() => setShowAnnotationEditor(true)}
       >
         Create new Annotation
@@ -274,7 +274,7 @@ function TemplateEditorModal(props: Props) {
         Cell: function DragCell() {
           return (
             <div className={styles.dragCell}>
-              <Icon type="drag" />
+              <DragOutlined />
             </div>
           );
         },
@@ -310,18 +310,15 @@ function TemplateEditorModal(props: Props) {
         Cell: function Actions(props: CellProps<AnnotationDraft>) {
           return (
             <div className={styles.actionCell}>
-              <Icon
-                type="search"
+              <SearchOutlined
                 title="View"
                 onClick={() => setFocusedAnnotation(props.row.original)}
               />
-              <Icon
-                type="edit"
+              <EditOutlined
                 title="Edit"
                 onClick={() => setAnnotationToEdit(props.row.original)}
               />
-              <Icon
-                type="delete"
+              <DeleteOutlined
                 title="Remove"
                 onClick={() => onRemoveAnnotation(props.row.index)}
               />
@@ -427,7 +424,7 @@ function TemplateEditorModal(props: Props) {
                 }
               />
               <Popover content={annotationOptionList} placement="right">
-                <Button icon="plus" className={styles.addAnnotationButton} />
+                <Button icon={<PlusOutlined />} className={styles.addAnnotationButton} />
               </Popover>
             </div>
             <div className={styles.annotationContainer}>

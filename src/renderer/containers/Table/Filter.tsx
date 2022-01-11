@@ -1,4 +1,5 @@
-import { Checkbox, DatePicker, Icon, Input, Popover } from "antd";
+import { FilterFilled, FilterOutlined } from "@ant-design/icons";
+import { Checkbox, DatePicker, Input, Popover } from "antd";
 import { debounce, without } from "lodash";
 import * as moment from "moment";
 import * as React from "react";
@@ -80,14 +81,17 @@ export default function Filter(props: Props) {
 
     return (
       <Popover content={content}>
-        <Icon
-          className={styles.filter}
-          title={`Filter by ${filterProps.column.id}`}
-          type="filter"
-          theme={
-            filterProps.column.filterValue !== undefined ? "filled" : "outlined"
-          }
-        />
+        {filterProps.column.filterValue !== undefined ? 
+          <FilterFilled
+            className={styles.filter}
+            title={`Filter by ${filterProps.column.id}`}
+          />
+          :
+          <FilterOutlined
+            className={styles.filter}
+            title={`Filter by ${filterProps.column.id}`}
+          />
+        }
       </Popover>
     );
   };

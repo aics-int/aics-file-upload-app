@@ -2,5 +2,5 @@
   "renderer": {
     "webpackConfig": "webpack/webpack.renderer.additions.js"
   },
-  "whiteListedModules": ["react-table", "react-beautiful-dnd"]
+  "whiteListedModules": ["@ant-design/icons", "react-table", "react-beautiful-dnd"]
 }

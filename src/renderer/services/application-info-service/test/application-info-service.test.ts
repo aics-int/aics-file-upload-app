@@ -15,7 +15,7 @@ describe("ApplicationInfoService", () => {
     httpClient = createStubInstance(HttpCacheClient);
     storage = createStubInstance(EnvironmentAwareStorage);
     // Stub `get` specifically, since it is a class property and not on the prototype
-    storage.get = stub();
+    storage.get = stub() as any;
 
     applicationInfoService = new ApplicationInfoService(
       httpClient as any as HttpCacheClient,

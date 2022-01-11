@@ -86,7 +86,8 @@ const applicationInfoService = new ApplicationInfoService(
   storage,
   false
 );
-export const reduxLogicDependencies: ReduxLogicExtraDependencies = {
+export const reduxLogicDependencies: Partial<ReduxLogicExtraDependencies> = {
+  applicationInfoService,
   fms: new FileManagementSystem({
     fileReader: new ChunkedFileReader(),
     fss: new FileStorageService(httpClient, storage),
@@ -97,7 +98,6 @@ export const reduxLogicDependencies: ReduxLogicExtraDependencies = {
   ipcRenderer,
   jssClient,
   labkeyClient,
-  applicationInfoService,
   mmsClient,
   storage,
 };
@@ -157,7 +157,12 @@ interface CreateReduxStoreParams {
 }
 
 export default function createReduxStore(params: CreateReduxStoreParams = {}) {
-  const logicMiddleware = createLogicMiddleware(logics, reduxLogicDependencies);
+  // Currently I am unable to satisfy the logics typings such that we can allow the implicit
+  // definition to be sufficient here. It seems the conflict between defining the store to allow
+  // generic "AnyAction" typed actions and logics with more specificly typed actions isn't something
+  // either typescript can infer - Sean M 01/10/2022
+  const logicMiddleware = createLogicMiddleware(logics as any);
+  logicMiddleware.addDeps(reduxLogicDependencies);
   const middleware = applyMiddleware(
     logicMiddleware,
     autoSaver,

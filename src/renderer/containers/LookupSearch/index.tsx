@@ -1,4 +1,5 @@
-import { Form, Icon, Select, Spin } from "antd";
+import { SearchOutlined } from '@ant-design/icons';
+import { Form, Select, Spin } from "antd";
 import classNames from "classnames";
 import * as React from "react";
 import { connect } from "react-redux";
@@ -29,7 +30,7 @@ interface OwnProps {
   className?: string;
   defaultOpen?: boolean;
   disabled?: boolean;
-  dropdownRender?: (n: React.ReactNode | undefined) => React.ReactNode;
+  dropdownRender?: (n: React.ReactElement) => React.ReactElement;
   error?: boolean;
   getDisplayFromOption?: (option: any) => string;
   lookupAnnotationName: keyof MetadataStateBranch;
@@ -39,7 +40,7 @@ interface OwnProps {
 }
 
 interface DefaultModeProps {
-  mode?: "default";
+  mode?: "tags";
   selectSearchValue: (value?: string) => void;
   value?: string;
 }
@@ -143,7 +144,7 @@ class LookupSearch extends React.Component<Props, { searchValue?: string }> {
           onSearch={this.onSearch}
           placeholder={placeholder}
           showSearch={true}
-          suffixIcon={isLargeLookup ? <Icon type="search" /> : undefined}
+          suffixIcon={isLargeLookup ? <SearchOutlined /> : undefined}
           value={value}
         >
           {(options || []).map((option) => {

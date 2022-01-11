@@ -1,4 +1,5 @@
-import { Divider, Icon, Select, Form, Alert } from "antd";
+import { PlusCircleOutlined } from "@ant-design/icons";
+import { Divider, Select, Form, Alert } from "antd";
 import classNames from "classnames";
 import { sortBy } from "lodash";
 import { ReactNode } from "react";
@@ -114,7 +115,7 @@ export default function TemplateSearch(props: TemplateSearchProps) {
                       }
                     }}
                   >
-                    <Icon className={styles.icon} type="plus-circle" />
+                    <PlusCircleOutlined className={styles.icon} />
                     <span className={styles.text}>Create {SCHEMA_SYNONYM}</span>
                   </div>
                 </>

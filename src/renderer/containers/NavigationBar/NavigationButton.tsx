@@ -1,12 +1,11 @@
-import { Button, Icon } from "antd";
+import { Button } from "antd";
 import classNames from "classnames";
-import React from "react";
+import * as React from "react";
 
 const styles = require("./styles.pcss");
 
 interface Props {
-  icon: string;
-  iconTheme?: "filled" | "outlined";
+  icon: (props: { className: string }) => React.ReactElement;
   isSelected: boolean;
   onSelect: () => void;
   title: string;
@@ -21,11 +20,7 @@ export default function NavigationButton(props: Props) {
       )}
       onClick={() => !props.isSelected && props.onSelect()}
     >
-      <Icon
-        className={styles.buttonIcon}
-        type={props.icon}
-        theme={props.iconTheme}
-      />
+      {props.icon({ className: styles.buttonIcon })}
       <p className={styles.buttonTitle}>{props.title}</p>
     </Button>
   );
