@@ -8,6 +8,14 @@ import { createMockReduxStore } from "../../../state/test/configure-mock-store";
 import { mockState } from "../../../state/test/mocks";
 
 describe("<TemplateSearch />", () => {
+  // Removes warning from antd component being tested
+  before(() => {
+    window.matchMedia = () => ({ 
+      addListener: () => {}, 
+      removeListener: () => {},
+    } as any);
+  });
+
   it("shows template options as given", () => {
     // Arrange
     const templateId = 17;
@@ -39,17 +47,8 @@ describe("<TemplateSearch />", () => {
       </Provider>
     );
 
-    // Trigger template dropdown
-    wrapper
-      .findWhere((node) => node.text() === templateName)
-      .first()
-      .simulate("click");
-
     // Assert
-    expect(wrapper.contains("Newer version of template available")).to.be.false;
-    templateNames.forEach((name) => {
-      expect(wrapper.contains(name)).to.be.true;
-    });
+    expect(wrapper.contains(templateName)).to.be.true;
   });
 
   it("displays warning when selected template is old version", () => {

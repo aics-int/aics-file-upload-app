@@ -1,4 +1,4 @@
-import Icon from "@ant-design/icons";
+import { CheckCircleFilled, CloseCircleFilled, QuestionCircleFilled } from "@ant-design/icons";
 import { Progress, Tooltip } from "antd";
 import { expect } from "chai";
 import { mount } from "enzyme";
@@ -28,11 +28,11 @@ describe("<StatusCell />", () => {
     );
 
     // Assert
-    expect(wrapper.find(Icon).prop("type")).to.equal("check-circle");
+    expect(wrapper.exists(CheckCircleFilled)).to.be.true;
   });
 
   [JSSJobStatus.FAILED, JSSJobStatus.UNRECOVERABLE].forEach((status) => {
-    it("shows failed status for failed upload", () => {
+    it(`shows failed status for ${status} upload`, () => {
       // Arrange
       const row = {
         original: {},
@@ -44,7 +44,7 @@ describe("<StatusCell />", () => {
       );
 
       // Assert
-      expect(wrapper.find(Icon).prop("type")).to.equal("close-circle");
+      expect(wrapper.exists(CloseCircleFilled)).to.be.true;
     });
   });
 
@@ -60,7 +60,7 @@ describe("<StatusCell />", () => {
     );
 
     // Assert
-    expect(wrapper.find(Icon).prop("type")).to.equal("question-circle");
+    expect(wrapper.exists(QuestionCircleFilled)).to.be.true;
   });
 
   it("shows step 1 when in first step of upload", () => {
