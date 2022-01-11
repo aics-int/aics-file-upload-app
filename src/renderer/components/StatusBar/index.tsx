@@ -4,7 +4,8 @@ import * as React from "react";
 
 import { AppEvent } from "../../state/types";
 
-const styles = require("./style.pcss");
+const styles = require("./styles.pcss");
+
 export const SECONDS_IN_A_MINUTE = 60;
 export const SECONDS_IN_AN_HOUR = 60 * SECONDS_IN_A_MINUTE;
 export const SECONDS_IN_A_DAY = SECONDS_IN_AN_HOUR * 24;

@@ -7,7 +7,7 @@ import * as React from "react";
 
 import { RendererProcessEvents } from "../../../shared/constants";
 
-const styles = require("../../components/DragAndDrop/style.pcss");
+const styles = require("./styles.pcss");
 
 interface DragAndDropProps {
   children?: React.ReactNode | React.ReactNodeArray;
@@ -56,7 +56,7 @@ export default function DragAndDrop(props: DragAndDropProps) {
       e.preventDefault();
       // Prevent drag and drop events from stacking (like notes over upload job page)
       e.stopPropagation();
-      setDragEnterCount(dragEnterCount - 1);
+      setDragEnterCount(dragEnterCount + 1);
     }
   };
 

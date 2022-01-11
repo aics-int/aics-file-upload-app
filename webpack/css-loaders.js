@@ -5,21 +5,19 @@ const miniLoaders = [
   {
     loader: "css-loader",
     options: {
-      camelCase: true,
       importLoaders: 1,
-      localIdentName: "[name]__[local]--[hash:base64:5]",
-      modules: true,
+      modules: {
+        exportLocalsConvention: "camelCase",
+        localIdentName: "[path][name]__[local]--[hash:base64:5]",
+      },
     },
   },
   {
     loader: "postcss-loader",
     options: {
-      ident: "postcss",
-      plugins: [
-        require("postcss-preset-env")({
-          stage: 0,
-        }),
-      ],
+      postcssOptions: {
+        plugins: () => [postcssPresetEnv({ stage: 0 })],
+      }
     },
   },
 ];

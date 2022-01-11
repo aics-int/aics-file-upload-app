@@ -185,7 +185,6 @@ function NotesCell(props: Props) {
         mouseEnterDelay={TOOLTIP_ENTER_DELAY}
         mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
       >
-        {/* TODO: Test */}
         <Dropdown overlay={getContextMenuItems(dispatch, props, note)} trigger={['contextMenu']}>
           {(!props.column.isReadOnly || notes) && (
             note ?
