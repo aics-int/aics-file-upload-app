@@ -107,7 +107,7 @@
     "@wojtekmaj/enzyme-adapter-react-17": "~0.6.6",
     "chai": "~4.3.4",
     "classnames": "~2.3.1",
-    "cross-env": "~7.0.3",
+    "cross-env": "5.2.0",
     "css-loader": "~5.2.7",
     "electron": "~16.0.6",
     "electron-builder": "~22.14.5",
