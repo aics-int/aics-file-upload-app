@@ -1,6 +1,3 @@
-import "core-js/actual/promise";
-import "core-js/actual/array/map";
-import "core-js/actual/set";
 import FrontendInsights, {
   LogLevel,
   reduxMiddleware,
