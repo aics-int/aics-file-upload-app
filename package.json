@@ -4,7 +4,7 @@
     "node": "16.x",
     "npm": "8.x"
   },
-  "version": "2.7.1-snapshot.0",
+  "version": "2.7.1-snapshot.1",
   "build": {
     "appId": "org.aics.alleninstitute.fileupload",
     "files": [
