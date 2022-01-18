@@ -26,7 +26,7 @@ jobs:
         env:
           ELECTRON_WEBPACK_APP_AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
         run: |
-          yarn --link-duplicates
+          yarn --link-duplicates --production=false
           yarn compile-prod
 
       - name: Build artifact and release

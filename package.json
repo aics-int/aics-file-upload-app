@@ -4,7 +4,7 @@
     "node": "16.x",
     "npm": "8.x"
   },
-  "version": "2.7.1-snapshot.4",
+  "version": "2.7.1-snapshot.5",
   "build": {
     "appId": "org.aics.alleninstitute.fileupload",
     "files": [
@@ -46,9 +46,6 @@
     "react",
     "aics"
   ],
-  "resolutions": {
-    "@types/react": "17.0.38"
-  },
   "author": "Lisa Harrylock",
   "license": "ISC",
   "dependencies": {
@@ -63,7 +60,6 @@
     "axios": "~0.24.0",
     "axios-retry": "~3.2.4",
     "chai-as-promised": "~7.1.1",
-    "core-js": "~3.20.2",
     "electron-devtools-installer": "~3.2.0",
     "electron-store": "~8.0.1",
     "electron-updater": "~4.6.1",
