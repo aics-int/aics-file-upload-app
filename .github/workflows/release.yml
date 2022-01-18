@@ -20,13 +20,13 @@ jobs:
       - name: Install Node.js, NPM, and Yarn
         uses: actions/setup-node@main
         with:
-          node-version: 12
+          node-version: 16
 
       - name: Install deps and compile app
         env:
           ELECTRON_WEBPACK_APP_AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
         run: |
-          yarn --link-duplicates
+          yarn --link-duplicates --production=false
           yarn compile-prod
 
       - name: Build artifact and release

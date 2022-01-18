@@ -10,8 +10,8 @@ export default class AutoReconnectingEventSource {
   private disconnected = false;
   private manualReconnect = false;
   private closed = false;
-  private disconnectHandler: Function | undefined;
-  private reconnectHandler: Function | undefined;
+  private disconnectHandler: (() => void) | undefined;
+  private reconnectHandler: (() => void) | undefined;
 
   private createEventSource(
     url: string,
@@ -70,12 +70,12 @@ export default class AutoReconnectingEventSource {
   }
 
   // Handler will be called when connection is lost to the URL
-  onDisconnect(handler: Function) {
+  onDisconnect(handler: () => void) {
     this.disconnectHandler = handler;
   }
 
   // Handler will be called when connection to the URL is restored
-  onReconnect(handler: Function) {
+  onReconnect(handler: () => void) {
     this.reconnectHandler = handler;
   }
 

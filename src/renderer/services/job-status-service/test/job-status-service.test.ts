@@ -19,17 +19,18 @@ import {
 
 const storage = createStubInstance(EnvironmentAwareStorage);
 // Stub `get` specifically, since it is a class property and not on the prototype
-storage.get = stub();
+storage.get = stub() as any;
 
-const httpClient = (createStubInstance(
+const httpClient = createStubInstance(
   HttpCacheClient
-) as any) as HttpCacheClient;
+) as any as HttpCacheClient;
 
 describe("JobStatusService", () => {
   const sandbox = createSandbox();
   const jobStatusClient = new JobStatusService(
     httpClient,
-    (storage as any) as LocalStorage
+    storage as any as LocalStorage,
+    false
   );
   afterEach(() => {
     sandbox.restore();

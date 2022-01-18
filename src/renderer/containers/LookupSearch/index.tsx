@@ -1,5 +1,6 @@
-import { Form, Icon, Select, Spin } from "antd";
-import * as classNames from "classnames";
+import { SearchOutlined } from '@ant-design/icons';
+import { Form, Select, Spin } from "antd";
+import classNames from "classnames";
 import * as React from "react";
 import { connect } from "react-redux";
 import { ActionCreator, AnyAction } from "redux";
@@ -29,7 +30,7 @@ interface OwnProps {
   className?: string;
   defaultOpen?: boolean;
   disabled?: boolean;
-  dropdownRender?: (n: React.ReactNode | undefined) => React.ReactNode;
+  dropdownRender?: (n: React.ReactElement) => React.ReactElement;
   error?: boolean;
   getDisplayFromOption?: (option: any) => string;
   lookupAnnotationName: keyof MetadataStateBranch;
@@ -39,7 +40,7 @@ interface OwnProps {
 }
 
 interface DefaultModeProps {
-  mode?: "default";
+  mode?: "tags";
   selectSearchValue: (value?: string) => void;
   value?: string;
 }
@@ -136,20 +137,14 @@ class LookupSearch extends React.Component<Props, { searchValue?: string }> {
           notFoundContent={notFoundContent}
           onInputKeyDown={this.props.onInputKeyDown}
           onBlur={onBlur}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-          // @ts-ignore: lisah cannot seem to make this component happy even
-          // if I extend its props in this component rather than overriding value and onChange
-          // The issue is related to wanting to support a generic value that can be a string or string[]
-          // and wanting onChange to take in either a string or string[]. I think this is called
-          // "type narrowing in discriminated unions":
+          // Unable to type this variable most explicitly due to "type narrowing in discriminated unions"
+          // typing as any for now though actual value will either be a string or string[]
           // https://stackoverflow.com/questions/50870423/discriminated-union-of-generic-type
-          onChange={(v) => selectSearchValue(v)}
+          onChange={(v: any) => selectSearchValue(v)}
           onSearch={this.onSearch}
           placeholder={placeholder}
           showSearch={true}
-          suffixIcon={isLargeLookup ? <Icon type="search" /> : undefined}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-          // @ts-ignore
+          suffixIcon={isLargeLookup ? <SearchOutlined /> : undefined}
           value={value}
         >
           {(options || []).map((option) => {

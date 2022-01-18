@@ -1,5 +1,6 @@
-import { Icon, Tooltip } from "antd";
-import * as classNames from "classnames";
+import { CloseCircleFilled } from "@ant-design/icons";
+import { Tooltip } from "antd";
+import classNames from "classnames";
 import { ReactNode, ReactNodeArray } from "react";
 import * as React from "react";
 
@@ -45,7 +46,7 @@ const FormControl: React.FunctionComponent<Props> = ({
           mouseEnterDelay={TOOLTIP_ENTER_DELAY}
           mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
         >
-          <Icon type="close-circle" theme="filled" />
+          <CloseCircleFilled />
         </Tooltip>
       )}
     </div>

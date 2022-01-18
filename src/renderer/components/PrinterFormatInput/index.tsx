@@ -15,43 +15,43 @@ interface PrinterFormatInputProps {
     What this means is input is restricted to contain only numbers, commas, whitespace, and dashes allowing the user
     to easily specify  ranges of values for numbers.
  */
-class PrinterFormatInput extends React.Component<PrinterFormatInputProps, {}> {
-  public static validateInput = defaultMemoize((input: string):
-    | string
-    | undefined => {
-    if (isEmpty(input)) {
-      return undefined;
-    }
-    const positions = input.split(",").map((position) => position.trim());
-    for (const [idx, position] of positions.entries()) {
-      const positionIndex = `Position at index ${idx + 1}`;
-      if (isEmpty(position)) {
-        return `${positionIndex} is empty`;
+class PrinterFormatInput extends React.Component<PrinterFormatInputProps, Record<string, any>> {
+  public static validateInput = defaultMemoize(
+    (input: string): string | undefined => {
+      if (isEmpty(input)) {
+        return undefined;
       }
-      const range = position.split("-");
-      const numberRange = range
-        .filter((num) => !isEmpty(num))
-        .map((num) => toNumber(num));
-      if (range.length !== numberRange.length) {
-        return `${positionIndex} is not valid range`;
-      }
-      if (!isNumber(numberRange[0])) {
-        return `${positionIndex} is not a number`;
-      }
-      if (numberRange.length > 1) {
-        if (!isNumber(numberRange[1])) {
+      const positions = input.split(",").map((position) => position.trim());
+      for (const [idx, position] of positions.entries()) {
+        const positionIndex = `Position at index ${idx + 1}`;
+        if (isEmpty(position)) {
+          return `${positionIndex} is empty`;
+        }
+        const range = position.split("-");
+        const numberRange = range
+          .filter((num) => !isEmpty(num))
+          .map((num) => toNumber(num));
+        if (range.length !== numberRange.length) {
           return `${positionIndex} is not valid range`;
         }
-        if (numberRange.length > 2) {
-          return `${positionIndex} has multiple dashes in a row without a comma separator`;
+        if (!isNumber(numberRange[0])) {
+          return `${positionIndex} is not a number`;
         }
-        if (numberRange[0] > numberRange[1]) {
-          return `${positionIndex} has uneven range, right number should be greater than left`;
+        if (numberRange.length > 1) {
+          if (!isNumber(numberRange[1])) {
+            return `${positionIndex} is not valid range`;
+          }
+          if (numberRange.length > 2) {
+            return `${positionIndex} has multiple dashes in a row without a comma separator`;
+          }
+          if (numberRange[0] > numberRange[1]) {
+            return `${positionIndex} has uneven range, right number should be greater than left`;
+          }
         }
       }
+      return undefined;
     }
-    return undefined;
-  });
+  );
 
   public static extractValues = (input: string): number[] | undefined => {
     const values: number[] = [];

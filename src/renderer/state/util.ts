@@ -63,15 +63,15 @@ export function getActionFromBatch(
   return undefined;
 }
 
-export const getReduxUndoFilterFn = (
-  excludeActions: string[]
-): FilterFunction => <T>(
-  action: AnyAction,
-  currentState: T,
-  previousHistory: StateWithHistory<T>
-) => {
-  return (
-    !excludeActions.includes(action.type) &&
-    currentState !== previousHistory.present
-  );
-};
+export const getReduxUndoFilterFn =
+  (excludeActions: string[]): FilterFunction =>
+  <T>(
+    action: AnyAction,
+    currentState: T,
+    previousHistory: StateWithHistory<T>
+  ) => {
+    return (
+      !excludeActions.includes(action.type) &&
+      currentState !== previousHistory.present
+    );
+  };

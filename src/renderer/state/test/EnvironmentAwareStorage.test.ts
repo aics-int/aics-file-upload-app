@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import * as Store from "electron-store";
+import ElectronStore from "electron-store";
 import * as lodash from "lodash";
 import {
   restore,
@@ -16,14 +16,14 @@ import EnvironmentAwareStorage from "../EnvironmentAwareStorage";
 const withPrefix = (str: string) => new RegExp(`^[a-fA-F0-9]{32}.${str}$`);
 
 describe("EnvironmentAwareStorage", () => {
-  let mockStore: SinonStubbedInstance<Store>;
+  let mockStore: SinonStubbedInstance<ElectronStore<any>>;
   let storage: EnvironmentAwareStorage;
 
   beforeEach(() => {
-    mockStore = createStubInstance(Store);
+    mockStore = createStubInstance(ElectronStore);
     // Stub `get` specifically, since it is a class property and not on the prototype
     mockStore.get = stub();
-    storage = new EnvironmentAwareStorage((mockStore as any) as Store);
+    storage = new EnvironmentAwareStorage(mockStore as any as ElectronStore);
   });
 
   afterEach(() => restore());

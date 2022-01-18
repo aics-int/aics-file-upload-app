@@ -1,4 +1,5 @@
-import { Icon, Tooltip } from "antd";
+import { CaretDownOutlined, CaretUpOutlined } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import * as React from "react";
 import { HeaderProps } from "react-table";
 
@@ -13,7 +14,7 @@ const styles = require("./styles.pcss");
   This component renders an interactive header rendered by default for
   all react-tables.
 */
-export default function DefaultHeader<T extends {}>({
+export default function DefaultHeader<T extends Record<string, any>>({
   column,
   name,
 }: HeaderProps<T>) {
@@ -26,7 +27,10 @@ export default function DefaultHeader<T extends {}>({
       <div className={styles.header}>
         {name || column.id} {column.isRequired && "* "}
         {column.isSorted && (
-          <Icon type={column.isSortedDesc ? "caret-down" : "caret-up"} />
+          column.isSortedDesc ? 
+          <CaretDownOutlined />
+          : 
+          <CaretUpOutlined />
         )}
       </div>
     </Tooltip>

@@ -1,6 +1,7 @@
 import { basename } from "path";
 
-import { Icon, Tooltip } from "antd";
+import { CaretDownOutlined, CaretRightOutlined, EditOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import classNames from "classnames";
 import { isNil } from "lodash";
 import React from "react";
@@ -63,11 +64,10 @@ export default function FilenameCell({
       style={{ paddingLeft: `${row.depth * 15}px` }}
     >
       {row.canExpand && (
-        <Icon
-          className={styles.rowExpansionIcon}
-          type={row.isExpanded ? "caret-down" : "caret-right"}
-          {...row.getToggleRowExpandedProps({})}
-        />
+        row.isExpanded ? 
+          <CaretDownOutlined className={styles.rowExpansionIcon} {...row.getToggleRowExpandedProps({})} />
+          :
+          <CaretRightOutlined className={styles.rowExpansionIcon} {...row.getToggleRowExpandedProps({})} />
       )}
       <Tooltip
         title={file}
@@ -97,11 +97,17 @@ export default function FilenameCell({
             mouseEnterDelay={TOOLTIP_ENTER_DELAY}
             mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
           >
-            <Icon
-              className={styles.subFileModalIcon}
-              onClick={() => dispatch(openSubFileSelectionModal(file))}
-              type={row.canExpand ? "edit" : "plus-circle"}
-            />
+            {row.canExpand ? 
+              <EditOutlined
+                className={styles.subFileModalIcon}
+                onClick={() => dispatch(openSubFileSelectionModal(file))}
+              />
+            :
+              <PlusCircleOutlined
+                className={styles.subFileModalIcon}
+                onClick={() => dispatch(openSubFileSelectionModal(file))}
+              />
+            }
           </Tooltip>
         </TutorialTooltip>
       )}

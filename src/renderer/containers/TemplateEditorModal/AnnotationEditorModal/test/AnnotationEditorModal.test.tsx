@@ -22,6 +22,11 @@ describe("<AnnotationEditorModal />", () => {
   const sandbox = createSandbox();
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
 
+  before(() => {
+    // Removes warning from antd component being tested
+    global.cancelAnimationFrame = noop;
+  })
+
   beforeEach(() => {
     labkeyClient = createStubInstance(LabkeyClient);
     sandbox.replace(mockReduxLogicDeps, "labkeyClient", labkeyClient);
@@ -89,12 +94,11 @@ describe("<AnnotationEditorModal />", () => {
     // Assert
     expect(wrapper.text()).to.contain("Limited Editing");
     expect(wrapper.text()).to.contain("Annotation Name");
-    expect(wrapper.find("input").prop("disabled")).to.be.true;
+    expect(wrapper.find("input").at(0).prop("disabled")).to.be.true;
     expect(wrapper.text()).to.contain("Description");
     expect(wrapper.find("textarea").prop("disabled")).to.be.undefined;
     expect(wrapper.text()).to.contain("Data Type");
-    expect(wrapper.exists(".ant-select-enabled")).to.be.false;
-    expect(wrapper.exists(".ant-select-disabled")).to.be.true;
+    expect(wrapper.find("input").at(1).prop("disabled")).to.be.true;
   });
 
   it("enables inputs when annotation is unused", async () => {
@@ -132,12 +136,11 @@ describe("<AnnotationEditorModal />", () => {
     // Assert
     expect(wrapper.text()).to.not.contain("Limited Editing");
     expect(wrapper.text()).to.contain("Annotation Name");
-    expect(wrapper.find("input").prop("disabled")).to.be.false;
+    expect(wrapper.find("input").at(0).prop("disabled")).to.be.false;
     expect(wrapper.text()).to.contain("Description");
     expect(wrapper.find("textarea").prop("disabled")).to.be.undefined;
     expect(wrapper.text()).to.contain("Data Type");
-    expect(wrapper.exists(".ant-select-enabled")).to.be.true;
-    expect(wrapper.exists(".ant-select-disabled")).to.be.false;
+    expect(wrapper.find("input").at(1).prop("disabled")).to.be.false;
   });
 
   it("enables inputs when annotation is novel", () => {
@@ -156,12 +159,11 @@ describe("<AnnotationEditorModal />", () => {
     // Assert
     expect(wrapper.text()).to.not.contain("Limited Editing");
     expect(wrapper.text()).to.contain("Annotation Name");
-    expect(wrapper.find("input").prop("disabled")).to.be.false;
+    expect(wrapper.find("input").at(0).prop("disabled")).to.be.false;
     expect(wrapper.text()).to.contain("Description");
     expect(wrapper.find("textarea").prop("disabled")).to.be.undefined;
     expect(wrapper.text()).to.contain("Data Type");
-    expect(wrapper.exists(".ant-select-enabled")).to.be.true;
-    expect(wrapper.exists(".ant-select-disabled")).to.be.false;
+    expect(wrapper.find("input").at(1).prop("disabled")).to.be.false;
   });
 
   it("renders dropdown options input when dropdown type", async () => {
@@ -269,6 +271,6 @@ describe("<AnnotationEditorModal />", () => {
     );
 
     // Assert
-    expect(wrapper.text()).to.be.null;
+    expect(wrapper.text()).to.be.empty;
   });
 });

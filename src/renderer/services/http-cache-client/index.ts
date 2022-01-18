@@ -190,9 +190,8 @@ export default class HttpCacheClient {
   };
 
   private get limsUrl() {
-    const userSettings: LimsSettings | undefined = this.localStorage.get(
-      USER_SETTINGS_KEY
-    );
+    const userSettings: LimsSettings | undefined =
+      this.localStorage.get(USER_SETTINGS_KEY);
     let host = LIMS_HOST;
     let port = LIMS_PORT;
     const protocol = LIMS_PROTOCOL;

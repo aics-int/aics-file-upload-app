@@ -60,6 +60,7 @@ module.exports = {
         include: [path.resolve(__dirname, "../", "src", "renderer")],
         use: getCssLoaders(isDevelopment),
       },
+      // Loads styles from antd
       {
         test: /\.less$/,
         use: [
@@ -69,17 +70,20 @@ module.exports = {
           {
             loader: "css-loader",
           },
+          // 
           {
             loader: "less-loader",
             options: {
-              modifyVars: {
-                "primary-color": "#1DA57A",
-                "link-color": "#1DA57A",
-                "border-radius-base": "4px",
-                "font-size-base": "18px",
-                "font-family": "Nunito",
-              },
-              javascriptEnabled: true,
+              lessOptions: {
+                modifyVars: {
+                  "primary-color": "#1DA57A",
+                  "link-color": "#1DA57A",
+                  "border-radius-base": "4px",
+                  "font-size-base": "18px",
+                  "font-family": "Nunito",
+                },
+                javascriptEnabled: true,
+              }
             },
           },
         ],
@@ -101,4 +105,11 @@ module.exports = {
   output: {
     globalObject: "this",
   },
+  stats: {
+    children: false,
+    env: true,
+    errors: true,
+    errorDetails: true,
+    version: true,
+}
 };

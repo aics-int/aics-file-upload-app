@@ -1,8 +1,10 @@
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+
 import { expect } from "chai";
-import { ActionCreator, Store } from "redux";
 import {
   createSandbox,
-  SinonStub,
   SinonStubbedInstance,
   stub,
   createStubInstance,
@@ -20,10 +22,8 @@ import { getAlert } from "../../feedback/selectors";
 import { SET_PLATE_BARCODE_TO_PLATES } from "../../metadata/constants";
 import { getPlateBarcodeToPlates } from "../../metadata/selectors";
 import { getAppliedTemplate } from "../../template/selectors";
-import { Actions } from "../../test/action-tracker";
 import {
   createMockReduxStore,
-  dialog,
   mockReduxLogicDeps,
 } from "../../test/configure-mock-store";
 import {
@@ -41,14 +41,12 @@ import {
   mockWellUpload,
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
-import { AlertType, AsyncRequest, Logger, Page, State } from "../../types";
+import { AlertType, AsyncRequest, Page, State } from "../../types";
 import { getUploadRowKey } from "../../upload/constants";
 import { getUpload } from "../../upload/selectors";
 import { closeUpload, viewUploads } from "../actions";
 import { VIEW_UPLOADS_SUCCEEDED } from "../constants";
-import { setSwitchEnvEnabled } from "../logics";
 import { getPage, getView } from "../selectors";
-import Menu = Electron.Menu;
 
 describe("Route logics", () => {
   const sandbox = createSandbox();
@@ -56,6 +54,11 @@ describe("Route logics", () => {
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
   let fms: SinonStubbedInstance<FileManagementSystem>;
   let jssClient: SinonStubbedInstance<JobStatusService>;
+  const testDir = path.resolve(os.tmpdir(), "routeTest");
+
+  before(async () => {
+    await fs.promises.mkdir(testDir);
+  })
 
   beforeEach(() => {
     mmsClient = createStubInstance(MetadataManagementService);
@@ -72,135 +75,75 @@ describe("Route logics", () => {
     sandbox.restore();
   });
 
-  describe("setSwitchEnvEnabled", () => {
-    let switchEnv: { enabled: boolean; label: string };
-    let fileMenu: {
-      label: string;
-      submenu: { items: Array<{ enabled: boolean; label: string }> };
-    };
-    let menu: Menu;
-    let logger: Logger;
-    const logError: SinonStub = stub();
-
-    beforeEach(() => {
-      logger = ({
-        error: logError,
-      } as any) as Logger;
-      switchEnv = {
-        enabled: true,
-        label: "Switch Environment",
-      };
-      fileMenu = {
-        label: "file",
-        submenu: {
-          items: [switchEnv],
-        },
-      };
-      menu = ({
-        items: [fileMenu],
-      } as any) as Menu;
-    });
-
-    it("logs error if file menu not found", () => {
-      stub(fileMenu, "label").value("Edit");
-      setSwitchEnvEnabled(menu, false, logger);
-      expect(switchEnv.enabled).to.be.true;
-      expect(logError.called).to.be.true;
-    });
-    it("logs error if file submenu not found", () => {
-      stub(fileMenu, "submenu").value(undefined);
-      setSwitchEnvEnabled(menu, false, logger);
-      expect(switchEnv.enabled).to.be.true;
-      expect(logError.called).to.be.true;
-    });
-    it("logs error if Switch Environment menu option not found", () => {
-      stub(fileMenu, "submenu").value({ items: [] });
-      setSwitchEnvEnabled(menu, false, logger);
-      expect(switchEnv.enabled).to.be.true;
-      expect(logError.called).to.be.true;
-    });
-    it("sets Switch Environment menu option to enabled if enabled=true", () => {
-      stub(switchEnv, "enabled").value(false);
-      expect(switchEnv.enabled).to.be.false;
-      setSwitchEnvEnabled(menu, true, logger);
-      expect(switchEnv.enabled).to.be.true;
-    });
-    it("sets Switch Environment menu option to disabled if enabled=false", () => {
-      stub(switchEnv, "enabled").value(true);
-      expect(switchEnv.enabled).to.be.true;
-      setSwitchEnvEnabled(menu, false, logger);
-      expect(switchEnv.enabled).to.be.false;
-    });
-  });
-
-  /**
-   * helper function for go back and closeUpload logic tests
-   * @param startPage the page we start on
-   * @param expectedEndPage the page we expect to end at,
-   * @param action action creator to dispatch
-   * @param messageBoxResponse button index to simulate user click
-   * changes and go back
-   * @param state
-   */
-  const runShowMessageBoxTest = async (
-    startPage: Page,
-    expectedEndPage: Page,
-    action: ActionCreator<any>,
-    messageBoxResponse = 1,
-    state: State = mockState
-  ): Promise<{
-    actions: Actions;
-    showMessageBoxStub: SinonStub;
-    store: Store;
-  }> => {
-    const showMessageBoxStub = stub().resolves({
-      response: messageBoxResponse,
-    });
-    sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
-    const { actions, logicMiddleware, store } = createMockReduxStore({
-      ...state,
-      route: {
-        page: startPage,
-        view: startPage,
-      },
-      upload: getMockStateWithHistory(mockWellUpload),
-    });
-
-    expect(getPage(store.getState())).to.equal(startPage);
-    expect(getView(store.getState())).to.equal(startPage);
-    expect(showMessageBoxStub.called).to.be.false;
-
-    store.dispatch(action());
-
-    await logicMiddleware.whenComplete();
-    expect(getPage(store.getState())).to.equal(expectedEndPage);
-    expect(getView(store.getState())).to.equal(expectedEndPage);
-    expect(showMessageBoxStub.called).to.be.true;
-    return { actions, showMessageBoxStub, store };
-  };
+  after(async () => {
+    await fs.promises.rm(testDir, { recursive: true });
+  })
 
   describe("resetUploadLogic", () => {
     it("goes to MyUploads page given user clicks Save Upload Draft from dialog", async () => {
-      const showSaveDialogStub = stub().resolves({
-        cancelled: false,
-        filePath: "/bar",
-      });
-      sandbox.replace(dialog, "showSaveDialog", showSaveDialogStub);
-      await runShowMessageBoxTest(
-        Page.UploadWithTemplate,
-        Page.MyUploads,
-        closeUpload,
-        2
-      );
-      expect(showSaveDialogStub.called).to.be.true;
+      // Arrange
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+      }
+      mockDeps.ipcRenderer.invoke.resolves(1)
+      const { logicMiddleware, store } = createMockReduxStore({
+        ...mockState,
+        route: {
+          page: Page.UploadWithTemplate,
+          view: Page.UploadWithTemplate,
+        },
+        upload: getMockStateWithHistory(mockWellUpload),
+      }, mockDeps);
+  
+      // (sanity-check)
+      expect(getPage(store.getState())).to.equal(Page.UploadWithTemplate);
+      expect(getView(store.getState())).to.equal(Page.UploadWithTemplate);
+      expect(mockDeps.ipcRenderer.invoke).to.not.have.been.calledOnce;
+  
+      // Act
+      store.dispatch(closeUpload());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(getPage(store.getState())).to.equal(Page.MyUploads);
+      expect(getView(store.getState())).to.equal(Page.MyUploads);
+      expect(mockDeps.ipcRenderer.invoke).to.have.been.calledOnce;
     });
+
     it("stays on current page given 'Cancel' clicked from dialog", async () => {
-      await runShowMessageBoxTest(
-        Page.UploadWithTemplate,
-        Page.UploadWithTemplate,
-        closeUpload,
-        0
-      );
+      // Arrange
+      const ipcRenderer = {
+        invoke: stub(),
+        on: stub(),
+        send: stub(),
+      }
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      mockDeps.ipcRenderer.invoke.resolves(0)
+      const { logicMiddleware, store } = createMockReduxStore({
+        ...mockState,
+        route: {
+          page: Page.UploadWithTemplate,
+          view: Page.UploadWithTemplate,
+        },
+        upload: getMockStateWithHistory(mockWellUpload),
+      }, mockDeps);
+  
+      // (sanity-check)
+      expect(getPage(store.getState())).to.equal(Page.UploadWithTemplate);
+      expect(getView(store.getState())).to.equal(Page.UploadWithTemplate);
+      expect(mockDeps.ipcRenderer.invoke).to.not.have.been.calledOnce;
+  
+      // Act
+      store.dispatch(closeUpload());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(getPage(store.getState())).to.equal(Page.UploadWithTemplate);
+      expect(getView(store.getState())).to.equal(Page.UploadWithTemplate);
+      expect(mockDeps.ipcRenderer.invoke).to.have.been.calledOnce;
     });
   });
   describe("viewUploadsLogic", () => {
@@ -214,31 +157,18 @@ describe("Route logics", () => {
       modifiedBy: "foo",
     };
 
-    const stubMethods = ({
-      showMessageBox,
-      showSaveDialog,
-      writeFile,
-    }: {
-      showMessageBox?: SinonStub;
-      showSaveDialog?: SinonStub;
-      writeFile?: SinonStub;
-    }) => {
-      sandbox.replace(
-        dialog,
-        "showMessageBox",
-        showMessageBox || stub().resolves({ response: 1 }) // discard draft by default
-      );
-      sandbox.replace(
-        dialog,
-        "showSaveDialog",
-        showSaveDialog ||
-          stub().resolves({ cancelled: false, filePath: "/test" })
-      );
-      sandbox.replace(
-        mockReduxLogicDeps,
-        "writeFile",
-        writeFile || stub().resolves()
-      );
+    const stubMethods = (messageBoxButtonIndex?: number, filePath?: string) => {
+      const ipcRenderer = {
+        invoke: stub(),
+        on: stub(),
+        send: stub(),
+      }
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      ipcRenderer.invoke.onCall(0).resolves(messageBoxButtonIndex)
+      ipcRenderer.invoke.onCall(1).resolves(filePath)
       labkeyClient.selectFirst.resolves(fileMetadata);
       mmsClient.getFileMetadata.resolves({
         ...fileMetadata,
@@ -275,6 +205,7 @@ describe("Route logics", () => {
         wells: [],
       });
       mmsClient.getTemplate.resolves(mockMMSTemplate);
+      return mockDeps;
     };
 
     let mockStateWithMetadata: State;
@@ -299,16 +230,10 @@ describe("Route logics", () => {
       };
     });
 
-    // These button indexes are hardcoded into `stateHelpers.ensureDraftGetsSaved()`
-    const CANCEL_BUTTON_INDEX = 0;
-    const SAVE_UPLOAD_DRAFT_BUTTON_INDEX = 2;
-
     it("doesn't do anything if user cancels action when asked to save current draft", async () => {
-      stubMethods({
-        showMessageBox: stub().resolves({ response: CANCEL_BUTTON_INDEX }),
-      });
+      const mockDeps = stubMethods(0);
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
@@ -319,55 +244,42 @@ describe("Route logics", () => {
       expect(actionTypes).not.to.include(VIEW_UPLOADS_SUCCEEDED);
       expect(actionTypes).not.to.include(REQUEST_FAILED);
     });
+
     it("shows save dialog if user has another draft open", async () => {
-      const showSaveDialog = stub().resolves({
-        cancelled: false,
-        filePath: "/foo",
-      });
-      stubMethods({
-        showMessageBox: stub().resolves({
-          response: SAVE_UPLOAD_DRAFT_BUTTON_INDEX,
-        }),
-        showSaveDialog,
-      });
+      const mockDeps = stubMethods(2, path.resolve(testDir, "savedDraft"));
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
 
-      expect(showSaveDialog.called).to.be.true;
+      expect(mockDeps.ipcRenderer.invoke).to.have.been.calledTwice;
     });
+
     it("shows save dialog if user is editing another upload", async () => {
-      const showSaveDialog = stub().resolves({
-        cancelled: false,
-        filePath: "/foo",
-      });
-      stubMethods({
-        showMessageBox: stub().resolves({
-          response: SAVE_UPLOAD_DRAFT_BUTTON_INDEX,
-        }),
-        showSaveDialog,
-      });
+      const mockDeps = stubMethods(2, path.resolve(testDir, "savedEdit"));
       const { logicMiddleware, store } = createMockReduxStore({
         ...nonEmptyStateForInitiatingUpload,
         selection: {
           ...nonEmptyStateForInitiatingUpload.selection,
         },
-      });
+      }, mockDeps);
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
 
-      expect(showSaveDialog.called).to.be.true;
+      expect(mockDeps.ipcRenderer.invoke).to.have.been.calledTwice;
     });
+
     it("sets error alert if job passed is missing information", async () => {
-      stubMethods({});
+      // Arrange
+      const mockDeps = stubMethods(1);
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
+      // Act
       store.dispatch(
         viewUploads([
           {
@@ -378,7 +290,7 @@ describe("Route logics", () => {
       );
       await logicMiddleware.whenComplete();
 
-      // after
+      // Assert
       const alert = getAlert(store.getState());
       expect(alert).to.not.be.undefined;
       expect(alert?.type).to.equal(AlertType.ERROR);
@@ -386,57 +298,66 @@ describe("Route logics", () => {
         `Upload ${mockSuccessfulUploadJob.jobName} has missing information`
       );
     });
+
     it("sets error alert if something fails while showing the warning dialog", async () => {
-      const showMessageBox = stub().resolves({
-        response: SAVE_UPLOAD_DRAFT_BUTTON_INDEX,
-      });
-      const writeFile = stub().rejects(new Error("foo"));
-      stubMethods({ showMessageBox, writeFile });
+      // Arrange
+      const mockDeps = stubMethods();
+      const errorMessage = "expected failure";
+      mockDeps.ipcRenderer.invoke.onCall(0).rejects(new Error(errorMessage));
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
-      // before
+      // (sanity-check) ensure alert not already present in state
       expect(getAlert(store.getState())).to.be.undefined;
 
-      // apply
+      // Act
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
 
-      // after
+      // Assert
       const alert = getAlert(store.getState());
       expect(alert).to.not.be.undefined;
       expect(alert?.type).to.equal(AlertType.ERROR);
-      expect(alert?.message).to.equal("Could not save draft: foo");
+      expect(alert?.message).to.equal(errorMessage);
     });
+
     it("allows users to open a failed upload", async () => {
-      stubMethods({});
+      // Arrange
+      const mockDeps = stubMethods();
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata
+        mockStateWithMetadata, mockDeps
       );
 
+      // Act
       store.dispatch(viewUploads([mockFailedUploadJob]));
       await logicMiddleware.whenComplete();
 
+      // Assert
       expect(actions.list.map(({ type }) => type)).includes(
         VIEW_UPLOADS_SUCCEEDED
       );
     });
+
     it("handles case where upload page is not open yet", async () => {
-      stubMethods({});
+      // Arrange
+      const mockDeps = stubMethods();
       const { logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata
+        mockStateWithMetadata, mockDeps
       );
 
+      // (sanity-check) pre-check values in state
       let state = store.getState();
       expect(getPage(state)).to.equal(Page.MyUploads);
       expect(getView(state)).to.equal(Page.MyUploads);
       expect(getUpload(state)).to.be.empty;
       expect(getAppliedTemplate(state)).to.be.undefined;
 
+      // Act
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
 
+      // Assert
       state = store.getState();
       expect(getPage(state)).to.equal(Page.UploadWithTemplate);
       expect(getView(state)).to.equal(Page.UploadWithTemplate);
@@ -466,14 +387,15 @@ describe("Route logics", () => {
         ],
       });
     });
+  
     it("dispatches requestFailed if boolean annotation type id is not defined", async () => {
-      stubMethods({});
+      const mockDeps = stubMethods();
       mmsClient.getFileMetadata.resolves({
         ...fileMetadata,
         templateId: 1,
         annotations: [],
       });
-      const { actions, logicMiddleware, store } = createMockReduxStore();
+      const { actions, logicMiddleware, store } = createMockReduxStore(mockState, mockDeps);
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
@@ -490,9 +412,8 @@ describe("Route logics", () => {
     it("dispatches requestFailed given not OK response when getting file metadata", async () => {
       const errorMessage = "lk failure";
       labkeyClient.selectFirst.rejects(new Error(errorMessage));
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockState
-      );
+      const { actions, logicMiddleware, store } =
+        createMockReduxStore(mockState);
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
@@ -524,7 +445,7 @@ describe("Route logics", () => {
     });
 
     it("sets upload error if something goes wrong while trying to get and set plate info", async () => {
-      stubMethods({});
+      const mockDeps = stubMethods();
       const errorMessage = "foo";
       mmsClient.getPlate.rejects(new Error(errorMessage));
       mmsClient.getFileMetadata.resolves({
@@ -536,7 +457,7 @@ describe("Route logics", () => {
         ],
       });
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata
+        mockStateWithMetadata, mockDeps
       );
       const expectedAction = requestFailed(
         `Could not open upload editor: ${errorMessage}`,
@@ -551,11 +472,11 @@ describe("Route logics", () => {
     });
 
     it("dispatches requestFailed if getting template fails", async () => {
-      stubMethods({});
+      const mockDeps = stubMethods();
       const errorMessage = "foo";
       mmsClient.getTemplate.rejects(new Error(errorMessage));
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata
+        mockStateWithMetadata, mockDeps
       );
       const expectedAction = requestFailed(
         `Could not open upload editor: ${errorMessage}`,

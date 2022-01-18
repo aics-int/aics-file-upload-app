@@ -1,5 +1,7 @@
-import { OpenDialogOptions, remote } from "electron";
+import { ipcRenderer, OpenDialogOptions } from "electron";
 import * as React from "react";
+
+import { RendererProcessEvents } from "../../../shared/constants";
 
 const styles = require("./styles.pcss");
 
@@ -20,7 +22,10 @@ interface Props {
 
 export default function NewUploadMenu(props: Props) {
   async function openFileBrowser(dialogOptions: OpenDialogOptions) {
-    const { filePaths } = await remote.dialog.showOpenDialog(dialogOptions);
+    const filePaths = await ipcRenderer.invoke(
+      RendererProcessEvents.SHOW_DIALOG,
+      dialogOptions
+    );
     props.onUploadWithoutTemplate(filePaths);
   }
 

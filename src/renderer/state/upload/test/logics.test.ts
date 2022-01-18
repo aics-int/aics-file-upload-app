@@ -9,7 +9,6 @@ import {
   createSandbox,
   createStubInstance,
   SinonStubbedInstance,
-  stub,
 } from "sinon";
 
 import { AnnotationName } from "../../../constants";
@@ -22,7 +21,7 @@ import {
 import { UploadJob } from "../../../services/job-status-service/types";
 import { ColumnType } from "../../../services/labkey-client/types";
 import { requestFailed } from "../../actions";
-import { setErrorAlert } from "../../feedback/actions";
+import { SET_ALERT } from "../../feedback/constants";
 import { getAlert } from "../../feedback/selectors";
 import { setPlateBarcodeToPlates } from "../../metadata/actions";
 import { SET_PLATE_BARCODE_TO_PLATES } from "../../metadata/constants";
@@ -30,7 +29,6 @@ import { getPlateBarcodeToPlates } from "../../metadata/selectors";
 import { setAppliedTemplate } from "../../template/actions";
 import {
   createMockReduxStore,
-  dialog,
   mockReduxLogicDeps,
 } from "../../test/configure-mock-store";
 import {
@@ -95,6 +93,11 @@ describe("Upload logics", () => {
   let jssClient: SinonStubbedInstance<JobStatusService>;
   let mmsClient: SinonStubbedInstance<MetadataManagementService>;
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
+  const testDir = path.resolve(os.tmpdir(), "uploadUnitTest");
+
+  before(async () => {
+    await fs.promises.mkdir(testDir);
+  })
 
   beforeEach(() => {
     fms = createStubInstance(FileManagementSystem);
@@ -110,6 +113,10 @@ describe("Upload logics", () => {
   afterEach(() => {
     sandbox.restore();
   });
+
+  after(async () => {
+    await fs.promises.rm(testDir, { recursive: true });
+  })
 
   describe("applyTemplateLogic", () => {
     it("dispatches requestFailed if booleanAnnotationTypeId not defined", async () => {
@@ -557,9 +564,8 @@ describe("Upload logics", () => {
       // after
       state = store.getState();
       expect(keys(getUpload(state)).length).to.equal(2);
-      const positionUpload = getUpload(state)[
-        getUploadRowKey({ file, positionIndex: 1 })
-      ];
+      const positionUpload =
+        getUpload(state)[getUploadRowKey({ file, positionIndex: 1 })];
       expect(positionUpload).to.not.be.undefined;
       expect(positionUpload).to.deep.equal({
         channelId: undefined,
@@ -613,9 +619,8 @@ describe("Upload logics", () => {
       // after
       state = store.getState();
       expect(keys(getUpload(state)).length).to.equal(2);
-      const subImageUpload = getUpload(state)[
-        getUploadRowKey({ file, subImageName: "foo" })
-      ];
+      const subImageUpload =
+        getUpload(state)[getUploadRowKey({ file, subImageName: "foo" })];
       expect(subImageUpload).to.not.be.undefined;
       expect(subImageUpload).to.deep.equal({
         channelId: undefined,
@@ -1632,129 +1637,185 @@ describe("Upload logics", () => {
   });
   describe("saveUploadDraftLogic", () => {
     it("shows save dialog and does not dispatch saveUploadDraftSuccess if user cancels save", async () => {
-      const showSaveDialogStub = stub().resolves({
-        cancelled: true,
-        filePath: undefined,
-      });
-      sandbox.replace(dialog, "showSaveDialog", showSaveDialogStub);
-      const { actions, logicMiddleware, store } = createMockReduxStore();
+      // Arrange
+      const ipcRenderer = {
+        send: sandbox.stub(),
+        on: sandbox.stub(),
+        invoke: sandbox.stub(),
+      }
+      ipcRenderer.invoke.resolves(undefined);
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      const { actions, logicMiddleware, store } = createMockReduxStore(mockState, mockDeps);
 
+      // Act
       store.dispatch(saveUploadDraft());
       await logicMiddleware.whenComplete();
+
+      // Assert
       expect(actions.list.find((a) => a.type === SAVE_UPLOAD_DRAFT_SUCCESS)).to
         .be.undefined;
     });
+
     it("dispatches saveUploadDraftSuccess if user saves draft to file", async () => {
-      const showSaveDialogStub = stub().resolves({
-        cancelled: false,
-        filePath: "/foo",
-      });
-      sandbox.replace(dialog, "showSaveDialog", showSaveDialogStub);
+      // Arrange
+      const filePath = path.resolve(testDir, "uploadDraft");
+      const ipcRenderer = {
+        send: sandbox.stub(),
+        on: sandbox.stub(),
+        invoke: sandbox.stub(),
+      }
+      ipcRenderer.invoke.resolves(filePath);
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
+      // Act
       store.dispatch(saveUploadDraft());
       await logicMiddleware.whenComplete();
+
+      // Assert
       expect(actions.includesMatch(saveUploadDraftSuccess())).to.be.true;
     });
+
     it("dispatches saveUploadDraftSuccess with filePath used to save draft when saveUploadDraft is called with true", async () => {
-      const showSaveDialogStub = stub().resolves({
-        cancelled: false,
-        filePath: "/foo",
-      });
-      sandbox.replace(dialog, "showSaveDialog", showSaveDialogStub);
+      // Arrange
+      const filePath = path.resolve(testDir, "uploadDraft");
+      const ipcRenderer = {
+        send: sandbox.stub(),
+        on: sandbox.stub(),
+        invoke: sandbox.stub(),
+      }
+      ipcRenderer.invoke.resolves(filePath);
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
+      // Act
       store.dispatch(saveUploadDraft(true));
       await logicMiddleware.whenComplete();
-      expect(actions.includesMatch(saveUploadDraftSuccess("/foo"))).to.be.true;
+      
+      // Assert
+      expect(actions.includesMatch(saveUploadDraftSuccess(filePath))).to.be.true;
     });
+
     it("sets error alert if something goes wrong while saving draft", async () => {
-      const showSaveDialogStub = stub().resolves({ filePath: "/foo" });
-      const writeFileStub = stub().rejects(new Error("uh oh!"));
-      sandbox.replace(mockReduxLogicDeps, "writeFile", writeFileStub);
-      sandbox.replace(dialog, "showSaveDialog", showSaveDialogStub);
+      // Arrange
+      const filePath = path.resolve(testDir, "failure", "uploadDraft");
+      const ipcRenderer = {
+        send: sandbox.stub(),
+        on: sandbox.stub(),
+        invoke: sandbox.stub(),
+      }
+      ipcRenderer.invoke.resolves(filePath);
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
+      // Act
       store.dispatch(saveUploadDraft());
       await logicMiddleware.whenComplete();
-      expect(actions.includesMatch(saveUploadDraftSuccess("/foo"))).to.be.false;
+
+      // Assert
+      expect(actions.includesMatch(saveUploadDraftSuccess(filePath))).to.be.false;
       expect(
-        actions.includesMatch(setErrorAlert("Could not save draft: uh oh!"))
+        actions.includesMatch({type: SET_ALERT})
       ).to.be.true;
     });
   });
+
   describe("openUploadLogic", () => {
     it("does not show open dialog if user cancels action when asked if they want to save", async () => {
-      const showMessageBoxStub = stub().resolves({
-        // 0 is the index of the cancel button in `stateHelpers.ensureDraftGetsSaved()`
-        response: 0,
-      });
-      const openDialogStub = stub();
-      sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
-      sandbox.replace(dialog, "showOpenDialog", openDialogStub);
+      const ipcRenderer = {
+        invoke: sandbox.stub(),
+        on: sandbox.stub(),
+        send: sandbox.stub(),
+      }
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      ipcRenderer.invoke.onCall(0).resolves(0)
+      ipcRenderer.invoke.onCall(1).resolves(testDir)
+      ipcRenderer.invoke.resolves(testDir)
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
       store.dispatch(openUploadDraft());
       await logicMiddleware.whenComplete();
 
-      expect(openDialogStub.called).to.be.false;
+      expect(ipcRenderer.invoke).to.not.have.been.calledThrice;
     });
+
     it("sets error alert if something goes wrong while trying to save", async () => {
-      const writeFileStub = stub().rejects(new Error("uh oh!"));
-      sandbox.replace(mockReduxLogicDeps, "writeFile", writeFileStub);
-      const showMessageStub = stub().resolves({ response: 2 });
-      const showSaveDialogStub = stub().resolves({
-        cancelled: false,
-        filePath: "/",
-      });
-      sandbox.replace(dialog, "showMessageBox", showMessageStub);
-      sandbox.replace(dialog, "showSaveDialog", showSaveDialogStub);
+      const ipcRenderer = {
+        invoke: sandbox.stub(),
+        on: sandbox.stub(),
+        send: sandbox.stub(),
+      }
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      ipcRenderer.invoke.onCall(0).resolves(2)
+      ipcRenderer.invoke.onCall(1).resolves(testDir)
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
 
       store.dispatch(openUploadDraft());
       await logicMiddleware.whenComplete();
 
       expect(
-        actions.includesMatch(setErrorAlert("Could not save draft: uh oh!"))
+        actions.includesMatch({ type: SET_ALERT })
       ).to.be.true;
     });
-    it("shows open dialog and replaces upload using data from reading file selected by user", async () => {
-      const showMessageBoxStub = stub().resolves({ response: 1 });
-      const showOpenDialogStub = stub().resolves({
-        cancelled: false,
-        filePaths: ["/foo"],
-      });
-      const readFileStub = stub().resolves(JSON.stringify(mockState));
-      sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
-      sandbox.replace(dialog, "showOpenDialog", showOpenDialogStub);
-      sandbox.replace(mockReduxLogicDeps, "readFile", readFileStub);
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
-      );
 
+    it("shows open dialog and replaces upload using data from reading file selected by user", async () => {
+      // Arrange
+      const ipcRenderer = {
+        invoke: sandbox.stub(),
+        on: sandbox.stub(),
+        send: sandbox.stub(),
+      }
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      const testFile = path.resolve(testDir, "replacement");
+      ipcRenderer.invoke.onCall(0).resolves(1)
+      ipcRenderer.invoke.onCall(1).resolves(testFile)
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        nonEmptyStateForInitiatingUpload, mockDeps
+      );
+      await fs.promises.writeFile(testFile, JSON.stringify(mockState));
+
+      // Act
       store.dispatch(openUploadDraft());
       await logicMiddleware.whenComplete();
 
-      expect(showOpenDialogStub.called).to.be.true;
+      // Assert
+      expect(ipcRenderer.invoke).to.have.been.calledTwice;
       expect(actions.includesMatch({ type: REPLACE_UPLOAD })).to.be.true;
     });
+
     it("creates mapping for new plate barcode entries", async () => {
       // Arrange
-      const showMessageBoxStub = stub().resolves({ response: 1 });
-      const showOpenDialogStub = stub().resolves({
-        cancelled: false,
-        filePaths: ["/foo"],
-      });
       const plateBarcodeToPlates = {
         abc123: [{ wells: [] }],
         def456: [{ wells: [] }],
@@ -1766,13 +1827,22 @@ describe("Upload logics", () => {
           plateBarcodeToPlates,
         },
       };
-      const readFileStub = stub().resolves(JSON.stringify(draft));
-      sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
-      sandbox.replace(dialog, "showOpenDialog", showOpenDialogStub);
-      sandbox.replace(mockReduxLogicDeps, "readFile", readFileStub);
+      const testFile = path.resolve(testDir, "draft.json");
+      const ipcRenderer = {
+        invoke: sandbox.stub(),
+        on: sandbox.stub(),
+        send: sandbox.stub(),
+      }
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      ipcRenderer.invoke.onCall(0).resolves(1)
+      ipcRenderer.invoke.onCall(1).resolves(testFile)
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload
+        nonEmptyStateForInitiatingUpload, mockDeps
       );
+      await fs.promises.writeFile(testFile, JSON.stringify(draft));
 
       // Act
       store.dispatch(openUploadDraft());
@@ -1784,7 +1854,9 @@ describe("Upload logics", () => {
         actions.includesMatch(setPlateBarcodeToPlates(plateBarcodeToPlates))
       ).to.be.true;
     });
+
     it("converts date strings to date instances", async () => {
+      // Arrange
       const expectedUploadFile = {
         file: "abc123",
         [mockDateAnnotation.name]: [new Date("2021-03-04")],
@@ -1796,15 +1868,18 @@ describe("Upload logics", () => {
           abc123: expectedUploadFile,
         }),
       };
-      const showMessageBoxStub = stub().resolves({ response: 1 });
-      const showOpenDialogStub = stub().resolves({
-        cancelled: false,
-        filePaths: ["/foo"],
-      });
-      const readFileStub = stub().resolves(JSON.stringify(state));
-      sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
-      sandbox.replace(dialog, "showOpenDialog", showOpenDialogStub);
-      sandbox.replace(mockReduxLogicDeps, "readFile", readFileStub);
+      const ipcRenderer = {
+        invoke: sandbox.stub(),
+        on: sandbox.stub(),
+        send: sandbox.stub(),
+      }
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer
+      }
+      const testFile = path.resolve(testDir, "draftState");
+      ipcRenderer.invoke.onCall(0).resolves(1)
+      ipcRenderer.invoke.onCall(1).resolves(testFile)
       const { actions, logicMiddleware, store } = createMockReduxStore({
         ...nonEmptyStateForInitiatingUpload,
         metadata: {
@@ -1823,11 +1898,14 @@ describe("Upload logics", () => {
           ],
           annotationTypes: mockAnnotationTypes,
         },
-      });
+      }, mockDeps);
+      await fs.promises.writeFile(testFile, JSON.stringify(state));
 
+      // Act
       store.dispatch(openUploadDraft());
       await logicMiddleware.whenComplete();
 
+      // Assert
       expect(actions.includesMatch(addUploadFiles([expectedUploadFile]))).to.be
         .true;
     });
@@ -1909,7 +1987,7 @@ describe("Upload logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      expect(jssClient.updateJob.calledOnce).to.be.true;
+      expect(jssClient.updateJob).to.have.been.calledOnce;
     });
   });
   describe("cancelUploads", () => {

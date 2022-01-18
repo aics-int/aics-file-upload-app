@@ -8,7 +8,7 @@ jobs:
       - name: Initialize
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 16
       - name: Install Dependencies
         run: yarn
       - name: Lint

@@ -1,4 +1,4 @@
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { first } from "lodash";
 import * as React from "react";
 
@@ -12,7 +12,7 @@ interface WellProps {
   well: Well;
 }
 
-class WellComponent extends React.Component<WellProps, {}> {
+class WellComponent extends React.Component<WellProps, Record<string, any>> {
   constructor(props: WellProps) {
     super(props);
     this.getWellText = this.getWellText.bind(this);

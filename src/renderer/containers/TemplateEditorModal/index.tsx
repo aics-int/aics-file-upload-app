@@ -1,8 +1,8 @@
+import { DeleteOutlined, DragOutlined, EditOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Alert,
   Button,
   Checkbox,
-  Icon,
   Input,
   Modal,
   Popover,
@@ -17,10 +17,7 @@ import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CellProps, useTable, useBlockLayout, Column } from "react-table";
 
-import {
-  OPEN_TEMPLATE_MENU_ITEM_CLICKED,
-  SCHEMA_SYNONYM,
-} from "../../../shared/constants";
+import { MainProcessEvents, SCHEMA_SYNONYM } from "../../../shared/constants";
 import FormControl from "../../components/FormControl";
 import LabeledInput from "../../components/LabeledInput";
 import TemplateSearch from "../../components/TemplateSearch";
@@ -118,16 +115,13 @@ function TemplateEditorModal(props: Props) {
   ) as AsyncRequest[];
 
   const [showErrors, setShowErrors] = React.useState(false);
-  const [annotationSearchValue, setAnnotationSearchValue] = React.useState<
-    string
-  >();
+  const [annotationSearchValue, setAnnotationSearchValue] =
+    React.useState<string>();
   const [showAnnotationEditor, setShowAnnotationEditor] = React.useState(false);
-  const [annotationToEdit, setAnnotationToEdit] = React.useState<
-    AnnotationDraft
-  >();
-  const [focusedAnnotation, setFocusedAnnotation] = React.useState<
-    AnnotationDraft
-  >();
+  const [annotationToEdit, setAnnotationToEdit] =
+    React.useState<AnnotationDraft>();
+  const [focusedAnnotation, setFocusedAnnotation] =
+    React.useState<AnnotationDraft>();
 
   const isEditing = Boolean(template && template.templateId);
   const isLoading = requestsInProgress.some((r) =>
@@ -143,9 +137,15 @@ function TemplateEditorModal(props: Props) {
     function showModal() {
       dispatch(openModal("templateEditor"));
     }
-    ipcRenderer.on(OPEN_TEMPLATE_MENU_ITEM_CLICKED, showModal);
+    ipcRenderer.on(
+      MainProcessEvents.OPEN_TEMPLATE_MENU_ITEM_CLICKED,
+      showModal
+    );
     return () => {
-      ipcRenderer.removeListener(OPEN_TEMPLATE_MENU_ITEM_CLICKED, showModal);
+      ipcRenderer.removeListener(
+        MainProcessEvents.OPEN_TEMPLATE_MENU_ITEM_CLICKED,
+        showModal
+      );
     };
   }, [dispatch]);
 
@@ -233,7 +233,7 @@ function TemplateEditorModal(props: Props) {
       </div>
       <Button
         className={styles.createAnnotationButton}
-        icon="plus"
+        icon={<PlusOutlined />}
         onClick={() => setShowAnnotationEditor(true)}
       >
         Create new Annotation
@@ -274,7 +274,7 @@ function TemplateEditorModal(props: Props) {
         Cell: function DragCell() {
           return (
             <div className={styles.dragCell}>
-              <Icon type="drag" />
+              <DragOutlined />
             </div>
           );
         },
@@ -310,18 +310,15 @@ function TemplateEditorModal(props: Props) {
         Cell: function Actions(props: CellProps<AnnotationDraft>) {
           return (
             <div className={styles.actionCell}>
-              <Icon
-                type="search"
+              <SearchOutlined
                 title="View"
                 onClick={() => setFocusedAnnotation(props.row.original)}
               />
-              <Icon
-                type="edit"
+              <EditOutlined
                 title="Edit"
                 onClick={() => setAnnotationToEdit(props.row.original)}
               />
-              <Icon
-                type="delete"
+              <DeleteOutlined
                 title="Remove"
                 onClick={() => onRemoveAnnotation(props.row.index)}
               />
@@ -427,7 +424,7 @@ function TemplateEditorModal(props: Props) {
                 }
               />
               <Popover content={annotationOptionList} placement="right">
-                <Button icon="plus" className={styles.addAnnotationButton} />
+                <Button icon={<PlusOutlined />} className={styles.addAnnotationButton} />
               </Popover>
             </div>
             <div className={styles.annotationContainer}>

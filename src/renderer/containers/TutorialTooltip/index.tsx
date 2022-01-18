@@ -1,3 +1,4 @@
+import { CaretLeftOutlined, CaretRightOutlined, CheckOutlined } from "@ant-design/icons";
 import { Button, Popover } from "antd";
 import { isNil } from "lodash";
 import React from "react";
@@ -48,12 +49,12 @@ export default function TutorialTooltip(props: Props) {
           <Button
             className={styles.footerButton}
             disabled={isNil(previous)}
-            icon="caret-left"
+            icon={<CaretLeftOutlined />}
             onClick={() => dispatch(setTutorialTooltipStep(previous))}
           />
           <Button
             className={styles.footerButton}
-            icon={isNil(next) ? "check" : "caret-right"}
+            icon={isNil(next) ? <CheckOutlined /> : <CaretRightOutlined />}
             onClick={() => dispatch(setTutorialTooltipStep(next))}
           />
         </div>

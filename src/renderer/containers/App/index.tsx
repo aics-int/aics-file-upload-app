@@ -1,16 +1,14 @@
 import "@aics/aics-react-labkey/dist/styles.css";
 import { message } from "antd";
-import { ipcRenderer, remote } from "electron";
+import { ipcRenderer } from "electron";
 import { camelizeKeys } from "humps";
 import * as React from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
-  OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED,
-  SAFELY_CLOSE_WINDOW,
-  SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED,
-  SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED,
+  MainProcessEvents,
+  RendererProcessEvents,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
 import { FSSUpload } from "../../services/file-storage-service";
@@ -104,7 +102,7 @@ export default function App() {
     });
 
     eventSource.addEventListener("jobInsert", (event: MessageEvent) => {
-      const job = camelizeKeys(JSON.parse(event.data)) as JSSJob;
+      const job = camelizeKeys(JSON.parse(event.data) as object) as JSSJob;
       // Separate user's other jobs from ones created by this app
       if (job.serviceFields?.type === "upload") {
         dispatch(receiveJobInsert(job as UploadJob));
@@ -112,7 +110,7 @@ export default function App() {
     });
 
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
-      const job = camelizeKeys(JSON.parse(event.data)) as JSSJob;
+      const job = camelizeKeys(JSON.parse(event.data) as object) as JSSJob;
       // An FSS job update is only important to us when it is signaling
       // the addition of the fileId i.e. FSS's completion or has failed
       if (
@@ -145,51 +143,56 @@ export default function App() {
 
   // Event handlers for menu events
   useEffect(() => {
-    ipcRenderer.on(SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED, () =>
-      dispatch(openEnvironmentDialog())
+    ipcRenderer.on(MainProcessEvents.OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED, () =>
+      dispatch(openUploadDraft())
     );
-    ipcRenderer.on(SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED, () =>
+    ipcRenderer.on(MainProcessEvents.SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED, () =>
       dispatch(saveUploadDraft(true))
     );
-    ipcRenderer.on(OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED, () =>
-      dispatch(openUploadDraft())
+    ipcRenderer.on(MainProcessEvents.SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED, () =>
+      dispatch(openEnvironmentDialog())
     );
 
     return function cleanUp() {
-      ipcRenderer.removeAllListeners(SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED);
-      ipcRenderer.removeAllListeners(SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED);
-      ipcRenderer.removeAllListeners(OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED);
+      ipcRenderer.removeAllListeners(
+        MainProcessEvents.SWITCH_ENVIRONMENT_MENU_ITEM_CLICKED
+      );
+      ipcRenderer.removeAllListeners(
+        MainProcessEvents.SAVE_UPLOAD_DRAFT_MENU_ITEM_CLICKED
+      );
+      ipcRenderer.removeAllListeners(
+        MainProcessEvents.OPEN_UPLOAD_DRAFT_MENU_ITEM_CLICKED
+      );
     };
   }, [dispatch]);
 
   // This one needs a special event handler that will be recreated whenever
   // `isSafeToExit` changes, since it is reliant on that value.
   useEffect(() => {
-    ipcRenderer.on(SAFELY_CLOSE_WINDOW, () => {
-      const warning =
-        "Uploads are in progress. Exiting now may cause incomplete uploads to be abandoned and" +
-        " will need to be manually cancelled. Are you sure?";
+    ipcRenderer.on(MainProcessEvents.SAFELY_CLOSE_WINDOW, async () => {
       if (isSafeToExit) {
-        remote.app.exit();
+        ipcRenderer.send(RendererProcessEvents.CLOSE_WINDOW);
       } else {
-        remote.dialog
-          .showMessageBox({
+        const warning =
+          "Uploads are in progress. Exiting now may cause incomplete uploads to be abandoned and" +
+          " will need to be manually cancelled. Are you sure?";
+        const buttonIndex = await ipcRenderer.invoke(
+          RendererProcessEvents.SHOW_MESSAGE_BOX,
+          {
             buttons: ["Cancel", "Close Anyways"],
             message: warning,
             title: "Danger!",
             type: "warning",
-          })
-          .then((value: Electron.MessageBoxReturnValue) => {
-            // value.response corresponds to button index
-            if (value.response === 1) {
-              remote.app.exit();
-            }
-          });
+          }
+        );
+        if (buttonIndex === 1) {
+          ipcRenderer.send(RendererProcessEvents.CLOSE_WINDOW);
+        }
       }
     });
 
     return function cleanUp() {
-      ipcRenderer.removeAllListeners(SAFELY_CLOSE_WINDOW);
+      ipcRenderer.removeAllListeners(MainProcessEvents.SAFELY_CLOSE_WINDOW);
     };
   }, [isSafeToExit, dispatch]);
 

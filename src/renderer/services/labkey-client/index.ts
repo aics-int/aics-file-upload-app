@@ -68,9 +68,8 @@ export default class LabkeyClient extends HttpCacheClient {
     this.getChannels = this.getChannels.bind(this);
     this.getTemplateHasBeenUsed = this.getTemplateHasBeenUsed.bind(this);
     this.findPlateByWellId = this.findPlateByWellId.bind(this);
-    this.findImagingSessionsByPlateBarcode = this.findImagingSessionsByPlateBarcode.bind(
-      this
-    );
+    this.findImagingSessionsByPlateBarcode =
+      this.findImagingSessionsByPlateBarcode.bind(this);
     this.fileExistsByNameAndMD5 = this.fileExistsByNameAndMD5.bind(this);
     this.selectRows = this.selectRows.bind(this);
     this.selectFirst = this.selectFirst.bind(this);
@@ -431,8 +430,7 @@ export default class LabkeyClient extends HttpCacheClient {
       ? {
           ...response,
           rows: response["rows"].map(
-            (row: any) =>
-              (camelizeKeys(pick(row, Object.keys(row))) as any) as T
+            (row: any) => camelizeKeys(pick(row, Object.keys(row))) as any as T
           ),
         }
       : { rows: [] };

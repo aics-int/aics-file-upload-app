@@ -1,4 +1,5 @@
-import { Icon, Tooltip } from "antd";
+import { CloseCircleFilled } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import classNames from "classnames";
 import moment from "moment";
 import * as React from "react";
@@ -237,10 +238,8 @@ export default function DisplayCell(props: Props) {
               mouseEnterDelay={TOOLTIP_ENTER_DELAY}
               mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
             >
-              <Icon
+              <CloseCircleFilled
                 className={styles.errorIcon}
-                type="close-circle"
-                theme="filled"
               />
             </Tooltip>
           )}

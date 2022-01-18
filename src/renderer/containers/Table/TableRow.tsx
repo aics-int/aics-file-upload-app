@@ -1,3 +1,4 @@
+import { Dropdown } from "antd";
 import classNames from "classnames";
 import { isEqual } from "lodash";
 import * as React from "react";
@@ -13,10 +14,10 @@ const styles = require("./styles.pcss");
 
 export const DRAG_HANDLER_COLUMN = "--";
 
-interface Props<T extends {}> extends Row<T> {
+interface Props<T extends Record<string, any>> extends Row<T> {
   draggableState: DraggableStateSnapshot;
   draggableProps: DraggableProvided;
-  onContextMenu?: (row: Row<T>, onCloseCallback: () => void) => void;
+  getContextMenuItems?: (row: Row<T>) => React.ReactElement;
   rowStyle?: React.CSSProperties;
 }
 
@@ -26,17 +27,16 @@ interface Props<T extends {}> extends Row<T> {
  * out into a memoized component allows the app to keep up with rapid updates from
  * sources like the copy progress updater.
  */
-function TableRow<T extends {}>(props: Props<T>) {
+function TableRow<T extends Record<string, any>>(props: Props<T>) {
   const [isHighlighted, setIsHighlighted] = React.useState(false);
 
   function onContextMenu() {
-    if (props.onContextMenu) {
+    if (props.getContextMenuItems) {
       setIsHighlighted(true);
-      props.onContextMenu(props, () => setIsHighlighted(false));
     }
   }
 
-  return (
+  const content = (
     <div
       {...props.draggableProps.draggableProps}
       {...props.getRowProps({
@@ -72,7 +72,17 @@ function TableRow<T extends {}>(props: Props<T>) {
         </div>
       ))}
     </div>
-  );
+  )
+
+  if (!props.getContextMenuItems) {
+    return content;
+  }
+
+  return (
+    <Dropdown overlay={props.getContextMenuItems(props)} trigger={['contextMenu']} onVisibleChange={(isVisible) => !isVisible && setIsHighlighted(false)}>
+        {content}
+    </Dropdown>
+  )
 }
 
 // Memoize the component
@@ -93,11 +103,11 @@ const TableRowMemoized = React.memo(
     )
 ) as typeof TableRow;
 
-interface ItemData<T extends {}> {
+interface ItemData<T extends Record<string, any>> {
   draggableState?: DraggableStateSnapshot;
   draggableProps?: DraggableProvided;
   dropSourceId?: string;
-  onContextMenu?: (row: Row<T>, onCloseCallback: () => void) => void;
+  getContextMenuItems?: (row: Row<T>) => React.ReactElement;
   prepareRow: (row: Row<T>) => void;
   rows: Row<T>[];
 }
@@ -129,7 +139,7 @@ export default function TableRowRenderer({
       <TableRowMemoized
         {...row}
         rowStyle={style}
-        onContextMenu={data.onContextMenu}
+        getContextMenuItems={data.getContextMenuItems}
         draggableState={data.draggableState}
         draggableProps={data.draggableProps}
       />
@@ -147,7 +157,7 @@ export default function TableRowRenderer({
         <TableRowMemoized
           {...row}
           rowStyle={style}
-          onContextMenu={data.onContextMenu}
+          getContextMenuItems={data.getContextMenuItems}
           draggableState={draggableState}
           draggableProps={draggableProps}
         />

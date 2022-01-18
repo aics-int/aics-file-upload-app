@@ -3,9 +3,7 @@ import { DropResult } from "react-beautiful-dnd";
 import { AnyAction } from "redux";
 import {
   createSandbox,
-  SinonStub,
   SinonStubbedInstance,
-  stub,
   createStubInstance,
 } from "sinon";
 
@@ -18,7 +16,6 @@ import { receiveMetadata } from "../../metadata/actions";
 import { openTemplateEditor } from "../../selection/actions";
 import {
   createMockReduxStore,
-  dialog,
   mockReduxLogicDeps,
 } from "../../test/configure-mock-store";
 import {
@@ -485,13 +482,10 @@ describe("Template Logics", () => {
         },
       };
     });
-    const stubMethods = (showMessageBoxOverride?: SinonStub) => {
-      const showMessageBoxStub =
-        showMessageBoxOverride || stub().resolves({ response: 1 });
-      sandbox.replace(dialog, "showMessageBox", showMessageBoxStub);
+    const stubMethods = () => {
+      mockReduxLogicDeps.ipcRenderer.invoke.resolves(1);
       mmsClient.editTemplate.resolves(1);
       mmsClient.createTemplate.resolves(1);
-      return { showMessageBoxStub };
     };
 
     it("calls editTemplate endpoint if draft has template id", async () => {
@@ -559,11 +553,7 @@ describe("Template Logics", () => {
       ).to.be.true;
     });
     it("dispatches saveTemplateSucceeded if template was saved successfully", async () => {
-      sandbox.replace(
-        dialog,
-        "showMessageBox",
-        stub().resolves({ response: 1 })
-      );
+      mockReduxLogicDeps.ipcRenderer.invoke.resolves(1);
       mmsClient.editTemplate.resolves(1);
       const { actions, logicMiddleware, store } = createMockReduxStore(
         stateWithChangedTemplateDraft
@@ -575,11 +565,7 @@ describe("Template Logics", () => {
       expect(actions.includesMatch(saveTemplateSucceeded(1))).to.be.true;
     });
     it("dispatches requestFailed if booleanAnnotationTypeId is not defined", async () => {
-      sandbox.replace(
-        dialog,
-        "showMessageBox",
-        stub().resolves({ response: 1 })
-      );
+      mockReduxLogicDeps.ipcRenderer.invoke.resolves(1);
       mmsClient.editTemplate.resolves(1);
       const { actions, logicMiddleware, store } = createMockReduxStore({
         ...stateWithChangedTemplateDraft,
@@ -602,11 +588,7 @@ describe("Template Logics", () => {
       );
     });
     it("dispatches requestFailed if getTemplate fails", async () => {
-      sandbox.replace(
-        dialog,
-        "showMessageBox",
-        stub().resolves({ response: 1 })
-      );
+      mockReduxLogicDeps.ipcRenderer.invoke.resolves(1);
       mmsClient.editTemplate.resolves(1);
       mmsClient.getTemplate.rejects({
         response: {

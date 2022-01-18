@@ -12,9 +12,8 @@ export default class JSSResponseMapper {
     }
     return {
       ...job,
-      [SERVICE_FIELD_NAME]: JSSResponseMapper.expandArrayLikeDictionariesToArrays(
-        serviceFields
-      ),
+      [SERVICE_FIELD_NAME]:
+        JSSResponseMapper.expandArrayLikeDictionariesToArrays(serviceFields),
     };
   }
 
@@ -30,18 +29,16 @@ export default class JSSResponseMapper {
     forOwn(rawServiceField, (value: any, key: string) => {
       // Replace occurrences of (dot) with actual dots in keys
       const convertedKey = key.replace(/\(dot\)/g, ".");
-      result[convertedKey] = JSSResponseMapper.expandDictionaryIfArrayLike(
-        value
-      );
+      result[convertedKey] =
+        JSSResponseMapper.expandDictionaryIfArrayLike(value);
     });
     return result;
   }
 
   // If a dictionary seems to be array like then convert it into an array
   private static expandDictionaryIfArrayLike(value: any): any {
-    const convertedValue = JSSResponseMapper.expandArrayLikeDictionariesToArrays(
-      value
-    );
+    const convertedValue =
+      JSSResponseMapper.expandArrayLikeDictionariesToArrays(value);
     if (value && isPlainObject(value)) {
       const keysAreIndexes = Object.keys(value)
         .sort()

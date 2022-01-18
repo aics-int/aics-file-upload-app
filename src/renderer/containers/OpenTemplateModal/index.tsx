@@ -1,11 +1,11 @@
 import { Modal } from "antd";
-import * as classNames from "classnames";
+import classNames from "classnames";
 import { ipcRenderer } from "electron";
 import * as React from "react";
 import { connect } from "react-redux";
 import { ActionCreator } from "redux";
 
-import { OPEN_OPEN_TEMPLATE_MODAL } from "../../../shared/constants";
+import { MainProcessEvents } from "../../../shared/constants";
 import TemplateSearch from "../../components/TemplateSearch";
 import { closeModal, openModal } from "../../state/feedback/actions";
 import { getOpenTemplateModalVisible } from "../../state/feedback/selectors";
@@ -27,13 +27,16 @@ interface Props {
   visible: boolean;
 }
 
-class OpenTemplateModal extends React.Component<Props, {}> {
+class OpenTemplateModal extends React.Component<Props, Record<string, any>> {
   public componentDidMount(): void {
-    ipcRenderer.on(OPEN_OPEN_TEMPLATE_MODAL, this.openModal);
+    ipcRenderer.on(MainProcessEvents.OPEN_OPEN_TEMPLATE_MODAL, this.openModal);
   }
 
   public componentWillUnmount(): void {
-    ipcRenderer.removeListener(OPEN_OPEN_TEMPLATE_MODAL, this.openModal);
+    ipcRenderer.removeListener(
+      MainProcessEvents.OPEN_OPEN_TEMPLATE_MODAL,
+      this.openModal
+    );
   }
 
   public render() {

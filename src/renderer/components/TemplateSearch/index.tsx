@@ -1,7 +1,7 @@
-import { Divider, Icon, Select, Form, Alert } from "antd";
-import * as classNames from "classnames";
+import { PlusCircleOutlined } from "@ant-design/icons";
+import { Divider, Select, Form, Alert } from "antd";
+import classNames from "classnames";
 import { sortBy } from "lodash";
-import { ReactNode } from "react";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -92,7 +92,7 @@ export default function TemplateSearch(props: TemplateSearchProps) {
           className={classNames(styles.container, className)}
           defaultOpen={defaultOpen}
           disabled={disabled || (loading && !templates)}
-          dropdownRender={(menu: ReactNode | undefined) => (
+          dropdownRender={(menu: React.ReactNode | undefined) => (
             <div>
               {menu}
               {allowCreate && (
@@ -114,7 +114,7 @@ export default function TemplateSearch(props: TemplateSearchProps) {
                       }
                     }}
                   >
-                    <Icon className={styles.icon} type="plus-circle" />
+                    <PlusCircleOutlined className={styles.icon} />
                     <span className={styles.text}>Create {SCHEMA_SYNONYM}</span>
                   </div>
                 </>

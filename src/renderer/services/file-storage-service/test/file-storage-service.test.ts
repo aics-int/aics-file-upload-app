@@ -11,11 +11,11 @@ describe("FileStorageService", () => {
   const storage = sandbox.createStubInstance(EnvironmentAwareStorage);
   const httpClient = sandbox.createStubInstance(HttpCacheClient);
   // Stub `get` specifically, since it is a class property and not on the prototype
-  storage.get = sandbox.stub();
+  storage.get = sandbox.stub() as any;
 
   const fss = new FileStorageService(
-    (httpClient as any) as HttpCacheClient,
-    (storage as any) as LocalStorage
+    httpClient as any as HttpCacheClient,
+    storage as any as LocalStorage
   );
 
   afterEach(() => {
@@ -42,9 +42,7 @@ describe("FileStorageService", () => {
       const fileSize = 13941234;
       const md5 = "13249012341234";
       const expectedPostBody = {
-        // eslint-disable-next-line @typescript-eslint/camelcase
         file_name: fileName,
-        // eslint-disable-next-line @typescript-eslint/camelcase
         file_size: fileSize,
         MD5: md5,
       };

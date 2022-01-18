@@ -1,10 +1,4 @@
-import {
-  ipcRenderer,
-  Menu,
-  MessageBoxOptions,
-  OpenDialogOptions,
-  Remote,
-} from "electron";
+import { ipcRenderer, MessageBoxOptions, OpenDialogOptions } from "electron";
 import { AnyAction } from "redux";
 import { CreateLogic } from "redux-logic/definitions/logic";
 import { StateWithHistory } from "redux-undo";
@@ -56,15 +50,6 @@ export interface BatchedAction {
   payload: AnyAction[];
 }
 
-export interface Logger {
-  debug: (...x: any[]) => void;
-  error: (...x: any[]) => void;
-  info: (...x: any[]) => void;
-  time: (timerName: string) => void;
-  timeEnd: (timerName: string) => void;
-  warn: (...x: any[]) => void;
-}
-
 export interface Dialog {
   showOpenDialog(
     options: OpenDialogOptions
@@ -77,42 +62,28 @@ export interface Dialog {
   ): Promise<Electron.SaveDialogReturnValue>;
 }
 
-export interface ReduxLogicExtraDependencies {
+export interface ReduxLogicExtraDependencies<Action extends AnyAction = AnyAction> {
+  action: Action;
   applicationInfoService: ApplicationInfoService;
   ctx?: any;
-  dialog: Dialog;
   fms: FileManagementSystem;
-  getApplicationMenu: () => Menu | null;
   ipcRenderer: typeof ipcRenderer;
+  getState: () => State;
   jssClient: JobStatusService;
   labkeyClient: LabkeyClient;
-  logger: Logger;
   mmsClient: MetadataManagementService;
-  readFile: (filePath: string, encoding?: string) => Promise<string | Buffer>;
-  remote: Remote;
   storage: LocalStorage;
-  writeFile: (filePath: string, content: string | Buffer) => Promise<void>;
 }
 
-export type ReduxLogicProcessDependencies = Process.DepObj<
-  State,
-  AnyAction,
-  ReduxLogicExtraDependencies,
-  undefined
->;
-export type ReduxLogicProcessDependenciesWithAction<
-  Action extends AnyAction
-> = Process.DepObj<State, Action, ReduxLogicExtraDependencies>;
-export type ReduxLogicTransformDependencies = DepObj<
-  State,
-  AnyAction,
-  ReduxLogicExtraDependencies
->;
-export type ReduxLogicTransformDependenciesWithAction<Action> = DepObj<
+export type ReduxLogicProcessDependenciesWithAction<Action extends AnyAction> =
+  Process.DepObj<State, Action, ReduxLogicExtraDependencies<Action>>;
+export type ReduxLogicProcessDependencies = ReduxLogicProcessDependenciesWithAction<AnyAction>;
+export type ReduxLogicTransformDependenciesWithAction<Action extends AnyAction> = DepObj<
   State,
   Action,
-  ReduxLogicExtraDependencies
+  ReduxLogicExtraDependencies<Action>
 >;
+export type ReduxLogicTransformDependencies = ReduxLogicTransformDependenciesWithAction<AnyAction>;
 
 export type ReduxLogicNextCb = (action: AnyAction) => void;
 export type ReduxLogicRejectCb = (action: AnyAction) => void;

@@ -42,7 +42,7 @@ describe("Setting logics", () => {
     labkeyClient = createStubInstance(LabkeyClient);
     storage = createStubInstance(EnvironmentAwareStorage);
     // Stub `get` specifically, since it is a class property and not on the prototype
-    storage.get = stub();
+    storage.get = stub() as any;
     replace(mockReduxLogicDeps, "storage", storage);
     replace(mockReduxLogicDeps, "labkeyClient", labkeyClient);
   });
@@ -136,27 +136,22 @@ describe("Setting logics", () => {
   describe("openEnvironmentDialogLogic", () => {
     it("updates settings in storage and reloads the app", async () => {
       // Arrange
-      const dialogMock = {
-        showMessageBox: stub().resolves({ response: 1 }),
-        showOpenDialog: stub(),
-        showSaveDialog: stub(),
-      };
-
       const storageMock = createStubInstance(EnvironmentAwareStorage);
 
-      const reloadStub = stub();
-      const remoteMock = {
-        getCurrentWindow: stub().returns({ reload: reloadStub }),
-      };
-
+      const ipcRenderer = {
+        on: stub(),
+        send: stub(),
+        invoke: stub(),
+      }
+      ipcRenderer.invoke.resolves(1);
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        ipcRenderer,
+        storage: storageMock,
+      }
       const { actions, logicMiddleware, store } = createMockReduxStore(
         undefined,
-        {
-          ...mockReduxLogicDeps,
-          dialog: dialogMock,
-          remote: remoteMock,
-          storage: storageMock,
-        }
+        mockDeps
       );
 
       // Act
@@ -164,10 +159,10 @@ describe("Setting logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      expect(dialogMock.showMessageBox).to.have.been.calledOnce;
+      expect(ipcRenderer.invoke).to.have.been.calledOnce;
       // `set` will be called once for each key of the LIMS URL settings
       expect(storageMock.set).to.have.been.calledThrice;
-      expect(reloadStub).to.have.been.calledOnce;
+      expect(ipcRenderer.send).to.have.been.calledOnce;
       expect(actions.list).to.deep.equal([openEnvironmentDialog()]);
     });
 
@@ -182,19 +177,17 @@ describe("Setting logics", () => {
       const storageMock = createStubInstance(EnvironmentAwareStorage);
       storageMock.set.throws(new Error("Problem persisting settings!"));
 
-      const reloadStub = stub();
-      const remoteMock = {
-        getCurrentWindow: stub().returns({ reload: reloadStub }),
-      };
+      const mockDeps = {
+        ...mockReduxLogicDeps,
+        dialog: dialogMock,
+        storage: storageMock,
+      }
+
+      mockDeps.ipcRenderer.invoke.resolves(1);
 
       const { actions, logicMiddleware, store } = createMockReduxStore(
         undefined,
-        {
-          ...mockReduxLogicDeps,
-          dialog: dialogMock,
-          remote: remoteMock,
-          storage: storageMock,
-        }
+        mockDeps
       );
 
       // Act

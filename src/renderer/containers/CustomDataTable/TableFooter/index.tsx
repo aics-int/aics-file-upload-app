@@ -1,9 +1,10 @@
 import { Button } from "antd";
-import { OpenDialogOptions, remote } from "electron";
+import { ipcRenderer, OpenDialogOptions } from "electron";
 import { isEmpty } from "lodash";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { RendererProcessEvents } from "../../../../shared/constants";
 import { loadFiles } from "../../../state/selection/actions";
 import { getIsExistingUpload } from "../../../state/selection/selectors";
 
@@ -27,12 +28,14 @@ export default function TableFooter() {
   }
 
   async function openFileBrowser() {
-    const { filePaths: filenames } = await remote.dialog.showOpenDialog(
+    const filePaths = await ipcRenderer.invoke(
+      RendererProcessEvents.SHOW_DIALOG,
       openDialogOptions
     );
+
     // If cancel is clicked, this callback gets called and filenames is undefined
-    if (!isEmpty(filenames)) {
-      dispatch(loadFiles(filenames));
+    if (!isEmpty(filePaths)) {
+      dispatch(loadFiles(filePaths));
     }
   }
 

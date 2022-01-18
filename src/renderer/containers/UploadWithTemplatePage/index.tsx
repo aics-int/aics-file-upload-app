@@ -3,7 +3,7 @@ import { ipcRenderer, OpenDialogOptions } from "electron";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { PLATE_CREATED, SCHEMA_SYNONYM } from "../../../shared/constants";
+import { MainProcessEvents, SCHEMA_SYNONYM } from "../../../shared/constants";
 import DragAndDrop from "../../components/DragAndDrop";
 import LabeledInput from "../../components/LabeledInput";
 import TemplateSearch from "../../components/TemplateSearch";
@@ -64,22 +64,25 @@ export default function UploadWithTemplatePage() {
 
   // Listen for barcode creation events
   React.useEffect(() => {
-    ipcRenderer.on(PLATE_CREATED, (_, uploadKey, barcode, imagingSessionId) => {
-      const imagingSession = imagingSessions.find(
-        (is) => is.imagingSessionId === imagingSessionId
-      );
-      dispatch(
-        updateUpload(uploadKey, {
-          [AnnotationName.PLATE_BARCODE]: [barcode],
-          [AnnotationName.IMAGING_SESSION]: imagingSession
-            ? [imagingSession.name]
-            : [],
-        })
-      );
-    });
+    ipcRenderer.on(
+      MainProcessEvents.PLATE_CREATED,
+      (_, uploadKey, barcode, imagingSessionId) => {
+        const imagingSession = imagingSessions.find(
+          (is) => is.imagingSessionId === imagingSessionId
+        );
+        dispatch(
+          updateUpload(uploadKey, {
+            [AnnotationName.PLATE_BARCODE]: [barcode],
+            [AnnotationName.IMAGING_SESSION]: imagingSession
+              ? [imagingSession.name]
+              : [],
+          })
+        );
+      }
+    );
 
     return function cleanUp() {
-      ipcRenderer.removeAllListeners(PLATE_CREATED);
+      ipcRenderer.removeAllListeners(MainProcessEvents.PLATE_CREATED);
     };
   }, [dispatch, imagingSessions]);
 

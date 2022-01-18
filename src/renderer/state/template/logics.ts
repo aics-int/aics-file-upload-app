@@ -1,7 +1,6 @@
 import { get, includes, isNil } from "lodash";
 import { createLogic } from "redux-logic";
 
-import { OPEN_TEMPLATE_MENU_ITEM_CLICKED } from "../../../shared/constants";
 import {
   SaveTemplateRequest,
   TemplateAnnotation,
@@ -18,6 +17,7 @@ import {
   getLookups,
   getUserIdToDisplayName,
 } from "../metadata/selectors";
+import { OPEN_TEMPLATE_EDITOR } from "../selection/constants";
 import { getApplyTemplateInfo, getWithRetry } from "../stateHelpers";
 import {
   AlertType,
@@ -86,11 +86,8 @@ const createAnnotation = createLogic({
           labkeyClient.getAnnotationOptions(),
           labkeyClient.getAnnotationLookups(),
         ]);
-      const [
-        annotations,
-        annotationOptions,
-        annotationLookups,
-      ] = await getWithRetry(request, dispatch);
+      const [annotations, annotationOptions, annotationLookups] =
+        await getWithRetry(request, dispatch);
       dispatch(
         receiveMetadata(
           { annotationOptions, annotations, annotationLookups },
@@ -138,11 +135,8 @@ const editAnnotation = createLogic({
           labkeyClient.getAnnotationOptions(),
           labkeyClient.getAnnotationLookups(),
         ]);
-      const [
-        annotations,
-        annotationOptions,
-        annotationLookups,
-      ] = await getWithRetry(request, dispatch);
+      const [annotations, annotationOptions, annotationLookups] =
+        await getWithRetry(request, dispatch);
       dispatch(
         receiveMetadata(
           { annotationOptions, annotations, annotationLookups },
@@ -228,7 +222,7 @@ const openTemplateEditorLogic = createLogic({
     }
     done();
   },
-  type: OPEN_TEMPLATE_MENU_ITEM_CLICKED,
+  type: OPEN_TEMPLATE_EDITOR,
 });
 
 const addExistingAnnotationLogic = createLogic({
@@ -327,9 +321,7 @@ const removeAnnotationsLogic = createLogic({
 
 const onTemplateAnnotationDragEndLogic = createLogic({
   transform: (
-    deps: ReduxLogicTransformDependenciesWithAction<
-      OnTemplateAnnotationDragEndAction
-    >,
+    deps: ReduxLogicTransformDependenciesWithAction<OnTemplateAnnotationDragEndAction>,
     next: ReduxLogicNextCb,
     reject?: ReduxLogicRejectCb
   ) => {

@@ -43,7 +43,6 @@ export const handleAbandonedJobsLogic = createLogic({
     {
       action,
       fms,
-      logger,
     }: ReduxLogicProcessDependenciesWithAction<ReceiveJobsAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -57,7 +56,6 @@ export const handleAbandonedJobsLogic = createLogic({
         try {
           // Alert user to abandoned job
           const info = `Checking to see if "${abandonedUpload.jobName}" was abandoned and can be resumed or retried.`;
-          logger.info(info);
           dispatch(setInfoAlert(info));
 
           const onProgress = (
@@ -69,7 +67,7 @@ export const handleAbandonedJobsLogic = createLogic({
           await fms.retry(abandonedUpload.jobId, onProgress);
         } catch (e) {
           const message = `Retry for upload "${abandonedUpload.jobName}" failed: ${e.message}`;
-          logger.error(message, e);
+          console.error(message, e);
           dispatch(setErrorAlert(message));
         }
       })
@@ -148,9 +146,7 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
       action,
       fms,
       getState,
-    }: ReduxLogicProcessDependenciesWithAction<
-      ReceiveFSSJobCompletionUpdateAction
-    >,
+    }: ReduxLogicProcessDependenciesWithAction<ReceiveFSSJobCompletionUpdateAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
@@ -189,9 +185,7 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
     {
       action,
       getState,
-    }: ReduxLogicTransformDependenciesWithAction<
-      ReceiveFSSJobCompletionUpdateAction
-    >,
+    }: ReduxLogicTransformDependenciesWithAction<ReceiveFSSJobCompletionUpdateAction>,
     next: ReduxLogicNextCb,
     reject: ReduxLogicRejectCb
   ) => {

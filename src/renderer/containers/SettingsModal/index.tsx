@@ -53,9 +53,8 @@ const notificationSettingsItems = [
 export default function SettingsModal({ visible }: { visible: boolean }) {
   const dispatch = useDispatch();
   const editableSettings = useSelector(getEditableSettings);
-  const [settingsDraft, setSettingsDraft] = React.useState<
-    Partial<SettingStateBranch>
-  >(editableSettings);
+  const [settingsDraft, setSettingsDraft] =
+    React.useState<Partial<SettingStateBranch>>(editableSettings);
 
   // Reset the draft settings whenever the ones in the store
   // change. This is technically derived state, which should be avoided, but

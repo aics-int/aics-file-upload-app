@@ -1,3 +1,7 @@
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+
 import { expect } from "chai";
 import {
   createStubInstance,
@@ -19,7 +23,7 @@ import {
 import { ReduxLogicTransformDependencies, UploadStateBranch } from "../types";
 import { getUploadRowKey } from "../upload/constants";
 
-import { dialog, mockReduxLogicDeps } from "./configure-mock-store";
+import { mockReduxLogicDeps } from "./configure-mock-store";
 import {
   mockBooleanAnnotation,
   mockFavoriteColorTemplateAnnotation,
@@ -44,7 +48,7 @@ describe("State helpers", () => {
     beforeEach(() => {
       requestStub = stub();
       dispatchStub = stub();
-      const setTimeoutStub = (stub().callsArg(0) as any) as typeof setTimeout;
+      const setTimeoutStub = stub().callsArg(0) as any as typeof setTimeout;
       replace(global, "setTimeout", setTimeoutStub);
     });
 
@@ -172,7 +176,7 @@ describe("State helpers", () => {
       return expect(
         getApplyTemplateInfo(
           1,
-          (mmsClient as any) as MetadataManagementService,
+          mmsClient as any as MetadataManagementService,
           stub(),
           mockBooleanAnnotation.annotationTypeId,
           uploads,
@@ -182,17 +186,15 @@ describe("State helpers", () => {
     });
     it("returns setAppliedTemplate action with template returned from MMS and expected upload", async () => {
       mmsClient.getTemplate.resolves(template);
-      const {
-        template: resultTemplate,
-        uploads: uploadsResult,
-      } = await getApplyTemplateInfo(
-        1,
-        (mmsClient as any) as MetadataManagementService,
-        stub(),
-        mockBooleanAnnotation.annotationTypeId,
-        uploads,
-        previouslyAppliedTemplate
-      );
+      const { template: resultTemplate, uploads: uploadsResult } =
+        await getApplyTemplateInfo(
+          1,
+          mmsClient as any as MetadataManagementService,
+          stub(),
+          mockBooleanAnnotation.annotationTypeId,
+          uploads,
+          previouslyAppliedTemplate
+        );
       expect(resultTemplate).to.deep.equal(template);
       // the Age annotation goes away since it's not part of the applied template
       expect(uploadsResult).to.deep.equal({
@@ -215,112 +217,113 @@ describe("State helpers", () => {
   });
 
   describe("ensureDraftGetsSaved", () => {
+    const testDir = path.resolve(os.tmpdir(), "stateHelpersTest");
+
+    before(async () => {
+      await fs.promises.mkdir(testDir);
+    })
+
+    after(async () => {
+      await fs.promises.rm(testDir, { recursive: true });
+    })
+
     const runTest = async (
       skipWarningDialog: boolean,
       showMessageBoxResponse?: number,
       currentUploadFilePath?: string,
       saveFilePath?: string
     ) => {
-      const writeFileStub = stub();
-      const showMessageBoxStub = stub().resolves({
-        response: showMessageBoxResponse,
-      });
-      replace(dialog, "showMessageBox", showMessageBoxStub);
-      const showSaveDialogStub = stub().resolves({ filePath: saveFilePath });
-      replace(dialog, "showSaveDialog", showSaveDialogStub);
-      const deps = ({
+      const ipcRenderer = {
+        invoke: stub(),
+      }
+      const deps = {
         ...mockReduxLogicDeps,
+        ipcRenderer,
         getState: () => ({}),
-        writeFile: writeFileStub,
-      } as any) as ReduxLogicTransformDependencies;
+      };
+
+
+      if (!skipWarningDialog) {
+        ipcRenderer.invoke.onCall(0).resolves(showMessageBoxResponse);
+        ipcRenderer.invoke.onCall(1).resolves(saveFilePath);
+      } else {
+        ipcRenderer.invoke.onCall(0).resolves(saveFilePath);
+      }
 
       const result = await ensureDraftGetsSaved(
-        deps,
+        deps as any as ReduxLogicTransformDependencies,
         true,
         currentUploadFilePath,
         skipWarningDialog
       );
-      return { result, showMessageBoxStub, showSaveDialogStub, writeFileStub };
+      return { result, invokeStub: ipcRenderer.invoke as SinonStub };
     };
+
     it("automatically saves draft if user is working on a draft that has previously been saved", async () => {
-      const {
-        showMessageBoxStub,
-        showSaveDialogStub,
-        writeFileStub,
-      } = await runTest(false, undefined, "/foo");
-      expect(writeFileStub.called).to.be.true;
-      expect(showMessageBoxStub.called).to.be.false;
-      expect(showSaveDialogStub.called).to.be.false;
+      const { invokeStub } =
+        await runTest(false, undefined, path.resolve(testDir, "testDraft"));
+      expect(invokeStub).to.not.have.been.called;
     });
+
     it("shows warning dialog if skipWarningDialog is false", async () => {
-      const { showMessageBoxStub } = await runTest(false);
-      expect(showMessageBoxStub.called).to.be.true;
+      const { invokeStub } = await runTest(false);
+      expect(invokeStub).to.have.been.calledOnce;
     });
+
     it("does not show warning dialog if skipWarningDialog is true and opens save dialog", async () => {
-      const { showMessageBoxStub, showSaveDialogStub } = await runTest(true);
-      expect(showMessageBoxStub.called).to.be.false;
-      expect(showSaveDialogStub.called).to.be.true;
+      const { invokeStub } = await runTest(true);
+      expect(invokeStub).to.have.been.calledOnce;
     });
+
     it("returns { cancelled: false, filePath: undefined } if user chooses to discard draft", async () => {
-      const { result, showMessageBoxStub, showSaveDialogStub } = await runTest(
+      const { result, invokeStub } = await runTest(
         false,
         1 // discard button index
       );
-      expect(showMessageBoxStub.called).to.be.true;
-      expect(showSaveDialogStub.called).to.be.false;
+      expect(invokeStub).to.have.been.calledOnce;
       expect(result).to.deep.equal({
         cancelled: false,
         filePath: undefined,
       });
     });
+
     it("shows saveDialog and returns { cancelled: false, filePath } with filePath chosen by user", async () => {
-      const filePath = "/foo";
-      const {
-        result,
-        showMessageBoxStub,
-        showSaveDialogStub,
-        writeFileStub,
-      } = await runTest(
-        false,
-        2, // save button index
-        undefined,
-        filePath
-      );
-      expect(showMessageBoxStub.called).to.be.true;
-      expect(showSaveDialogStub.called).to.be.true;
-      expect(writeFileStub.called).to.be.true;
+      const filePath = path.resolve(testDir, "testDraftSaves");
+      const { result, invokeStub } =
+        await runTest(
+          false,
+          2, // save button index
+          undefined,
+          filePath
+        );
+      expect(invokeStub).to.have.been.calledTwice;
       expect(result).to.deep.equal({
         cancelled: false,
         filePath,
       });
     });
+
     it("shows saveDialog and returns { cancelled: false, filePath: undefined } if user decides to cancel saving draft", async () => {
-      const {
-        result,
-        showMessageBoxStub,
-        showSaveDialogStub,
-        writeFileStub,
-      } = await runTest(
-        false,
-        2, // save button index
-        undefined,
-        undefined
-      );
-      expect(showMessageBoxStub.called).to.be.true;
-      expect(showSaveDialogStub.called).to.be.true;
-      expect(writeFileStub.called).to.be.false;
+      const { result, invokeStub } =
+        await runTest(
+          false,
+          2, // save button index
+          undefined,
+          undefined
+        );
+      expect(invokeStub).to.have.been.calledTwice;
       expect(result).to.deep.equal({
         cancelled: false,
         filePath: undefined,
       });
     });
+
     it("returns { cancelled: true, filePath: undefined } if user clicks Cancel in warning dialog", async () => {
-      const { result, showMessageBoxStub, showSaveDialogStub } = await runTest(
+      const { result, invokeStub } = await runTest(
         false,
         0 // cancel button index
       );
-      expect(showMessageBoxStub.called).to.be.true;
-      expect(showSaveDialogStub.called).to.be.false;
+      expect(invokeStub).to.have.been.calledOnce;
       expect(result).to.deep.equal({
         cancelled: true,
         filePath: undefined,

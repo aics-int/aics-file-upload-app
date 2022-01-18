@@ -70,8 +70,8 @@ export const mockJobResponse = {
   responseType: "SUCCESS",
 };
 
-const axiosError: AxiosError = (stub() as any) as AxiosError;
-const axiosResponse: AxiosResponse = (stub() as any) as AxiosResponse;
+const axiosError: AxiosError = stub() as any as AxiosError;
+const axiosResponse: AxiosResponse = stub() as any as AxiosResponse;
 export const badGatewayResponse: AxiosError = {
   ...axiosError,
   response: {
