@@ -127,9 +127,18 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
     return null;
   }
 
+  // Map columns to their widths to persist the widths in the MassEditTable as well
+  const columnToWidthMap = tableInstance.allColumns.reduce(
+    (mapSoFar, column) => ({
+      ...mapSoFar,
+      [column.id]: column.width,
+    }),
+    {}
+  );
+
   return (
     <>
-      {isMassEditing && <MassEditTable />}
+      {isMassEditing && <MassEditTable columnToWidthMap={columnToWidthMap} />}
       <TableToolHeader selectedRows={tableInstance.selectedFlatRows || []} />
       <Table tableInstance={tableInstance} />
       <TableFooter />

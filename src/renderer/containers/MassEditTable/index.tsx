@@ -9,6 +9,7 @@ import { applyMassEdit, cancelMassEdit } from "../../state/selection/actions";
 import { getMassEditRowAsTableRow } from "../../state/selection/selectors";
 import { useHiddenColumns } from "../../util/hooks";
 import { getTemplateColumnsForTable } from "../CustomDataTable/selectors";
+import { CustomColumn } from "../CustomDataTable/types";
 import Table from "../Table";
 import NotesCell from "../Table/CustomCells/NotesCell";
 import DefaultCell from "../Table/DefaultCells/DefaultCell";
@@ -22,7 +23,11 @@ import {
 
 const styles = require("./styles.pcss");
 
-const DEFAULT_COLUMNS = [
+interface Props {
+  columnToWidthMap: { [column: string]: number };
+}
+
+const DEFAULT_COLUMNS: CustomColumn[] = [
   {
     accessor: ROW_COUNT_COLUMN,
     Cell: ReadOnlyCell,
@@ -45,7 +50,7 @@ const DEFAULT_COLUMNS = [
   with a lot of the logic managed for us. Majority of the logic we implement
   can be found by finding the "Cell" component specified by the column.
 */
-export default function MassEditTable() {
+export default function MassEditTable({ columnToWidthMap }: Props) {
   const dispatch = useDispatch();
   const row = useSelector(getMassEditRowAsTableRow);
   const templateColumns = useSelector(getTemplateColumnsForTable);
@@ -56,8 +61,21 @@ export default function MassEditTable() {
 
   const data: any[] = React.useMemo(() => [row], [row]);
   const columns = React.useMemo(
-    () => [...DEFAULT_COLUMNS, ...templateColumns],
-    [templateColumns]
+    () =>
+      [...DEFAULT_COLUMNS, ...templateColumns].map((column) => {
+        // Use the column widths from the parent component if possible
+        if (
+          typeof column.accessor === "string" &&
+          columnToWidthMap[column.accessor]
+        ) {
+          return {
+            ...column,
+            width: columnToWidthMap[column.accessor],
+          };
+        }
+        return column;
+      }),
+    [columnToWidthMap, templateColumns]
   );
 
   const tableInstance = useTable(
