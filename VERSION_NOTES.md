@@ -1,5 +1,9 @@
 # Version Notes
 
+## 2.8.0 (02/03/22)
+- Feature: User-adjusted column widths in the custom metadata data editor grid will now be transferred to the mass editor grid
+- Feature: Previous scene/position/sub-images entries are not lost when attempting to edit said existing ones
+
 ## 2.7.0 (10/01/21)
 - Feature: Information about who has affected the Metadata Template & the Template's annotations will now be shown.
 - Bugfix: User-adjusted column widths will no longer be resized on data changes.
