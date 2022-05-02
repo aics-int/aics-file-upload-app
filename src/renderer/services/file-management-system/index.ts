@@ -24,6 +24,8 @@ import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
+import { FileType } from "../../state/upload/types";
+import { extensionToFileTypeMap } from "../../state/upload/selectors";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -135,8 +137,13 @@ export default class FileManagementSystem {
       }
 
       // Start job in FSS
+      const fileType = extensionToFileTypeMap[
+        path.extname(upload.serviceFields.files[0]?.file.originalPath).toLowerCase()
+      ] || FileType.OTHER;
+
       const registration = await this.fss.registerUpload(
         fileName,
+        fileType,
         fileSize,
         md5
       );
