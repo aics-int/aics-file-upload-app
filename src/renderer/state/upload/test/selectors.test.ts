@@ -5,6 +5,7 @@ import { AnnotationName } from "../../../constants";
 import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
 import { UploadRequest } from "../../../services/types";
 import { Duration } from "../../../types";
+import { FileType } from "../../../util";
 import {
   getMockStateWithHistory,
   mockAnnotationTypes,
@@ -41,7 +42,7 @@ import {
   getUploadRequests,
 } from "../selectors";
 import { getUploadAsTableRows, getUploadValidationErrors } from "../selectors";
-import { FileType, MMSAnnotationValueRequest } from "../types";
+import { MMSAnnotationValueRequest } from "../types";
 
 const orderAnnotationValueRequests = (
   annotations: MMSAnnotationValueRequest[]
