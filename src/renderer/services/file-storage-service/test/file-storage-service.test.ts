@@ -3,6 +3,7 @@ import { createSandbox, SinonStub } from "sinon";
 
 import FileStorageService from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
+import { FileType } from "../../../state/upload/types";
 import { LocalStorage } from "../../../types";
 import HttpCacheClient from "../../http-cache-client";
 
@@ -39,17 +40,19 @@ describe("FileStorageService", () => {
       };
       const postStub = sandbox.stub().resolves(response);
       const fileName = "my_cool_czi.czi";
+      const fileType = FileType.IMAGE;
       const fileSize = 13941234;
       const md5 = "13249012341234";
       const expectedPostBody = {
         file_name: fileName,
+        file_type: fileType,
         file_size: fileSize,
         MD5: md5,
       };
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
       // Act
-      const actual = await fss.registerUpload(fileName, fileSize, md5);
+      const actual = await fss.registerUpload(fileName, fileType, fileSize, md5);
 
       // Assert
       expect(actual).to.deep.equal(expectedResponse);
