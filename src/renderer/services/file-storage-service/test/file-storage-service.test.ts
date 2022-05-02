@@ -3,8 +3,8 @@ import { createSandbox, SinonStub } from "sinon";
 
 import FileStorageService from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
-import { FileType } from "../../../state/upload/types";
 import { LocalStorage } from "../../../types";
+import { FileType } from "../../../util";
 import HttpCacheClient from "../../http-cache-client";
 
 describe("FileStorageService", () => {
