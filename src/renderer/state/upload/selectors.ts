@@ -30,6 +30,7 @@ import {
 import { ColumnType } from "../../services/labkey-client/types";
 import { UploadRequest } from "../../services/types";
 import { Duration } from "../../types";
+import { extensionToFileTypeMap, FileType } from "../../util";
 import {
   getBooleanAnnotationTypeId,
   getDateAnnotationTypeId,
@@ -50,7 +51,7 @@ import {
 import { State, FileModel, UploadStateBranch } from "../types";
 
 import { isChannelOnlyRow, isFileRow, isSubImageRow } from "./constants";
-import { FileType, MMSAnnotationValueRequest, UploadTableRow } from "./types";
+import { MMSAnnotationValueRequest, UploadTableRow } from "./types";
 
 export const getUpload = (state: State) => state.upload.present;
 export const getCurrentUploadIndex = (state: State) => state.upload.index;
@@ -556,22 +557,6 @@ const getAnnotations = (
     });
     return result;
   });
-};
-
-export const extensionToFileTypeMap: { [index: string]: FileType } = {
-  ".csv": FileType.CSV,
-  ".czexp": FileType.ZEISS_CONFIG_FILE,
-  ".czi": FileType.IMAGE,
-  ".czmbi": FileType.ZEISS_CONFIG_FILE,
-  ".czsh": FileType.ZEISS_CONFIG_FILE,
-  ".gif": FileType.IMAGE,
-  ".jpeg": FileType.IMAGE,
-  ".jpg": FileType.IMAGE,
-  ".pdf": FileType.IMAGE, // TODO: decide if we consider this to be true
-  ".png": FileType.IMAGE,
-  ".tif": FileType.IMAGE,
-  ".tiff": FileType.IMAGE,
-  ".txt": FileType.TEXT,
 };
 
 export const getUploadRequests = createSelector(

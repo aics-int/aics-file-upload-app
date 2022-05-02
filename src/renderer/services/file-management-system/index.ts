@@ -4,8 +4,7 @@ import * as path from "path";
 import { throttle, uniq } from "lodash";
 import * as uuid from "uuid";
 
-import { extensionToFileTypeMap } from "../../state/upload/selectors";
-import { FileType } from "../../state/upload/types";
+import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, {
   ChunkStatus,
   FSSUpload,
