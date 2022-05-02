@@ -179,6 +179,11 @@ export default class HttpCacheClient {
         "Content-Type": "application/json",
         "X-User-Id": username,
       },
+      // `axios` has a default POST body size of 10mb.
+      // When uploading to FSS2 the POST body needs
+      // to be able to be greater than that limit.
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
     };
   };
 
