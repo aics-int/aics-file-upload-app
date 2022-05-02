@@ -2,8 +2,8 @@ import axios, { AxiosRequestConfig } from "axios";
 import { camelizeKeys } from "humps";
 import { castArray } from "lodash";
 
-import { FileType } from "../../state/upload/types";
 import { LocalStorage } from "../../types";
+import { FileType } from "../../util";
 import HttpCacheClient from "../http-cache-client";
 import { JSSJob, JSSJobStatus } from "../job-status-service/types";
 import { HttpClient } from "../types";

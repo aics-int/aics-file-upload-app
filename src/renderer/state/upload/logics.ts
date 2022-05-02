@@ -25,7 +25,7 @@ import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
 import { UploadRequest } from "../../services/types";
-import { determineFilesFromNestedPaths, splitTrimAndFilter } from "../../util";
+import { determineFilesFromNestedPaths, extensionToFileTypeMap, FileType, splitTrimAndFilter } from "../../util";
 import { requestFailed } from "../actions";
 import { setErrorAlert } from "../feedback/actions";
 import { updateUploadProgressInfo } from "../job/actions";
@@ -101,7 +101,6 @@ import {
   UPLOAD_WITHOUT_METADATA,
 } from "./constants";
 import {
-  extensionToFileTypeMap,
   getCanSaveUploadDraft,
   getUpload,
   getUploadFileNames,
@@ -110,7 +109,6 @@ import {
 import {
   ApplyTemplateAction,
   CancelUploadAction,
-  FileType,
   InitiateUploadAction,
   OpenUploadDraftAction,
   RetryUploadAction,

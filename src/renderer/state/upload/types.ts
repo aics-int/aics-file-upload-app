@@ -204,11 +204,3 @@ export interface SaveUploadDraftSuccessAction extends WriteToStoreAction {
   payload?: string;
   type: string;
 }
-
-export enum FileType {
-  CSV = "csv",
-  IMAGE = "image",
-  OTHER = "other",
-  TEXT = "text",
-  ZEISS_CONFIG_FILE = "zeiss-config-file",
-}
