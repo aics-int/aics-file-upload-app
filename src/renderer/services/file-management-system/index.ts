@@ -4,6 +4,8 @@ import * as path from "path";
 import { throttle, uniq } from "lodash";
 import * as uuid from "uuid";
 
+import { extensionToFileTypeMap } from "../../state/upload/selectors";
+import { FileType } from "../../state/upload/types";
 import FileStorageService, {
   ChunkStatus,
   FSSUpload,
@@ -24,8 +26,6 @@ import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
-import { FileType } from "../../state/upload/types";
-import { extensionToFileTypeMap } from "../../state/upload/selectors";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
