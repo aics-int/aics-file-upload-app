@@ -247,6 +247,7 @@ export default class FileManagementSystem {
 
     // Attempt to resume an ongoing upload if possible before scraping this one entirely
     const { fssUploadId } = upload.serviceFields;
+    let resumeError: Error | undefined;
     if (fssUploadId) {
       let fssStatus;
       try {
@@ -264,6 +265,7 @@ export default class FileManagementSystem {
           return;
         } catch (error) {
           // Cancel FSS upload to retry again from scratch
+          resumeError = error
           await this.fss.cancelUpload(fssUploadId);
         }
       }
@@ -294,12 +296,16 @@ export default class FileManagementSystem {
 
           try {
             // Update the current job with information about the replacement
+            let errorMessage = `This job has been replaced with Job ID: ${newUpload.jobId}`
+            if (resumeError) {
+              errorMessage += ` after attempting to resume resulting in error ${resumeError?.message}`
+            }
             await this.jss.updateJob(
               uploadId,
               {
                 status: JSSJobStatus.FAILED,
                 serviceFields: {
-                  error: `This job has been replaced with Job ID: ${newUpload.jobId}`,
+                  error: errorMessage,
                   replacementJobIds: uniq([
                     ...(upload?.serviceFields?.replacementJobIds || []),
                     newUpload.jobId,
