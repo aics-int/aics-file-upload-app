@@ -425,6 +425,7 @@ export default class FileManagementSystem {
       // Retrive job FSS uses to track its upload portion
       let fssUpload;
       try {
+        console.log("getting JSS jobID: " + fssUploadId);
         fssUpload = (await this.jss.getJob(fssUploadId)) as FSSUpload;
       } catch (error) {
         // Because FSS uses a queue to interact with JSS this job
@@ -441,9 +442,11 @@ export default class FileManagementSystem {
 
         // If there is no file ID the add to LabKey step may have yet to complete
         console.log("About to complete upload in resume")
+        console.log(fssUpload.serviceFields);
         if (fileId && addedToLabkey?.status === JSSJobStatus.SUCCEEDED) {
           console.log("Completing upload in resume")
-          await this.complete(upload, fileId);
+          console.log("saw fileId: " + fileId);
+          await this.complete(upload, fileId)
         }
       } else if (fssStatus.uploadStatus === UploadStatus.WORKING) {
         // Shouldn't occur, but kept for type safety
