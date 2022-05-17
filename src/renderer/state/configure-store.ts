@@ -82,7 +82,8 @@ axiosRetry(axios, {
   retries: 3,
   retryDelay: () => 10000,
   retryCondition: (error) =>
-    error.response?.status === 502 &&
+    !!error.response?.status &&
+    error.response.status >= 500 &&
     resourcesValidForRetryPaths.filter((resourcePath) =>
       error.request.responseURL.includes(resourcePath)
     ).length > 0,
