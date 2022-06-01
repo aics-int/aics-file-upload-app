@@ -45,7 +45,7 @@ export const useDisplayValue = (value?: ColumnValue, type?: ColumnType) =>
         return value[0] ? "Yes" : "No";
       case ColumnType.DATE:
         return (value as Date[])
-          .map((d) => moment(d).format("M/D/YYYY"))
+          .map((d) => moment(d).utc().format("M/D/YYYY")) // Dates (not DateTimes) need to be treated as UTC
           .join(", ");
       case ColumnType.DATETIME:
         return (value as Date[])

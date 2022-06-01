@@ -53,7 +53,7 @@ export default function DateEditor({
         className={styles.datePicker}
         showTime={column.type === ColumnType.DATETIME}
         placeholder="Add a Date"
-        value={value ? moment(value) : undefined}
+        value={value ? moment(value).utc() : undefined}
         onChange={(d) => setValue(d?.toDate() ?? undefined)}
         renderExtraFooter={() => (
           <div className={styles.footer}>
