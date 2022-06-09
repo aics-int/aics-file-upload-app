@@ -22,6 +22,13 @@ import {
 } from "../../job-status-service/types";
 import ChunkedFileReader from "../ChunkedFileReader";
 
+class TestError extends Error {
+  constructor() {
+    super("Test.");
+    this.name = "TestError";
+  }
+}
+
 describe("FileManagementSystem", () => {
   const sandbox = createSandbox();
   let fileReader: SinonStubbedInstance<ChunkedFileReader>;
@@ -115,6 +122,55 @@ describe("FileManagementSystem", () => {
       expect(fss.finalize.calledOnceWithExactly(uploadId)).to.be.true;
     });
 
+    it("makes requests to FSS asyncronously", async () => {
+      // Arrange
+      const md5 = "09k2341234k";
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [
+            {
+              file: {
+                fileType: "text",
+                originalPath: testFilePath,
+              },
+            },
+          ],
+          type: "upload",
+        },
+      };
+      const uploadId = "091234124";
+      fileReader.calculateMD5.resolves(md5);
+      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+      // p.getName.callsFake(() => { return "Alex Smith"; });
+      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>, chunkSize: number, offset: number)=>{
+        for(let i = 0; i < 5; i++){
+          await onProgress(new Uint8Array());
+        }
+      });
+      let inFlightFssRequests = 0;
+      let wasParallelising = false;
+      fss.sendUploadChunk.callsFake(async ()=>{
+        inFlightFssRequests++;
+        await new Promise((resolve)=>setTimeout(resolve, 25));
+        if(inFlightFssRequests > 1){
+          wasParallelising = true;
+        }
+        inFlightFssRequests--;
+        return {
+          chunkNumber: 0,
+          uploadId: 'testID',
+        };
+      });
+      // Act
+      await fms.upload(upload, noop);
+
+      // Assert
+      expect(wasParallelising).to.be.true;
+      expect(inFlightFssRequests).to.be.equal(0);
+    });
+
     it("re-uses MD5 if not modified since last attempt", async () => {
       // Arrange
       const { mtime: lastModified } = await fs.promises.stat(testFilePath);
@@ -203,6 +259,38 @@ describe("FileManagementSystem", () => {
         })
       ).to.be.true;
       expect(fileReader.read).to.have.been.calledOnce;
+    });
+
+    it("fails upload if fss errors bubble up from reader", async () => {
+      // Arrange
+      const md5 = "09k2341234k";
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [
+            {
+              file: {
+                fileType: "text",
+                originalPath: testFilePath,
+              },
+            },
+          ],
+          type: "upload",
+        },
+      };
+      const uploadId = "091234124";
+      fileReader.calculateMD5.resolves(md5);
+      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+      // p.getName.callsFake(() => { return "Alex Smith"; });
+      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>, chunkSize: number, offset: number)=>{
+        await onProgress(new Uint8Array());
+      });
+      fss.sendUploadChunk.callsFake(async ()=>{
+        throw new TestError();
+      });
+      // Act, Assert
+      expect(fms.upload(upload, noop)).to.be.rejectedWith(TestError);
     });
   });
 
