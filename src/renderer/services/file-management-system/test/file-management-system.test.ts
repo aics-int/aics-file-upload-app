@@ -144,7 +144,7 @@ describe("FileManagementSystem", () => {
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
       // p.getName.callsFake(() => { return "Alex Smith"; });
-      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>, chunkSize: number, offset: number)=>{
+      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
         for(let i = 0; i < 5; i++){
           await onProgress(new Uint8Array());
         }
@@ -283,7 +283,7 @@ describe("FileManagementSystem", () => {
       lk.fileExistsByNameAndMD5.resolves(false);
       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
       // p.getName.callsFake(() => { return "Alex Smith"; });
-      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>, chunkSize: number, offset: number)=>{
+      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
         await onProgress(new Uint8Array());
       });
       fss.sendUploadChunk.callsFake(async ()=>{
