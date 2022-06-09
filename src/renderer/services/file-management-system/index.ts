@@ -60,6 +60,14 @@ export default class FileManagementSystem {
     return uuid.v1().replace(/-/g, "");
   }
 
+  private static sleep(timeoutInMs = 2000){
+    return new Promise(resolve => setTimeout(resolve, timeoutInMs))
+  }
+
+  private static getInFlightChunkRequestsLimit(chunkSize: number){
+    return 5;
+  }
+
   public constructor(config: FileManagementClientConfig) {
     this.fileReader = config.fileReader;
     this.fss = config.fss;
@@ -517,27 +525,41 @@ export default class FileManagementSystem {
       ChunkedFileReader.THROTTLE_DELAY_IN_MS
     );
 
+    let bytesUploaded = initialChunkNumber * chunkSize;
+    const uploadChunkPromises: Promise<void>[] = [];
+    let chunksInFlight = 0;
+    const chunksInFlightLimit = FileManagementSystem.getInFlightChunkRequestsLimit(chunkSize);
+
     // Prepare a callback to send each chunk to FSS on each file
     // chunk read and send that progress to the onProgress callback
-    const onChunkRead = async (chunk: Uint8Array): Promise<void> => {
+    const uploadChunk = async (chunk: Uint8Array): Promise<void> => {
       // Upload chunk
       console.log("About to send chunk to fss")
+      chunksInFlight++;
+      // Increment chunk number for next chunk upload
+      chunkNumber += 1;
       await this.fss.sendUploadChunk(
         fssUploadId,
-        chunkNumber + 1,
+        chunkNumber,
         chunkSize * chunkNumber,
         chunk,
         user
       );
       console.log("Sent chunk to fss")
 
-      // Increment chunk number for next chunk upload
-      chunkNumber += 1;
 
       // Submit progress to callback
-      const bytesUploaded = chunkSize * chunkNumber;
+      bytesUploaded += chunk.byteLength;
       throttledOnProgress(bytesUploaded);
+      chunksInFlight--;
     };
+
+    const onChunkRead =async (chunk:Uint8Array): Promise<void> => {
+      while(chunksInFlight >= chunksInFlightLimit){
+        await FileManagementSystem.sleep();
+      }
+      uploadChunkPromises.push(uploadChunk(chunk));
+    }
 
     // Read in file
     console.log("About to read file")
@@ -548,7 +570,8 @@ export default class FileManagementSystem {
       chunkSize,
       chunkSize * initialChunkNumber
     );
-
+    await Promise.all(uploadChunkPromises);
+    
     console.log("Done reading file")
     // Ensure final progress events are sent
     throttledOnProgress.flush();
