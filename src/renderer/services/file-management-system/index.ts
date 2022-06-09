@@ -65,6 +65,7 @@ export default class FileManagementSystem {
   }
 
   private static getInFlightChunkRequestsLimit(chunkSize: number){
+    chunkSize; //TODO base return value on chunkSize, for memory management
     return 5;
   }
 
