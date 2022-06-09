@@ -82,7 +82,7 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
     {
       columns,
       data,
-      // Defines the default column properties, can be overriden per column
+      // Defines the default column properties, can be overridden per column
       defaultColumn: {
         Cell: DefaultCell,
         Header: DefaultHeader,
