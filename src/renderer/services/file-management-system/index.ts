@@ -528,38 +528,38 @@ export default class FileManagementSystem {
 
     let bytesUploaded = initialChunkNumber * chunkSize;
     const uploadChunkPromises: Promise<void>[] = [];
+    
+    // For rate throttling how many chunks are sent in parallel
     let chunksInFlight = 0;
     const chunksInFlightLimit = FileManagementSystem.getInFlightChunkRequestsLimit(chunkSize);
 
-    // Prepare a callback to send each chunk to FSS on each file
-    // chunk read and send that progress to the onProgress callback
-    const uploadChunk = async (chunk: Uint8Array): Promise<void> => {
+    // Handles submitting chunks to FSS, and updating progress
+    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number): Promise<void> => {
       // Upload chunk
-      console.log("About to send chunk to fss")
       chunksInFlight++;
-      // Increment chunk number for next chunk upload
-      chunkNumber += 1;
       await this.fss.sendUploadChunk(
         fssUploadId,
         chunkNumber,
-        chunkSize * chunkNumber,
+        chunkSize * (chunkNumber-1),
         chunk,
         user
       );
-      console.log("Sent chunk to fss")
-
-
+      console.log("Sent chunk " + chunkNumber + " to fss")
       // Submit progress to callback
       bytesUploaded += chunk.byteLength;
       throttledOnProgress(bytesUploaded);
       chunksInFlight--;
     };
 
+    // Handler for fileReader.
     const onChunkRead =async (chunk:Uint8Array): Promise<void> => {
+      // Throttle how many chunks will be uploaded in parallel
       while(chunksInFlight >= chunksInFlightLimit){
         await FileManagementSystem.sleep();
       }
-      uploadChunkPromises.push(uploadChunk(chunk));
+      // Increment chunk number for next chunk upload
+      chunkNumber += 1;
+      uploadChunkPromises.push(uploadChunk(chunk, chunkNumber));
     }
 
     // Read in file
@@ -571,6 +571,7 @@ export default class FileManagementSystem {
       chunkSize,
       chunkSize * initialChunkNumber
     );
+    //Block until all chunk uploads have completed
     await Promise.all(uploadChunkPromises);
     
     console.log("Done reading file")
