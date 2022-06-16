@@ -516,7 +516,6 @@ export default class FileManagementSystem {
     onProgress: (bytesUploaded: number) => void,
     initialChunkNumber = 0
   ): Promise<void> {
-    console.log("Sending chunk")
     let chunkNumber = initialChunkNumber;
 
     // Throttle the progress callback to avoid sending
@@ -551,7 +550,16 @@ export default class FileManagementSystem {
       chunksInFlight--;
     };
 
-    // Handler for fileReader.
+    /**
+     * 
+     * @param chunk 
+     * A callback for this.fileReader.
+     * Responsible for throttling the reader when the desired number of chunks "in flight" (submitted to fss, and not yet resolved) has been reached.
+     * It accomplishes this by checking the state of chunksInFlight, and pausing if needed.  
+     * 
+     * When chunksInFlight is not saturated, onChunkRead is also responsible for submitting chunks to this.fss (via uploadChunk) and has the 
+     * side effect of populating uploadChunkPromises.
+     */
     const onChunkRead =async (chunk:Uint8Array): Promise<void> => {
       // Throttle how many chunks will be uploaded in parallel
       while(chunksInFlight >= chunksInFlightLimit){
@@ -571,6 +579,7 @@ export default class FileManagementSystem {
       chunkSize,
       chunkSize * initialChunkNumber
     );
+
     //Block until all chunk uploads have completed
     await Promise.all(uploadChunkPromises);
     
