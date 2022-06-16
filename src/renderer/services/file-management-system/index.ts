@@ -564,7 +564,6 @@ export default class FileManagementSystem {
       while(chunksInFlight >= chunksInFlightLimit){
         await FileManagementSystem.sleep();
       }
-      // Increment chunk number for next chunk upload
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber));
     }
