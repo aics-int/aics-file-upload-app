@@ -551,7 +551,6 @@ export default class FileManagementSystem {
     };
 
     /**
-     * 
      * @param chunk 
      * A callback for this.fileReader.
      * Responsible for throttling the reader when the desired number of chunks "in flight" (submitted to fss, and not yet resolved) has been reached.
