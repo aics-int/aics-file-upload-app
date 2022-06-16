@@ -554,7 +554,7 @@ export default class FileManagementSystem {
      * @param chunk 
      * A callback for this.fileReader.
      * Responsible for throttling the reader when the desired number of chunks "in flight" (submitted to fss, and not yet resolved) has been reached.
-     * It accomplishes this by checking the state of chunksInFlight, and pausing if needed.  
+     * It accomplishes this by checking the state of chunksInFlight, and pausing (reading of the file) if needed.  
      * 
      * When chunksInFlight is not saturated, onChunkRead is also responsible for submitting chunks to this.fss (via uploadChunk) and has the 
      * side effect of populating uploadChunkPromises.
