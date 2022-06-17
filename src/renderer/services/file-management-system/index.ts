@@ -1,3 +1,4 @@
+import { assert } from "console";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -25,7 +26,6 @@ import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
-import { assert } from "console";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -73,13 +73,13 @@ export default class FileManagementSystem {
    * This function returns the optimaized number of chunks to be in flight.
   */   
   private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number) {
-      var chunksThatFitInMemory = Math.floor(FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE / chunkSizeInBytes);
+      const chunksThatFitInMemory = Math.floor(FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE / chunkSizeInBytes);
       if(chunksThatFitInMemory < 1){
         throw new Error(
           `chunkSize ${chunkSizeInBytes} is too large to fit in available memory ${FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE}.`
         );
       }
-      var chunksThatFitInMemoryLimited = Math.min(10, chunksThatFitInMemory);
+      const chunksThatFitInMemoryLimited = Math.min(10, chunksThatFitInMemory);
       return Math.max(1, chunksThatFitInMemoryLimited);
   }
 
