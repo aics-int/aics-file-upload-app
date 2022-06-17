@@ -1,5 +1,8 @@
 # Version Notes
 
+## 2.8.1 (06/17/22)
+- Bugfix: Date and Datetime annotation values should now be correctly displayed in the post-upload file details screen
+
 ## 2.8.0 (02/03/22)
 - Feature: User-adjusted column widths in the custom metadata data editor grid will now be transferred to the mass editor grid
 - Feature: Previous scene/position/sub-images entries are not lost when attempting to edit said existing ones
