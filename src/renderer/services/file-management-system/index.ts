@@ -25,6 +25,7 @@ import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
+import { assert } from "console";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -64,9 +65,22 @@ export default class FileManagementSystem {
     return new Promise(resolve => setTimeout(resolve, timeoutInMs))
   }
 
-  private static getInFlightChunkRequestsLimit(chunkSize: number){
-    chunkSize; //TODO base return value on chunkSize, for memory management
-    return 5;
+  private static readonly MAX_INFLIGHT_REQUEST_MEMORY_USAGE = 40 * 1024 * 1024; // 40 mb
+
+  /** 
+   * Fss chunks 'in flight' require memory for the chunk data.  
+   * The number of chunks that can be managed by available memory is a function of memory avaiable, and chunk size.
+   * This function returns the optimaized number of chunks to be in flight.
+  */   
+  private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number) {
+      var chunksThatFitInMemory = Math.floor(FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE / chunkSizeInBytes);
+      if(chunksThatFitInMemory < 1){
+        throw new Error(
+          `chunkSize ${chunkSizeInBytes} is too large to fit in available memory ${FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE}.`
+        );
+      }
+      var chunksThatFitInMemoryLimited = Math.min(10, chunksThatFitInMemory);
+      return Math.max(1, chunksThatFitInMemoryLimited);
   }
 
   public constructor(config: FileManagementClientConfig) {
