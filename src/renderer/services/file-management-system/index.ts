@@ -52,6 +52,9 @@ export default class FileManagementSystem {
   private readonly lk: LabkeyClient;
   private readonly mms: MetadataManagementService;
 
+  private static readonly CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX = 40 * 1024 * 1024; // 40 mb
+  private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 10; //ceiling on concurrent chunk requests (even if more can fit in memory)
+
   /**
    * Returns JSS friendly UUID to group files
    * uploaded together
@@ -64,22 +67,19 @@ export default class FileManagementSystem {
     return new Promise(resolve => setTimeout(resolve, timeoutInMs))
   }
 
-  private static readonly MAX_INFLIGHT_REQUEST_MEMORY_USAGE = 40 * 1024 * 1024; // 40 mb
-
   /** 
    * Fss chunks 'in flight' require memory for the chunk data.  
    * The number of chunks that can be managed by available memory is a function of memory available, and chunk size.
    * This function returns the optimized number of chunks to be in flight.
   */   
   private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number) {
-      const chunksThatFitInMemory = Math.floor(FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE / chunkSizeInBytes);
+      const chunksThatFitInMemory = Math.floor(FileManagementSystem.CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX / chunkSizeInBytes);
       if(chunksThatFitInMemory < 1){
         throw new Error(
-          `chunkSize ${chunkSizeInBytes} is too large to fit in available memory ${FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE}.`
+          `chunkSize ${chunkSizeInBytes} is too large to fit in available memory ${FileManagementSystem.CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX}.`
         );
       }
-      const chunksThatFitInMemoryLimited = Math.min(10, chunksThatFitInMemory);
-      return Math.max(1, chunksThatFitInMemoryLimited);
+      return Math.min(FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING, chunksThatFitInMemory);
   }
 
   public constructor(config: FileManagementClientConfig) {
