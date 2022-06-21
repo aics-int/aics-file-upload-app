@@ -69,7 +69,7 @@ export default class FileManagementSystem {
   /** 
    * Fss chunks 'in flight' require memory for the chunk data.  
    * The number of chunks that can be managed by available memory is a function of memory avaiable, and chunk size.
-   * This function returns the optimaized number of chunks to be in flight.
+   * This function returns the optimized number of chunks to be in flight.
   */   
   private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number) {
       const chunksThatFitInMemory = Math.floor(FileManagementSystem.MAX_INFLIGHT_REQUEST_MEMORY_USAGE / chunkSizeInBytes);
