@@ -10,7 +10,6 @@ import FileManagementSystem from "..";
 import {
   FileStorageService,
   JobStatusService,
-  LabkeyClient,
   MetadataManagementService,
 } from "../..";
 import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
@@ -34,16 +33,16 @@ describe("FileManagementSystem", () => {
   let fileReader: SinonStubbedInstance<ChunkedFileReader>;
   let fss: SinonStubbedInstance<FileStorageService>;
   let jss: SinonStubbedInstance<JobStatusService>;
-  let lk: SinonStubbedInstance<LabkeyClient>;
   let mms: SinonStubbedInstance<MetadataManagementService>;
   let fms: FileManagementSystem;
   const testFilePath = path.resolve(os.tmpdir(), "md5-test.txt");
+  const testFileSize = 1024 * 1024 * 2;
 
   before(async () => {
     // Generate file with 2MB of "random" bytes
     await fs.promises.writeFile(
       testFilePath,
-      Buffer.allocUnsafe(1024 * 1024 * 2)
+      Buffer.allocUnsafe(testFileSize)
     );
   });
 
@@ -51,14 +50,12 @@ describe("FileManagementSystem", () => {
     fileReader = sandbox.createStubInstance(ChunkedFileReader);
     fss = sandbox.createStubInstance(FileStorageService);
     jss = sandbox.createStubInstance(JobStatusService);
-    lk = sandbox.createStubInstance(LabkeyClient);
     mms = sandbox.createStubInstance(MetadataManagementService);
 
     fms = new FileManagementSystem({
       fileReader: fileReader as any,
       fss: fss as any,
       jss: jss as any,
-      lk: lk as any,
       mms: mms as any,
     });
   });
@@ -87,7 +84,6 @@ describe("FileManagementSystem", () => {
   describe("upload", () => {
     it("creates appropriate metadata & completes tracking job", async () => {
       // Arrange
-      const md5 = "09k2341234k";
       const upload: UploadJob = {
         ...mockJob,
         serviceFields: {
@@ -103,8 +99,7 @@ describe("FileManagementSystem", () => {
         },
       };
       const uploadId = "091234124";
-      fileReader.calculateMD5.resolves(md5);
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
 
       // Act
@@ -113,9 +108,9 @@ describe("FileManagementSystem", () => {
       // Assert
       expect(fileReader.calculateMD5).to.have.been.calledOnce;
       expect(
-        lk.fileExistsByNameAndMD5.calledOnceWithExactly(
+        fss.fileExistsByNameAndSize.calledOnceWithExactly(
           path.basename(testFilePath),
-          md5
+          testFileSize
         )
       ).to.be.true;
       expect(fileReader.read).to.have.been.calledOnce;
@@ -141,7 +136,7 @@ describe("FileManagementSystem", () => {
       };
       const uploadId = "091234124";
       fileReader.calculateMD5.resolves(md5);
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
       fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
         for(let i = 0; i < 5; i++){
@@ -191,7 +186,7 @@ describe("FileManagementSystem", () => {
       };
       const fileId = "12343124";
       const localPath = "/some/path/into/fms/at/test_file.txt";
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
         fileId,
@@ -233,7 +228,7 @@ describe("FileManagementSystem", () => {
         },
       };
       fileReader.calculateMD5.resolves(md5);
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
       fileReader.read.rejects(new Error(error));
 
@@ -243,9 +238,9 @@ describe("FileManagementSystem", () => {
       // Assert
       expect(fileReader.calculateMD5).to.have.been.calledOnce;
       expect(
-        lk.fileExistsByNameAndMD5.calledOnceWithExactly(
+        fss.fileExistsByNameAndSize.calledOnceWithExactly(
           path.basename(testFilePath),
-          md5
+          testFileSize
         )
       ).to.be.true;
       expect(
@@ -279,7 +274,7 @@ describe("FileManagementSystem", () => {
       };
       const uploadId = "091234124";
       fileReader.calculateMD5.resolves(md5);
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
       // p.getName.callsFake(() => { return "Alex Smith"; });
       fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
@@ -315,7 +310,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fileReader.calculateMD5.resolves("09k2341234k");
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
         fileId,
@@ -365,7 +360,7 @@ describe("FileManagementSystem", () => {
         chunkStatuses: [],
       });
       fileReader.calculateMD5.resolves("09k2341234k");
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
         fileId,
@@ -416,7 +411,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fileReader.calculateMD5.resolves("09k2341234k");
-      lk.fileExistsByNameAndMD5.resolves(false);
+      fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
         fileId,
