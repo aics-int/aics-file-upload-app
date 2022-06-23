@@ -146,7 +146,7 @@ export default class FileManagementSystem {
         );
       }
 
-      // Prevent attempting to upload a duplicate
+      // Heuristic which in most cases, prevents attempting to upload a duplicate
       if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
         throw new Error(
           `File ${fileName} with MD5 ${md5} already exists in LabKey`
