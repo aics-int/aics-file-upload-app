@@ -20,7 +20,6 @@ import {
   UploadServiceFields,
   Service,
 } from "../job-status-service/types";
-import LabkeyClient from "../labkey-client";
 import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 

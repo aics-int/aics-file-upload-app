@@ -87,7 +87,7 @@ export default class FileStorageService extends HttpCacheClient {
   ): Promise<boolean> {
     const url = `${FileStorageService.BASE_FILE_PATH}?name=${name}&size=${size}`;
     const fileRecords = await this.get<FileRecord[]>(url);
-    return fileRecords.length != 0;
+    return fileRecords.length !== 0;
   }
 
   /**
