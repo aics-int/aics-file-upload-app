@@ -30,7 +30,6 @@ interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
   fss: FileStorageService;
   jss: JobStatusService;
-  lk: LabkeyClient;
   mms: MetadataManagementService;
 }
 
@@ -49,7 +48,6 @@ export default class FileManagementSystem {
   private readonly fileReader: ChunkedFileReader;
   private readonly fss: FileStorageService;
   private readonly jss: JobStatusService;
-  private readonly lk: LabkeyClient;
   private readonly mms: MetadataManagementService;
 
   private static readonly CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX = 40 * 1024 * 1024; // 40 mb
@@ -86,7 +84,6 @@ export default class FileManagementSystem {
     this.fileReader = config.fileReader;
     this.fss = config.fss;
     this.jss = config.jss;
-    this.lk = config.lk;
     this.mms = config.mms;
   }
 
@@ -151,7 +148,7 @@ export default class FileManagementSystem {
       }
 
       // Prevent attempting to upload a duplicate
-      if (await this.lk.fileExistsByNameAndMD5(fileName, md5)) {
+      if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
         throw new Error(
           `File ${fileName} with MD5 ${md5} already exists in LabKey`
         );

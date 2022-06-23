@@ -81,6 +81,15 @@ export default class FileStorageService extends HttpCacheClient {
     super(httpClient, localStorage, false);
   }
 
+  public async fileExistsByNameAndSize(
+    name: string,
+    size: number
+  ): Promise<boolean> {
+    const url = `${FileStorageService.BASE_FILE_PATH}?name=${name}&size=${size}`;
+    const fileRecords = await this.get<FileRecord[]>(url);
+    return fileRecords.length != 0;
+  }
+
   /**
    * This is the first step to an upload. Before the app can start sending
    * chunks of the file to upload it must first make the service aware of the
