@@ -104,7 +104,6 @@ export const reduxLogicDependencies: Partial<ReduxLogicExtraDependencies> = {
     fileReader: new ChunkedFileReader(),
     fss: new FileStorageService(httpClient, storage),
     jss: jssClient,
-    lk: labkeyClient,
     mms: mmsClient,
   }),
   ipcRenderer,
