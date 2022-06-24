@@ -36,10 +36,10 @@ describe("FileManagementSystem", () => {
   let mms: SinonStubbedInstance<MetadataManagementService>;
   let fms: FileManagementSystem;
   const testFilePath = path.resolve(os.tmpdir(), "md5-test.txt");
-  const testFileSize = 1024 * 1024 * 2;
+  const testFileSize = 1024 * 1024 * 2; //2MB
 
   before(async () => {
-    // Generate file with 2MB of "random" bytes
+    // Generate file with testFileSize of "random" bytes
     await fs.promises.writeFile(
       testFilePath,
       Buffer.allocUnsafe(testFileSize)
