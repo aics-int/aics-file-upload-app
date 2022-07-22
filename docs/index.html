@@ -4,8 +4,8 @@
     <head>
         <meta charset="utf-8">
 
-        <title>FMS File Explorer</title>
-        <meta name="description" content="FMS File Explorer">
+        <title>FMS File Upload App</title>
+        <meta name="description" content="FMS File Upload App">
         <meta name="author" content="AICS Software">
 
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Raleway:wght@600&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
                 <header>
                     <img class="logo" src="resources/aics-logo.png" alt="AICS logo" />
                     <img class="logo" src="resources/aics-logo-name.png" alt="AICS logo" />
-                    <h1 class="title">FMS File Explorer</h1>
+                    <h1 class="title">FMS File Upload App</h1>
                 </header>
 
                 <section>
@@ -51,7 +51,7 @@
 
                 <footer>
                     <a
-                        href="https://github.com/AllenInstitute/aics-fms-file-explorer-app"
+                        href="https://github.com/aics-int/aics-file-upload-app"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -68,12 +68,32 @@
             <div id="secondary-column" class="column">
                 <nav id="nav">
                     <ol>
+                        <li><a class="link" href="#intro">What is the FMS File Upload App?</a></li>
                         <li><a class="link" href="#installation-instructions">Installation instructions</a></li>
                         <li><a class="link" href="#use-from-home">How to use while working from home</a></li>
-                        <li><a class="link" href="#tutorials">Tutorials</a></li>
+                        <li><a class="link" href="#how-to-query">How to find uploaded files?</a></li>
                         <li><a class="link" href="#report-issue">Report issue or otherwise get in touch</a></li>
                     </ol>
                 </nav>
+
+                <hr class="divider" />
+
+                <section>
+                    <h2 class="title" id="intro">What is the FMS File Upload App?</h2>
+                    <p>
+                        The FMS File Upload App is the graphical user interface application for uploading files 
+                        into AICS's centralized file storage colloquially known as FMS. To search for or access the
+                        uploaded files now in FMS you can use another AICS application, the
+                        <a class="link" href="https://alleninstitute.github.io/aics-fms-file-explorer-app/">FMS File Explorer App.</a>
+                    </p>
+                    <p>
+                        Files in FMS are best located by their 'annotations' (metadata about the file ex. I can upload an imaging file and
+                        annotate it with the annotation "Program" giving the value that corresponds with the project I'm working on e.g. EMT,
+                        Nucmorph, etc.). Every file in FMS is, by default, given some basic annotations ("Uploaded by", "Kind", "Type"), but
+                        to better differentiate your files it is helpful to add additional annnotations which the FMS File Upload App allows
+                        you to do.
+                    </p>
+                </section>
 
                 <hr class="divider" />
 
@@ -88,8 +108,7 @@
                     <h2 class="title" id="use-from-home">How to use while working from home</h2>
                     <ul>
                         <li>
-                            <strong>To use outside of the office, connect to the Allen Institute VPN. </strong> To be clear: you do not need
-                            to be on VPN to <em>download</em> the application, just to use it.
+                            <strong>To use outside of the office, connect to the Allen Institute VPN. </strong>
                         </li>
                         <li>
                             <strong>N.b.: This application requires access to the public internet to work properly.</strong> If your VPN configuration blocks access to the public
@@ -102,27 +121,16 @@
                 <hr class="divider" />
 
                 <section>
-                    <h2 class="title" id="tutorials">Tutorials</h2>
-                    <div id="tutorial-container">
-                        <ol id="tutorial-list">
-                            <!-- Dynamically constructed in js/scripts.js -->
-                        </ol>
-                        <figure id="tutorial-video-container">
-                            <!-- The src of this iframe is dynamically constructed in js/scripts.js -->
-                            <iframe
-                                id="vimeo-player"
-                                title="vimeo-player"
-                                width="640"
-                                height="360"
-                                frameborder="0"
-                                allowfullscreen
-                            >
-                            </iframe>
-                            <figcaption id="tutorial-video-caption">
-                                <!-- Dynamically constructed in js/scripts.js -->
-                            </figcaption>
-                        </figure>
-                    </div>
+                    <h2 class="title" id="how-to-query">How to find uploaded files?</h2>
+                    <p>
+                        Check out the <a class="link" href="https://alleninstitute.github.io/aics-fms-file-explorer-app/">FMS File Explorer App</a>,
+                        it is another AICS application in which you can search for files by basic information, like their name or who uploaded it,
+                        as well as any other metadata the file has been annotated with.
+                    </p>
+                    <p>
+                        Note: Metadata about uploaded files can also be seen in the File Upload App by the user whom uploaded them. The metadata
+                        can also be updated in this way.
+                    </p>
                 </section>
 
                 <hr class="divider" />
@@ -130,21 +138,15 @@
                 <section>
                     <h2 class="title" id="report-issue">How to report an issue or otherwise get in touch</h2>
                     <p>
-                        Maybe you think some data should be available but you can't find it, or maybe you found a way to crash the application.
-                        Maybe you'd be really excited if a particular feature is implemented, or maybe you just want to chat.
-                        In any case, it would be our privilege to hear from you.
+                        If you'd like to bring up something that needs immediate attention i.e. is blocking your work,
+                        chat with us on the #support_aics_software channel on Slack.
                     </p>
                     <p>
-                        We're fairly certain you know how to get a hold of the software engineering team (e.g., Slack, email, Zoom, Teams, etc), but here are a few
-                        additional channels that are out of the ordinary:
+                        Otherwise, <a class="link" href="https://aicsjira.corp.alleninstitute.org/secure/project/CreateIssue.jspa?issuetype=1&pid=10406">
+                        submit a ticket using our JIRA request form!</a> Must be on-site or connected to the institute via VPN to access JIRA.
+                        Likely by the next week you can expect someone from our team to reach out to you or someone listed in the ticket to gather more
+                        information, but feel free to reach out to us, the software engineering team, before then (e.g., Slack, email, Zoom, Teams, etc).
                     </p>
-                    <ul>
-                        <li>Reach out to a member of your team that has been an ambassador to this project.</li>
-                        <li>
-                            If familiar and comfortable with JIRA, <a class="link" href="https://aicsjira.corp.alleninstitute.org/browse/FMS-917">submit a ticket!</a>
-                            (VPN required to visit JIRA).
-                        </li>
-                    </ul>
                 </section>
             </div>
         </div>
