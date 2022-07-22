@@ -1,0 +1,155 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+
+        <title>FMS File Explorer</title>
+        <meta name="description" content="FMS File Explorer">
+        <meta name="author" content="AICS Software">
+
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Raleway:wght@600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css?v=1.0">
+    </head>
+
+    <body>
+        <div id="app">
+            <div id="primary-column" class="column">
+                <header>
+                    <img class="logo" src="resources/aics-logo.png" alt="AICS logo" />
+                    <img class="logo" src="resources/aics-logo-name.png" alt="AICS logo" />
+                    <h1 class="title">FMS File Explorer</h1>
+                </header>
+
+                <section>
+                    <div id="selectors">
+                        <div class="selector-container" id="version-selector-container">
+                            <label>Application Version</label>
+                            <select
+                                name="version-selector"
+                                id="version-selector"
+                                onchange="updateDownloadLink(this.value)"
+                            >
+                            </select>
+                        </div>
+                        <div class="selector-container" id="os-selector-container">
+                            <label>Operating System</label>
+                            <select
+                                name="os-selector"
+                                id="os-selector"
+                                onchange="selectOperatingSystem(this.value)"
+                            >
+                            </select>
+                        </div>
+                    </div>
+
+                    <a id="download-link">
+                        <button id="download-button">
+                        </button>
+                    </a>
+                </section>
+
+                <footer>
+                    <a
+                        href="https://github.com/AllenInstitute/aics-fms-file-explorer-app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <img
+                            src="resources/GitHub-Mark-Light-64px.png"
+                            alt="AICS logo"
+                            id="gh-logo"
+                            title="See this project on Github"
+                        />
+                    </a>
+                </footer>
+            </div>
+
+            <div id="secondary-column" class="column">
+                <nav id="nav">
+                    <ol>
+                        <li><a class="link" href="#installation-instructions">Installation instructions</a></li>
+                        <li><a class="link" href="#use-from-home">How to use while working from home</a></li>
+                        <li><a class="link" href="#tutorials">Tutorials</a></li>
+                        <li><a class="link" href="#report-issue">Report issue or otherwise get in touch</a></li>
+                    </ol>
+                </nav>
+
+                <hr class="divider" />
+
+                <section>
+                    <h2 class="title" id="installation-instructions"></h2>
+                    <ol id="instructions"></ol>
+                </section>
+
+                <hr class="divider" />
+
+                <section>
+                    <h2 class="title" id="use-from-home">How to use while working from home</h2>
+                    <ul>
+                        <li>
+                            <strong>To use outside of the office, connect to the Allen Institute VPN. </strong> To be clear: you do not need
+                            to be on VPN to <em>download</em> the application, just to use it.
+                        </li>
+                        <li>
+                            <strong>N.b.: This application requires access to the public internet to work properly.</strong> If your VPN configuration blocks access to the public
+                            internet, you'll notice--among other potential issues--that usages of certain icons are replaced by placeholder boxes. Those boxes are
+                            still functional, but without seeing the icon, it may be difficult to know what function the boxes serve!
+                        </li>
+                    </ul>
+                </section>
+
+                <hr class="divider" />
+
+                <section>
+                    <h2 class="title" id="tutorials">Tutorials</h2>
+                    <div id="tutorial-container">
+                        <ol id="tutorial-list">
+                            <!-- Dynamically constructed in js/scripts.js -->
+                        </ol>
+                        <figure id="tutorial-video-container">
+                            <!-- The src of this iframe is dynamically constructed in js/scripts.js -->
+                            <iframe
+                                id="vimeo-player"
+                                title="vimeo-player"
+                                width="640"
+                                height="360"
+                                frameborder="0"
+                                allowfullscreen
+                            >
+                            </iframe>
+                            <figcaption id="tutorial-video-caption">
+                                <!-- Dynamically constructed in js/scripts.js -->
+                            </figcaption>
+                        </figure>
+                    </div>
+                </section>
+
+                <hr class="divider" />
+
+                <section>
+                    <h2 class="title" id="report-issue">How to report an issue or otherwise get in touch</h2>
+                    <p>
+                        Maybe you think some data should be available but you can't find it, or maybe you found a way to crash the application.
+                        Maybe you'd be really excited if a particular feature is implemented, or maybe you just want to chat.
+                        In any case, it would be our privilege to hear from you.
+                    </p>
+                    <p>
+                        We're fairly certain you know how to get a hold of the software engineering team (e.g., Slack, email, Zoom, Teams, etc), but here are a few
+                        additional channels that are out of the ordinary:
+                    </p>
+                    <ul>
+                        <li>Reach out to a member of your team that has been an ambassador to this project.</li>
+                        <li>
+                            If familiar and comfortable with JIRA, <a class="link" href="https://aicsjira.corp.alleninstitute.org/browse/FMS-917">submit a ticket!</a>
+                            (VPN required to visit JIRA).
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+
+        <!-- Scripts -->
+        <script src="js/scripts.js"></script>
+    </body>
+</html>
