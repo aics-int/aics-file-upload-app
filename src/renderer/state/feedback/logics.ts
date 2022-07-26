@@ -23,8 +23,7 @@ const checkForUpdateLogic = createLogic({
       const currentVersion = ApplicationInfoService.getApplicationVersion();
       const newestVersion = await applicationInfoService.getNewestApplicationVersion();
       if (gt(newestVersion, currentVersion)) {
-        const downloadPage =
-          "https://aics-int.github.io/aics-file-upload-app/";
+        const downloadPage = "https://aics-int.github.io/aics-file-upload-app/";
         const message = `A new version of the application is available!<br/>
           Visit the <a href="${downloadPage}" target="_blank" title="File Upload App Confluence page">File Upload App Confluence page</a> to download.`;
         dispatch(setInfoAlert(message));
