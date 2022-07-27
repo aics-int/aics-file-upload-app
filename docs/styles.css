@@ -1,0 +1,239 @@
+html {
+    --purple: #6b6286;
+    --column-padding: 3em;
+
+    background-color: #ffffff;
+    box-sizing: border-box;
+    color: darkslategrey;
+    font-family: "Open Sans", sans-serif;
+  }
+
+  *,
+  *:before,
+  *:after {
+      box-sizing: inherit;
+  }
+
+html, body, #app {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.title {
+    font-family: 'Raleway', sans-serif;
+}
+
+#app {
+    /* flex parent of primary- and secondary-column */
+    display: flex;
+    flex-direction: row;
+}
+
+.column {
+    padding: var(--column-padding);
+}
+
+#primary-column {
+    /* flex child of app */
+    flex: 1 1 40%;
+
+    /* flex parent of primary-column-body & primary-column-footer */
+    display: flex;
+    flex-direction: column;
+
+    color: #ffffff;
+    background-color: var(--purple);
+    user-select: none;
+}
+
+#primary-column header {
+    flex: 0 0 10%;
+}
+
+.logo {
+    max-height: 50px;
+}
+
+#primary-column section {
+    /* flex child of primary-column */
+    flex: 1 1 80%;
+
+    padding: 0 10%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#download-link {
+    text-decoration: none;
+    width: 100%;
+}
+
+#download-button {
+    background-color: #BAD636;
+    font-size: 1.5em;
+    width: 100%;
+    border: none;
+    color: #003056;
+    cursor: pointer;
+    display: table;
+    font-weight: 700;
+    height: 3em;
+}
+
+#download-button:hover {
+    background-color: #dbee86;
+}
+
+#selectors {
+    display: flex;
+    width: 100%;
+
+    margin-bottom: 20px;
+}
+
+select {
+    background-color: white;
+    color: black;
+    cursor: pointer;
+    display: block;
+    padding: 0.5em;
+    margin-top: 0.5em;
+}
+
+.selector-container {
+    width: 50%;
+    padding: 0 5%;
+
+    /* flex parent to its label and select elements */
+    display: flex;
+    flex-direction: column;
+}
+
+#primary-column footer {
+    /* flex child of primary-column */
+    flex: 1 1 auto;
+    text-align: center;
+
+    /* flex parent of github link */
+    display: flex;
+}
+
+#gh-logo {
+    width: 32px;
+}
+
+#secondary-column {
+    /* flex child of app */
+    flex: 1 1 60%;
+
+    overflow-y: auto;
+}
+
+#secondary-column section:last-of-type {
+    margin-bottom: var(--column-padding);
+}
+
+.link {
+    text-decoration: none;
+    color: #847AA3;
+}
+
+.link:hover, .link:focus {
+    text-decoration: underline;
+    color: #003056;
+    outline: 0;
+}
+
+.divider {
+    margin: 50px auto;
+    width: 90%;
+    color: var(--purple);
+}
+
+.banner {
+    background-color: rgba(107, 98, 134, 0.3);
+    text-align: center;
+    padding: 5%;
+    margin: 0 2.5%;
+}
+
+li {
+    margin: 0.25em 0;
+}
+
+#instructions li {
+    margin-bottom: 2em;
+}
+
+#subtitle {
+    color: #edebf1;
+}
+
+.figure {
+    width: 80%;
+}
+
+.figure.installation-instr {
+    width: 100%;
+}
+
+.figure-caption {
+    font-style: italic;
+}
+
+.installation-instr .figure-caption {
+    font-style: normal;
+}
+
+.screenshot {
+    width: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.installation-instr .screenshot {
+    width: 75%;
+    max-height: 250px;
+}
+
+#tutorial-container {
+    /* flex parent */
+    display: flex;
+    flex-direction: row;
+}
+
+#tutorial-list {
+    border-right: 1px solid black;
+    margin-right: 1em;
+    padding-right: 0.5em;
+
+    /* flex child */
+    flex: 1 1 30%;
+}
+
+.tutorial-list-item {
+    cursor: pointer;
+}
+
+.tutorial-list-item.selected {
+    color: black;
+}
+
+#tutorial-video-container {
+    /* flex child */
+    flex: 1 1 70%;
+
+    /* flex parent */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#tutorial-video-caption {
+    margin-top: 0.5em;
+}
