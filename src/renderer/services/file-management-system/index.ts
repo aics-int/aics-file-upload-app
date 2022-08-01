@@ -138,12 +138,13 @@ export default class FileManagementSystem {
       ) {
         md5 = upload.serviceFields.calculatedMD5;
       } else {
-        md5 = await this.fileReader.calculateMD5(
-          upload.jobId,
-          upload.serviceFields.files[0]?.file.originalPath,
-          (md5BytesComputed) =>
-            onProgress({ md5BytesComputed, totalBytes: fileSize })
-        );
+        // md5 = await this.fileReader.calculateMD5(
+        //   upload.jobId,
+        //   upload.serviceFields.files[0]?.file.originalPath,
+        //   (md5BytesComputed) =>
+        //     onProgress({ md5BytesComputed, totalBytes: fileSize })
+        // );
+        md5 = "your md5 here"
       }
 
       // Heuristic which in most cases, prevents attempting to upload a duplicate
