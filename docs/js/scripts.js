@@ -25,7 +25,7 @@ const INSTRUCTIONS_FOR_OS = {
         <ul>
             <li>
                 <figure class="figure installation-instr">
-                    <img class="screenshot" src="resources/macos-open-with-safari.png">
+                    <img class="screenshot" src="resources/installation/macos-open-with-safari.png">
                     <figcaption class="figure-caption">
                     Safari may ask for permission to download from AWS (where we store the application), click 'Allow'.
                     </figcaption>
@@ -33,7 +33,7 @@ const INSTRUCTIONS_FOR_OS = {
             </li>
             <li>
                 <figure class="figure installation-instr">
-                    <img class="screenshot" src="resources/macos-open-with-firefox.png">
+                    <img class="screenshot" src="resources/installation/macos-open-with-firefox.png">
                     <figcaption class="figure-caption">
                     Firefox may prompt for where and how to store the app, select 'Open with DiskImageMounter (default).' & click 'Ok'.
 
@@ -47,7 +47,7 @@ const INSTRUCTIONS_FOR_OS = {
         `,
         `
         <figure class="figure installation-instr">
-            <img class="screenshot" src="resources/macos-drag-into-applications.png">
+            <img class="screenshot" src="resources/installation/macos-drag-into-applications.png">
             <figcaption class="figure-caption">
             Drag and drop the File Upload App icon onto the Applications folder icon. If prompted to 'Keep Both,' 'Stop,' or 'Replace,' choose 'Replace.'
             </figcaption>
@@ -55,7 +55,7 @@ const INSTRUCTIONS_FOR_OS = {
         `,
         `
         <figure class="figure installation-instr">
-            <img class="screenshot" src="resources/macos-open-after-first-time.png">
+            <img class="screenshot" src="resources/installation/macos-open-after-first-time.png">
             <figcaption class="figure-caption">
             If this isn't your first time installing the File Upload App, you may be given this prompt, here you'll want to click 'Replace'.
             </figcaption>
@@ -63,7 +63,7 @@ const INSTRUCTIONS_FOR_OS = {
         `,
         `
         <figure class="figure installation-instr">
-            <img class="screenshot" src="resources/macos-locate-application.png">
+            <img class="screenshot" src="resources/installation/macos-locate-application.png">
             <figcaption class="figure-caption">
             Open Finder, and locate the File Upload App in Applications.
             </figcaption>
@@ -72,7 +72,7 @@ const INSTRUCTIONS_FOR_OS = {
         "Right-click on the File Upload App, select 'Open.' <em>You may need to do this twice in order to get to the next step</em>.",
         `
         <figure class="figure installation-instr">
-            <img class="screenshot" src="resources/macos-open-anyway.png">
+            <img class="screenshot" src="resources/installation/macos-open-anyway.png">
             <figcaption class="figure-caption">
             You should be prompted with an alert that reads, "macOS cannot verify the developer of 'File Upload App'. Are you sure you want to open it?" Select "Open."
             </figcaption>
@@ -80,7 +80,7 @@ const INSTRUCTIONS_FOR_OS = {
         `,
         `
         <figure class="figure installation-instr">
-            <img class="screenshot" src="resources/macos-connect-to-fms-storage.png">
+            <img class="screenshot" src="resources/installation/macos-connect-to-fms-storage.png">
             <figcaption class="figure-caption">
             Until the Isilon is fully non-existent, you'll need to mount FMS storage on your computer.
             To do this: <code>Go</code> → <code>Connect to server</code> → enter <code>smb://allen/programs</code> → <code>Connect</code>.
