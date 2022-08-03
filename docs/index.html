@@ -123,7 +123,32 @@
 
                 <section>
                     <h2 class="title" id="tutorials">Tutorials</h2>
-                    <ol id="tutorials-slider"></ol>
+                    <div id="tutorial-container">
+                        <ol id="tutorial-list">
+                            <!-- Dynamically constructed in js/scripts.js -->
+                        </ol>
+                        <div id="slideshow-container">
+                            <!-- Dynamically constructed in js/scripts.js -->
+
+                            <figure id="tutorial-slide-container">
+                                <!-- The src of this img is dynamically constructed in js/scripts.js -->
+                                <img id="tutorial-slide" class="screenshot" src="" height="400px" />
+
+                                <!-- Next and previous buttons -->
+                                <a id="prev-slide-button">&#10094;</a>
+                                <a id="next-slide-button">&#10095;</a>
+                            </figure>
+
+                            <!-- The dots/circles -->
+                            <div id="slide-dot-container">
+                                <!-- Dynamically constructed in js/scripts.js -->
+                            </div>
+                            
+                            <figcaption id="tutorial-slide-caption">
+                                <!-- Dynamically constructed in js/scripts.js -->
+                            </figcaption>
+                        </div>
+                    </div>
                 </section>
 
                 <hr class="divider" />
