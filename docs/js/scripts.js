@@ -497,11 +497,11 @@ function initialize() {
 
     // Determine operating system
     let os;
-    if (navigator.appVersion.indexOf("Win") !== -1) {
+    if (navigator.userAgent.toLowerCase().indexOf("win") !== -1) {
         os = OS.WINDOWS;
-    } else if (navigator.appVersion.indexOf("Mac") !== -1) {
+    } else if (navigator.userAgent.toLowerCase().indexOf("mac") !== -1) {
         os = OS.MAC;
-    } else if (navigator.appVersion.indexOf("Linux") !== -1) {
+    } else if (navigator.userAgent.toLowerCase().indexOf("linux") !== -1) {
         os = OS.LINUX;
     } else {
         os = OS.UNKNOWN;
