@@ -49,7 +49,7 @@ const INSTRUCTIONS_FOR_OS = {
         <figure class="figure installation-instr">
             <img class="screenshot" src="resources/installation/macos-drag-into-applications.png">
             <figcaption class="figure-caption">
-            Drag and drop the File Upload App icon onto the Applications folder icon. If prompted to 'Keep Both,' 'Stop,' or 'Replace,' choose 'Replace.'
+            Drag and drop the File Upload App icon onto the Applications folder icon.
             </figcaption>
         </figure>
         `,
