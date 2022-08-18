@@ -76,7 +76,7 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
     [columnDefinitions, hasSubmitBeenAttempted]
   );
 
-  const tableInstance: TableInstance<FileModel> = useTable(
+  const tableInstance: TableInstance<FileModel> = useTable<FileModel>(
     {
       columns,
       data,
@@ -89,7 +89,7 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
         maxWidth: 500,
         sortType: ARRAY_SORT,
       },
-      // getRowId: getUploadRowKey, // TODO: Should just be row.file
+      getRowId: (row) => row.file,
       // Prevent hidden columns from resetting on data changes
       autoResetHiddenColumns: false,
       // This comes from the useExpanded plugin and prevents

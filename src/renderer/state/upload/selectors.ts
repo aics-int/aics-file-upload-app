@@ -66,10 +66,7 @@ export const getCanUndoUpload = createSelector(
   }
 );
 
-const EXCLUDED_UPLOAD_FIELDS = [
-  "file",
-  "key", // TODO: Is key needed?
-];
+const EXCLUDED_UPLOAD_FIELDS = ["file", "key"];
 
 // this matches the metadata annotations to the ones in the database and removes
 // extra stuff that does not have annotations associated with it but is needed for UI display
@@ -91,7 +88,6 @@ export const getUploadAsTableRows = createSelector(
     }))
 );
 
-// TODO: Why does this exist? Is this just because of scenes?
 export const getFileToAnnotationHasValueMap = createSelector(
   [getUpload],
   (fileToMetadataMap): { [file: string]: { [annotation: string]: boolean } } =>

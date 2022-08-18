@@ -39,13 +39,7 @@ import {
   getUploadRequests,
 } from "../selectors";
 import { getUploadAsTableRows, getUploadValidationErrors } from "../selectors";
-import { FileType, MMSAnnotationValueRequest } from "../types";
-
-const orderAnnotationValueRequests = (
-  annotations: MMSAnnotationValueRequest[]
-) => {
-  return orderBy(annotations, ["annotationId"]);
-};
+import { FileType } from "../types";
 
 // utility function to allow us to deeply compare expected and actual output without worrying about order
 const standardizeUploads = (uploadRequests: UploadRequest[]): UploadRequest[] =>
@@ -53,10 +47,9 @@ const standardizeUploads = (uploadRequests: UploadRequest[]): UploadRequest[] =>
     ...request,
     customMetadata: {
       ...request.customMetadata,
-      // TODO: Is this ordering necessary???
-      annotations: orderAnnotationValueRequests(
-        request.customMetadata?.annotations || []
-      ),
+      annotations: orderBy(request.customMetadata?.annotations || [], [
+        "annotationId",
+      ]),
     },
   }));
 
