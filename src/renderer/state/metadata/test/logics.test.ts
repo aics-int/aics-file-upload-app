@@ -31,7 +31,6 @@ import {
   mockAnnotationTypes,
   mockAuditInfo,
   mockBarcodePrefixes,
-  mockChannel,
   mockImagingSessions,
   mockLookupOptions,
   mockLookups,
@@ -138,13 +137,11 @@ describe("Metadata logics", () => {
   });
   describe("requestMetadata", () => {
     it("sets metadata given OK response", async () => {
-      const channels = [mockChannel];
       labkeyClient.getAnnotations.resolves(mockAnnotations);
       labkeyClient.getAnnotationOptions.resolves(mockAnnotationOptions);
       labkeyClient.getAnnotationLookups.resolves(mockAnnotationLookups);
       labkeyClient.getAnnotationTypes.resolves(mockAnnotationTypes);
       labkeyClient.getBarcodePrefixes.resolves(mockBarcodePrefixes);
-      labkeyClient.getChannels.resolves(channels);
       labkeyClient.getImagingSessions.resolves(mockImagingSessions);
       labkeyClient.getLookups.resolves(mockLookups);
       labkeyClient.getUnits.resolves([mockUnit]);
@@ -156,7 +153,6 @@ describe("Metadata logics", () => {
         annotationLookups: mockAnnotationLookups,
         annotationTypes: mockAnnotationTypes,
         barcodePrefixes: mockBarcodePrefixes,
-        channels: channels,
         imagingSessions: mockImagingSessions,
         lookups: mockLookups,
         units: [mockUnit],

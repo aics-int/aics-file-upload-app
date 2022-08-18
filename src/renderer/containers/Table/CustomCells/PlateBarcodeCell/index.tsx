@@ -18,9 +18,12 @@ import {
   getBarcodePrefixes,
   getUniqueBarcodeSearchResults,
 } from "../../../../state/metadata/selectors";
-import { AsyncRequest, BarcodeSelectorOption } from "../../../../state/types";
+import {
+  AsyncRequest,
+  BarcodeSelectorOption,
+  FileModel,
+} from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
-import { UploadTableRow } from "../../../../state/upload/types";
 import LookupSearch from "../../../LookupSearch";
 import DisplayCell from "../../DefaultCells/DisplayCell";
 import { createEnterKeyHandler } from "../../Editors/util";
@@ -33,7 +36,7 @@ const styles = require("./styles.pcss");
  * barcode match.
  */
 export default function PlateBarcodeCell(
-  props: CellProps<UploadTableRow, string[]>
+  props: CellProps<FileModel, string[]>
 ) {
   const dispatch = useDispatch();
   const barcodePrefixes = useSelector(getBarcodePrefixes);

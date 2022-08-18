@@ -66,7 +66,6 @@ import {
   clearUploadHistory,
   jumpToPastUpload,
 } from "../upload/actions";
-import { getUploadRowKey } from "../upload/constants";
 import { getCanSaveUploadDraft } from "../upload/selectors";
 import { batchActions } from "../util";
 
@@ -208,12 +207,9 @@ function convertUploadRequestsToUploadStateBranch(
     templateId = file.customMetadata?.templateId || templateId;
 
     if (!file.customMetadata?.annotations.length) {
-      const key = getUploadRowKey({
-        file: file.file.originalPath,
-      });
       return {
         ...uploadSoFar,
-        [key]: {
+        [file.file.originalPath]: {
           file: file.file.originalPath,
           fileId: file.fileId,
         },
@@ -225,10 +221,6 @@ function convertUploadRequestsToUploadStateBranch(
         keyToMetadataSoFar: UploadStateBranch,
         annotation: MMSFileAnnotation
       ) => {
-        const key = getUploadRowKey({
-          file: file.file.originalPath,
-          ...annotation,
-        });
         const annotationDefinition =
           annotationIdToAnnotationMap[annotation.annotationId]?.[0];
         if (!annotationDefinition) {
@@ -289,19 +281,16 @@ function convertUploadRequestsToUploadStateBranch(
             );
         }
 
+        const filePath = file.file.originalPath;
         return {
           ...keyToMetadataSoFar,
-          [key]: {
-            ...(keyToMetadataSoFar[key] || {}),
-            file: file.file.originalPath,
+          [filePath]: {
+            ...(keyToMetadataSoFar[filePath] || {}),
+            file: filePath,
             fileId: file.fileId,
-            channelId: annotation.channelId,
-            fovId: annotation.fovId,
-            positionIndex: annotation.positionIndex,
-            scene: annotation.scene,
-            subImageName: annotation.subImageName,
             [annotationDefinition.name]: uniq([
-              ...(keyToMetadataSoFar[key]?.[annotationDefinition.name] || []),
+              ...(keyToMetadataSoFar[filePath]?.[annotationDefinition.name] ||
+                []),
               ...values,
             ]),
           },

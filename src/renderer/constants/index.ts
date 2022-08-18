@@ -6,7 +6,6 @@ export const LIST_DELIMITER_SPLIT = ",";
 export const LIST_DELIMITER_JOIN = ", ";
 
 export enum AnnotationName {
-  CHANNEL_TYPE = "Channel Type",
   NOTES = "Notes",
   IMAGING_SESSION = "Imaging Session",
   PLATE_BARCODE = "Plate Barcode",
