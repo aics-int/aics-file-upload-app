@@ -33,11 +33,11 @@ export interface UploadServiceFields {
   groupId?: string;
 
   // The MD5 hash calculated for this upload file. Tracked in this
-  // job to try to avoid re-calculation when possible.
-  calculatedMD5?: string;
+  // job to try to avoid renable resuming an upload at any chunk.
+  partiallyCalculatedMd5?: string;
 
   // Tracks the modified date present in the upload file's metadata at the time
-  // the MD5 calculation occurred. If this date is different than the current
+  // the MD5 calculation began. If this date is different than the current
   // upload file's metadata it can be concluded that the MD5 may no longer
   // represent the current state of the file.
   lastModifiedInMS?: number;
