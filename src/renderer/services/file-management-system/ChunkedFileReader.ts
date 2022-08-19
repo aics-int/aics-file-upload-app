@@ -2,8 +2,6 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as stream from "stream";
 
-import { throttle } from "lodash";
-
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 
 // Create an explicit error class to capture cancellations
@@ -31,78 +29,19 @@ export default class ChunkedFileReader {
   private readonly uploadIdToStreamMap: {
     [jobId: string]: {
       readStream: fs.ReadStream;
-      writeStream?: fs.WriteStream;
       progressStream?: stream.Transform;
       hashStream?: crypto.Hash;
     };
   } = {};
 
   /**
-   * Calculates the MD5 hash of the file at the 'source'. Each chunk,
-   * of 'chunkSize' size read will be sent back in the given
-   * 'onProgress' callback.
-   *
-   * The file read is tracked by the given 'uploadId' and may be
-   * cancelled at any time.
-   */
-  public async calculateMD5(
-    uploadId: string,
-    source: string,
-    onProgress: (bytesRead: number) => void
-  ): Promise<string> {
-    const readStream = fs.createReadStream(source);
-    const hashStream = crypto.createHash("md5").setEncoding("hex");
-    let bytesCopied = 0;
-
-    // Throttle the progress callback to avoid overwhelming during fast reads
-    const throttledOnProgress = throttle(
-      onProgress,
-      ChunkedFileReader.THROTTLE_DELAY_IN_MS
-    );
-
-    // Create progress stream for sending updates while reading
-    const progressStream = new stream.Transform({
-      transform(chunk, _, callback) {
-        bytesCopied += chunk.length;
-        throttledOnProgress(bytesCopied);
-        callback(null, chunk);
-      },
-    });
-
-    // Add streams to mapping of in progress reads
-    this.uploadIdToStreamMap[uploadId] = {
-      readStream,
-      hashStream,
-      progressStream,
-    };
-
-    // Wait for stream pipeline to finish
-    await new Promise<void>((resolve, reject) => {
-      // Create a pipeline sending updating on each chunk read
-      stream.pipeline(readStream, progressStream, hashStream, (error) => {
-        if (error) {
-          delete this.uploadIdToStreamMap[uploadId];
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    // Send any remaining progress updates before returning
-    throttledOnProgress.flush();
-
-    // Remove streams from in progress mapping
-    delete this.uploadIdToStreamMap[uploadId];
-
-    return hashStream.read();
-  }
-
-  /**
    * Reads the given file at the 'source'. Each chunk, of 'chunkSize' size
    * read will be sent back in the given 'onProgress' callback. The starting
    * point for the file read may be offset from the first byte using the 'offset'
    * parameter.
+   * 
+   * Returns the MD5 hash of the file upon resolution. This MD5 is calculated
+   * while the file is read.
    *
    * The file read is tracked by the given 'uploadId' and may be
    * cancelled at any time.
@@ -112,7 +51,8 @@ export default class ChunkedFileReader {
     source: string,
     onProgress: (chunk: Uint8Array) => Promise<void>,
     chunkSize: number,
-    offset: number
+    offset: number,
+    partiallyCalculatedMd5?: string
   ): Promise<void> {
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
@@ -184,14 +124,17 @@ export default class ChunkedFileReader {
       },
     });
 
+    // TODO: Problem, unsure how to ressurect an MD5 midway through
+    const hashStream = crypto.createHash("md5").setEncoding("hex");
     // Add streams to mapping of in progress reads
     this.uploadIdToStreamMap[uploadId] = {
       readStream,
+      hashStream,
       progressStream,
     };
 
-    // Wait for stream pipeline to finish
-    await new Promise<void>((resolve, reject) => {
+    // Create promise for upload & promise for MD5 calculation
+    const uploadPromise = new Promise<void>((resolve, reject) => {
       // Send source bytes to destination and track progress
       stream.pipeline(readStream, progressStream, (error) => {
         if (error) {
@@ -203,9 +146,27 @@ export default class ChunkedFileReader {
         }
       });
     });
+    // TODO: Test combining streams
+    const md5CalcPromise = new Promise<void>((resolve, reject) => {
+      // Calculate MD5
+      stream.pipeline(readStream, hashStream, (error) => {
+        if (error) {
+          delete this.uploadIdToStreamMap[uploadId];
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    // Wait for read, upload, md5 calculation to complete
+    await Promise.all([uploadPromise, md5CalcPromise]);
 
     // Remove streams from in progress mapping
     delete this.uploadIdToStreamMap[uploadId];
+
+    // Return MD5 hash of file read
+    return hashStream.read();
   }
 
   /**
@@ -224,7 +185,6 @@ export default class ChunkedFileReader {
       // Destroy the downstream streams emitting an error if possible
       this.uploadIdToStreamMap[uploadId].progressStream?.destroy(error);
       this.uploadIdToStreamMap[uploadId].hashStream?.destroy(error);
-      this.uploadIdToStreamMap[uploadId].writeStream?.destroy(error);
       delete this.uploadIdToStreamMap[uploadId];
     }
     return isUploadTracked;

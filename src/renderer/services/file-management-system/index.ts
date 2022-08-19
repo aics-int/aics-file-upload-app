@@ -123,24 +123,6 @@ export default class FileManagementSystem {
         await fs.promises.stat(source);
       const fileLastModifiedInMs = fileLastModified.getTime();
 
-      // Calculate MD5 ahead of submission, re-use from job if possible. Only potentially available
-      // on job if this upload is being re-submitted like for a retry. Avoid reusing MD5 if the file
-      // has been modified since the MD5 was calculated
-      let md5;
-      if (
-        upload.serviceFields.calculatedMD5 &&
-        fileLastModifiedInMs === upload.serviceFields.lastModifiedInMS
-      ) {
-        md5 = upload.serviceFields.calculatedMD5;
-      } else {
-        md5 = await this.fileReader.calculateMD5(
-          upload.jobId,
-          upload.serviceFields.files[0]?.file.originalPath,
-          (md5BytesComputed) =>
-            onProgress({ md5BytesComputed, totalBytes: fileSize })
-        );
-      }
-
       // Heuristic which in most cases, prevents attempting to upload a duplicate
       if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
         throw new Error(
@@ -157,14 +139,12 @@ export default class FileManagementSystem {
         fileName,
         fileType,
         fileSize,
-        md5
       );
 
       // Update parent job with upload job created by FSS
       // for tracking in the event of a retry
       await this.jss.updateJob(upload.jobId, {
         serviceFields: {
-          calculatedMD5: md5,
           fssUploadChunkSize: registration.chunkSize,
           fssUploadId: registration.uploadId,
           lastModifiedInMS: fileLastModifiedInMs,
@@ -286,8 +266,6 @@ export default class FileManagementSystem {
 
     // Start new upload jobs that will replace the current one
     const newJobServiceFields = {
-      calculatedMD5: upload.serviceFields.calculatedMD5,
-      lastModifiedInMS: upload.serviceFields.lastModifiedInMS,
       groupId:
         upload.serviceFields?.groupId ||
         FileManagementSystem.createUploadGroupId(),
@@ -430,8 +408,14 @@ export default class FileManagementSystem {
     fssStatus: UploadStatusResponse,
     onProgress: (uploadId: string, progress: UploadProgressInfo) => void
   ): Promise<void> {
-    const { fssUploadChunkSize, fssUploadId } = upload.serviceFields;
-    console.log("In resume!!!")
+    const { fssUploadChunkSize, fssUploadId, lastModifiedInMS, files } = upload.serviceFields;
+    const { mtime: fileLastModified } =
+      await fs.promises.stat(files[0].file.originalPath);
+    const fileLastModifiedInMs = fileLastModified.getTime();
+
+    if (lastModifiedInMS !== fileLastModifiedInMs) {
+      throw new Error("File has been modified since last upload attempt");
+    }
 
     // Skip trying to resume if there is no FSS upload to check
     if (fssUploadId) {
@@ -518,7 +502,8 @@ export default class FileManagementSystem {
     chunkSize: number,
     user: string,
     onProgress: (bytesUploaded: number) => void,
-    initialChunkNumber = 0
+    initialChunkNumber = 0,
+    partiallyCalculatedMd5?: string,
   ): Promise<void> {
     let chunkNumber = initialChunkNumber;
 
@@ -537,7 +522,7 @@ export default class FileManagementSystem {
     const chunksInFlightLimit = FileManagementSystem.getInFlightChunkRequestsLimit(chunkSize);
 
     // Handles submitting chunks to FSS, and updating progress
-    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number): Promise<void> => {
+    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
       // Upload chunk
       chunksInFlight++;
       await this.fss.sendUploadChunk(
@@ -547,6 +532,13 @@ export default class FileManagementSystem {
         chunk,
         user
       );
+      // TODO: This would be better combined into FSS to ensure
+      // the chunks and MD5 calculation progress align, also would avoid overrunning JSS
+      await this.jss.updateJob(uploadId, {
+        serviceFields: {
+          partiallyCalculatedMd5: md5ThusFar,
+        },
+      })
       console.log("Sent chunk " + chunkNumber + " to fss")
       // Submit progress to callback
       bytesUploaded += chunk.byteLength;
@@ -555,21 +547,20 @@ export default class FileManagementSystem {
     };
 
     /**
-     * @param chunk 
-     * A callback for this.fileReader.
+     * A callback for ChunkedFileReader::read
      * Responsible for throttling the reader when the desired number of chunks "in flight" (submitted to fss, and not yet resolved) has been reached.
      * It accomplishes this by checking the state of chunksInFlight, and pausing (reading of the file) if needed.  
      * 
      * When chunksInFlight is not saturated, onChunkRead is also responsible for submitting chunks to this.fss (via uploadChunk) and has the 
      * side effect of populating uploadChunkPromises.
      */
-    const onChunkRead =async (chunk:Uint8Array): Promise<void> => {
+    const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be uploaded in parallel
-      while(chunksInFlight >= chunksInFlightLimit){
+      while (chunksInFlight >= chunksInFlightLimit) {
         await FileManagementSystem.sleep();
       }
       chunkNumber += 1;
-      uploadChunkPromises.push(uploadChunk(chunk, chunkNumber));
+      uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
 
     // Read in file
@@ -579,7 +570,8 @@ export default class FileManagementSystem {
       source,
       onChunkRead,
       chunkSize,
-      chunkSize * initialChunkNumber
+      chunkSize * initialChunkNumber,
+      partiallyCalculatedMd5,
     );
 
     //Block until all chunk uploads have completed

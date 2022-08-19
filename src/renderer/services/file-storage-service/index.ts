@@ -99,7 +99,6 @@ export default class FileStorageService extends HttpCacheClient {
     fileName: string,
     fileType: FileType,
     fileSize: number,
-    md5: string
   ): Promise<RegisterUploadResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
     const postBody = {
@@ -110,7 +109,6 @@ export default class FileStorageService extends HttpCacheClient {
       // Unfortunately FSS expects snake_case in all but one case (MD5)
       // so the conversion must be manual each request
       file_size: fileSize,
-      MD5: md5,
     };
     return this.post<RegisterUploadResponse>(
       url,
