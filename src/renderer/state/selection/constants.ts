@@ -9,10 +9,6 @@ export const ADD_ROW_TO_DRAG_EVENT = makeConstant(
 export const APPLY_MASS_EDIT = makeConstant(BRANCH_NAME, "apply-mass-edit");
 export const CANCEL_MASS_EDIT = makeConstant(BRANCH_NAME, "cancel-mass-edit");
 export const LOAD_FILES = makeConstant(BRANCH_NAME, "load-files");
-export const OPEN_TEMPLATE_EDITOR = makeConstant(
-  BRANCH_NAME,
-  "add-row-to-drag-event"
-);
 export const REMOVE_ROW_FROM_DRAG_EVENT = makeConstant(
   BRANCH_NAME,
   "remove-row-from-drag-event"
