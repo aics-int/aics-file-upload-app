@@ -9,6 +9,7 @@ import {
   isEqual,
   isNil,
   keys,
+  mapValues,
   omit,
   uniq,
 } from "lodash";
@@ -91,23 +92,12 @@ export const getUploadAsTableRows = createSelector(
 export const getFileToAnnotationHasValueMap = createSelector(
   [getUpload],
   (fileToMetadataMap): { [file: string]: { [annotation: string]: boolean } } =>
-    Object.values(fileToMetadataMap).reduce(
-      (fileToAnnotationHasValueMap, fileMetadata) => {
-        fileToAnnotationHasValueMap[fileMetadata.file] = Object.entries(
-          fileMetadata
-        ).reduce((annotationHasValueMap, [annotation, value]) => {
-          const currentValueIsEmpty = isArray(value)
-            ? isEmpty(value)
-            : isNil(value);
-          annotationHasValueMap[annotation] =
-            annotationHasValueMap[annotation] || !currentValueIsEmpty;
-
-          return annotationHasValueMap;
-        }, {} as { [annotation: string]: boolean });
-
-        return fileToAnnotationHasValueMap;
-      },
-      {} as { [file: string]: { [annotation: string]: boolean } }
+    mapValues(fileToMetadataMap, (fileMetadata) =>
+      mapValues(fileMetadata, (annotationValue) =>
+        isArray(annotationValue)
+          ? !isEmpty(annotationValue)
+          : !isNil(annotationValue)
+      )
     )
 );
 
