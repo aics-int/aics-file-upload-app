@@ -1,25 +1,14 @@
-import { AnnotationName } from "../../constants";
 import { JSSJob } from "../../services/job-status-client/types";
 import { UploadServiceFields } from "../../services/types";
-import {
-  AutoSaveAction,
-  FileModel,
-  FileModelId,
-  State,
-  WriteToStoreAction,
-} from "../types";
+import { AutoSaveAction, FileModel, State, WriteToStoreAction } from "../types";
 
 export interface MMSAnnotationValueRequest {
   annotationId: number;
-  channelId?: string; // channel name or channel index (not primary key)
-  positionIndex?: number;
-  scene?: number;
-  subImageName?: string;
   values: string[];
 }
 
 export interface AddUploadFilesAction extends AutoSaveAction {
-  payload: FileModelId[];
+  payload: FileModel[]; // array of files to upload
   type: string;
 }
 
@@ -42,23 +31,6 @@ export interface UpdateUploadRowsAction extends AutoSaveAction {
     metadataUpdate: Partial<FileModel>;
   };
   type: string;
-}
-
-export interface UploadTableRow extends FileModel {
-  // react-table property for discovering sub rows for any given row
-  subRows: UploadTableRow[];
-
-  // Keeps track of all positionIndexes - used only on the top-level row
-  positionIndexes: number[];
-
-  // Keeps track of all scenes - used only on top-level row
-  scenes: number[];
-
-  // Keeps track of all sub image names - used only on top-level row
-  subImageNames: string[];
-
-  // Keeps track of all channelIds - used only on the top-level row
-  [AnnotationName.CHANNEL_TYPE]: string[];
 }
 
 export interface JumpToPastUploadAction extends AutoSaveAction {
@@ -147,19 +119,6 @@ export interface UpdateUploadsAction extends AutoSaveAction {
     clearAll: boolean;
     uploads: Partial<FileModel>;
   };
-  type: string;
-}
-
-export interface UpdateSubImagesPayload {
-  channelIds: string[];
-  positionIndexes: number[];
-  row: UploadTableRow;
-  scenes: number[];
-  subImageNames: string[];
-}
-
-export interface UpdateSubImagesAction extends AutoSaveAction {
-  payload: UpdateSubImagesPayload;
   type: string;
 }
 

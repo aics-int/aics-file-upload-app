@@ -42,7 +42,6 @@ import {
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
 import { AlertType, AsyncRequest, Logger, Page, State } from "../../types";
-import { getUploadRowKey } from "../../upload/constants";
 import { getUpload } from "../../upload/selectors";
 import { closeUpload, viewUploads } from "../actions";
 import { VIEW_UPLOADS_SUCCEEDED } from "../constants";
@@ -441,18 +440,13 @@ describe("Route logics", () => {
       expect(getPage(state)).to.equal(Page.UploadWithTemplate);
       expect(getView(state)).to.equal(Page.UploadWithTemplate);
       expect(getUpload(state)).to.deep.equal({
-        [getUploadRowKey({ file: fileMetadata.localFilePath || "" })]: {
+        [fileMetadata.localFilePath || ""]: {
           file: fileMetadata.localFilePath,
           fileId: "dog",
           "Favorite Color": ["Blue", "Green"],
           [AnnotationName.WELL]: ["A1", "B6"],
           [AnnotationName.PLATE_BARCODE]: ["abc"],
           [AnnotationName.IMAGING_SESSION]: [],
-          channelId: undefined,
-          fovId: undefined,
-          positionIndex: undefined,
-          scene: undefined,
-          subImageName: undefined,
         },
       });
       expect(getAppliedTemplate(state)).to.not.be.undefined;

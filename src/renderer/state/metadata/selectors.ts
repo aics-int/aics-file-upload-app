@@ -27,7 +27,6 @@ export const getBarcodePrefixes = (state: State) =>
   state.metadata.barcodePrefixes;
 export const getBarcodeSearchResults = (state: State) =>
   state.metadata.barcodeSearchResults;
-export const getChannels = (state: State) => state.metadata.channels;
 export const getCurrentUploadFilePath = (state: State) =>
   state.metadata.currentUploadFilePath;
 export const getImagingSessions = (state: State) =>

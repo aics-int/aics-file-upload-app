@@ -1,17 +1,6 @@
 import { basename, extname } from "path";
 
-import {
-  castArray,
-  chunk,
-  flatMap,
-  forEach,
-  get,
-  includes,
-  isEmpty,
-  isNil,
-  trim,
-  values,
-} from "lodash";
+import { castArray, chunk, flatMap, forEach, get, isNil, trim } from "lodash";
 import { isDate, isMoment } from "moment";
 import { createLogic } from "redux-logic";
 
@@ -48,7 +37,6 @@ import {
   ensureDraftGetsSaved,
   getApplyTemplateInfo,
   handleUploadProgress,
-  pivotAnnotations,
 } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import { getAppliedTemplate } from "../template/selectors";
@@ -60,10 +48,9 @@ import {
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicRejectCb,
   ReduxLogicTransformDependenciesWithAction,
-  UploadProgressInfo,
-  UploadStateBranch,
   FileModel,
   PlateAtImagingSession,
+  UploadProgressInfo,
 } from "../types";
 import { batchActions } from "../util";
 
@@ -76,24 +63,19 @@ import {
   editFileMetadataSucceeded,
   initiateUploadFailed,
   initiateUploadSucceeded,
-  removeUploads,
   replaceUpload,
   saveUploadDraftSuccess,
-  updateUploads,
   uploadFailed,
 } from "./actions";
 import {
   ADD_UPLOAD_FILES,
   APPLY_TEMPLATE,
   CANCEL_UPLOADS,
-  getUploadRowKey,
   INITIATE_UPLOAD,
-  isSubImageOnlyRow,
   OPEN_UPLOAD_DRAFT,
   RETRY_UPLOADS,
   SAVE_UPLOAD_DRAFT,
   SUBMIT_FILE_METADATA_UPDATE,
-  UPDATE_SUB_IMAGES,
   UPDATE_UPLOAD,
   UPDATE_UPLOAD_ROWS,
   UPLOAD_WITHOUT_METADATA,
@@ -114,7 +96,6 @@ import {
   RetryUploadAction,
   SaveUploadDraftAction,
   SubmitFileMetadataUpdateAction,
-  UpdateSubImagesAction,
   UpdateUploadAction,
   UpdateUploadRowsAction,
   UploadWithoutMetadataAction,
@@ -343,222 +324,6 @@ const retryUploadsLogic = createLogic({
   },
   type: RETRY_UPLOADS,
   warnTimeout: 0,
-});
-
-const getSubImagesAndKey = (
-  positionIndexes: number[],
-  scenes: number[],
-  subImageNames: string[]
-) => {
-  let subImages: Array<string | number> = positionIndexes;
-  let subImageKey: keyof UploadRequest = "positionIndex";
-  if (isEmpty(subImages)) {
-    subImages = scenes;
-    subImageKey = "scene";
-  }
-  if (isEmpty(subImages)) {
-    subImages = subImageNames;
-    subImageKey = "subImageName";
-  }
-  subImages = subImages || [];
-  return {
-    subImageKey,
-    subImages,
-  };
-};
-
-// This handles the event where a user adds subimages in the form of positions/scenes/names (only one type allowed)
-// and/or channels.
-// When this happens we want to:
-// (1) delete rows representing subimages and channels that we no longer care about
-// (2) create new rows for subimages and channels that are new
-// (3) remove wells from file row if a sub image was added.
-// For rows containing subimage or channel information that was previously there, we do nothing, as to save
-// anything that user has entered for that row.
-const updateSubImagesLogic = createLogic({
-  type: UPDATE_SUB_IMAGES,
-  validate: (
-    {
-      action,
-      getState,
-    }: ReduxLogicTransformDependenciesWithAction<UpdateSubImagesAction>,
-    next: ReduxLogicNextCb,
-    reject: ReduxLogicRejectCb
-  ) => {
-    const {
-      channelIds,
-      positionIndexes,
-      row: fileRow,
-      scenes,
-      subImageNames,
-    } = action.payload;
-    const fileRowKey = getUploadRowKey(fileRow);
-    let notEmptySubImageParams = 0;
-    if (!isEmpty(positionIndexes)) {
-      notEmptySubImageParams++;
-    }
-
-    if (!isEmpty(scenes)) {
-      notEmptySubImageParams++;
-    }
-
-    if (!isEmpty(subImageNames)) {
-      notEmptySubImageParams++;
-    }
-
-    if (notEmptySubImageParams > 1) {
-      reject(
-        setErrorAlert(
-          "Could not update sub images. Found more than one type of subImage in request"
-        )
-      );
-      return;
-    }
-
-    const { subImageKey, subImages } = getSubImagesAndKey(
-      positionIndexes,
-      scenes,
-      subImageNames
-    );
-    const update: Partial<UploadStateBranch> = {};
-
-    const uploads = getUpload(getState());
-    const existingUploadsForFile = values(uploads).filter(
-      (u) => u.file === fileRow.file
-    );
-
-    const template = getAppliedTemplate(getState());
-
-    if (!template) {
-      next(
-        setErrorAlert(
-          "Could not get applied template while attempting to update file sub images. Contact Software."
-        )
-      );
-      return;
-    }
-
-    const booleanAnnotationTypeId = getBooleanAnnotationTypeId(getState());
-    if (!booleanAnnotationTypeId) {
-      next(
-        setErrorAlert("Could not get boolean annotation type. Contact Software")
-      );
-      return;
-    }
-
-    const additionalAnnotations = pivotAnnotations(
-      template.annotations,
-      booleanAnnotationTypeId
-    );
-
-    // If there are subimages for a file, remove the well associations from the file row
-    // Also add channels as an annotation
-    if (!isEmpty(subImages)) {
-      update[fileRowKey] = {
-        ...uploads[fileRowKey],
-        [AnnotationName.WELL]: [],
-        ...(channelIds.length && {
-          [AnnotationName.CHANNEL_TYPE]: channelIds,
-        }),
-      };
-    }
-
-    // add channel rows that are new
-    const oldChannelIds = fileRow.channelIds || [];
-    channelIds
-      .filter((c: string) => !includes(oldChannelIds, c))
-      .forEach((channelId: string) => {
-        const key = getUploadRowKey({
-          file: fileRow.file,
-          channelId,
-        });
-        update[key] = {
-          channelId,
-          file: fileRow.file,
-          [AnnotationName.NOTES]: [],
-          positionIndex: undefined,
-          scene: undefined,
-          subImageName: undefined,
-          [AnnotationName.WELL]: [],
-          ...additionalAnnotations,
-        };
-      });
-
-    // add uploads that are new
-    subImages.forEach((subImageValue: string | number) => {
-      const matchingSubImageRow = existingUploadsForFile
-        .filter(isSubImageOnlyRow)
-        .find((u) => u[subImageKey] === subImageValue);
-
-      if (!matchingSubImageRow) {
-        const subImageOnlyRowKey = getUploadRowKey({
-          file: fileRow.file,
-          [subImageKey]: subImageValue,
-        });
-        update[subImageOnlyRowKey] = {
-          channelId: undefined,
-          file: fileRow.file,
-          [AnnotationName.NOTES]: [],
-          [AnnotationName.WELL]: [],
-          [subImageKey]: subImageValue,
-          ...additionalAnnotations,
-        };
-      }
-
-      channelIds.forEach((channelId: string) => {
-        const matchingChannelRow = existingUploadsForFile.find(
-          (u) =>
-            u.channelId &&
-            u.channelId === channelId &&
-            u[subImageKey] === subImageValue
-        );
-
-        if (!matchingChannelRow) {
-          const key = getUploadRowKey({
-            channelId: channelId,
-            file: fileRow.file,
-            [subImageKey]: subImageValue,
-          });
-          update[key] = {
-            channelId,
-            file: fileRow.file,
-            [AnnotationName.NOTES]: [],
-            [AnnotationName.WELL]: [],
-            [subImageKey]: subImageValue,
-            ...additionalAnnotations,
-          };
-        }
-      });
-    });
-
-    // delete the uploads that don't exist anymore
-    const rowKeysToDelete = existingUploadsForFile
-      .filter(
-        (u) =>
-          (!isNil(u.positionIndex) &&
-            !includes(positionIndexes, u.positionIndex)) ||
-          (!isNil(u.scene) && !includes(scenes, u.scene)) ||
-          (!isNil(u.subImageName) &&
-            !includes(subImageNames, u.subImageName)) ||
-          (!isNil(u.channelId) && !includes(channelIds, u.channelId))
-      )
-      .map(({ file, positionIndex, channelId, scene, subImageName }) =>
-        getUploadRowKey({
-          channelId,
-          file,
-          positionIndex,
-          scene,
-          subImageName,
-        })
-      );
-    next(
-      batchActions([
-        action,
-        updateUploads(update),
-        removeUploads(rowKeysToDelete),
-      ])
-    );
-  },
 });
 
 const parseStringArray = (input: string[]): string[] =>
@@ -1060,7 +825,6 @@ export default [
   retryUploadsLogic,
   saveUploadDraftLogic,
   submitFileMetadataUpdateLogic,
-  updateSubImagesLogic,
   updateUploadLogic,
   updateUploadRowsLogic,
   uploadWithoutMetadataLogic,

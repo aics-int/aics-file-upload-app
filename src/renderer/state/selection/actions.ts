@@ -6,9 +6,7 @@ import {
   ADD_ROW_TO_DRAG_EVENT,
   APPLY_MASS_EDIT,
   CANCEL_MASS_EDIT,
-  CLOSE_SUB_FILE_SELECTION_MODAL,
   LOAD_FILES,
-  OPEN_SUB_FILE_SELECTION_MODAL,
   REMOVE_ROW_FROM_DRAG_EVENT,
   START_CELL_DRAG,
   START_MASS_EDIT,
@@ -19,9 +17,7 @@ import {
   AddRowToDragEventAction,
   ApplyMassEditAction,
   CancelMassEditAction,
-  CloseSubFileSelectionModalAction,
   LoadFilesAction,
-  OpenSubFileSelectionModalAction,
   RemoveRowFromDragEventAction,
   StartCellDragAction,
   StartMassEditAction,
@@ -53,21 +49,6 @@ export function applyMassEdit(): ApplyMassEditAction {
 export function cancelMassEdit(): CancelMassEditAction {
   return {
     type: CANCEL_MASS_EDIT,
-  };
-}
-
-export function closeSubFileSelectionModal(): CloseSubFileSelectionModalAction {
-  return {
-    type: CLOSE_SUB_FILE_SELECTION_MODAL,
-  };
-}
-
-export function openSubFileSelectionModal(
-  file: string
-): OpenSubFileSelectionModalAction {
-  return {
-    payload: file,
-    type: OPEN_SUB_FILE_SELECTION_MODAL,
   };
 }
 

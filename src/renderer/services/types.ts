@@ -54,16 +54,8 @@ interface FileMetadataBlock {
   [id: string]: any;
 }
 
-export interface ImageModelBase {
-  channelId?: string;
-  fovId?: number;
-  positionIndex?: number;
-  scene?: number;
-  subImageName?: string;
-}
-
 // This is used for the POST request to mms for creating file metadata
-export interface MMSFileAnnotation extends ImageModelBase {
+export interface MMSFileAnnotation {
   annotationId: number;
   values: string[];
 }

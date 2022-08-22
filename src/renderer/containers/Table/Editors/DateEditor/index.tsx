@@ -5,7 +5,7 @@ import { ColumnInstance } from "react-table";
 
 import { DATE_FORMAT, DATETIME_FORMAT } from "../../../../constants";
 import { ColumnType } from "../../../../services/labkey-client/types";
-import { UploadTableRow } from "../../../../state/upload/types";
+import { FileModel } from "../../../../state/types";
 
 const styles = require("./styles.pcss");
 
@@ -13,7 +13,7 @@ const CLEAR_BUTTON = "clear-button";
 
 interface Props {
   initialValue: Date[];
-  column: ColumnInstance<UploadTableRow>;
+  column: ColumnInstance<FileModel>;
   commitChanges: (value: Date[]) => void;
 }
 

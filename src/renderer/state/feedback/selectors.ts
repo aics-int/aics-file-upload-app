@@ -46,7 +46,6 @@ export const getEventsByNewest = createSelector(
 
 const TUTORIAL_ORDER = [
   TutorialStep.MASS_EDIT,
-  TutorialStep.ADD_SCENES,
   TutorialStep.INPUT_MULTIPLE_VALUES,
 ];
 
