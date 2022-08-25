@@ -6,7 +6,6 @@ import * as uuid from "uuid";
 
 import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, {
-  ChunkStatus,
   FSSUpload,
   UploadStage,
   UploadStatus,
@@ -153,11 +152,12 @@ export default class FileManagementSystem {
 
       // Wait for upload
       await this.uploadInChunks(
+        upload.jobId,
         registration.uploadId,
         source,
         registration.chunkSize,
         upload.user,
-        (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
+        (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize }),
       );
     } catch (error) {
       // Ignore cancellation errors
@@ -422,7 +422,6 @@ export default class FileManagementSystem {
       // Retrive job FSS uses to track its upload portion
       let fssUpload;
       try {
-        console.log("getting JSS jobID: " + fssUploadId);
         fssUpload = (await this.jss.getJob(fssUploadId)) as FSSUpload;
       } catch (error) {
         // Because FSS uses a queue to interact with JSS this job
@@ -438,17 +437,12 @@ export default class FileManagementSystem {
         const { fileId, addedToLabkey } = fssUpload.serviceFields;
 
         // If there is no file ID the add to LabKey step may have yet to complete
-        console.log("About to complete upload in resume")
-        console.log(fssUpload.serviceFields);
         if (fileId && addedToLabkey?.status === JSSJobStatus.SUCCEEDED) {
-          console.log("Completing upload in resume")
-          console.log("saw fileId: " + fileId);
           await this.complete(upload, fileId)
         }
       } else if (fssStatus.uploadStatus === UploadStatus.WORKING) {
         // Shouldn't occur, but kept for type safety
         if (!fssUploadChunkSize) {
-          console.error("Bad fss upload chunk size " + fssUploadChunkSize)
           throw new Error(
             "Upload missing vital information about chunk size to send to server"
           );
@@ -458,17 +452,12 @@ export default class FileManagementSystem {
         await this.jss.updateJob(upload.jobId, {
           status: JSSJobStatus.RETRYING,
         });
-        console.log("Updated job to retrying " + upload.jobId)
 
-        // If FSS is still available to continue receiving chunks of this upload
-        // simply continue sending the chunks
-        let lastChunkNumber = fssStatus.chunkStatuses.findIndex(
-          (status) => status !== ChunkStatus.COMPLETE
-        );
-        if (lastChunkNumber === -1) {
-          lastChunkNumber = fssStatus.chunkStatuses.length;
+        let lastChunkNumber = 0;
+        if (upload.serviceFields.md5CalculationInformation) {
+          lastChunkNumber = upload.serviceFields.md5CalculationInformation.chunkNumber;
         }
-        console.log("Chunk number is " + lastChunkNumber)
+
 
         // FSS may already have all the chunks it needs and is asynchronously
         // comparing the MD5 hash
@@ -480,13 +469,15 @@ export default class FileManagementSystem {
           const { size: fileSize } = await fs.promises.stat(originalPath);
           console.log("Uploading chunk in resume")
           await this.uploadInChunks(
+            upload.jobId,
             fssUploadId,
             originalPath,
             fssUploadChunkSize,
             upload.user,
             (bytesUploaded) =>
               onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
-            lastChunkNumber
+            lastChunkNumber,
+            upload.serviceFields.md5CalculationInformation?.partiallyCalculatedMd5
           );
         }
       }
@@ -497,6 +488,8 @@ export default class FileManagementSystem {
    * Uploads the given file to FSS in chunks asynchronously using a NodeJS.
    */
   private async uploadInChunks(
+    // TODO: Arguments too plentiful, make into object
+    uploadId: string,
     fssUploadId: string,
     source: string,
     chunkSize: number,
@@ -522,7 +515,7 @@ export default class FileManagementSystem {
     const chunksInFlightLimit = FileManagementSystem.getInFlightChunkRequestsLimit(chunkSize);
 
     // Handles submitting chunks to FSS, and updating progress
-    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
+    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, partiallyCalculatedMd5: string): Promise<void> => {
       // Upload chunk
       chunksInFlight++;
       await this.fss.sendUploadChunk(
@@ -532,11 +525,13 @@ export default class FileManagementSystem {
         chunk,
         user
       );
-      // TODO: This would be better combined into FSS to ensure
-      // the chunks and MD5 calculation progress align, also would avoid overrunning JSS
+      // TODO: Would this be better in FSS to avoid over using JSS?
       await this.jss.updateJob(uploadId, {
         serviceFields: {
-          partiallyCalculatedMd5: md5ThusFar,
+          md5CalculationInformation: {
+            partiallyCalculatedMd5,
+            chunkNumber
+          },
         },
       })
       console.log("Sent chunk " + chunkNumber + " to fss")

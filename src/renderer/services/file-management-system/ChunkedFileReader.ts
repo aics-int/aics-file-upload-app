@@ -49,7 +49,7 @@ export default class ChunkedFileReader {
   public async read(
     uploadId: string,
     source: string,
-    onProgress: (chunk: Uint8Array) => Promise<void>,
+    onProgress: (chunk: Uint8Array, hashThusFar: string) => Promise<void>,
     chunkSize: number,
     offset: number,
     partiallyCalculatedMd5?: string
@@ -61,6 +61,11 @@ export default class ChunkedFileReader {
       // not necessarily guaranteed
       highWaterMark: chunkSize,
     });
+
+    const hashStream = crypto.createHash("md5").setEncoding("hex");
+    if (partiallyCalculatedMd5) {
+      hashStream.update(partiallyCalculatedMd5); // TODO: Does this work?
+    }
 
     // The client of this entity requires a specific chunkSize each time
     // however, streams do not guarantee an exact size each time so this
@@ -108,7 +113,7 @@ export default class ChunkedFileReader {
           } else {
             // Otherwise, run each chunk progress update consecutively
             // failing at the first failure
-            const progressUpdates = chunks.map((c) => () => onProgress(c));
+            const progressUpdates = chunks.map((c) => () => onProgress(c, hashStream.read()));
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,
               1
@@ -123,9 +128,6 @@ export default class ChunkedFileReader {
         }
       },
     });
-
-    // TODO: Problem, unsure how to ressurect an MD5 midway through
-    const hashStream = crypto.createHash("md5").setEncoding("hex");
     // Add streams to mapping of in progress reads
     this.uploadIdToStreamMap[uploadId] = {
       readStream,
