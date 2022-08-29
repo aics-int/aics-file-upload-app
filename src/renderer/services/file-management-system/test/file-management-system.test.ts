@@ -1,616 +1,616 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+// import * as fs from "fs";
+// import * as os from "os";
+// import * as path from "path";
 
-import { expect } from "chai";
-import { noop } from "lodash";
-import { createSandbox, SinonStubbedInstance } from "sinon";
+// import { expect } from "chai";
+// import { noop } from "lodash";
+// import { createSandbox, SinonStubbedInstance } from "sinon";
 
-import FileManagementSystem from "..";
-import {
-  FileStorageService,
-  JobStatusService,
-  MetadataManagementService,
-} from "../..";
-import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
-import { UploadStage, UploadStatus } from "../../file-storage-service";
-import {
-  JSSJob,
-  JSSJobStatus,
-  UploadJob,
-} from "../../job-status-service/types";
-import ChunkedFileReader from "../ChunkedFileReader";
+// import FileManagementSystem from "..";
+// import {
+//   FileStorageService,
+//   JobStatusService,
+//   MetadataManagementService,
+// } from "../..";
+// import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
+// import { UploadStage, UploadStatus } from "../../file-storage-service";
+// import {
+//   JSSJob,
+//   JSSJobStatus,
+//   UploadJob,
+// } from "../../job-status-service/types";
+// import ChunkedFileReader from "../ChunkedFileReader";
 
-class TestError extends Error {
-  constructor() {
-    super("Test.");
-    this.name = "TestError";
-  }
-}
+// class TestError extends Error {
+//   constructor() {
+//     super("Test.");
+//     this.name = "TestError";
+//   }
+// }
 
-describe("FileManagementSystem", () => {
-  const sandbox = createSandbox();
-  let fileReader: SinonStubbedInstance<ChunkedFileReader>;
-  let fss: SinonStubbedInstance<FileStorageService>;
-  let jss: SinonStubbedInstance<JobStatusService>;
-  let mms: SinonStubbedInstance<MetadataManagementService>;
-  let fms: FileManagementSystem;
-  const testFilePath = path.resolve(os.tmpdir(), "md5-test.txt");
-  const testFileSize = 1024 * 1024 * 2; //2MB
+// describe("FileManagementSystem", () => {
+//   const sandbox = createSandbox();
+//   let fileReader: SinonStubbedInstance<ChunkedFileReader>;
+//   let fss: SinonStubbedInstance<FileStorageService>;
+//   let jss: SinonStubbedInstance<JobStatusService>;
+//   let mms: SinonStubbedInstance<MetadataManagementService>;
+//   let fms: FileManagementSystem;
+//   const testFilePath = path.resolve(os.tmpdir(), "md5-test.txt");
+//   const testFileSize = 1024 * 1024 * 2; //2MB
 
-  before(async () => {
-    // Generate file with testFileSize of "random" bytes
-    await fs.promises.writeFile(
-      testFilePath,
-      Buffer.allocUnsafe(testFileSize)
-    );
-  });
+//   before(async () => {
+//     // Generate file with testFileSize of "random" bytes
+//     await fs.promises.writeFile(
+//       testFilePath,
+//       Buffer.allocUnsafe(testFileSize)
+//     );
+//   });
 
-  beforeEach(() => {
-    fileReader = sandbox.createStubInstance(ChunkedFileReader);
-    fss = sandbox.createStubInstance(FileStorageService);
-    jss = sandbox.createStubInstance(JobStatusService);
-    mms = sandbox.createStubInstance(MetadataManagementService);
+//   beforeEach(() => {
+//     fileReader = sandbox.createStubInstance(ChunkedFileReader);
+//     fss = sandbox.createStubInstance(FileStorageService);
+//     jss = sandbox.createStubInstance(JobStatusService);
+//     mms = sandbox.createStubInstance(MetadataManagementService);
 
-    fms = new FileManagementSystem({
-      fileReader: fileReader as any,
-      fss: fss as any,
-      jss: jss as any,
-      mms: mms as any,
-    });
-  });
+//     fms = new FileManagementSystem({
+//       fileReader: fileReader as any,
+//       fss: fss as any,
+//       jss: jss as any,
+//       mms: mms as any,
+//     });
+//   });
 
-  afterEach(() => {
-    sandbox.restore();
-  });
+//   afterEach(() => {
+//     sandbox.restore();
+//   });
 
-  after(async () => {
-    await fs.promises.unlink(testFilePath);
-  });
+//   after(async () => {
+//     await fs.promises.unlink(testFilePath);
+//   });
 
-  describe("initiateUpload", () => {
-    it("creates tracking job in JSS", async () => {
-      // Act
-      await fms.initiateUpload(
-        { file: { originalPath: "", fileType: "txt" } },
-        "test"
-      );
+//   describe("initiateUpload", () => {
+//     it("creates tracking job in JSS", async () => {
+//       // Act
+//       await fms.initiateUpload(
+//         { file: { originalPath: "", fileType: "txt" } },
+//         "test"
+//       );
 
-      // Assert
-      expect(jss.createJob).to.have.been.calledOnce;
-    });
-  });
+//       // Assert
+//       expect(jss.createJob).to.have.been.calledOnce;
+//     });
+//   });
 
-  describe("upload", () => {
-    it("creates appropriate metadata & completes tracking job", async () => {
-      // Arrange
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          type: "upload",
-        },
-      };
-      const uploadId = "091234124";
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+//   describe("upload", () => {
+//     it("creates appropriate metadata & completes tracking job", async () => {
+//       // Arrange
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           type: "upload",
+//         },
+//       };
+//       const uploadId = "091234124";
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
 
-      // Act
-      await fms.upload(upload, noop);
+//       // Act
+//       await fms.upload(upload, noop);
 
-      // Assert
-      expect(fileReader.calculateMD5).to.have.been.calledOnce;
-      expect(
-        fss.fileExistsByNameAndSize.calledOnceWithExactly(
-          path.basename(testFilePath),
-          testFileSize
-        )
-      ).to.be.true;
-      expect(fileReader.read).to.have.been.calledOnce;
-      expect(fss.finalize.calledOnceWithExactly(uploadId)).to.be.true;
-    });
+//       // Assert
+//       expect(fileReader.calculateMD5).to.have.been.calledOnce;
+//       expect(
+//         fss.fileExistsByNameAndSize.calledOnceWithExactly(
+//           path.basename(testFilePath),
+//           testFileSize
+//         )
+//       ).to.be.true;
+//       expect(fileReader.read).to.have.been.calledOnce;
+//       expect(fss.finalize.calledOnceWithExactly(uploadId)).to.be.true;
+//     });
 
-    it("makes requests to FSS asyncronously", async () => {
-      // Arrange
-      const md5 = "09k2341234k";
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          type: "upload",
-        },
-      };
-      const uploadId = "091234124";
-      fileReader.calculateMD5.resolves(md5);
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
-      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
-        for(let i = 0; i < 5; i++){
-          await onProgress(new Uint8Array());
-        }
-      });
-      let inFlightFssRequests = 0;
-      let wasParallelising = false;
-      fss.sendUploadChunk.callsFake(async ()=>{
-        inFlightFssRequests++;
-        await new Promise((resolve)=>setTimeout(resolve, 25));
-        if(inFlightFssRequests > 1){
-          wasParallelising = true;
-        }
-        inFlightFssRequests--;
-        return {
-          chunkNumber: 0,
-          uploadId: 'testID',
-        };
-      });
-      // Act
-      await fms.upload(upload, noop);
+//     it("makes requests to FSS asyncronously", async () => {
+//       // Arrange
+//       const md5 = "09k2341234k";
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           type: "upload",
+//         },
+//       };
+//       const uploadId = "091234124";
+//       fileReader.calculateMD5.resolves(md5);
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+//       fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
+//         for(let i = 0; i < 5; i++){
+//           await onProgress(new Uint8Array());
+//         }
+//       });
+//       let inFlightFssRequests = 0;
+//       let wasParallelising = false;
+//       fss.sendUploadChunk.callsFake(async ()=>{
+//         inFlightFssRequests++;
+//         await new Promise((resolve)=>setTimeout(resolve, 25));
+//         if(inFlightFssRequests > 1){
+//           wasParallelising = true;
+//         }
+//         inFlightFssRequests--;
+//         return {
+//           chunkNumber: 0,
+//           uploadId: 'testID',
+//         };
+//       });
+//       // Act
+//       await fms.upload(upload, noop);
 
-      // Assert
-      expect(wasParallelising).to.be.true;
-      expect(inFlightFssRequests).to.be.equal(0);
-    });
+//       // Assert
+//       expect(wasParallelising).to.be.true;
+//       expect(inFlightFssRequests).to.be.equal(0);
+//     });
 
-    it("re-uses MD5 if not modified since last attempt", async () => {
-      // Arrange
-      const { mtime: lastModified } = await fs.promises.stat(testFilePath);
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          lastModifiedInMS: lastModified.getTime(),
-          calculatedMD5: "123094123412",
-          type: "upload",
-        },
-      };
-      const fileId = "12343124";
-      const localPath = "/some/path/into/fms/at/test_file.txt";
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.finalize.resolves({
-        fileId,
-        chunkNumber: 14,
-        uploadId: upload.jobId,
-      });
-      fss.getFileAttributes.resolves({
-        fileId,
-        localPath,
-        addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
-        md5: "",
-      });
+//     it("re-uses MD5 if not modified since last attempt", async () => {
+//       // Arrange
+//       const { mtime: lastModified } = await fs.promises.stat(testFilePath);
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           lastModifiedInMS: lastModified.getTime(),
+//           calculatedMD5: "123094123412",
+//           type: "upload",
+//         },
+//       };
+//       const fileId = "12343124";
+//       const localPath = "/some/path/into/fms/at/test_file.txt";
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+//       fss.finalize.resolves({
+//         fileId,
+//         chunkNumber: 14,
+//         uploadId: upload.jobId,
+//       });
+//       fss.getFileAttributes.resolves({
+//         fileId,
+//         localPath,
+//         addedToLabkey: true,
+//         fileName: "",
+//         fileSize: 4,
+//         md5: "",
+//       });
 
-      // Act
-      await fms.upload(upload, noop);
+//       // Act
+//       await fms.upload(upload, noop);
 
-      // Assert
-      expect(fileReader.calculateMD5.called).to.be.false;
-    });
+//       // Assert
+//       expect(fileReader.calculateMD5.called).to.be.false;
+//     });
 
-    it("fails upload if error occurs during read", async () => {
-      // Arrange
-      const error = "Test failure during read";
-      const md5 = "09k2341234k";
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          type: "upload",
-        },
-      };
-      fileReader.calculateMD5.resolves(md5);
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fileReader.read.rejects(new Error(error));
+//     it("fails upload if error occurs during read", async () => {
+//       // Arrange
+//       const error = "Test failure during read";
+//       const md5 = "09k2341234k";
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           type: "upload",
+//         },
+//       };
+//       fileReader.calculateMD5.resolves(md5);
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+//       fileReader.read.rejects(new Error(error));
 
-      // Act
-      await expect(fms.upload(upload, noop)).to.be.rejectedWith(Error);
+//       // Act
+//       await expect(fms.upload(upload, noop)).to.be.rejectedWith(Error);
 
-      // Assert
-      expect(fileReader.calculateMD5).to.have.been.calledOnce;
-      expect(
-        fss.fileExistsByNameAndSize.calledOnceWithExactly(
-          path.basename(testFilePath),
-          testFileSize
-        )
-      ).to.be.true;
-      expect(
-        jss.updateJob.calledWithExactly(upload.jobId, {
-          status: JSSJobStatus.FAILED,
-          serviceFields: {
-            error: `Something went wrong uploading ${upload.jobName}. Details: ${error}`,
-            cancelled: false,
-          },
-        })
-      ).to.be.true;
-      expect(fileReader.read).to.have.been.calledOnce;
-    });
+//       // Assert
+//       expect(fileReader.calculateMD5).to.have.been.calledOnce;
+//       expect(
+//         fss.fileExistsByNameAndSize.calledOnceWithExactly(
+//           path.basename(testFilePath),
+//           testFileSize
+//         )
+//       ).to.be.true;
+//       expect(
+//         jss.updateJob.calledWithExactly(upload.jobId, {
+//           status: JSSJobStatus.FAILED,
+//           serviceFields: {
+//             error: `Something went wrong uploading ${upload.jobName}. Details: ${error}`,
+//             cancelled: false,
+//           },
+//         })
+//       ).to.be.true;
+//       expect(fileReader.read).to.have.been.calledOnce;
+//     });
 
-    it("fails upload if fss errors bubble up from reader", async () => {
-      // Arrange
-      const md5 = "09k2341234k";
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          type: "upload",
-        },
-      };
-      const uploadId = "091234124";
-      fileReader.calculateMD5.resolves(md5);
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
-      // p.getName.callsFake(() => { return "Alex Smith"; });
-      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
-        await onProgress(new Uint8Array());
-      });
-      fss.sendUploadChunk.callsFake(async ()=>{
-        throw new TestError();
-      });
-      // Act, Assert
-      expect(fms.upload(upload, noop)).to.be.rejectedWith(TestError);
-    });
-  });
+//     it("fails upload if fss errors bubble up from reader", async () => {
+//       // Arrange
+//       const md5 = "09k2341234k";
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           type: "upload",
+//         },
+//       };
+//       const uploadId = "091234124";
+//       fileReader.calculateMD5.resolves(md5);
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+//       // p.getName.callsFake(() => { return "Alex Smith"; });
+//       fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array) => Promise<void>)=>{
+//         await onProgress(new Uint8Array());
+//       });
+//       fss.sendUploadChunk.callsFake(async ()=>{
+//         throw new TestError();
+//       });
+//       // Act, Assert
+//       expect(fms.upload(upload, noop)).to.be.rejectedWith(TestError);
+//     });
+//   });
 
-  describe("retry", () => {
-    it("creates new upload if fss upload not tracked", async () => {
-      // Arrange
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          type: "upload",
-        },
-      };
-      const fileId = "12343124";
-      const localPath = "/some/path/into/fms/at/test_file.txt";
-      jss.getJob.resolves(upload);
-      jss.createJob.resolves(upload);
-      fileReader.calculateMD5.resolves("09k2341234k");
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.finalize.resolves({
-        fileId,
-        chunkNumber: 14,
-        uploadId: upload.jobId,
-      });
-      fss.getFileAttributes.resolves({
-        fileId,
-        localPath,
-        addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
-        md5: "",
-      });
+//   describe("retry", () => {
+//     it("creates new upload if fss upload not tracked", async () => {
+//       // Arrange
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           type: "upload",
+//         },
+//       };
+//       const fileId = "12343124";
+//       const localPath = "/some/path/into/fms/at/test_file.txt";
+//       jss.getJob.resolves(upload);
+//       jss.createJob.resolves(upload);
+//       fileReader.calculateMD5.resolves("09k2341234k");
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+//       fss.finalize.resolves({
+//         fileId,
+//         chunkNumber: 14,
+//         uploadId: upload.jobId,
+//       });
+//       fss.getFileAttributes.resolves({
+//         fileId,
+//         localPath,
+//         addedToLabkey: true,
+//         fileName: "",
+//         fileSize: 4,
+//         md5: "",
+//       });
 
-      // Act
-      await fms.retry("mockUploadId", noop);
+//       // Act
+//       await fms.retry("mockUploadId", noop);
 
-      // Assert
-      expect(fss.getStatus.called).to.be.false;
-      expect(jss.createJob).to.have.been.calledOnce;
-    });
+//       // Assert
+//       expect(fss.getStatus.called).to.be.false;
+//       expect(jss.createJob).to.have.been.calledOnce;
+//     });
 
-    it("creates new upload if fss upload not in progress (able to resume)", async () => {
-      // Arrange
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          fssUploadId: "234124141",
-          type: "upload",
-        },
-      };
-      const fileId = "12343124";
-      const localPath = "/some/path/into/fms/at/test_file.txt";
-      jss.getJob.resolves(upload);
-      jss.createJob.resolves(upload);
-      fss.getStatus.resolves({
-        uploadStatus: UploadStatus.FAILED,
-        chunkStatuses: [],
-      });
-      fileReader.calculateMD5.resolves("09k2341234k");
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.finalize.resolves({
-        fileId,
-        chunkNumber: 14,
-        uploadId: upload.jobId,
-      });
-      fss.getFileAttributes.resolves({
-        fileId,
-        localPath,
-        addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
-        md5: "",
-      });
+//     it("creates new upload if fss upload not in progress (able to resume)", async () => {
+//       // Arrange
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           fssUploadId: "234124141",
+//           type: "upload",
+//         },
+//       };
+//       const fileId = "12343124";
+//       const localPath = "/some/path/into/fms/at/test_file.txt";
+//       jss.getJob.resolves(upload);
+//       jss.createJob.resolves(upload);
+//       fss.getStatus.resolves({
+//         uploadStatus: UploadStatus.FAILED,
+//         chunkStatuses: [],
+//       });
+//       fileReader.calculateMD5.resolves("09k2341234k");
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+//       fss.finalize.resolves({
+//         fileId,
+//         chunkNumber: 14,
+//         uploadId: upload.jobId,
+//       });
+//       fss.getFileAttributes.resolves({
+//         fileId,
+//         localPath,
+//         addedToLabkey: true,
+//         fileName: "",
+//         fileSize: 4,
+//         md5: "",
+//       });
 
-      // Act
-      await fms.retry("mockUploadId", noop);
+//       // Act
+//       await fms.retry("mockUploadId", noop);
 
-      // Assert
-      expect(fss.getStatus).to.have.been.calledOnce;
-      expect(jss.createJob).to.have.been.calledOnce;
-    });
+//       // Assert
+//       expect(fss.getStatus).to.have.been.calledOnce;
+//       expect(jss.createJob).to.have.been.calledOnce;
+//     });
 
-    it("creates multiple new uploads for backwards compatibility", async () => {
-      // Arrange
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          type: "upload",
-        },
-      };
-      const fileId = "12343124";
-      const localPath = "/some/path/into/fms/at/test_file.txt";
-      jss.getJob.resolves(upload);
-      jss.createJob.resolves(upload);
-      fileReader.calculateMD5.resolves("09k2341234k");
-      fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
-      fss.finalize.resolves({
-        fileId,
-        chunkNumber: 14,
-        uploadId: upload.jobId,
-      });
-      fss.getFileAttributes.resolves({
-        fileId,
-        localPath,
-        addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
-        md5: "",
-      });
+//     it("creates multiple new uploads for backwards compatibility", async () => {
+//       // Arrange
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           type: "upload",
+//         },
+//       };
+//       const fileId = "12343124";
+//       const localPath = "/some/path/into/fms/at/test_file.txt";
+//       jss.getJob.resolves(upload);
+//       jss.createJob.resolves(upload);
+//       fileReader.calculateMD5.resolves("09k2341234k");
+//       fss.fileExistsByNameAndSize.resolves(false);
+//       fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+//       fss.finalize.resolves({
+//         fileId,
+//         chunkNumber: 14,
+//         uploadId: upload.jobId,
+//       });
+//       fss.getFileAttributes.resolves({
+//         fileId,
+//         localPath,
+//         addedToLabkey: true,
+//         fileName: "",
+//         fileSize: 4,
+//         md5: "",
+//       });
 
-      // Act
-      await fms.retry("mockUploadId", noop);
+//       // Act
+//       await fms.retry("mockUploadId", noop);
 
-      // Assert
-      expect(fss.getStatus.called).to.be.false;
-      expect(jss.createJob.getCalls()).to.be.lengthOf(2);
-    });
+//       // Assert
+//       expect(fss.getStatus.called).to.be.false;
+//       expect(jss.createJob.getCalls()).to.be.lengthOf(2);
+//     });
 
-    [UploadStage.ADDING_CHUNKS, UploadStage.WAITING_FOR_FIRST_CHUNK].forEach(
-      (stage) => {
-        it(`resumes sending chunks for an upload with an active FSS status for stage ${stage}`, async () => {
-          // Arrange
-          const upload: UploadJob = {
-            ...mockJob,
-            serviceFields: {
-              files: [
-                {
-                  file: {
-                    fileType: "text",
-                    originalPath: testFilePath,
-                  },
-                },
-              ],
-              fssUploadId: "234124141",
-              fssUploadChunkSize: 13,
-              type: "upload",
-            },
-          };
-          const fssUpload: JSSJob = {
-            ...mockJob,
-            currentStage: stage,
-          };
-          jss.getJob.onFirstCall().resolves(upload);
-          fss.getStatus.resolves({
-            uploadStatus: UploadStatus.WORKING,
-            chunkStatuses: [],
-          });
-          jss.getJob.onSecondCall().resolves(fssUpload);
+//     [UploadStage.ADDING_CHUNKS, UploadStage.WAITING_FOR_FIRST_CHUNK].forEach(
+//       (stage) => {
+//         it(`resumes sending chunks for an upload with an active FSS status for stage ${stage}`, async () => {
+//           // Arrange
+//           const upload: UploadJob = {
+//             ...mockJob,
+//             serviceFields: {
+//               files: [
+//                 {
+//                   file: {
+//                     fileType: "text",
+//                     originalPath: testFilePath,
+//                   },
+//                 },
+//               ],
+//               fssUploadId: "234124141",
+//               fssUploadChunkSize: 13,
+//               type: "upload",
+//             },
+//           };
+//           const fssUpload: JSSJob = {
+//             ...mockJob,
+//             currentStage: stage,
+//           };
+//           jss.getJob.onFirstCall().resolves(upload);
+//           fss.getStatus.resolves({
+//             uploadStatus: UploadStatus.WORKING,
+//             chunkStatuses: [],
+//           });
+//           jss.getJob.onSecondCall().resolves(fssUpload);
 
-          // Act
-          await fms.retry("mockUploadId", noop);
+//           // Act
+//           await fms.retry("mockUploadId", noop);
 
-          // Assert
-          expect(jss.createJob.called).to.be.false;
-          expect(fileReader.read).to.have.been.calledOnce;
-        });
-      }
-    );
+//           // Assert
+//           expect(jss.createJob.called).to.be.false;
+//           expect(fileReader.read).to.have.been.calledOnce;
+//         });
+//       }
+//     );
 
-    it("resumes an upload that just needs finalizing", async () => {
-      // Arrange
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          fssUploadId: "234124141",
-          type: "upload",
-        },
-      };
-      const fileId = "12343124";
-      const localPath = "/some/path/into/fms/at/test_file.txt";
-      jss.getJob.resolves(upload);
-      fss.getStatus.resolves({
-        uploadStatus: UploadStatus.COMPLETE,
-        chunkStatuses: [],
-      });
-      fss.finalize.resolves({
-        fileId,
-        chunkNumber: 14,
-        uploadId: upload.jobId,
-      });
-      fss.getFileAttributes.resolves({
-        fileId,
-        localPath,
-        addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
-        md5: "",
-      });
+//     it("resumes an upload that just needs finalizing", async () => {
+//       // Arrange
+//       const upload: UploadJob = {
+//         ...mockJob,
+//         serviceFields: {
+//           files: [
+//             {
+//               file: {
+//                 fileType: "text",
+//                 originalPath: testFilePath,
+//               },
+//             },
+//           ],
+//           fssUploadId: "234124141",
+//           type: "upload",
+//         },
+//       };
+//       const fileId = "12343124";
+//       const localPath = "/some/path/into/fms/at/test_file.txt";
+//       jss.getJob.resolves(upload);
+//       fss.getStatus.resolves({
+//         uploadStatus: UploadStatus.COMPLETE,
+//         chunkStatuses: [],
+//       });
+//       fss.finalize.resolves({
+//         fileId,
+//         chunkNumber: 14,
+//         uploadId: upload.jobId,
+//       });
+//       fss.getFileAttributes.resolves({
+//         fileId,
+//         localPath,
+//         addedToLabkey: true,
+//         fileName: "",
+//         fileSize: 4,
+//         md5: "",
+//       });
 
-      // Act
-      await fms.retry("mockUploadId", noop);
+//       // Act
+//       await fms.retry("mockUploadId", noop);
 
-      // Assert
-      expect(jss.createJob.called).to.be.false;
-      expect(fileReader.read.called).to.be.false;
-    });
-  });
+//       // Assert
+//       expect(jss.createJob.called).to.be.false;
+//       expect(fileReader.read.called).to.be.false;
+//     });
+//   });
 
-  describe("complete", () => {
-    it("fails upload job on error", async () => {
-      // Arrange
-      mms.createFileMetadata.rejects(new Error("Test failure"));
+//   describe("complete", () => {
+//     it("fails upload job on error", async () => {
+//       // Arrange
+//       mms.createFileMetadata.rejects(new Error("Test failure"));
 
-      // Act
-      await expect(
-        fms.complete(mockWorkingUploadJob, "90124124")
-      ).to.be.rejectedWith(Error);
+//       // Act
+//       await expect(
+//         fms.complete(mockWorkingUploadJob, "90124124")
+//       ).to.be.rejectedWith(Error);
 
-      // Assert
-      expect(jss.updateJob).to.have.been.calledOnce;
-    });
-  });
+//       // Assert
+//       expect(jss.updateJob).to.have.been.calledOnce;
+//     });
+//   });
 
-  describe("cancel", () => {
-    const mockUploadId = "90k123123";
+//   describe("cancel", () => {
+//     const mockUploadId = "90k123123";
 
-    it("cancels upload via reader and FSS", async () => {
-      // Arrange
-      jss.getJob.resolves({
-        ...mockJob,
-        status: JSSJobStatus.WORKING,
-        serviceFields: {
-          ...mockJob.serviceFields,
-          fssUploadId: "12412m4413",
-        },
-      });
-      fss.getStatus.resolves({
-        uploadStatus: UploadStatus.WORKING,
-        chunkStatuses: [],
-      });
+//     it("cancels upload via reader and FSS", async () => {
+//       // Arrange
+//       jss.getJob.resolves({
+//         ...mockJob,
+//         status: JSSJobStatus.WORKING,
+//         serviceFields: {
+//           ...mockJob.serviceFields,
+//           fssUploadId: "12412m4413",
+//         },
+//       });
+//       fss.getStatus.resolves({
+//         uploadStatus: UploadStatus.WORKING,
+//         chunkStatuses: [],
+//       });
 
-      // Act
-      await fms.cancel(mockUploadId);
+//       // Act
+//       await fms.cancel(mockUploadId);
 
-      // Assert
-      expect(fileReader.cancel).to.have.been.calledOnce;
-      expect(fss.cancelUpload).to.have.been.calledOnce;
-    });
+//       // Assert
+//       expect(fileReader.cancel).to.have.been.calledOnce;
+//       expect(fss.cancelUpload).to.have.been.calledOnce;
+//     });
 
-    it("sets job status to FAILED with cancellation flag", async () => {
-      // Arrange
-      jss.getJob.resolves(mockJob);
+//     it("sets job status to FAILED with cancellation flag", async () => {
+//       // Arrange
+//       jss.getJob.resolves(mockJob);
 
-      // Act
-      await fms.cancel(mockUploadId);
+//       // Act
+//       await fms.cancel(mockUploadId);
 
-      // Assert
-      expect(
-        jss.updateJob.calledOnceWithExactly(mockUploadId, {
-          status: JSSJobStatus.FAILED,
-          serviceFields: {
-            cancelled: true,
-            error: "Cancelled by user",
-          },
-        })
-      ).to.be.true;
-    });
+//       // Assert
+//       expect(
+//         jss.updateJob.calledOnceWithExactly(mockUploadId, {
+//           status: JSSJobStatus.FAILED,
+//           serviceFields: {
+//             cancelled: true,
+//             error: "Cancelled by user",
+//           },
+//         })
+//       ).to.be.true;
+//     });
 
-    it("rejects cancellations of uploads that have been successfully copied into the FMS", async () => {
-      // Arrange
-      jss.getJob.resolves({
-        ...mockJob,
-        status: JSSJobStatus.WORKING,
-        serviceFields: {
-          ...mockJob.serviceFields,
-          fssUploadId: "12412m4413",
-        },
-      });
-      fss.getStatus.resolves({
-        uploadStatus: UploadStatus.COMPLETE,
-        chunkStatuses: [],
-      });
+//     it("rejects cancellations of uploads that have been successfully copied into the FMS", async () => {
+//       // Arrange
+//       jss.getJob.resolves({
+//         ...mockJob,
+//         status: JSSJobStatus.WORKING,
+//         serviceFields: {
+//           ...mockJob.serviceFields,
+//           fssUploadId: "12412m4413",
+//         },
+//       });
+//       fss.getStatus.resolves({
+//         uploadStatus: UploadStatus.COMPLETE,
+//         chunkStatuses: [],
+//       });
 
-      // Act / Assert
-      await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
-    });
+//       // Act / Assert
+//       await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
+//     });
 
-    it("rejects cancellation if upload not in progress", async () => {
-      // Arrange
-      jss.getJob.resolves({
-        ...mockJob,
-        status: JSSJobStatus.SUCCEEDED,
-      });
+//     it("rejects cancellation if upload not in progress", async () => {
+//       // Arrange
+//       jss.getJob.resolves({
+//         ...mockJob,
+//         status: JSSJobStatus.SUCCEEDED,
+//       });
 
-      // Act / Arrange
-      await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
-    });
-  });
-});
+//       // Act / Arrange
+//       await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
+//     });
+//   });
+// });

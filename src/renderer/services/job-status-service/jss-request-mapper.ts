@@ -50,7 +50,7 @@ export default class JSSRequestMapper {
       rawServiceFields,
       (accum: any, value: any, key: string) => {
         // Mongo doesn't support keys with dots in them
-        const newKey = `${updateKey}.${key.replace(/\./g, "(dot)")}`;
+        const newKey = `${updateKey}.${`${key}`.replace(/\./g, "(dot)")}`;
         if (isBasicType(value) || !isPatch) {
           accum[newKey] = value;
         } else if (value instanceof Array) {
