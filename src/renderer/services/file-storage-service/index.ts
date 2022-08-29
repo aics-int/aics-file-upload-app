@@ -89,7 +89,7 @@ export default class FileStorageService extends HttpCacheClient {
     const fileRecords = await this.get<FileRecord[]>(url);
     return fileRecords.length !== 0;
   }
-
+//NOTE: why is chunk size 50B
   /**
    * This is the first step to an upload. Before the app can start sending
    * chunks of the file to upload it must first make the service aware of the
@@ -108,6 +108,7 @@ export default class FileStorageService extends HttpCacheClient {
       file_type: fileType,
       // Unfortunately FSS expects snake_case in all but one case (MD5)
       // so the conversion must be manual each request
+      MD5: '55e46d9a06bbbbcc4bc8db9b6c241c10', //TODO
       file_size: fileSize,
     };
     return this.post<RegisterUploadResponse>(
@@ -145,9 +146,13 @@ export default class FileStorageService extends HttpCacheClient {
    * performed by the service, this method need only be called for upload that have
    * failed to finalize themselves.
    */
-  public finalize(uploadId: string): Promise<UploadChunkResponse> {
+  public finalize(uploadId: string, md5: string): Promise<UploadChunkResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize`;
-    return this.patch<UploadChunkResponse>(url, undefined);
+    return this.patch<UploadChunkResponse>(
+      url,
+      {MD5: md5},
+      FileStorageService.getHttpRequestConfig()
+      );
   }
 
   /**

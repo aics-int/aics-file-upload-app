@@ -4,6 +4,11 @@ import * as stream from "stream";
 
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 
+export type SerializedBuffer = {
+  type: 'Buffer';
+  data: number[];
+}
+
 // Create an explicit error class to capture cancellations
 export class CancellationError extends Error {
   constructor() {
@@ -49,11 +54,11 @@ export default class ChunkedFileReader {
   public async read(
     uploadId: string,
     source: string,
-    onProgress: (chunk: Uint8Array, hashThusFar: string) => Promise<void>,
+    onProgress: (chunk: Uint8Array, hashThusFar: SerializedBuffer) => Promise<void>,
     chunkSize: number,
     offset: number,
-    partiallyCalculatedMd5?: string
-  ): Promise<void> {
+    partiallyCalculatedMd5?: SerializedBuffer
+  ): Promise<string> {
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
       start: offset,
@@ -62,9 +67,20 @@ export default class ChunkedFileReader {
       highWaterMark: chunkSize,
     });
 
+
     const hashStream = crypto.createHash("md5").setEncoding("hex");
     if (partiallyCalculatedMd5) {
-      hashStream.update(partiallyCalculatedMd5); // TODO: Does this work?
+      try{
+        const acc: number[] = [];
+        const reduceFunc = (accumulator: number[], index: number): number[] => {
+          accumulator[index] = partiallyCalculatedMd5.data[index];
+          return accumulator;
+        };
+        const partialMd5Arr = Object.keys(partiallyCalculatedMd5.data).reduce(reduceFunc as any, acc);
+        hashStream.update(Buffer.from(partialMd5Arr as any)); // TODO: Does this work?
+      } catch(error){
+        console.log(error);
+      }
     }
 
     // The client of this entity requires a specific chunkSize each time
@@ -78,6 +94,7 @@ export default class ChunkedFileReader {
     const progressStream = new stream.Transform({
       transform(chunk: Uint8Array, _, callback) {
         try {
+          hashStream.update(chunk);
           bytesRead += chunk.byteLength;
           const totalBytes = Buffer.concat([excessBytes, chunk]);
 
@@ -113,7 +130,12 @@ export default class ChunkedFileReader {
           } else {
             // Otherwise, run each chunk progress update consecutively
             // failing at the first failure
-            const progressUpdates = chunks.map((c) => () => onProgress(c, hashStream.read()));
+            
+            const serializePartialMd5 = hashStream.copy().digest().toJSON();
+            
+            const test = Buffer.from(serializePartialMd5 as any);
+
+            const progressUpdates = chunks.map((c) => () => onProgress(c, serializePartialMd5 as any));
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,
               1
@@ -136,7 +158,7 @@ export default class ChunkedFileReader {
     };
 
     // Create promise for upload & promise for MD5 calculation
-    const uploadPromise = new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       // Send source bytes to destination and track progress
       stream.pipeline(readStream, progressStream, (error) => {
         if (error) {
@@ -149,26 +171,26 @@ export default class ChunkedFileReader {
       });
     });
     // TODO: Test combining streams
-    const md5CalcPromise = new Promise<void>((resolve, reject) => {
-      // Calculate MD5
-      stream.pipeline(readStream, hashStream, (error) => {
-        if (error) {
-          delete this.uploadIdToStreamMap[uploadId];
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
+    // const md5CalcPromise = new Promise<void>((resolve, reject) => {
+    //   // Calculate MD5
+    //   stream.pipeline(readStream, hashStream, (error) => {
+    //     if (error) {
+    //       delete this.uploadIdToStreamMap[uploadId];
+    //       reject(error);
+    //     } else {
+    //       resolve();
+    //     }
+    //   });
+    // });
 
     // Wait for read, upload, md5 calculation to complete
-    await Promise.all([uploadPromise, md5CalcPromise]);
+    // await Promise.all([uploadPromise, md5CalcPromise]);
 
     // Remove streams from in progress mapping
     delete this.uploadIdToStreamMap[uploadId];
 
     // Return MD5 hash of file read
-    return hashStream.read();
+    return hashStream.digest('hex');
   }
 
   /**
