@@ -1,12 +1,22 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as stream from "stream";
+import * as CryptoJS from "crypto-js";
 
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 
 export type SerializedBuffer = {
   type: 'Buffer';
   data: number[];
+}
+
+function byteArrayToWordArray(ba: Uint8Array) {
+	const wa: any[] = [];
+	for (let i = 0; i < ba.byteLength; i++) {
+		wa[(i / 4) | 0] |= ba[i] << (24 - 8 * i);
+	}
+
+	return CryptoJS.lib.WordArray.create(wa, ba.length);
 }
 
 // Create an explicit error class to capture cancellations
@@ -116,7 +126,7 @@ export default class ChunkedFileReader {
     const progressStream = new stream.Transform({
       transform(chunk: Uint8Array, _, callback) {
         try {
-          hashStream.update(chunk);
+          hashStream.update(byteArrayToWordArray(chunk));
           bytesRead += chunk.byteLength;
           const totalBytes = Buffer.concat([excessBytes, chunk]);
 
