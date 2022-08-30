@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as stream from "stream";
+
 import * as CryptoJS from "crypto-js";
 
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
@@ -27,19 +28,19 @@ export class CancellationError extends Error {
   }
 }
 
-function serializeMd5(md5: any) {
+function serializeMd5(md5: any):string {
   return JSON.stringify(md5);
 }
 
-function deserializeMd5(serialized_md5: any) {
+function deserializeMd5(serialized_md5: string){
   const md5 = CryptoJS.algo.MD5.create();
 
   /** Recursively copy properties from object source to object target. */
   function restore_data(source: any, target: any) {
-    for (var prop in source) {
-        var value = source[prop];
-        if (typeof value == "object") {
-            if (typeof target[prop] != "object") {
+    for (const prop in source) {
+        const value = source[prop];
+        if (typeof value === "object") {
+            if (typeof target[prop] !== "object") {
                 target[prop] = {};
             }
             restore_data(source[prop], target[prop]);
@@ -90,10 +91,10 @@ export default class ChunkedFileReader {
   public async read(
     uploadId: string,
     source: string,
-    onProgress: (chunk: Uint8Array, hashThusFar: SerializedBuffer) => Promise<void>,
+    onProgress: (chunk: Uint8Array, hashThusFar: string) => Promise<void>,
     chunkSize: number,
     offset: number,
-    partiallyCalculatedMd5?: SerializedBuffer
+    partiallyCalculatedMd5?: string
   ): Promise<string> {
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param

@@ -1,4 +1,3 @@
-import { SerializedBuffer } from "../file-management-system/ChunkedFileReader";
 import { FSSResponseFile, UploadRequest } from "../types";
 
 export interface UploadServiceFields {
@@ -34,13 +33,9 @@ export interface UploadServiceFields {
   groupId?: string;
 
   md5CalculationInformation?: {
-    // The MD5 hash calculated for this upload file. Tracked in this
-    // job to try to enable resuming an upload at any chunk.
-    // partiallyCalculatedMd5: string;
     // To ensure the MD5 calculation resumes at the same chunk
-    // as next time, save the chunkNumber relative to the MD5 calculation
-    // chunkNumber: number;
-    [chunkNumber: string]: SerializedBuffer
+    // as next time, save the chunkNumber relative to the partial MD5 calculation
+    [chunkNumber: string]: string
   }
 
   // Tracks the modified date present in the upload file's metadata at the time
