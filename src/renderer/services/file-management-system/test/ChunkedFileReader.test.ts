@@ -1,13 +1,11 @@
-import * as crypto from "crypto";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
 import { expect } from "chai";
 import * as CryptoJS from "crypto-js";
-import { noop } from "lodash";
 
-import ChunkedFileReader, { CancellationError, SerializedBuffer } from "../ChunkedFileReader";
+import ChunkedFileReader from "../ChunkedFileReader";
 
 describe("ChunkedFileReader", () => {
   const fileReader = new ChunkedFileReader();
@@ -68,7 +66,7 @@ describe("ChunkedFileReader", () => {
 
   describe("read", () => {
 
-    it.only("test using crypto-js", () => {
+    it("test using crypto-js", () => {
       function serializeMd5(md5: any) {
         return JSON.stringify(md5);
       }
@@ -78,10 +76,10 @@ describe("ChunkedFileReader", () => {
 
         /** Recursively copy properties from object source to object target. */
         function restore_data(source: any, target: any) {
-          for (var prop in source) {
-              var value = source[prop];
-              if (typeof value == "object") {
-                  if (typeof target[prop] != "object") {
+          for (const prop in source) {
+              const value = source[prop];
+              if (typeof value === "object") {
+                  if (typeof target[prop] !== "object") {
                       target[prop] = {};
                   }
                   restore_data(source[prop], target[prop]);
@@ -116,43 +114,43 @@ describe("ChunkedFileReader", () => {
       expect(expectedHash).to.equal(actualHash);
     })
 
-    it.only("it resumes md5 computation as expected (string mode)", () => {
-      // Arrange
-      const originalHash = crypto.createHash("md5");
-      originalHash.update(Buffer.from([1, 24, 945, 10532, 54, 349, 8359]));
-      const hashFromOriginal = originalHash.digest('hex');
+    // it("it resumes md5 computation as expected (string mode)", () => {
+    //   // Arrange
+    //   const originalHash = crypto.createHash("md5");
+    //   originalHash.update(Buffer.from([1, 24, 945, 10532, 54, 349, 8359]));
+    //   const hashFromOriginal = originalHash.digest('hex');
 
-      // Act
-      const newHash = crypto.createHash("md5");
-      newHash.update(hashFromOriginal, 'hex');
-      const hashFromNewStream = newHash.digest("hex");
+    //   // Act
+    //   const newHash = crypto.createHash("md5");
+    //   newHash.update(hashFromOriginal, 'hex');
+    //   const hashFromNewStream = newHash.digest("hex");
 
-      // Assert
-      expect(hashFromNewStream).to.equal(hashFromOriginal);
-    })
+    //   // Assert
+    //   expect(hashFromNewStream).to.equal(hashFromOriginal);
+    // })
 
-    it.only("it resumes md5 computation as expected (byte mode)", () => {
-      // Arrange
-      const originalHash = crypto.createHash("md5");
-      originalHash.update(Buffer.from([1, 24, 945, 10532, 54, 349, 8359]));
-      const bufferFromOriginal = originalHash.digest().toJSON();
+    // it("it resumes md5 computation as expected (byte mode)", () => {
+    //   // Arrange
+    //   const originalHash = crypto.createHash("md5");
+    //   originalHash.update(Buffer.from([1, 24, 945, 10532, 54, 349, 8359]));
+    //   const bufferFromOriginal = originalHash.digest().toJSON();
 
-      // Act
-      const newHash = crypto.createHash("md5");
-      newHash.update(Buffer.from(bufferFromOriginal as any));
-      const hashFromNewStream = newHash.digest().toJSON();
+    //   // Act
+    //   const newHash = crypto.createHash("md5");
+    //   newHash.update(Buffer.from(bufferFromOriginal as any));
+    //   const hashFromNewStream = newHash.digest().toJSON();
 
-      // Assert
-      expect(hashFromNewStream).to.equal(bufferFromOriginal);
-    })
+    //   // Assert
+    //   expect(hashFromNewStream).to.equal(bufferFromOriginal);
+    // })
 
-    it.only("it calculates md5 correctly starting from a partial (seialized) md5", async () => {
+    it("it calculates md5 correctly starting from a partial (seialized) md5", async () => {
       // Arrange
       let chunkNumber = 0;
       const stoppedChunkNum = 3;
       const chunkSize = 100;
-      let partiallyCalculatedMd5: SerializedBuffer | undefined;
-      const onProgress = (_: Uint8Array, partialMd5: SerializedBuffer) => {
+      let partiallyCalculatedMd5: string | undefined;
+      const onProgress = (_: Uint8Array, partialMd5: string) => {
         chunkNumber += 1;
         if(chunkNumber === stoppedChunkNum){
           partiallyCalculatedMd5 = partialMd5;
@@ -183,49 +181,49 @@ describe("ChunkedFileReader", () => {
       expect(actualMd5).to.equal(expectedMd5);
     });
 
-    it.only("it resumes md5 computation as expected",async () => {
-      const someBuffer = Buffer.from([3,23,54,66,21,4,66,7]);
-      const hashStream1 = crypto.createHash("md5").setEncoding("hex");
-      const hashStream2 = crypto.createHash("md5").setEncoding("hex");
+    // it("it resumes md5 computation as expected",async () => {
+    //   const someBuffer = Buffer.from([3,23,54,66,21,4,66,7]);
+    //   const hashStream1 = crypto.createHash("md5").setEncoding("hex");
+    //   const hashStream2 = crypto.createHash("md5").setEncoding("hex");
 
-      hashStream1.update(someBuffer); 
-      hashStream2.update(Buffer.from(someBuffer.toJSON() as any)); // TODO: Does this work?
+    //   hashStream1.update(someBuffer); 
+    //   hashStream2.update(Buffer.from(someBuffer.toJSON() as any)); // TODO: Does this work?
       
-      const md51 = hashStream1.digest('hex');
-      const md52 = hashStream2.digest('hex');
+    //   const md51 = hashStream1.digest('hex');
+    //   const md52 = hashStream2.digest('hex');
 
-      expect(md51).to.not.be.empty
-      expect(md51).to.equal(md52);
+    //   expect(md51).to.not.be.empty
+    //   expect(md51).to.equal(md52);
 
-    })
+    // })
 
-    it.only("it consistently creates the same MD5 from the same bytes", async () => {
-      // Arrange
-      const onProgress = (_: Uint8Array, partialMd5: SerializedBuffer) => {
-        return Promise.resolve();
-      };
+    // it("it consistently creates the same MD5 from the same bytes", async () => {
+    //   // Arrange
+    //   const onProgress = (_: Uint8Array, partialMd5: string) => {
+    //     return Promise.resolve();
+    //   };
 
-      // Act
-      const expectedMd5 = await fileReader.read(
-        mockUploadId,
-        testFilePath,
-        onProgress,
-        100,
-        0
-      );
+    //   // Act
+    //   const expectedMd5 = await fileReader.read(
+    //     mockUploadId,
+    //     testFilePath,
+    //     onProgress,
+    //     100,
+    //     0
+    //   );
 
-      const actualMd5 = await fileReader.read(
-        mockUploadId,
-        testFilePath,
-        onProgress,
-        100,
-        0,
-      );
+    //   const actualMd5 = await fileReader.read(
+    //     mockUploadId,
+    //     testFilePath,
+    //     onProgress,
+    //     100,
+    //     0,
+    //   );
 
-      // Assert
-      expect(actualMd5).to.not.be.empty
-      expect(actualMd5).to.equal(expectedMd5);
-    });
+    //   // Assert
+    //   expect(actualMd5).to.not.be.empty
+    //   expect(actualMd5).to.equal(expectedMd5);
+    // });
 
     it("starts byte read at offset", async () => {
       // Arrange

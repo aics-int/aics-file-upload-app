@@ -23,7 +23,7 @@ import {
 import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 
-import ChunkedFileReader, { CancellationError, SerializedBuffer } from "./ChunkedFileReader";
+import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -502,7 +502,7 @@ export default class FileManagementSystem {
     user: string,
     onProgress: (bytesUploaded: number) => void,
     initialChunkNumber = 0,
-    partiallyCalculatedMd5?: SerializedBuffer,
+    partiallyCalculatedMd5?: string,
   ): Promise<void> {
     let chunkNumber = initialChunkNumber;
 
@@ -521,10 +521,10 @@ export default class FileManagementSystem {
     const chunksInFlightLimit = FileManagementSystem.getInFlightChunkRequestsLimit(chunkSize);
 
     // Handles submitting chunks to FSS, and updating progress
-    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: SerializedBuffer): Promise<void> => {
-      if(!partiallyCalculatedMd5 && chunkNumber === 3){
-        throw new Error("TEST ERROR");
-      }
+    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
+      // if(!partiallyCalculatedMd5 && chunkNumber === 3){
+        // throw new Error("TEST ERROR");
+      // }
       chunksInFlight++;
       // TODO: Would this be better in FSS to avoid over using JSS?
       await this.jss.updateJob(uploadId, {
@@ -559,7 +559,7 @@ export default class FileManagementSystem {
      * When chunksInFlight is not saturated, onChunkRead is also responsible for submitting chunks to this.fss (via uploadChunk) and has the 
      * side effect of populating uploadChunkPromises.
      */
-    const onChunkRead = async (chunk:Uint8Array, md5ThusFar: SerializedBuffer): Promise<void> => {
+    const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be uploaded in parallel
       while (chunksInFlight >= chunksInFlightLimit) {
         await FileManagementSystem.sleep();
