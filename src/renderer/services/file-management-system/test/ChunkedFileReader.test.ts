@@ -4,6 +4,7 @@ import * as os from "os";
 import * as path from "path";
 
 import { expect } from "chai";
+import * as CryptoJS from "crypto-js";
 import { noop } from "lodash";
 
 import ChunkedFileReader, { CancellationError, SerializedBuffer } from "../ChunkedFileReader";
@@ -66,6 +67,84 @@ describe("ChunkedFileReader", () => {
   // });
 
   describe("read", () => {
+
+    it.only("test using crypto-js", () => {
+      function serializeMd5(md5: any) {
+        return JSON.stringify(md5);
+      }
+
+      function deserializeMd5(serialized_md5: any) {
+        const md5 = CryptoJS.algo.MD5.create();
+
+        /** Recursively copy properties from object source to object target. */
+        function restore_data(source: any, target: any) {
+          for (var prop in source) {
+              var value = source[prop];
+              if (typeof value == "object") {
+                  if (typeof target[prop] != "object") {
+                      target[prop] = {};
+                  }
+                  restore_data(source[prop], target[prop]);
+              } else {
+                  target[prop] = source[prop];
+              }
+          }
+        }
+
+        restore_data(JSON.parse(serialized_md5), md5);
+        return md5;    
+      }
+
+      const chunk1 = "abc"
+      const chunk2 = "def";
+
+      // The correct hash:
+      const controlMd5 = CryptoJS.algo.MD5.create();
+      controlMd5.update(chunk1);
+      controlMd5.update(chunk2);
+      const expectedHash = controlMd5.finalize().toString();
+
+      // Using stringify/parse
+      const initialTestMd5 = CryptoJS.algo.MD5.create();
+      initialTestMd5.update(chunk1);
+      const serializedMd5 = serializeMd5(initialTestMd5);
+      const resumedTestMd5 = deserializeMd5(serializedMd5);
+      resumedTestMd5.update(chunk2);
+      const actualHash = resumedTestMd5.finalize().toString();
+
+      expect(actualHash).to.not.be.empty;
+      expect(expectedHash).to.equal(actualHash);
+    })
+
+    it.only("it resumes md5 computation as expected (string mode)", () => {
+      // Arrange
+      const originalHash = crypto.createHash("md5");
+      originalHash.update(Buffer.from([1, 24, 945, 10532, 54, 349, 8359]));
+      const hashFromOriginal = originalHash.digest('hex');
+
+      // Act
+      const newHash = crypto.createHash("md5");
+      newHash.update(hashFromOriginal, 'hex');
+      const hashFromNewStream = newHash.digest("hex");
+
+      // Assert
+      expect(hashFromNewStream).to.equal(hashFromOriginal);
+    })
+
+    it.only("it resumes md5 computation as expected (byte mode)", () => {
+      // Arrange
+      const originalHash = crypto.createHash("md5");
+      originalHash.update(Buffer.from([1, 24, 945, 10532, 54, 349, 8359]));
+      const bufferFromOriginal = originalHash.digest().toJSON();
+
+      // Act
+      const newHash = crypto.createHash("md5");
+      newHash.update(Buffer.from(bufferFromOriginal as any));
+      const hashFromNewStream = newHash.digest().toJSON();
+
+      // Assert
+      expect(hashFromNewStream).to.equal(bufferFromOriginal);
+    })
 
     it.only("it calculates md5 correctly starting from a partial (seialized) md5", async () => {
       // Arrange

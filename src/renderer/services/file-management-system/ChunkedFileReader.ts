@@ -17,6 +17,32 @@ export class CancellationError extends Error {
   }
 }
 
+function serializeMd5(md5: any) {
+  return JSON.stringify(md5);
+}
+
+function deserializeMd5(serialized_md5: any) {
+  const md5 = CryptoJS.algo.MD5.create();
+
+  /** Recursively copy properties from object source to object target. */
+  function restore_data(source: any, target: any) {
+    for (var prop in source) {
+        var value = source[prop];
+        if (typeof value == "object") {
+            if (typeof target[prop] != "object") {
+                target[prop] = {};
+            }
+            restore_data(source[prop], target[prop]);
+        } else {
+            target[prop] = source[prop];
+        }
+    }
+  }
+
+  restore_data(JSON.parse(serialized_md5), md5);
+  return md5;    
+}
+
 /**
  * File reader capable of reading a given file in chunks sending
  * back said chunks in the specified callback or computing the chunks
@@ -68,19 +94,15 @@ export default class ChunkedFileReader {
     });
 
 
-    const hashStream = crypto.createHash("md5").setEncoding("hex");
+    let hashStream: any;
     if (partiallyCalculatedMd5) {
       try{
-        const acc: number[] = [];
-        const reduceFunc = (accumulator: number[], index: number): number[] => {
-          accumulator[index] = partiallyCalculatedMd5.data[index];
-          return accumulator;
-        };
-        const partialMd5Arr = Object.keys(partiallyCalculatedMd5.data).reduce(reduceFunc as any, acc);
-        hashStream.update(Buffer.from(partialMd5Arr as any)); // TODO: Does this work?
+        hashStream = deserializeMd5(partiallyCalculatedMd5);
       } catch(error){
         console.log(error);
       }
+    } else {
+      hashStream = CryptoJS.algo.MD5.create();
     }
 
     // The client of this entity requires a specific chunkSize each time
@@ -130,12 +152,8 @@ export default class ChunkedFileReader {
           } else {
             // Otherwise, run each chunk progress update consecutively
             // failing at the first failure
-            
-            const serializePartialMd5 = hashStream.copy().digest().toJSON();
-            
-            const test = Buffer.from(serializePartialMd5 as any);
-
-            const progressUpdates = chunks.map((c) => () => onProgress(c, serializePartialMd5 as any));
+            const serializedPartialMd5 = serializeMd5(hashStream);
+            const progressUpdates = chunks.map((c) => () => onProgress(c, serializedPartialMd5 as any));
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,
               1
@@ -190,7 +208,7 @@ export default class ChunkedFileReader {
     delete this.uploadIdToStreamMap[uploadId];
 
     // Return MD5 hash of file read
-    return hashStream.digest('hex');
+    return hashStream.finalize().toString();
   }
 
   /**
