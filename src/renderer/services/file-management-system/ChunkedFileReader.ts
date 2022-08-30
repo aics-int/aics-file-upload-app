@@ -94,6 +94,13 @@ export default class ChunkedFileReader {
     const progressStream = new stream.Transform({
       transform(chunk: Uint8Array, _, callback) {
         try {
+          if(bytesRead === 16000000){ // should be true on chunk 3
+            console.log("serializing then rehydrating hashStream");
+            console.log(bytesRead);
+            const serializedTest = hashStream.copy().digest('hex');//.toJSON()
+            console.log(serializedTest);
+            hashStream.update(serializedTest, 'hex');
+          }
           hashStream.update(chunk);
           bytesRead += chunk.byteLength;
           const totalBytes = Buffer.concat([excessBytes, chunk]);
@@ -132,9 +139,6 @@ export default class ChunkedFileReader {
             // failing at the first failure
             
             const serializePartialMd5 = hashStream.copy().digest().toJSON();
-            
-            const test = Buffer.from(serializePartialMd5 as any);
-
             const progressUpdates = chunks.map((c) => () => onProgress(c, serializePartialMd5 as any));
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,

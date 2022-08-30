@@ -522,8 +522,9 @@ export default class FileManagementSystem {
 
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: SerializedBuffer): Promise<void> => {
-      if(!partiallyCalculatedMd5 && chunkNumber === 3){
-        throw new Error("TEST ERROR");
+      if(!partiallyCalculatedMd5){//} && chunkNumber === 3){
+        // throw new Error("TEST ERROR");
+        console.log("uploadChunk: " + chunkNumber);
       }
       chunksInFlight++;
       // TODO: Would this be better in FSS to avoid over using JSS?
