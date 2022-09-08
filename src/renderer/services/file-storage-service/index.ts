@@ -23,17 +23,17 @@ export interface FSSUpload extends JSSJob {
 
 export enum UploadStatus {
   WORKING = "WORKING", // as expected, in process
-  FAILED = "FAILED", // software failure
   COMPLETE = "COMPLETE",
+  FAILED = "FAILED", // software failure
   CANCELLED = "CANCELLED", // user cancelled
   EXPIRED = "EXPIRED", // too long since last activity
 }
 
 export enum ChunkStatus {
-  ALLOCATED = "Allocated",
-  WORKING = "Working",
-  FAILED = "Failed",
-  COMPLETE = "Complete",
+  FAILED = "FAILED",
+  WORKING = "WORKING",
+  CORRUPT = "CORRUPT",
+  COMPLETE = "COMPLETE",
 }
 
 export enum UploadStage {
