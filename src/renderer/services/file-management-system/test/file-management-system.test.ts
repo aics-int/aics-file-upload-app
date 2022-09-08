@@ -13,7 +13,7 @@ import {
   MetadataManagementService,
 } from "../..";
 import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
-import { UploadStage, UploadStatus } from "../../file-storage-service";
+import { ChunkStatus, UploadStage, UploadStatus } from "../../file-storage-service";
 import {
   JSSJob,
   JSSJobStatus,
@@ -437,7 +437,7 @@ describe("FileManagementSystem", () => {
 
     [UploadStage.ADDING_CHUNKS, UploadStage.WAITING_FOR_FIRST_CHUNK].forEach(
       (stage) => {
-        it(`resumes sending chunks for an upload with an active FSS status for stage ${stage}`, async () => {
+        it(`resumes sending chunks for an upload with no chunks, and an active FSS status for stage ${stage}`, async () => {
           // Arrange
           const upload: UploadJob = {
             ...mockJob,
@@ -472,6 +472,51 @@ describe("FileManagementSystem", () => {
           // Assert
           expect(jss.createJob.called).to.be.false;
           expect(fileReader.read).to.have.been.calledOnce;
+        });
+      }
+    );
+
+    [UploadStage.ADDING_CHUNKS, UploadStage.WAITING_FOR_FIRST_CHUNK].forEach(
+      (stage) => {
+        it.only(`resumes sending chunks for an upload with some chunks already been sent, and an active FSS status for stage ${stage}`, async () => {
+          // Arrange
+          const uploadId = "234124141";
+          const upload: UploadJob = {
+            ...mockJob,
+            serviceFields: {
+              files: [
+                {
+                  file: {
+                    fileType: "text",
+                    originalPath: testFilePath,
+                  },
+                },
+              ],
+              fssUploadId: uploadId,
+              fssUploadChunkSize: 13,
+              type: "upload",
+            },
+          };
+          const fssUpload: JSSJob = {
+            ...mockJob,
+            currentStage: stage,
+          };
+          jss.getJob.onFirstCall().resolves(upload);
+          fss.getStatus.resolves({
+            uploadStatus: UploadStatus.WORKING,
+            chunkStatuses: [ChunkStatus.COMPLETE, ChunkStatus.COMPLETE, null as any, ChunkStatus.COMPLETE, null as any, ChunkStatus.COMPLETE],
+          });
+          jss.getJob.onSecondCall().resolves(fssUpload);
+
+          // Act
+          await fms.retry("mockUploadId", noop);
+
+          // Assert
+          expect(jss.createJob.called).to.be.false;
+          const actualOffset = fileReader.read.args[0][4];
+          //expect the offset to be 26, because the file read should start at the index where the first null chunk acurrs in the chunkStatuses arr.
+          //The chunk size is 13, and the first null value is the third element.  
+          expect(actualOffset).to.equal(26)
         });
       }
     );
