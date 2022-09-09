@@ -478,7 +478,7 @@ describe("FileManagementSystem", () => {
 
     [UploadStage.ADDING_CHUNKS, UploadStage.WAITING_FOR_FIRST_CHUNK].forEach(
       (stage) => {
-        it(`resumes sending chunks for an upload with some chunks already been sent, and an active FSS status for stage ${stage}`, async () => {
+        it(`resumes sending chunks for an upload. Said upload has some chunks uploaded already, and is in an active FSS status for stage ${stage}`, async () => {
           // Arrange
           const uploadId = "234124141";
           const upload: UploadJob = {
