@@ -522,6 +522,7 @@ export default class FileManagementSystem {
 
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
+      // TODO: delete error handling test code
       // if(!partiallyCalculatedMd5 && chunkNumber === 3){
         // throw new Error("TEST ERROR");
       // }
@@ -530,9 +531,7 @@ export default class FileManagementSystem {
       await this.jss.updateJob(uploadId, {
         serviceFields: {
           md5CalculationInformation: {
-            // partiallyCalculatedMd5: md5ThusFar,
-            [chunkNumber]: md5ThusFar, 
-            // chunkNumber
+            [chunkNumber]: md5ThusFar,
           },
         },
       }, true)
