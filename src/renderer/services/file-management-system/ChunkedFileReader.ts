@@ -199,21 +199,6 @@ export default class ChunkedFileReader {
         }
       });
     });
-    // TODO: Test combining streams
-    // const md5CalcPromise = new Promise<void>((resolve, reject) => {
-    //   // Calculate MD5
-    //   stream.pipeline(readStream, hashStream, (error) => {
-    //     if (error) {
-    //       delete this.uploadIdToStreamMap[uploadId];
-    //       reject(error);
-    //     } else {
-    //       resolve();
-    //     }
-    //   });
-    // });
-
-    // Wait for read, upload, md5 calculation to complete
-    // await Promise.all([uploadPromise, md5CalcPromise]);
 
     // Remove streams from in progress mapping
     delete this.uploadIdToStreamMap[uploadId];
