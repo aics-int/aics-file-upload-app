@@ -139,9 +139,8 @@ export default class FileStorageService extends HttpCacheClient {
   }
 
   /**
-   * This is the final step to an upload. However, normally this is automatically
-   * performed by the service, this method need only be called for upload that have
-   * failed to finalize themselves.
+   * This is the final step to an upload.  The MD5 is included, and will be used by the server for a checksum.
+   * Other post upload tasks may also occur.
    */
   public finalize(uploadId: string, md5: string): Promise<UploadChunkResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize?md5=${md5}`;
