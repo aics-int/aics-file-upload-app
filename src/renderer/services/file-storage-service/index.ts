@@ -23,16 +23,13 @@ export interface FSSUpload extends JSSJob {
 
 export enum UploadStatus {
   WORKING = "WORKING", // as expected, in process
-  COMPLETE = "COMPLETE",
   FAILED = "FAILED", // software failure
+  COMPLETE = "COMPLETE",
   CANCELLED = "CANCELLED", // user cancelled
   EXPIRED = "EXPIRED", // too long since last activity
 }
 
 export enum ChunkStatus {
-  FAILED = "FAILED",
-  WORKING = "WORKING",
-  CORRUPT = "CORRUPT",
   COMPLETE = "COMPLETE",
 }
 
@@ -147,12 +144,8 @@ export default class FileStorageService extends HttpCacheClient {
    * failed to finalize themselves.
    */
   public finalize(uploadId: string, md5: string): Promise<UploadChunkResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize`;
-    return this.patch<UploadChunkResponse>(
-      url,
-      {MD5: md5},
-      FileStorageService.getHttpRequestConfig()
-      );
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize?md5=${md5}`;
+    return this.patch<UploadChunkResponse>(url, undefined);
   }
 
   /**
