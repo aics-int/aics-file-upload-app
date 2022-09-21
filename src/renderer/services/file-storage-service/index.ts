@@ -105,7 +105,6 @@ export default class FileStorageService extends HttpCacheClient {
       file_type: fileType,
       // Unfortunately FSS expects snake_case in all but one case (MD5)
       // so the conversion must be manual each request
-      MD5: '55e46d9a06bbbbcc4bc8db9b6c241c10', //TODO
       file_size: fileSize,
     };
     return this.post<RegisterUploadResponse>(
