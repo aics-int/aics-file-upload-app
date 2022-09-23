@@ -569,14 +569,14 @@ export default class FileManagementSystem {
 
     // Read in file
     console.log("About to read file")
-    const md5 = await this.fileReader.read(
-      fssUploadId,
+    const md5 = await this.fileReader.read({
+      uploadId: fssUploadId,
       source,
-      onChunkRead,
+      onProgress: onChunkRead,
       chunkSize,
-      chunkSize * initialChunkNumber,
+      offset: chunkSize * initialChunkNumber,
       partiallyCalculatedMd5,
-    );
+  });
 
     console.log('MD5: ' + md5);
 
