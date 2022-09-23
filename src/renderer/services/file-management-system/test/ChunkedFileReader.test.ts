@@ -27,11 +27,11 @@ describe("ChunkedFileReader", () => {
 
   describe("read", () => {
 
-    it("it calculates md5 correctly starting from a partial (seialized) md5", async () => {
+    it("it calculates md5 correctly starting from a partial (serialized) md5", async () => {
       // Arrange
       let chunkNumber = 0;
       const stoppedChunkNum = 3;
-      const chunkSize = 100;
+      const chunkSize = 250;
       let partiallyCalculatedMd5: string | undefined;
       const onProgress = (_: Uint8Array, partialMd5: string) => {
         chunkNumber += 1;

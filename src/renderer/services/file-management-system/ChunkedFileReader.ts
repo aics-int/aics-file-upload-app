@@ -1,23 +1,8 @@
 import * as fs from "fs";
 import * as stream from "stream";
 
-import * as CryptoJS from "crypto-js";
-
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
-
-export type SerializedBuffer = {
-  type: 'Buffer';
-  data: number[];
-}
-
-function byteArrayToWordArray(ba: Uint8Array) {
-	const wa: any[] = [];
-	for (let i = 0; i < ba.byteLength; i++) {
-		wa[(i / 4) | 0] |= ba[i] << (24 - 8 * i);
-	}
-
-	return CryptoJS.lib.WordArray.create(wa, ba.length);
-}
+import Md5Hasher from "./Md5Hasher";
 
 // Create an explicit error class to capture cancellations
 export class CancellationError extends Error {
@@ -25,32 +10,6 @@ export class CancellationError extends Error {
     super("File copy cancelled by user.");
     this.name = "CancellationError";
   }
-}
-
-function serializeMd5(md5: any):string {
-  return JSON.stringify(md5);
-}
-
-function deserializeMd5(serialized_md5: string){
-  const md5 = CryptoJS.algo.MD5.create();
-
-  /** Recursively copy properties from object source to object target. */
-  function restore_data(source: any, target: any) {
-    for (const prop in source) {
-        const value = source[prop];
-        if (typeof value === "object") {
-            if (typeof target[prop] !== "object") {
-                target[prop] = {};
-            }
-            restore_data(source[prop], target[prop]);
-        } else {
-            target[prop] = source[prop];
-        }
-    }
-  }
-
-  restore_data(JSON.parse(serialized_md5), md5);
-  return md5;    
 }
 
 /**
@@ -103,9 +62,9 @@ export default class ChunkedFileReader {
       highWaterMark: chunkSize,
     });
 
-    let hasher = CryptoJS.algo.MD5.create();
+    let hasher = new Md5Hasher();
     if (partiallyCalculatedMd5) {
-      hasher = deserializeMd5(partiallyCalculatedMd5);
+      hasher = Md5Hasher.deserialize(partiallyCalculatedMd5);
     }
 
     // The client of this entity requires a specific chunkSize each time
@@ -119,7 +78,7 @@ export default class ChunkedFileReader {
     const progressStream = new stream.Transform({
       transform(chunk: Uint8Array, _, callback) {
         try {
-          hasher.update(byteArrayToWordArray(chunk));
+          hasher.update(chunk);
           bytesRead += chunk.byteLength;
           const totalBytes = Buffer.concat([excessBytes, chunk]);
 
@@ -155,7 +114,7 @@ export default class ChunkedFileReader {
           } else {
             // Otherwise, run each chunk progress update consecutively
             // failing at the first failure
-            const serializedPartialMd5 = serializeMd5(hasher);
+            const serializedPartialMd5 = hasher.serialize();
             const progressUpdates = chunks.map((c) => () => onProgress(c, serializedPartialMd5 as any));
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,
@@ -195,7 +154,7 @@ export default class ChunkedFileReader {
     delete this.uploadIdToStreamMap[uploadId];
 
     // Return MD5 hash of file read
-    return hasher.finalize().toString();
+    return hasher.digest();
   }
 
   /**
