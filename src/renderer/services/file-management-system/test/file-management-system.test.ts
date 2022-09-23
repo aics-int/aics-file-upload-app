@@ -138,9 +138,11 @@ describe("FileManagementSystem", () => {
       const uploadId = "091234124";
       fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
-      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>):Promise<string>=>{
+      fileReader.read.callsFake(
+        async (
+          args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
         for(let i = 0; i < 5; i++){
-          await onProgress(new Uint8Array(), "");
+          await args.onProgress(new Uint8Array(), "");
         }
         return md5;
       });
@@ -229,8 +231,8 @@ describe("FileManagementSystem", () => {
       fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
       // p.getName.callsFake(() => { return "Alex Smith"; });
-      fileReader.read.callsFake(async (uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>):Promise<string>=>{
-        await onProgress(new Uint8Array(), "testMd5");
+      fileReader.read.callsFake(async (args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
+        await args.onProgress(new Uint8Array(), "testMd5");
         return "completeMd5";
       });
       fss.sendUploadChunk.callsFake(async ()=>{

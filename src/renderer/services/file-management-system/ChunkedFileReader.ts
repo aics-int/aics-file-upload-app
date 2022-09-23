@@ -1,4 +1,3 @@
-import * as crypto from "crypto";
 import * as fs from "fs";
 import * as stream from "stream";
 
@@ -72,7 +71,6 @@ export default class ChunkedFileReader {
     [jobId: string]: {
       readStream: fs.ReadStream;
       progressStream?: stream.Transform;
-      hashStream?: crypto.Hash;
     };
   } = {};
 
@@ -88,14 +86,15 @@ export default class ChunkedFileReader {
    * The file read is tracked by the given 'uploadId' and may be
    * cancelled at any time.
    */
-  public async read(
+  public async read(config: {
     uploadId: string,
     source: string,
     onProgress: (chunk: Uint8Array, hashThusFar: string) => Promise<void>,
     chunkSize: number,
     offset: number,
     partiallyCalculatedMd5?: string
-  ): Promise<string> {
+  }): Promise<string> {
+    const { uploadId, source, onProgress, chunkSize, offset, partiallyCalculatedMd5 } = config;
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
       start: offset,
@@ -104,16 +103,9 @@ export default class ChunkedFileReader {
       highWaterMark: chunkSize,
     });
 
-
-    let hashStream: any;
+    let hasher = CryptoJS.algo.MD5.create();
     if (partiallyCalculatedMd5) {
-      try{
-        hashStream = deserializeMd5(partiallyCalculatedMd5);
-      } catch(error){
-        console.log(error);
-      }
-    } else {
-      hashStream = CryptoJS.algo.MD5.create();
+      hasher = deserializeMd5(partiallyCalculatedMd5);
     }
 
     // The client of this entity requires a specific chunkSize each time
@@ -127,7 +119,7 @@ export default class ChunkedFileReader {
     const progressStream = new stream.Transform({
       transform(chunk: Uint8Array, _, callback) {
         try {
-          hashStream.update(byteArrayToWordArray(chunk));
+          hasher.update(byteArrayToWordArray(chunk));
           bytesRead += chunk.byteLength;
           const totalBytes = Buffer.concat([excessBytes, chunk]);
 
@@ -163,7 +155,7 @@ export default class ChunkedFileReader {
           } else {
             // Otherwise, run each chunk progress update consecutively
             // failing at the first failure
-            const serializedPartialMd5 = serializeMd5(hashStream);
+            const serializedPartialMd5 = serializeMd5(hasher);
             const progressUpdates = chunks.map((c) => () => onProgress(c, serializedPartialMd5 as any));
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,
@@ -182,7 +174,6 @@ export default class ChunkedFileReader {
     // Add streams to mapping of in progress reads
     this.uploadIdToStreamMap[uploadId] = {
       readStream,
-      hashStream,
       progressStream,
     };
 
@@ -204,7 +195,7 @@ export default class ChunkedFileReader {
     delete this.uploadIdToStreamMap[uploadId];
 
     // Return MD5 hash of file read
-    return hashStream.finalize().toString();
+    return hasher.finalize().toString();
   }
 
   /**
@@ -222,7 +213,6 @@ export default class ChunkedFileReader {
       this.uploadIdToStreamMap[uploadId].readStream.unpipe();
       // Destroy the downstream streams emitting an error if possible
       this.uploadIdToStreamMap[uploadId].progressStream?.destroy(error);
-      this.uploadIdToStreamMap[uploadId].hashStream?.destroy(error);
       delete this.uploadIdToStreamMap[uploadId];
     }
     return isUploadTracked;
