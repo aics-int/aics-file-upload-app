@@ -5,7 +5,8 @@ import * as path from "path";
 import { expect } from "chai";
 import * as CryptoJS from "crypto-js";
 
-import ChunkedFileReader from "../ChunkedFileReader";
+import ChunkedFileReader, { CancellationError } from "../ChunkedFileReader";
+import { noop } from "lodash";
 
 describe("ChunkedFileReader", () => {
   const fileReader = new ChunkedFileReader();
@@ -210,7 +211,7 @@ describe("ChunkedFileReader", () => {
       expect(totalBytesRead).to.equal(expectedBytes);
     });
 
-    it.only("provides bytes necessary to recreate file exactly", async () => {
+    it("provides bytes necessary to recreate file exactly", async () => {
       // Arrange
       const chunks: Uint8Array[] = [];
       const onProgress = (chunk: Uint8Array) => {
@@ -243,7 +244,7 @@ describe("ChunkedFileReader", () => {
       expect(md5OfRecreatedFile).to.equal(md5OfOriginalFile);
     });
 
-    it.only("provides bytes necessary to recreate file exactly, starting from second chunk using partial MD5", async () => {
+    it("provides bytes necessary to recreate file exactly, starting from second chunk using partial MD5", async () => {
       // Arrange
       const chunkSize = 1000;
       const chunks: Uint8Array[] = [];
@@ -284,42 +285,58 @@ describe("ChunkedFileReader", () => {
 
   });
 
-  // describe("cancel", () => {
-  //   it("cancels with default error", async () => {
-  //     // Arrange
-  //     const calculateMD5 = (uploadId: string) =>
-  //       fileReader.calculateMD5(uploadId, testFilePath, noop);
-  //     const promise = calculateMD5(mockUploadId);
+  describe("cancel", () => {
+    it("cancels with default error", async () => {
+      // Arrange
+      let wasCancelled = false;
+      const readFunc = (uploadId: string) =>
+        fileReader.read({
+          uploadId, 
+          source: testFilePath, 
+          onProgress: async () => {
+            if(!wasCancelled){
+              // Act
+              wasCancelled = fileReader.cancel(mockUploadId);
+            }
+          },
+          offset: 0,
+          chunkSize: 1000
+        });
 
-  //     // Act
-  //     const wasCancelled = fileReader.cancel(mockUploadId);
+      // Assert
+      await expect(readFunc(mockUploadId)).to.be.rejectedWith(CancellationError);
+      expect(wasCancelled).to.be.true;
 
-  //     // Assert
-  //     expect(wasCancelled).to.be.true;
-  //     await expect(promise).to.be.rejectedWith(CancellationError);
+      // (sanity-check) Does not reject non-canceled calculations
+      await expect(readFunc("12903123")).to.not.be.rejectedWith(
+        CancellationError
+      );
+    });
 
-  //     // (sanity-check) Does not reject non-canceled calculations
-  //     await expect(calculateMD5("12903123")).to.not.be.rejectedWith(
-  //       CancellationError
-  //     );
-  //   });
+    it.only("cancels with custom error", async () => {
+      // Arrange
+      const error = new Error("my special error");
+      let wasCancelled = false;
+      const readFunc = (uploadId: string) =>
+        fileReader.read({
+          uploadId, 
+          source: testFilePath, 
+          onProgress: async () => {
+            if(!wasCancelled){
+              // Act
+              wasCancelled = fileReader.cancel(mockUploadId, error);
+            }
+          },
+          offset: 0,
+          chunkSize: 1000
+        });
 
-  //   it("cancels with custom error", async () => {
-  //     // Arrange
-  //     const error = new Error("my special error");
-  //     const calculateMD5 = (uploadId: string) =>
-  //       fileReader.calculateMD5(uploadId, testFilePath, noop);
-  //     const promise = calculateMD5(mockUploadId);
+      // Assert
+      await expect(readFunc(mockUploadId)).to.be.rejectedWith(error);
+      expect(wasCancelled).to.be.true;
 
-  //     // Act
-  //     const wasCancelled = fileReader.cancel(mockUploadId, error);
-
-  //     // Assert
-  //     expect(wasCancelled).to.be.true;
-  //     await expect(promise).to.be.rejectedWith(error);
-
-  //     // (sanity-check) Does not reject non-canceled calculations
-  //     await expect(calculateMD5("12903123")).to.not.be.rejectedWith(error);
-  //   });
-  // });
+      // (sanity-check) Does not reject non-canceled calculations
+      await expect(readFunc("12903123")).to.not.be.rejectedWith(error);
+    });
+  });
 });
