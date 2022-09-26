@@ -70,7 +70,7 @@ export default class Md5Hasher{
         return new Md5Hasher(hasher);        
     }
 
-    private hasher?: any
+    private hasher: Hasher
 
     public constructor (hasher?: any) {
         this.hasher  = hasher || CryptoJS.algo.MD5.create();
