@@ -87,7 +87,7 @@ describe("ChunkedFileReader", () => {
       expect(totalBytesRead).to.equal(size - offset);
     });
 
-    it.only("yields chunks no larger than chunk size specified", async () => {
+    it("yields chunks no larger than chunk size specified", async () => {
       // Arrange
       const chunkSize = 4096;
       const onProgress = (chunk: Uint8Array) => {
