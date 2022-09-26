@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as stream from "stream";
 
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
+
 import Md5Hasher from "./Md5Hasher";
 
 // Create an explicit error class to capture cancellations
