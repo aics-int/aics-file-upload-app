@@ -87,9 +87,9 @@ describe("ChunkedFileReader", () => {
       expect(totalBytesRead).to.equal(size - offset);
     });
 
-    it("yields chunks no larger than chunk size specified", async () => {
+    it.only("yields chunks no larger than chunk size specified", async () => {
       // Arrange
-      const chunkSize = 1024;
+      const chunkSize = 4096;
       const onProgress = (chunk: Uint8Array) => {
         // Assert
         expect(chunk.byteLength).to.be.lessThan(chunkSize + 1);
@@ -101,7 +101,7 @@ describe("ChunkedFileReader", () => {
         uploadId: mockUploadId, 
         source: testFilePath, 
         onProgress, 
-        chunkSize: 100, 
+        chunkSize: 4000, 
         offset: 0
       });
     });
