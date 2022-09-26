@@ -31,7 +31,7 @@ describe("ChunkedFileReader", () => {
       // Arrange
       let chunkNumber = 0;
       const stoppedChunkNum = 3;
-      const chunkSize = 500;
+      const chunkSize = 2000;
       let partiallyCalculatedMd5: string | undefined;
       const onProgress = (_: Uint8Array, partialMd5: string) => {
         chunkNumber += 1;
@@ -79,7 +79,7 @@ describe("ChunkedFileReader", () => {
         uploadId: mockUploadId,
         source: testFilePath,
         onProgress,
-        chunkSize: 100,
+        chunkSize: 1024,
         offset
     });
 
