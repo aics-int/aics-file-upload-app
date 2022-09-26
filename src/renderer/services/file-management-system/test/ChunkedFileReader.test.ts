@@ -31,7 +31,7 @@ describe("ChunkedFileReader", () => {
       // Arrange
       let chunkNumber = 0;
       const stoppedChunkNum = 3;
-      const chunkSize = 250;
+      const chunkSize = 500;
       let partiallyCalculatedMd5: string | undefined;
       const onProgress = (_: Uint8Array, partialMd5: string) => {
         chunkNumber += 1;
