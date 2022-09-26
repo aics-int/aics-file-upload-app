@@ -68,6 +68,7 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
           <LookupEditor
             initialValue={value as string[]}
             lookupAnnotationName={column.id}
+            lookupTable={column?.lookupTable}
             commitChanges={commitChanges}
           />
         );
