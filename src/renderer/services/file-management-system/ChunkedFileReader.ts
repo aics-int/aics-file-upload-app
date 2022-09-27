@@ -116,7 +116,7 @@ export default class ChunkedFileReader {
             // Otherwise, run each chunk progress update consecutively
             // failing at the first failure
             const serializedPartialMd5 = hasher.serialize();
-            const progressUpdates = chunks.map((c) => () => onProgress(c, serializedPartialMd5 as any));
+            const progressUpdates = chunks.map((c) => () => onProgress(c, serializedPartialMd5));
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,
               1
