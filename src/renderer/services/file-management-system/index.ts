@@ -152,14 +152,14 @@ export default class FileManagementSystem {
       });
 
       // Wait for upload
-      await this.uploadInChunks(
-        upload.jobId,
-        registration.uploadId,
-        source,
-        registration.chunkSize,
-        upload.user,
-        (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize }),
-      );
+      await this.uploadInChunks({
+        uploadId: upload.jobId,
+        fssUploadId: registration.uploadId,
+        source: source,
+        chunkSize: registration.chunkSize,
+        user: upload.user,
+        onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
+      });
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -473,17 +473,17 @@ export default class FileManagementSystem {
 
           const { originalPath } = upload.serviceFields.files[0].file;
           const { size: fileSize } = await fs.promises.stat(originalPath);
-          await this.uploadInChunks(
-            upload.jobId,
+          await this.uploadInChunks({
+            uploadId: upload.jobId,
             fssUploadId,
-            originalPath,
-            fssUploadChunkSize,
-            upload.user,
-            (bytesUploaded) =>
+            source: originalPath,
+            chunkSize: fssUploadChunkSize,
+            user: upload.user,
+            onProgress: (bytesUploaded) =>
               onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
-            lastChunkNumber,
-            upload.serviceFields.md5CalculationInformation?.[`${lastChunkNumber}`]
-          );
+            initialChunkNumber: lastChunkNumber,
+            partiallyCalculatedMd5: upload.serviceFields.md5CalculationInformation?.[`${lastChunkNumber}`]
+          });
         }
       }
     }
@@ -492,17 +492,17 @@ export default class FileManagementSystem {
   /**
    * Uploads the given file to FSS in chunks asynchronously using a NodeJS.
    */
-  private async uploadInChunks(
-    // TODO: Arguments too plentiful, make into object
+  private async uploadInChunks(config: {
     uploadId: string,
     fssUploadId: string,
     source: string,
     chunkSize: number,
     user: string,
     onProgress: (bytesUploaded: number) => void,
-    initialChunkNumber = 0,
+    initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
-  ): Promise<void> {
+  }): Promise<void> {
+    const { uploadId, fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
 
     // Throttle the progress callback to avoid sending
