@@ -163,7 +163,7 @@ export default class FileManagementSystem {
         onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       });
       const end = new Date().getTime();
-      var time = (end - start) / 1000; //convert from ms to sec
+      const time = (end - start) / 1000; //convert from ms to sec
       console.log(`Upload Complete.  UploadId: ${registration.uploadId}`)
       console.log(`Execution time: ${time} Seconds`);
       console.log(`*********** End *************`)
