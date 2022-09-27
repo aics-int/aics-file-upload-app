@@ -86,7 +86,6 @@ export default class FileStorageService extends HttpCacheClient {
     const fileRecords = await this.get<FileRecord[]>(url);
     return fileRecords.length !== 0;
   }
-//NOTE: why is chunk size 50B
   /**
    * This is the first step to an upload. Before the app can start sending
    * chunks of the file to upload it must first make the service aware of the
