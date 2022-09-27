@@ -33,6 +33,11 @@ import * as CryptoJS from "crypto-js";
 
 export default class Md5Hasher{
 
+    /**
+     * Converts serialized string to a hasher object, having the same state as when it was serialized.
+     * @param serialized_md5 
+     * @returns 
+     */
     public static deserialize (serialized_md5: string){
         const hasher = CryptoJS.algo.MD5.create();
         
@@ -61,6 +66,10 @@ export default class Md5Hasher{
         this.hasher  = hasher || CryptoJS.algo.MD5.create();
     }
 
+    /**
+     * Adds chunk bytes to computes MD5 hash.
+     * @param chunk 
+     */
     public update(chunk: Uint8Array) : void {
         const wa: any[] = [];
         for (let i = 0; i < chunk.byteLength; i++) {
@@ -70,6 +79,10 @@ export default class Md5Hasher{
         this.hasher.update(word);
     }
 
+    /**
+     * Converts state of Hashing process to a String.
+     * @returns Serialized Hasher string, which can be stored and used to resume hashing process.
+     */
     public serialize():string {
         return JSON.stringify(this.hasher);
     }
