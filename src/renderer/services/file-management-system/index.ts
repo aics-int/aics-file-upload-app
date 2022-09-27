@@ -473,7 +473,6 @@ export default class FileManagementSystem {
 
           const { originalPath } = upload.serviceFields.files[0].file;
           const { size: fileSize } = await fs.promises.stat(originalPath);
-          console.log("Uploading chunk in resume")
           await this.uploadInChunks(
             upload.jobId,
             fssUploadId,
@@ -522,12 +521,7 @@ export default class FileManagementSystem {
 
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
-      // TODO: delete error handling test code
-      // if(!partiallyCalculatedMd5 && chunkNumber === 3){
-        // throw new Error("TEST ERROR");
-      // }
       chunksInFlight++;
-      // TODO: Would this be better in FSS to avoid over using JSS?
       await this.jss.updateJob(uploadId, {
         serviceFields: {
           md5CalculationInformation: {
@@ -543,7 +537,6 @@ export default class FileManagementSystem {
         chunk,
         user
       );
-      console.log("Sent chunk " + chunkNumber + " to fss")
       // Submit progress to callback
       bytesUploaded += chunk.byteLength;
       throttledOnProgress(bytesUploaded);
@@ -567,8 +560,6 @@ export default class FileManagementSystem {
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
 
-    // Read in file
-    console.log("About to read file")
     const md5 = await this.fileReader.read({
       uploadId: fssUploadId,
       source,
@@ -578,16 +569,12 @@ export default class FileManagementSystem {
       partiallyCalculatedMd5,
   });
 
-    console.log('MD5: ' + md5);
-
     //Block until all chunk uploads have completed
     await Promise.all(uploadChunkPromises);
     
-    console.log("Done reading file")
     // Ensure final progress events are sent
     throttledOnProgress.flush();
 
-    console.log("Finalizing upload by fss")
     // Trigger asynchrous finalize step in FSS
     await this.fss.finalize(fssUploadId, md5);
   }
