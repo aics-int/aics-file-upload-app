@@ -42,23 +42,25 @@ export default class Md5Hasher{
     public static deserialize (serialized_md5: string){
         const hasher = CryptoJS.algo.MD5.create();
         
-        /** Recursively copy properties from object source to object target. */
-        function restore_data(source: any, target: any) {
-            for (const prop in source) {
-                const value = source[prop];
-                if (typeof value === "object") {
-                    if (typeof target[prop] !== "object") {
-                        target[prop] = {};
-                    }
-                    restore_data(source[prop], target[prop]);
-                } else {
-                    target[prop] = source[prop];
+        Md5Hasher.deepCopy(JSON.parse(serialized_md5), hasher);
+        return new Md5Hasher(hasher);        
+    }
+
+    /**
+     * Recursively copy properties from object source to object target.
+    */
+    private static deepCopy(source: Record<string, any>, target: Record<string, any>) {
+        for (const prop in source) {
+            const value = source[prop];
+            if (typeof value === "object") {
+                if (typeof target[prop] !== "object") {
+                    target[prop] = {};
                 }
+                Md5Hasher.deepCopy(source[prop], target[prop]);
+            } else {
+                target[prop] = source[prop];
             }
         }
-        
-        restore_data(JSON.parse(serialized_md5), hasher);
-        return new Md5Hasher(hasher);        
     }
 
     private hasher: Hasher
