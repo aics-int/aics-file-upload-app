@@ -123,6 +123,8 @@ export default class FileManagementSystem {
         await fs.promises.stat(source);
       const fileLastModifiedInMs = fileLastModified.getTime();
 
+      const start = new Date().getTime();
+      console.log(`*********** Beginning or upload for file ${fileName} size ${fileSize} ***************`)
       // Heuristic which in most cases, prevents attempting to upload a duplicate
       if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
         throw new Error(
@@ -160,6 +162,11 @@ export default class FileManagementSystem {
         user: upload.user,
         onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       });
+      const end = new Date().getTime();
+      var time = (end - start) / 1000; //convert from ms to sec
+      console.log(`Upload Complete.  UploadId: ${registration.uploadId}`)
+      console.log(`Execution time: ${time} Seconds`);
+      console.log(`*********** End *************`)
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
