@@ -10,10 +10,6 @@ import * as CryptoJS from "crypto-js";
     blockSize: number;
     /**
      * Resets this hasher to its initial state.
-     *
-     * @example
-     *
-     *     hasher.reset();
      */
     reset(): void;
     /**
@@ -22,11 +18,6 @@ import * as CryptoJS from "crypto-js";
      * @param messageUpdate The message to append.
      *
      * @return This hasher.
-     *
-     * @example
-     *
-     *     hasher.update('message');
-     *     hasher.update(wordArray);
      */
     update(messageUpdate: CryptoJS.lib.WordArray | string): this;
     /**
@@ -36,12 +27,6 @@ import * as CryptoJS from "crypto-js";
      * @param messageUpdate (Optional) A final message update.
      *
      * @return The hash.
-     *
-     * @example
-     *
-     *     var hash = hasher.finalize();
-     *     var hash = hasher.finalize('message');
-     *     var hash = hasher.finalize(wordArray);
      */
     finalize(messageUpdate?: CryptoJS.lib.WordArray | string): CryptoJS.lib.WordArray;
 }
@@ -72,7 +57,7 @@ export default class Md5Hasher{
 
     private hasher: Hasher
 
-    public constructor (hasher?: any) {
+    public constructor (hasher?: Hasher) {
         this.hasher  = hasher || CryptoJS.algo.MD5.create();
     }
 
