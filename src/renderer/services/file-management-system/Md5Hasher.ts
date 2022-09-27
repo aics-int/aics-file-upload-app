@@ -2,6 +2,7 @@ import * as CryptoJS from "crypto-js";
 
 /**
  * Abstract hasher template.
+ * Provides this project with a type for CryptoJS.algo.MD5 from CryptoJS which does not export this type.
  */
  interface Hasher {
     /**
