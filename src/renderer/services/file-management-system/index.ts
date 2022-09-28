@@ -49,7 +49,7 @@ export default class FileManagementSystem {
   private readonly jss: JobStatusService;
   private readonly mms: MetadataManagementService;
 
-  private static readonly CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX = 40 * 1024 * 1024; // 40 mb
+  private static readonly CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX = 1000 * 1024 * 1024; // 40 mb
   private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 10; //ceiling on concurrent chunk requests (even if more can fit in memory)
 
   /**
@@ -71,7 +71,9 @@ export default class FileManagementSystem {
   */   
   private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number) {
     const chunksThatFitInMemory = Math.floor(FileManagementSystem.CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX / chunkSizeInBytes);
-    return Math.min(FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING, Math.max(chunksThatFitInMemory, 1));
+    const chunksInFlight = Math.min(FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING, Math.max(chunksThatFitInMemory, 1));
+    console.log(`$$$$$$$$$$$$$$$$$$$$$ chunkSize: ${chunkSizeInBytes} chunksInFlight: ${chunksInFlight}$$$$$$$$$$$$$$$$$$$$$$`);
+    return chunksInFlight;
   }
 
   public constructor(config: FileManagementClientConfig) {
@@ -123,6 +125,8 @@ export default class FileManagementSystem {
         await fs.promises.stat(source);
       const fileLastModifiedInMs = fileLastModified.getTime();
 
+      const start = new Date().getTime();
+      console.log(`*********** Beginning or upload for file ${fileName} size ${fileSize} ***************`)
       // Heuristic which in most cases, prevents attempting to upload a duplicate
       if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
         throw new Error(
@@ -141,11 +145,12 @@ export default class FileManagementSystem {
         fileSize,
       );
 
+      const tunedChunkSize = 50000000
       // Update parent job with upload job created by FSS
       // for tracking in the event of a retry
       await this.jss.updateJob(upload.jobId, {
         serviceFields: {
-          fssUploadChunkSize: registration.chunkSize,
+          fssUploadChunkSize: tunedChunkSize,
           fssUploadId: registration.uploadId,
           lastModifiedInMS: fileLastModifiedInMs,
         },
@@ -156,10 +161,15 @@ export default class FileManagementSystem {
         uploadId: upload.jobId,
         fssUploadId: registration.uploadId,
         source: source,
-        chunkSize: registration.chunkSize,
+        chunkSize: tunedChunkSize,
         user: upload.user,
         onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
       });
+      const end = new Date().getTime();
+      const time = (end - start) / 1000; //convert from ms to sec
+      console.log(`Upload Complete.  UploadId: ${registration.uploadId}`)
+      console.log(`Execution time: ${time} Seconds`);
+      console.log(`*********** End *************`)
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -554,9 +564,11 @@ export default class FileManagementSystem {
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be uploaded in parallel
       while (chunksInFlight >= chunksInFlightLimit) {
+        console.log("^^^^^^^^^^ waiting on chunks in flight.")
         await FileManagementSystem.sleep();
       }
       chunkNumber += 1;
+      console.log(`********* uploading chunk ${chunkNumber}`);
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
 
