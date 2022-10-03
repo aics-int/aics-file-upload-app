@@ -15,6 +15,7 @@ import {
   getCanShowImagingSessionColumn,
   getCanShowWellColumn,
   getColumnsForTable,
+  getColumnWidthForType,
   getSelectedPlateBarcodes,
   getTemplateColumnsForTable,
   PLATE_RELATED_COLUMNS,
@@ -29,7 +30,6 @@ describe("CustomDataTable selectors", () => {
     name,
     annotationTypeId: index,
   }));
-  const annotationTypeWidths = [150, 100, 84.49999999999999];
   const annotations = ["Cell Line", "Color", "Is Aligned"].map(
     (name, index) => {
       const lookupTypeExtras =
@@ -212,6 +212,7 @@ describe("CustomDataTable selectors", () => {
       expect(actual).deep.equal([
         ...PLATE_RELATED_COLUMNS,
         ...annotations.map((a, index) => {
+          const type = annotationTypes[index].name;
           const lookupTypeExtras =
             annotationTypes[index].name === ColumnType.LOOKUP
               ? {
@@ -220,12 +221,12 @@ describe("CustomDataTable selectors", () => {
                 }
               : null;
           return {
-            type: annotationTypes[index].name,
+            type,
             accessor: a.name,
             description: a.description,
             dropdownValues: [],
             isRequired: false,
-            width: annotationTypeWidths[index],
+            width: getColumnWidthForType(a.name, type),
             ...lookupTypeExtras,
           };
         }),
