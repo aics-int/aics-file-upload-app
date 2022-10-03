@@ -157,23 +157,20 @@ export const getTemplateColumnsForTable = createSelector(
           const type = annotationTypes.find(
             (type) => type.annotationTypeId === annotation.annotationTypeId
           )?.name;
-          const standardReturn = {
+          const lookupTypeAttributes =
+            type === ColumnType.LOOKUP
+              ? {
+                  lookupSchema: annotation.lookupSchema,
+                  lookupTable: annotation.lookupTable,
+                }
+              : null;
+          return {
             type,
             accessor: annotation.name,
             description: annotation.description,
             dropdownValues: annotation.annotationOptions,
             isRequired: annotation.required,
             width: getColumnWidthForType(annotation.name, type),
-          };
-          let lookupTypeAttributes = {};
-          if (type === ColumnType.LOOKUP) {
-            lookupTypeAttributes = {
-              lookupSchema: annotation.lookupSchema,
-              lookupTable: annotation.lookupTable,
-            };
-          }
-          return {
-            ...standardReturn,
             ...lookupTypeAttributes,
           };
         }),
