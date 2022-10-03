@@ -12,10 +12,10 @@ import {
   mockTemplateStateBranch,
 } from "../../../state/test/mocks";
 import {
-  getColumnsForTable,
-  getSelectedPlateBarcodes,
   getCanShowImagingSessionColumn,
   getCanShowWellColumn,
+  getColumnsForTable,
+  getSelectedPlateBarcodes,
   getTemplateColumnsForTable,
   PLATE_RELATED_COLUMNS,
 } from "../selectors";
@@ -29,17 +29,28 @@ describe("CustomDataTable selectors", () => {
     name,
     annotationTypeId: index,
   }));
+  const annotationTypeWidths = [150, 100, 84.49999999999999];
   const annotations = ["Cell Line", "Color", "Is Aligned"].map(
-    (name, index) => ({
-      ...mockAuditInfo,
-      annotationId: index,
-      name,
-      description: `${name} description`,
-      annotationTypeId: index === 0 ? 0 : 1,
-      orderIndex: index,
-      annotationOptions: [],
-      required: false,
-    })
+    (name, index) => {
+      const lookupTypeExtras =
+        index === 0
+          ? {
+              lookupSchema: "Celllines",
+              lookupTable: "Cell Line",
+            }
+          : null;
+      return {
+        ...mockAuditInfo,
+        annotationId: index,
+        name,
+        description: `${name} description`,
+        annotationTypeId: annotationTypes[index]["annotationTypeId"],
+        orderIndex: index,
+        annotationOptions: [],
+        required: false,
+        ...lookupTypeExtras,
+      };
+    }
   );
   const appliedTemplate = {
     ...mockMMSTemplate,
@@ -200,14 +211,24 @@ describe("CustomDataTable selectors", () => {
       expect(actual).to.be.lengthOf(6);
       expect(actual).deep.equal([
         ...PLATE_RELATED_COLUMNS,
-        ...annotations.map((a, index) => ({
-          type: index === 0 ? ColumnType.LOOKUP : ColumnType.TEXT,
-          accessor: a.name,
-          description: a.description,
-          dropdownValues: [],
-          isRequired: false,
-          width: index === 0 ? 150 : 100,
-        })),
+        ...annotations.map((a, index) => {
+          const lookupTypeExtras =
+            annotationTypes[index].name === ColumnType.LOOKUP
+              ? {
+                  lookupSchema: "Celllines",
+                  lookupTable: "Cell Line",
+                }
+              : null;
+          return {
+            type: annotationTypes[index].name,
+            accessor: a.name,
+            description: a.description,
+            dropdownValues: [],
+            isRequired: false,
+            width: annotationTypeWidths[index],
+            ...lookupTypeExtras,
+          };
+        }),
       ]);
     });
 
