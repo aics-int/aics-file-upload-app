@@ -33,6 +33,8 @@ interface CustomColumnProps {
   isRequired?: boolean;
   hasSubmitBeenAttempted?: boolean;
   type?: ColumnType;
+  lookupSchema?: string;
+  lookupTable?: string;
 }
 
 // Config for `react-table` types. More info here:
