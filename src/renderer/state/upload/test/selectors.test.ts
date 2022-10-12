@@ -14,7 +14,7 @@ import {
   mockDateTimeAnnotation,
   mockDropdownAnnotation,
   mockFavoriteColorAnnotation,
-  mockFavoriteColorTemplateAnnotation,
+  mockFavoriteColorTemplateAnnotation, mockFmsFileLookupAnnotation,
   mockIntervalTemplate,
   mockLookupAnnotation,
   mockMMSTemplate,
@@ -132,6 +132,57 @@ describe("Upload selectors", () => {
               {
                 annotationId: mockBooleanAnnotation.annotationId,
                 values: ["false"],
+              },
+            ],
+            templateId: mockMMSTemplate.templateId,
+          },
+          file: {
+            disposition: "tape",
+            fileType: FileType.IMAGE,
+            originalPath: "/path/to.dot/image.tiff",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
+          microscopy: {},
+        },
+      ];
+      const actual = getUploadRequests(state);
+      expect(actual).to.deep.equal(expectedPayload);
+    });
+    it("Interprets combined 'File Name (File ID)' FMS.File Lookup values into just File IDs", () => {
+      const state: State = {
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...nonEmptyStateForInitiatingUpload.template,
+          appliedTemplate: {
+            ...mockMMSTemplate,
+            annotations: [mockFmsFileLookupAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          "/path/to.dot/image.tiff": {
+            FileLookupAnnotation: [
+              "File 1 (AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 2 (BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)",
+            ],
+            barcode: "452",
+            file: "/path/to.dot/image.tiff",
+            [AnnotationName.NOTES]: [],
+            plateId: 4,
+            [AnnotationName.WELL]: [],
+          },
+        }),
+      };
+      const expectedPayload = [
+        {
+          customMetadata: {
+            annotations: [
+              {
+                annotationId: mockFmsFileLookupAnnotation.annotationId,
+                values: [
+                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+                ],
               },
             ],
             templateId: mockMMSTemplate.templateId,
