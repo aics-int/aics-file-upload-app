@@ -388,7 +388,7 @@ const getAnnotations = (
         // However, we only want the fileIDs for the upload
         if (
           annotation.type === ColumnType.LOOKUP &&
-          annotation?.lookupTable === "file"
+          annotation.lookupTable === "file"
         ) {
           value = value.map((fileEntry: string) => {
             const re = RegExp(/\(([a-zA-Z0-9]{32})\)/); // Find the FileID in parentheses and capture it
