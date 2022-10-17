@@ -179,7 +179,15 @@ export default class LabkeyClient extends HttpCacheClient {
     column: string,
     searchString = ""
   ): Promise<string[]> {
-    const additionalQueries = [`query.sort=${column}`, `query.maxRows=100`];
+    const queryColumns =
+      table === FMS_FILE_TABLE_NAME
+        ? [FMS_FILE_FILE_ID, FMS_FILE_FILE_NAME].join(",")
+        : column;
+    const additionalQueries = [
+      `query.columns=${queryColumns}`,
+      `query.sort=${column}`,
+      `query.maxRows=100`,
+    ];
     if (!isEmpty(searchString)) {
       // The fms.file table is so large that running "contains" queries on it will take forever, so use "eq" instead
       /*
