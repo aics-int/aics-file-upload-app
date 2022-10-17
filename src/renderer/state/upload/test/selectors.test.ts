@@ -15,6 +15,7 @@ import {
   mockDropdownAnnotation,
   mockFavoriteColorAnnotation,
   mockFavoriteColorTemplateAnnotation,
+  mockFmsFileLookupAnnotation,
   mockIntervalTemplate,
   mockLookupAnnotation,
   mockMMSTemplate,
@@ -132,6 +133,70 @@ describe("Upload selectors", () => {
               {
                 annotationId: mockBooleanAnnotation.annotationId,
                 values: ["false"],
+              },
+            ],
+            templateId: mockMMSTemplate.templateId,
+          },
+          file: {
+            disposition: "tape",
+            fileType: FileType.IMAGE,
+            originalPath: "/path/to.dot/image.tiff",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
+          microscopy: {},
+        },
+      ];
+      const actual = getUploadRequests(state);
+      expect(actual).to.deep.equal(expectedPayload);
+    });
+    it("Interprets combined 'File Name (File ID)' FMS.File Lookup values into just File IDs", () => {
+      const state: State = {
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...nonEmptyStateForInitiatingUpload.template,
+          appliedTemplate: {
+            ...mockMMSTemplate,
+            annotations: [mockFmsFileLookupAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          "/path/to.dot/image.tiff": {
+            FileLookupAnnotation: [
+              // Over-testing a bit to make sure our regex works. We really only want to upload FileIDs
+              "File 1 (File1AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 2 (File2AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 3 with a considerably longer file name (File3AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 4",
+              "File 5 parens do not contain ID (A)",
+              "File 6 no paren - File6AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "File 7 missing paren (File7AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "File 8 extra parens (File8AAAAAAAAAAAAAAAAAAAAAAAAAAA) (File8AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+            ],
+            barcode: "452",
+            file: "/path/to.dot/image.tiff",
+            [AnnotationName.NOTES]: [],
+            plateId: 4,
+            [AnnotationName.WELL]: [],
+          },
+        }),
+      };
+      const expectedPayload = [
+        {
+          customMetadata: {
+            annotations: [
+              {
+                annotationId: mockFmsFileLookupAnnotation.annotationId,
+                values: [
+                  "File1AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File2AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File3AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File 4",
+                  "File 5 parens do not contain ID (A)",
+                  "File 6 no paren - File6AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File 7 missing paren (File7AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File8AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                ],
               },
             ],
             templateId: mockMMSTemplate.templateId,
