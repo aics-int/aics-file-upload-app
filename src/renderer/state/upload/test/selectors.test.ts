@@ -163,8 +163,15 @@ describe("Upload selectors", () => {
         upload: getMockStateWithHistory({
           "/path/to.dot/image.tiff": {
             FileLookupAnnotation: [
-              "File 1 (AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)",
-              "File 2 (BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)",
+              // Over-testing a bit to make sure our regex works. We really only want to upload FileIDs
+              "File 1 (File1AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 2 (File2AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 3 with a considerably longer file name (File3AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 4",
+              "File 5 parens do not contain ID (A)",
+              "File 6 no paren - File6AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "File 7 missing paren (File7AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "File 8 extra parens (File8AAAAAAAAAAAAAAAAAAAAAAAAAAA) (File8AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
             ],
             barcode: "452",
             file: "/path/to.dot/image.tiff",
@@ -181,8 +188,14 @@ describe("Upload selectors", () => {
               {
                 annotationId: mockFmsFileLookupAnnotation.annotationId,
                 values: [
-                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-                  "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+                  "File1AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File2AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File3AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File 4",
+                  "File 5 parens do not contain ID (A)",
+                  "File 6 no paren - File6AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File 7 missing paren (File7AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File8AAAAAAAAAAAAAAAAAAAAAAAAAAA",
                 ],
               },
             ],

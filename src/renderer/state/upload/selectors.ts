@@ -391,7 +391,7 @@ const getAnnotations = (
           annotation.lookupTable === "file"
         ) {
           value = value.map((fileEntry: string) => {
-            const re = RegExp(/\(([a-zA-Z0-9]{32})\)/); // Find the FileID in parentheses and capture it
+            const re = RegExp(/\(([a-zA-Z0-9]{32})\)$/); // Find the FileID in parentheses and capture it
             const match = re.exec(fileEntry);
             if (match && match.length === 2) {
               return match[1]; // return captured ID
