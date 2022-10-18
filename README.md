@@ -101,7 +101,7 @@ A release is an official version of the app. You can create a release from the c
 Ensure you are on the master branch and have the latest:
 
 ```bash
-git checkout master
+git checkout main
 git pull
 ```
 
@@ -124,9 +124,9 @@ git push --tags && git push
 
 You can look at the GitHub Actions build by going to https://github.com/aicsgithub/aics-file-upload-app/actions.
 
-### Step 4: Update Confluence links
-Update the download links in Confluence: http://confluence.corp.alleninstitute.org/display/SF/File+Upload+Application
-And notify people in the #file-upload-app Slack channel
+### Step 4: Check Download Page
+The download page, [located here](https://aics-int.github.io/aics-file-upload-app/), will automatically update with the new build, if successful. 
+Be sure to notify the team of your new updates via the #file-upload-app Slack channel!
 
 ### Packaging the app locally
 
