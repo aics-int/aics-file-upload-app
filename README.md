@@ -126,7 +126,7 @@ You can look at the GitHub Actions build by going to https://github.com/aicsgith
 
 ### Step 4: Check Download Page
 The download page, [located here](https://aics-int.github.io/aics-file-upload-app/), will automatically update with the new build, if successful. 
-Be sure to notify the team of your new updates via the #file-upload-app Slack channel!
+Be sure to notify the team of your updates via the #file-upload-app Slack channel!
 
 ### Packaging the app locally
 
