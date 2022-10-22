@@ -438,6 +438,7 @@ export default class FileManagementSystem {
         const { fileId, addedToLabkey } = fssUpload.serviceFields;
 
         // If there is no file ID the add to LabKey step may have yet to complete
+        // TODO clients should no longer be concerned with JSS service fields about post upload events;  a COMPLETE uploadStatus garauntees that the id was added to Labkey.
         if (fileId && addedToLabkey?.status === JSSJobStatus.SUCCEEDED) {
           await this.complete(upload, fileId)
         }
@@ -455,6 +456,7 @@ export default class FileManagementSystem {
         });
           // FSS may already have all the chunks it needs and is asynchronously
           // comparing the MD5 hash
+          // TODO I am thinking this knowlege should be based on UploadStatus (does it equal POST_PROCESSING, or RETRY, or INACTIVE).
         if (
           fssUpload.currentStage === UploadStage.ADDING_CHUNKS ||
           fssUpload.currentStage === UploadStage.WAITING_FOR_FIRST_CHUNK
@@ -486,6 +488,7 @@ export default class FileManagementSystem {
           });
         }
       }
+      //TODO handle case where UploadStatus == RETRY
     }
   }
 
