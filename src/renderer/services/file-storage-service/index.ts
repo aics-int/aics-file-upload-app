@@ -21,12 +21,15 @@ export interface FSSUpload extends JSSJob {
   };
 }
 
+/**
+ * Values for UploadStatus are defined by FSS2 (ClientUploadStatus): https://github.com/aics-int/file-storage-service/blob/main/src/main/java/org/alleninstitute/aics/fss/model/status/UploadStatus.java#L427
+ */
 export enum UploadStatus {
-  WORKING = "WORKING", // as expected, in process
-  FAILED = "FAILED", // software failure
   COMPLETE = "COMPLETE",
-  CANCELLED = "CANCELLED", // user cancelled
-  EXPIRED = "EXPIRED", // too long since last activity
+  WORKING = "WORKING",                  //Upload is in progress and accepting chunks.
+  INACTIVE = "INACTIVE",                //Upload was either cancelled, expired, or failed.
+  RETRY = "RETRY",                      //Upload experienced a recoverable error, and can resume when /upload/retry is called.
+  POST_PROCESSING = "POST_PROCESSING"   //Chunks were all recieved, /finalize was called, and post upload processing is happening.  
 }
 
 export enum ChunkStatus {
@@ -58,11 +61,10 @@ export interface UploadStatusResponse {
 
 interface FileRecord {
   addedToLabkey: boolean;
-  archivePath?: string;
   cloudPath?: string;
   fileId: string;
-  fileName: string;
-  fileSize: number;
+  name: string;
+  size: number;
   localPath: string;
   md5: string;
 }
@@ -83,8 +85,16 @@ export default class FileStorageService extends HttpCacheClient {
     size: number
   ): Promise<boolean> {
     const url = `${FileStorageService.BASE_FILE_PATH}?name=${name}&size=${size}`;
-    const fileRecords = await this.get<FileRecord[]>(url);
-    return fileRecords.length !== 0;
+    try{
+      await this.get<FileRecord>(url);
+      return true;
+    } catch (error){
+      if(error.response.status === 404){
+        return false;
+      }
+      throw error;
+    }
+
   }
   /**
    * This is the first step to an upload. Before the app can start sending
@@ -98,11 +108,11 @@ export default class FileStorageService extends HttpCacheClient {
   ): Promise<RegisterUploadResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
     const postBody = {
-      // Unfortunately FSS expects snake_case in all but one case (MD5)
+      // Unfortunately FSS expects snake_case
       // so the conversion must be manual each request
       file_name: fileName,
       file_type: fileType,
-      // Unfortunately FSS expects snake_case in all but one case (MD5)
+      // Unfortunately FSS expects snake_case
       // so the conversion must be manual each request
       file_size: fileSize,
     };
