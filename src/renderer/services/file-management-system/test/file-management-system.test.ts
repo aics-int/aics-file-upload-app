@@ -275,8 +275,8 @@ describe("FileManagementSystem", () => {
         fileId,
         localPath,
         addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
+        name: "",
+        size: 4,
         md5: "",
       });
 
@@ -310,7 +310,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fss.getStatus.resolves({
-        uploadStatus: UploadStatus.FAILED,
+        uploadStatus: UploadStatus.INACTIVE,
         chunkStatuses: [],
       });
       fss.fileExistsByNameAndSize.resolves(false);
@@ -324,8 +324,8 @@ describe("FileManagementSystem", () => {
         fileId,
         localPath,
         addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
+        name: "",
+        size: 4,
         md5: "",
       });
 
@@ -374,8 +374,8 @@ describe("FileManagementSystem", () => {
         fileId,
         localPath,
         addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
+        name: "",
+        size: 4,
         md5: "",
       });
 
@@ -475,8 +475,8 @@ describe("FileManagementSystem", () => {
         fileId,
         localPath,
         addedToLabkey: true,
-        fileName: "",
-        fileSize: 4,
+        name: "",
+        size: 4,
         md5: "",
       });
 
