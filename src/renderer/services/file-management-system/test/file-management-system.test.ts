@@ -13,7 +13,7 @@ import {
   MetadataManagementService,
 } from "../..";
 import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
-import { UploadStage, UploadStatus } from "../../file-storage-service";
+import { UploadStatus } from "../../file-storage-service";
 import {
   JSSJob,
   JSSJobStatus,
@@ -387,53 +387,48 @@ describe("FileManagementSystem", () => {
       expect(jss.createJob.getCalls()).to.be.lengthOf(2);
     });
 
-    [UploadStage.ADDING_CHUNKS, UploadStage.WAITING_FOR_FIRST_CHUNK].forEach(
-      (stage) => {
-        it(`resumes sending chunks for an upload with an active FSS status for stage ${stage}`, async () => {
-          // Arrange
-          const { mtime: fileLastModified } =
-          await fs.promises.stat(testFilePath);
-          const fileLastModifiedInMs = fileLastModified.getTime();
-          const upload: UploadJob = {
-            ...mockJob,
-            serviceFields: {
-              files: [
-                {
-                  file: {
-                    fileType: "text",
-                    originalPath: testFilePath,
-                  },
+      it(`resumes sending chunks for an upload with an WORKING FSS status`, async () => {
+        // Arrange
+        const { mtime: fileLastModified } =
+        await fs.promises.stat(testFilePath);
+        const fileLastModifiedInMs = fileLastModified.getTime();
+        const upload: UploadJob = {
+          ...mockJob,
+          serviceFields: {
+            files: [
+              {
+                file: {
+                  fileType: "text",
+                  originalPath: testFilePath,
                 },
-              ],
-              fssUploadId: "234124141",
-              fssUploadChunkSize: 13,
-              type: "upload",
-              lastModifiedInMS: fileLastModifiedInMs,
-              md5CalculationInformation:{
-                "0": "testPartialMd5"
-              }
-            },
-          };
-          const fssUpload: JSSJob = {
-            ...mockJob,
-            currentStage: stage,
-          };
-          jss.getJob.onFirstCall().resolves(upload);
-          fss.getStatus.resolves({
-            uploadStatus: UploadStatus.WORKING,
-            chunkStatuses: [],
-          });
-          jss.getJob.onSecondCall().resolves(fssUpload);
-
-          // Act
-          await fms.retry("mockUploadId", noop);
-
-          // Assert
-          expect(jss.createJob.called).to.be.false;
-          expect(fileReader.read).to.have.been.calledOnce;
+              },
+            ],
+            fssUploadId: "234124141",
+            fssUploadChunkSize: 13,
+            type: "upload",
+            lastModifiedInMS: fileLastModifiedInMs,
+            md5CalculationInformation:{
+              "0": "testPartialMd5"
+            }
+          },
+        };
+        const fssUpload: JSSJob = {
+          ...mockJob,
+        };
+        jss.getJob.onFirstCall().resolves(upload);
+        fss.getStatus.resolves({
+          uploadStatus: UploadStatus.WORKING,
+          chunkStatuses: [],
         });
-      }
-    );
+        jss.getJob.onSecondCall().resolves(fssUpload);
+
+        // Act
+        await fms.retry("mockUploadId", noop);
+
+        // Assert
+        expect(jss.createJob.called).to.be.false;
+        expect(fileReader.read).to.have.been.calledOnce;
+      });
 
     it("resumes an upload that just needs finalizing", async () => {
       // Arrange

@@ -36,11 +36,6 @@ export enum ChunkStatus {
   COMPLETE = "COMPLETE",
 }
 
-export enum UploadStage {
-  WAITING_FOR_FIRST_CHUNK = "WAITING_FOR_FIRST_CHUNK",
-  ADDING_CHUNKS = "ADDING_CHUNKS",
-}
-
 // RESPONSE TYPES
 interface RegisterUploadResponse {
   uploadId: string; // ID for tracking upload

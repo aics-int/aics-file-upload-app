@@ -8,7 +8,6 @@ import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, {
   ChunkStatus,
   FSSUpload,
-  UploadStage,
   UploadStatus,
   UploadStatusResponse,
 } from "../file-storage-service";
@@ -454,13 +453,6 @@ export default class FileManagementSystem {
         await this.jss.updateJob(upload.jobId, {
           status: JSSJobStatus.RETRYING,
         });
-          // FSS may already have all the chunks it needs and is asynchronously
-          // comparing the MD5 hash
-          // TODO I am thinking this knowlege should be based on UploadStatus (does it equal POST_PROCESSING, or RETRY, or INACTIVE).
-        if (
-          fssUpload.currentStage === UploadStage.ADDING_CHUNKS ||
-          fssUpload.currentStage === UploadStage.WAITING_FOR_FIRST_CHUNK
-        ) {
           // If FSS is still available to continue receiving chunks of this upload
           // simply continue sending the chunks
           let lastChunkNumber = fssStatus.chunkStatuses.findIndex(
@@ -486,7 +478,6 @@ export default class FileManagementSystem {
             initialChunkNumber: lastChunkNumber,
             partiallyCalculatedMd5: upload.serviceFields.md5CalculationInformation?.[`${lastChunkNumber}`]
           });
-        }
       }
       //TODO handle case where UploadStatus == RETRY
     }
