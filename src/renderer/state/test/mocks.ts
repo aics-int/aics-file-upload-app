@@ -425,7 +425,7 @@ export const mockSuccessfulUploadJob: UploadJob = {
 
 export const mockFSSUploadJob: FSSUpload = {
   created: new Date(),
-  currentStage: "ADDING CHUNKS",
+  currentStage: "UPLOAD_IN_PROGRESS",
   jobId: "3333333333FSS",
   jobName: "mockFSSUploadJob",
   modified: new Date(),
