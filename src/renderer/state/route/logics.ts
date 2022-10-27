@@ -35,8 +35,8 @@ import {
 } from "../feedback/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
+  getAllAnnotations,
   getAnnotationLookups,
-  getAnnotations,
   getBooleanAnnotationTypeId,
   getCurrentUploadFilePath,
   getImagingSessions,
@@ -190,7 +190,7 @@ function convertUploadRequestsToUploadStateBranch(
   files: UploadRequest[],
   state: State
 ): Upload {
-  const annotations = getAnnotations(state);
+  const annotations = getAllAnnotations(state);
   const lookups = getLookups(state);
   const annotationLookups = getAnnotationLookups(state);
   const annotationIdToAnnotationMap = groupBy(annotations, "annotationId");

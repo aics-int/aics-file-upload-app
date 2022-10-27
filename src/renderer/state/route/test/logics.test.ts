@@ -37,6 +37,7 @@ import {
   mockMMSTemplate,
   mockState,
   mockSuccessfulUploadJob,
+  mockSuccessfulUploadJobWithUnexposedAnnotation,
   mockWellAnnotation,
   mockWellUpload,
   nonEmptyStateForInitiatingUpload,
@@ -415,6 +416,21 @@ describe("Route logics", () => {
       );
 
       store.dispatch(viewUploads([mockFailedUploadJob]));
+      await logicMiddleware.whenComplete();
+
+      expect(actions.list.map(({ type }) => type)).includes(
+        VIEW_UPLOADS_SUCCEEDED
+      );
+    });
+    it("allows users to open an upload with unexposed annotations", async () => {
+      stubMethods({});
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockStateWithMetadata
+      );
+
+      store.dispatch(
+        viewUploads([mockSuccessfulUploadJobWithUnexposedAnnotation])
+      );
       await logicMiddleware.whenComplete();
 
       expect(actions.list.map(({ type }) => type)).includes(

@@ -101,7 +101,7 @@ export const mockNotesAnnotation: Annotation = {
 
 const mockUnusableStructureAnnotation: Annotation = {
   ...mockAuditInfo,
-  annotationId: 3,
+  annotationId: 4,
   annotationTypeId: 1,
   description: "Other information",
   exposeToFileUploadApp: false,
@@ -416,6 +416,45 @@ export const mockSuccessfulUploadJob: JSSJob = {
         modified: new Date(),
       },
     },
+  },
+  status: JSSJobStatus.SUCCEEDED,
+  user: "test_user",
+};
+
+export const mockSuccessfulUploadJobWithUnexposedAnnotation: JSSJob = {
+  created: new Date(),
+  currentStage: "Completed",
+  jobId: "123434234",
+  jobName: "mockJob1",
+  modified: new Date(),
+  serviceFields: {
+    files: [
+      {
+        customMetadata: {
+          annotations: [
+            {
+              annotationId: 1,
+              values: ["test", "1"],
+            },
+            {
+              annotationId: 4,
+              values: ["test", "1"],
+            },
+          ],
+          templateId: 1,
+        },
+        file: {
+          originalPath: "/some/filepath",
+          fileType: "other",
+          shouldBeInArchive: true,
+          shouldBeInLocal: true,
+        },
+      },
+    ],
+    lastModified: {},
+    md5: {},
+    type: "upload",
+    uploadDirectory: "/foo",
   },
   status: JSSJobStatus.SUCCEEDED,
   user: "test_user",
