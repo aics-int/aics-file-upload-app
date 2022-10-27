@@ -144,7 +144,6 @@ export default class FileManagementSystem {
       // for tracking in the event of a retry
       await this.jss.updateJob(upload.jobId, {
         serviceFields: {
-          fssUploadChunkSize: registration.chunkSize,
           fssUploadId: registration.uploadId,
           lastModifiedInMS: fileLastModifiedInMs,
         },
@@ -250,8 +249,8 @@ export default class FileManagementSystem {
       }
 
       if (
-        fssStatus?.uploadStatus === UploadStatus.WORKING ||
-        fssStatus?.uploadStatus === UploadStatus.COMPLETE
+        fssStatus?.status === UploadStatus.WORKING ||
+        fssStatus?.status === UploadStatus.COMPLETE
       ) {
         try {
           await this.resume(upload, fssStatus, onProgress);
@@ -364,7 +363,7 @@ export default class FileManagementSystem {
 
       if (fssStatus) {
         // If FSS has completed the upload it is too late to cancel
-        if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
+        if (fssStatus.status === UploadStatus.COMPLETE) {
           throw new Error(`Upload has progressed too far to be canceled`);
         }
 
@@ -408,7 +407,7 @@ export default class FileManagementSystem {
     fssStatus: UploadStatusResponse,
     onProgress: (uploadId: string, progress: UploadProgressInfo) => void
   ): Promise<void> {
-    const { fssUploadChunkSize, fssUploadId, lastModifiedInMS, files } = upload.serviceFields;
+    const { fssUploadId, lastModifiedInMS, files } = upload.serviceFields;
     const { mtime: fileLastModified } =
       await fs.promises.stat(files[0].file.originalPath);
     const fileLastModifiedInMs = fileLastModified.getTime();
@@ -431,24 +430,15 @@ export default class FileManagementSystem {
         return;
       }
 
-      if (fssStatus.uploadStatus === UploadStatus.COMPLETE) {
+      if (fssStatus.status === UploadStatus.COMPLETE) {
         // If an FSS upload status is complete it has performed everything
         // it needs to and may just need the client to finish its portion
-        const { fileId, addedToLabkey } = fssUpload.serviceFields;
-
-        // If there is no file ID the add to LabKey step may have yet to complete
-        // TODO clients should no longer be concerned with JSS service fields about post upload events;  a COMPLETE uploadStatus garauntees that the id was added to Labkey.
-        if (fileId && addedToLabkey?.status === JSSJobStatus.SUCCEEDED) {
-          await this.complete(upload, fileId)
+        const { fileId } = fssUpload.serviceFields;
+        if(!fileId){
+          throw new Error("FileId was not published on COMPLETE upload: " + fssStatus.uploadId)
         }
-      } else if (fssStatus.uploadStatus === UploadStatus.WORKING) {
-        // Shouldn't occur, but kept for type safety
-        if (!fssUploadChunkSize) {
-          throw new Error(
-            "Upload missing vital information about chunk size to send to server"
-          );
-        }
-
+        await this.complete(upload, fileId)
+      } else if (fssStatus.status === UploadStatus.WORKING) {
         // Update status to reflect the resume going smoothly
         await this.jss.updateJob(upload.jobId, {
           status: JSSJobStatus.RETRYING,
@@ -471,7 +461,7 @@ export default class FileManagementSystem {
             uploadId: upload.jobId,
             fssUploadId,
             source: originalPath,
-            chunkSize: fssUploadChunkSize,
+            chunkSize: fssStatus.chunkSize,
             user: upload.user,
             onProgress: (bytesUploaded) =>
               onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),

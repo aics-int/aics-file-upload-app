@@ -5,18 +5,11 @@ import { castArray } from "lodash";
 import { LocalStorage } from "../../types";
 import { FileType } from "../../util";
 import HttpCacheClient from "../http-cache-client";
-import { JSSJob, JSSJobStatus } from "../job-status-service/types";
+import { JSSJob } from "../job-status-service/types";
 import { HttpClient } from "../types";
-
-interface FSSServiceField {
-  status: JSSJobStatus;
-  statusDetail?: string;
-}
 
 export interface FSSUpload extends JSSJob {
   serviceFields: {
-    addedToLabkey?: FSSServiceField;
-    publishedToSns?: FSSServiceField;
     fileId?: string;
   };
 }
@@ -37,10 +30,6 @@ export enum ChunkStatus {
 }
 
 // RESPONSE TYPES
-interface RegisterUploadResponse {
-  uploadId: string; // ID for tracking upload
-  chunkSize: number; // Size of chunks to send to service
-}
 
 // Receipt of chunk submission
 interface UploadChunkResponse {
@@ -51,11 +40,12 @@ interface UploadChunkResponse {
 
 export interface UploadStatusResponse {
   chunkStatuses: ChunkStatus[];
-  uploadStatus: UploadStatus;
+  status: UploadStatus;
+  uploadId: string; // ID for tracking upload
+  chunkSize: number; // Size of chunks to send to service
 }
 
 interface FileRecord {
-  addedToLabkey: boolean;
   cloudPath?: string;
   fileId: string;
   name: string;
@@ -100,7 +90,7 @@ export default class FileStorageService extends HttpCacheClient {
     fileName: string,
     fileType: FileType,
     fileSize: number,
-  ): Promise<RegisterUploadResponse> {
+  ): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
     const postBody = {
       // Unfortunately FSS expects snake_case
@@ -111,7 +101,7 @@ export default class FileStorageService extends HttpCacheClient {
       // so the conversion must be manual each request
       file_size: fileSize,
     };
-    return this.post<RegisterUploadResponse>(
+    return this.post<UploadStatusResponse>(
       url,
       postBody,
       FileStorageService.getHttpRequestConfig()

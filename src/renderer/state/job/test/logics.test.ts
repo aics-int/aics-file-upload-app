@@ -286,7 +286,6 @@ describe("Job logics", () => {
       ...mockSuccessfulUploadJob,
       jobId: fssUploadId,
       serviceFields: {
-        addedToLabkey: { status: JSSJobStatus.SUCCEEDED },
         fileId: "9203414",
       },
     };
@@ -351,34 +350,6 @@ describe("Job logics", () => {
         serviceFields: {
           ...successfulFSSUpload.serviceFields,
           fileId: undefined,
-        },
-      };
-
-      // Act
-      const action = receiveFSSJobCompletionUpdate(fssUpload);
-      store.dispatch(action);
-      await logicMiddleware.whenComplete();
-
-      // Assert
-      expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
-        .false;
-    });
-
-    it("rejects updates without labkey entries", async () => {
-      // Arrange
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        stateWithMatchingUpload,
-        undefined,
-        undefined,
-        false
-      );
-      const fssUpload = {
-        ...successfulFSSUpload,
-        serviceFields: {
-          ...successfulFSSUpload.serviceFields,
-          addedToLabkey: {
-            status: JSSJobStatus.FAILED,
-          },
         },
       };
 

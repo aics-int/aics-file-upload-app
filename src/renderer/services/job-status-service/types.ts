@@ -23,11 +23,6 @@ export interface UploadServiceFields {
   // Unique ID for tracking the upload according to FSS
   fssUploadId?: string;
 
-  // In the event an upload is resumed the chunk size requested by FSS
-  // initially may not still be around in which case it will be helpful
-  // to store it here to access as needed
-  fssUploadChunkSize?: number;
-
   // Identifies the upload as part of a larger group of uploads
   // useful for grouping uploads that were uploaded together
   groupId?: string;
@@ -186,6 +181,7 @@ export const FAILED_STATUSES = [
   JSSJobStatus.FAILED,
   JSSJobStatus.UNRECOVERABLE,
 ];
+//TODO why these are here
 export const IN_PROGRESS_STATUSES = [
   JSSJobStatus.BLOCKED,
   JSSJobStatus.RETRYING,

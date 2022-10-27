@@ -432,14 +432,6 @@ export const mockFSSUploadJob: FSSUpload = {
   service: Service.FILE_STORAGE_SERVICE,
   serviceFields: {
     fileId: "82beaf0460384911b6d6293fb333c4b0",
-    addedToLabkey: {
-      status: JSSJobStatus.SUCCEEDED,
-      statusDetail: "",
-    },
-    publishedToSns: {
-      status: JSSJobStatus.SUCCEEDED,
-      statusDetail: "",
-    },
   },
   status: JSSJobStatus.WORKING,
   user: "test_user",
