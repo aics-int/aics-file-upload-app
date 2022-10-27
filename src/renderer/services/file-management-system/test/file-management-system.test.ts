@@ -13,7 +13,7 @@ import {
   MetadataManagementService,
 } from "../..";
 import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
-import { UploadStatus } from "../../file-storage-service";
+import { FSSUpload, UploadStatus } from "../../file-storage-service";
 import {
   JSSJob,
   JSSJobStatus,
@@ -101,7 +101,7 @@ describe("FileManagementSystem", () => {
       const uploadId = "091234124";
       const expectedMd5 = "testMd5";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId, chunkSize: 2424 });
       fileReader.read.resolves(expectedMd5)
 
       // Act
@@ -137,7 +137,7 @@ describe("FileManagementSystem", () => {
       };
       const uploadId = "091234124";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId, chunkSize: 2424 });
       fileReader.read.callsFake(
         async (
           args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
@@ -186,7 +186,7 @@ describe("FileManagementSystem", () => {
         },
       };
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId: "091234124", chunkSize: 2424 });
       fileReader.read.rejects(new Error(error));
 
       // Act
@@ -229,7 +229,7 @@ describe("FileManagementSystem", () => {
       };
       const uploadId = "091234124";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId, chunkSize: 2424 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId, chunkSize: 2424 });
       // p.getName.callsFake(() => { return "Alex Smith"; });
       fileReader.read.callsFake(async (args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
         await args.onProgress(new Uint8Array(), "testMd5");
@@ -265,7 +265,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
@@ -274,7 +274,6 @@ describe("FileManagementSystem", () => {
       fss.getFileAttributes.resolves({
         fileId,
         localPath,
-        addedToLabkey: true,
         name: "",
         size: 4,
         md5: "",
@@ -310,11 +309,13 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fss.getStatus.resolves({
-        uploadStatus: UploadStatus.INACTIVE,
+        uploadId: "-1",
+        chunkSize: -1,
+        status: UploadStatus.INACTIVE,
         chunkStatuses: [],
       });
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
@@ -323,7 +324,6 @@ describe("FileManagementSystem", () => {
       fss.getFileAttributes.resolves({
         fileId,
         localPath,
-        addedToLabkey: true,
         name: "",
         size: 4,
         md5: "",
@@ -364,7 +364,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ uploadId: "091234124", chunkSize: 2424 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
@@ -373,7 +373,6 @@ describe("FileManagementSystem", () => {
       fss.getFileAttributes.resolves({
         fileId,
         localPath,
-        addedToLabkey: true,
         name: "",
         size: 4,
         md5: "",
@@ -404,7 +403,6 @@ describe("FileManagementSystem", () => {
               },
             ],
             fssUploadId: "234124141",
-            fssUploadChunkSize: 13,
             type: "upload",
             lastModifiedInMS: fileLastModifiedInMs,
             md5CalculationInformation:{
@@ -417,7 +415,9 @@ describe("FileManagementSystem", () => {
         };
         jss.getJob.onFirstCall().resolves(upload);
         fss.getStatus.resolves({
-          uploadStatus: UploadStatus.WORKING,
+          status: UploadStatus.WORKING,
+          chunkSize: -1,
+          uploadId: "-1",
           chunkStatuses: [],
         });
         jss.getJob.onSecondCall().resolves(fssUpload);
@@ -435,7 +435,7 @@ describe("FileManagementSystem", () => {
       const { mtime: fileLastModified } =
       await fs.promises.stat(testFilePath);
       const fileLastModifiedInMs = fileLastModified.getTime();
-      const upload: UploadJob = {
+      const fuaUploadJob: UploadJob = {
         ...mockJob,
         serviceFields: {
           files: [
@@ -454,22 +454,29 @@ describe("FileManagementSystem", () => {
           }
         },
       };
+      const fssUploadJob: FSSUpload = {
+        ...mockJob,
+        serviceFields: {
+          fileId: "testFileId"
+        },
+      };
       const fileId = "12343124";
       const localPath = "/some/path/into/fms/at/test_file.txt";
-      jss.getJob.resolves(upload);
+      jss.getJob.onFirstCall().resolves(fuaUploadJob).onSecondCall().resolves(fssUploadJob);
       fss.getStatus.resolves({
-        uploadStatus: UploadStatus.COMPLETE,
+        uploadId: "-1",
+        chunkSize: -1,
+        status: UploadStatus.COMPLETE,
         chunkStatuses: [],
       });
       fss.finalize.resolves({
         fileId,
         chunkNumber: 14,
-        uploadId: upload.jobId,
+        uploadId: fuaUploadJob.jobId,
       });
       fss.getFileAttributes.resolves({
         fileId,
         localPath,
-        addedToLabkey: true,
         name: "",
         size: 4,
         md5: "",
@@ -513,7 +520,9 @@ describe("FileManagementSystem", () => {
         },
       });
       fss.getStatus.resolves({
-        uploadStatus: UploadStatus.WORKING,
+        uploadId: "-1",
+        chunkSize: -1,
+        status: UploadStatus.WORKING,
         chunkStatuses: [],
       });
 
@@ -555,7 +564,9 @@ describe("FileManagementSystem", () => {
         },
       });
       fss.getStatus.resolves({
-        uploadStatus: UploadStatus.COMPLETE,
+        uploadId: "-1",
+        chunkSize: -1,
+        status: UploadStatus.COMPLETE,
         chunkStatuses: [],
       });
 
