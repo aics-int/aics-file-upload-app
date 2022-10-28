@@ -7,6 +7,7 @@ import { FileType } from "../../util";
 import HttpCacheClient from "../http-cache-client";
 import { JSSJob } from "../job-status-service/types";
 import { HttpClient } from "../types";
+import * as http from "http";
 
 export interface FSSUpload extends JSSJob {
   serviceFields: {
@@ -118,16 +119,32 @@ export default class FileStorageService extends HttpCacheClient {
     rangeStart: number,
     postBody: Uint8Array,
     user: string
-  ): Promise<UploadChunkResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/chunk/${chunkNumber}`;
-    const rangeEnd = rangeStart + postBody.byteLength - 1;
-    return this.post<UploadChunkResponse>(url, postBody, {
-      ...FileStorageService.getHttpRequestConfig(),
-      headers: {
-        "Content-Type": "application/octet-stream",
-        Range: `bytes=${rangeStart}-${rangeEnd}`,
-        "X-User-Id": user,
-      },
+  ): Promise<void> {
+    return new Promise<void>((resolve)=>{
+      const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/chunk/${chunkNumber}`;
+      const rangeEnd = rangeStart + postBody.byteLength - 1;
+      const requestOptions = {
+        // port: 80,
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/octet-stream",
+          Range: `bytes=${rangeStart}-${rangeEnd}`,
+          "X-User-Id": user,
+        }
+        };
+      const test = http.request("http://stg-aics-api.corp.alleninstitute.org/" + url, requestOptions, (res) => {
+        console.log(res);
+        resolve();
+      });
+      console.log("http://stg-aics-api.corp.alleninstitute.org/" + url)
+      // this.post<UploadChunkResponse>(url, postBody, {
+      //   ...FileStorageService.getHttpRequestConfig(),
+      //   headers: {
+      //     "Content-Type": "application/octet-stream",
+      //     Range: `bytes=${rangeStart}-${rangeEnd}`,
+      //     "X-User-Id": user,
+      //   },
+      // });
     });
   }
 
