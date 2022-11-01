@@ -49,8 +49,8 @@ export default class FileManagementSystem {
   private readonly jss: JobStatusService;
   private readonly mms: MetadataManagementService;
 
-  private static readonly CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX = 40 * 1024 * 1024; // 40 mb
-  private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 10; //ceiling on concurrent chunk requests (even if more can fit in memory)
+  // private static readonly CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX = 40 * 1024 * 1024; // 40 mb
+  // private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 10; //ceiling on concurrent chunk requests (even if more can fit in memory)
 
   /**
    * Returns JSS friendly UUID to group files
