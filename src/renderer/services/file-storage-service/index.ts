@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
+import { ipcRenderer } from "electron";
 import { camelizeKeys } from "humps";
 import { castArray } from "lodash";
 
@@ -134,15 +135,18 @@ export default class FileStorageService extends HttpCacheClient {
     postBody: Uint8Array,
     user: string
   ): Promise<UploadChunkResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/chunk/${chunkNumber}`;
+    const url = this.getFullUrl(`${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/chunk/${chunkNumber}`);
     const rangeEnd = rangeStart + postBody.byteLength - 1;
-    return this.post<UploadChunkResponse>(url, postBody, {
-      ...FileStorageService.getHttpRequestConfig(),
+    console.log("Sending chunk: " + chunkNumber + " to URL: " + url);
+    return ipcRenderer.invoke('request', {
+      url,
+      method: 'POST',
       headers: {
         "Content-Type": "application/octet-stream",
         Range: `bytes=${rangeStart}-${rangeEnd}`,
         "X-User-Id": user,
       },
+      data: postBody,
     });
   }
 

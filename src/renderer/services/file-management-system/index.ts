@@ -69,9 +69,10 @@ export default class FileManagementSystem {
    * The number of chunks that can be managed by available memory is a function of memory available, and chunk size.
    * This function returns the optimized number of chunks to be in flight.
   */   
-  private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number) {
-    const chunksThatFitInMemory = Math.floor(FileManagementSystem.CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX / chunkSizeInBytes);
-    return Math.min(FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING, Math.max(chunksThatFitInMemory, 1));
+  private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number): number {
+    // const chunksThatFitInMemory = Math.floor(FileManagementSystem.CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX / chunkSizeInBytes);
+    // return Math.min(FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING, Math.max(chunksThatFitInMemory, 1));
+    return 10000000000000;
   }
 
   public constructor(config: FileManagementClientConfig) {

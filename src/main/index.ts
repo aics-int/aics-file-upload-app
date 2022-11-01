@@ -1,6 +1,7 @@
 import * as path from "path";
 import { format as formatUrl } from "url";
 
+import axios from 'axios';
 import { app, BrowserWindow, dialog, Event, ipcMain } from "electron";
 import installExtension, { REACT_DEVELOPER_TOOLS } from "electron-devtools-installer";
 import ElectronStore from "electron-store";
@@ -203,6 +204,15 @@ ipcMain.handle(
     return buttonIndex;
   }
 );
+
+// TODO: Use constant like above for channel ID
+// Handler for receiving HTTP requests intended for this process
+// to pass along rather than sending them through the renderer process
+ipcMain.handle('request', async (_, axios_request) => {
+  // TODO: Consider using node here
+  const result = await axios(axios_request)
+  return result.data;
+})
 
 ipcMain.on(
   RendererProcessEvents.SHOW_SAVE_DIALOG,

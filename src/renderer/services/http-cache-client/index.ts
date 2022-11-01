@@ -187,7 +187,7 @@ export default class HttpCacheClient {
     };
   };
 
-  private getFullUrl = (url: string) => {
+  protected getFullUrl = (url: string) => {
     if (url.startsWith("http")) {
       return url;
     }
