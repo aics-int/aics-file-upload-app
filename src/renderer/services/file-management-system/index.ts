@@ -506,7 +506,7 @@ export default class FileManagementSystem {
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
       chunksInFlight++;
-      await this.jss.updateJob(uploadId, {
+      const jssPromise = this.jss.updateJob(uploadId, {
         serviceFields: {
           md5CalculationInformation: {
             [chunkNumber]: md5ThusFar,
@@ -514,13 +514,15 @@ export default class FileManagementSystem {
         },
       }, true)
       // Upload chunk
-      await this.fss.sendUploadChunk(
+      const fssPromise = this.fss.sendUploadChunk(
         fssUploadId,
         chunkNumber,
         chunkSize * (chunkNumber-1),
         chunk,
         user
       );
+      // Make the requests to JSS and FSS concurrently for improved performance
+      await Promise.all([jssPromise, fssPromise]);
       // Submit progress to callback
       bytesUploaded += chunk.byteLength;
       throttledOnProgress(bytesUploaded);
