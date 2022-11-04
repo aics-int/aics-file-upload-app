@@ -146,6 +146,8 @@ export default class FileStorageService extends HttpCacheClient {
         Range: `bytes=${rangeStart}-${rangeEnd}`,
         "X-User-Id": user,
       },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
       data: postBody,
     });
   }

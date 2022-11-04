@@ -506,7 +506,9 @@ export default class FileManagementSystem {
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { uploadId, fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const { uploadId, fssUploadId, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const chunkSize = 50000000;
+    
     let chunkNumber = initialChunkNumber;
 
     // Throttle the progress callback to avoid sending
