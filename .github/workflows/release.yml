@@ -30,7 +30,6 @@ jobs:
           yarn compile-prod
 
       - name: Build artifact and release
-        uses: samuelmeuli/action-electron-builder@v1.6.0
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -41,3 +40,12 @@ jobs:
           release: true
           windows_certs: ${{ secrets.CSC_LINK }}
           windows_certs_password: ${{ secrets.CSC_KEY_PASSWORD }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          yarn run electron-builder --linux --publish always
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          yarn run electron-builder --windows --publish always
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          yarn run electron-builder --mac --publish always
