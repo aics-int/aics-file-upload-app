@@ -40,12 +40,12 @@ jobs:
           release: true
           windows_certs: ${{ secrets.CSC_LINK }}
           windows_certs_password: ${{ secrets.CSC_KEY_PASSWORD }}
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: matrix.os == 'ubuntu-latest'
         run: |
           yarn run electron-builder --linux --publish always
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: matrix.os == 'windows-latest'
         run: |
           yarn run electron-builder --windows --publish always
-        if: ${{ matrix.os == 'macos-latest' }}
+        if: matrix.os == 'macos-latest'
         run: |
           yarn run electron-builder --mac --publish always
