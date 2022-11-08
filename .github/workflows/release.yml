@@ -8,6 +8,16 @@ on:
 
 jobs:
   release-file-upload-app:
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    with:
+      # GitHub token, automatically provided to the action
+      # (No need to define this secret in the repo settings)
+      github_token: ${{ secrets.github_token }}
+      release: true
+      windows_certs: ${{ secrets.CSC_LINK }}
+      windows_certs_password: ${{ secrets.CSC_KEY_PASSWORD }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -30,43 +40,13 @@ jobs:
           yarn compile-prod
 
       - name: Build artifact and release Mac
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
-          release: true
-          windows_certs: ${{ secrets.CSC_LINK }}
-          windows_certs_password: ${{ secrets.CSC_KEY_PASSWORD }}
         if: matrix.os == 'macos-latest'
         run: yarn run electron-builder --mac --publish always
 
       - name: Build artifact and release Linux
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
-          release: true
-          windows_certs: ${{ secrets.CSC_LINK }}
-          windows_certs_password: ${{ secrets.CSC_KEY_PASSWORD }}
         if: matrix.os == 'ubuntu-latest'
         run: yarn run electron-builder --linux --publish always
 
       - name: Build artifact and release Windows
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
-          release: true
-          windows_certs: ${{ secrets.CSC_LINK }}
-          windows_certs_password: ${{ secrets.CSC_KEY_PASSWORD }}
         if: matrix.os == 'windows-latest'
         run: yarn run electron-builder --windows --publish always
