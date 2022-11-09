@@ -114,7 +114,7 @@
     "electron": "~16.0.6",
     "electron-builder": "~23.0.2",
     "electron-webpack": "~2.8.2",
-    "electron-webpack-ts": "~4.5.4",
+    "electron-webpack-ts": "~4.0.1",
     "enzyme": "~3.11.0",
     "eslint": "~8.6.0",
     "eslint-config-prettier": "~8.3.0",
