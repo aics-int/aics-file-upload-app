@@ -10,7 +10,7 @@ jobs:
         with:
           node-version: 16
       - name: Install Dependencies
-        run: yarn install --network-timeout 100000
+        run: yarn
       - name: Lint
         run: yarn lint
       - name: Check for Circular Dependencies
