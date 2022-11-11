@@ -48,8 +48,7 @@ export default class FileManagementSystem {
   private readonly jss: JobStatusService;
   private readonly mms: MetadataManagementService;
 
-  private static readonly CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX = 40 * 1024 * 1024; // 40 mb
-  private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 10; //ceiling on concurrent chunk requests (even if more can fit in memory)
+  private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
 
   /**
    * Returns JSS friendly UUID to group files
@@ -61,16 +60,6 @@ export default class FileManagementSystem {
 
   private static sleep(timeoutInMs = 2000){
     return new Promise(resolve => setTimeout(resolve, timeoutInMs))
-  }
-
-  /** 
-   * Fss chunks 'in flight' require memory for the chunk data.  
-   * The number of chunks that can be managed by available memory is a function of memory available, and chunk size.
-   * This function returns the optimized number of chunks to be in flight.
-  */   
-  private static getInFlightChunkRequestsLimit(chunkSizeInBytes: number) {
-    const chunksThatFitInMemory = Math.floor(FileManagementSystem.CHUNKS_INFLIGHT_REQUEST_MEMORY_USAGE_MAX / chunkSizeInBytes);
-    return Math.min(FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING, Math.max(chunksThatFitInMemory, 1));
   }
 
   public constructor(config: FileManagementClientConfig) {
@@ -501,7 +490,7 @@ export default class FileManagementSystem {
     
     // For rate throttling how many chunks are sent in parallel
     let chunksInFlight = 0;
-    const chunksInFlightLimit = FileManagementSystem.getInFlightChunkRequestsLimit(chunkSize);
+    const chunksInFlightLimit = FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING;
 
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
