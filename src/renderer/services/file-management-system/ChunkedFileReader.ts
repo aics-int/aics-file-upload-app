@@ -5,6 +5,8 @@ import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 
 import Md5Hasher from "./Md5Hasher";
 
+const READ_STREAM_MAX_CHUNK_SIZE = 100 * 1000 * 1000; // 100 MB
+
 // Create an explicit error class to capture cancellations
 export class CancellationError extends Error {
   constructor() {
@@ -55,12 +57,13 @@ export default class ChunkedFileReader {
     partiallyCalculatedMd5?: string
   }): Promise<string> {
     const { uploadId, source, onProgress, chunkSize, offset, partiallyCalculatedMd5 } = config;
+    const readStreamChunkSize = Math.min(chunkSize, READ_STREAM_MAX_CHUNK_SIZE);
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
       start: offset,
       // Control the MAX amount of bytes we read at a time
       // not necessarily guaranteed
-      highWaterMark: chunkSize,
+      highWaterMark: readStreamChunkSize,
     });
 
     let hasher = new Md5Hasher();
