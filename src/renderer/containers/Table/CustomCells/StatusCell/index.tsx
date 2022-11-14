@@ -24,13 +24,11 @@ const POWER_OF_1000_TO_ABBREV = new Map<number, string>([
 enum Step {
   ONE,
   TWO,
-  THREE,
 }
 
 const STEP_INFO = {
-  [Step.ONE]: "Step 1 of 3: Reading file",
-  [Step.TWO]: "Step 2 of 3: Uploading file",
-  [Step.THREE]: "Step 3 of 3: Adding metadata",
+  [Step.ONE]: "Step 1 of 2: Uploading file",
+  [Step.TWO]: "Step 2 of 2: Adding metadata",
 };
 
 function getBytesDisplay(bytes: number): string {
@@ -88,33 +86,21 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     );
   } else {
     const {
-      md5BytesComputed = 0,
       bytesUploaded = 0,
       totalBytes = 0,
     } = props.row.original.progress || {};
 
     let step = Step.ONE;
-    let bytesCompletedForStep = md5BytesComputed;
-    let displayForStep = getBytesDisplay(bytesCompletedForStep);
+    let displayForStep = getBytesDisplay(bytesUploaded);
     let totalForStep = getBytesDisplay(totalBytes);
+    let progressForStep = 0;
     // If all bytes have been uploaded then the upload is on the last step
-    if (bytesUploaded >= totalBytes) {
-      step = Step.THREE;
-      bytesCompletedForStep = 0;
+    if (totalBytes > 0 && bytesUploaded >= totalBytes) {
+      step = Step.TWO;
       displayForStep = "0";
       totalForStep = "1";
-    } else if (bytesUploaded || md5BytesComputed === totalBytes) {
-      // If any bytes are uploaded or if step 1 has completed then the upload
-      // is on the second step
-      step = Step.TWO;
-      bytesCompletedForStep = bytesUploaded;
-      displayForStep = getBytesDisplay(bytesCompletedForStep);
-      totalForStep = getBytesDisplay(totalBytes);
-    }
-
-    let progressForStep = 0;
-    if (bytesCompletedForStep && totalBytes) {
-      progressForStep = Math.floor((bytesCompletedForStep / totalBytes) * 100);
+    } else if (bytesUploaded && totalBytes) {
+      progressForStep = Math.floor((bytesUploaded / totalBytes) * 100);
     }
 
     tooltip = `${tooltip} - ${STEP_INFO[step]}`;
@@ -127,7 +113,7 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
           status="active"
         />
         <div className={styles.activeInfo}>
-          <p>Step {step + 1} of 3</p>
+          <p>Step {step + 1} of 2</p>
           <p>
             {displayForStep} / {totalForStep}
           </p>
