@@ -68,7 +68,7 @@ describe("<StatusCell />", () => {
     const row = {
       original: {
         progress: {
-          md5BytesComputed: 4245,
+          bytesUploaded: 4245,
           totalBytes: 82341,
         },
       },
@@ -81,17 +81,17 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 1 of 3: Reading file"
+      "WORKING - Step 1 of 2: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(5);
   });
 
-  it("shows step 2 when md5 calc complete", () => {
+  it("shows step 2 when no bytes uploaded", () => {
     // Arrange
     const row = {
       original: {
         progress: {
-          md5BytesComputed: 82341,
+          bytesUploaded: 0,
           totalBytes: 82341,
         },
       },
@@ -104,7 +104,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 3: Uploading file"
+      "WORKING - Step 1 of 2: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });
@@ -127,7 +127,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 3: Uploading file"
+      "WORKING - Step 1 of 2: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(60);
   });
@@ -150,7 +150,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 3 of 3: Adding metadata"
+      "WORKING - Step 2 of 2: Adding metadata"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });

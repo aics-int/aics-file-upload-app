@@ -477,6 +477,9 @@ export default class FileManagementSystem {
   }): Promise<void> {
     const { uploadId, fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
+    
+    //Initialize bytes uploaded with progress made previously
+    onProgress(chunkSize * initialChunkNumber);
 
     // Throttle the progress callback to avoid sending
     // too many updates on fast uploads
