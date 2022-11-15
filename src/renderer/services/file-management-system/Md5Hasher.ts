@@ -1,36 +1,4 @@
-import * as CryptoJS from "crypto-js";
-
-/**
- * Abstract hasher template.
- * Provides this project with a type for CryptoJS.algo.MD5 from CryptoJS which does not export this type.
- */
- interface Hasher {
-    /**
-     * The number of 32-bit words this hasher operates on. Default: 16 (512 bits)
-     */
-    blockSize: number;
-    /**
-     * Resets this hasher to its initial state.
-     */
-    reset(): void;
-    /**
-     * Updates this hasher with a message.
-     *
-     * @param messageUpdate The message to append.
-     *
-     * @return This hasher.
-     */
-    update(messageUpdate: CryptoJS.lib.WordArray | string): this;
-    /**
-     * Finalizes the hash computation.
-     * Note that the finalize operation is effectively a destructive, read-once operation.
-     *
-     * @param messageUpdate (Optional) A final message update.
-     *
-     * @return The hash.
-     */
-    finalize(messageUpdate?: CryptoJS.lib.WordArray | string): CryptoJS.lib.WordArray;
-}
+import * as SparkMD5 from "spark-md5";
 
 export default class Md5Hasher{
 
@@ -40,33 +8,16 @@ export default class Md5Hasher{
      * @returns 
      */
     public static deserialize (serialized_md5: string){
-        const hasher = CryptoJS.algo.MD5.create();
+        // const hasher = CryptoJS.algo.MD5.create();
         
-        Md5Hasher.deepCopy(JSON.parse(serialized_md5), hasher);
-        return new Md5Hasher(hasher);        
+        // Md5Hasher.deepCopy(JSON.parse(serialized_md5), hasher);
+        // return new Md5Hasher(hasher);        
     }
 
-    /**
-     * Recursively copy properties from object source to object target.
-    */
-    private static deepCopy(source: Record<string, any>, target: Record<string, any>) {
-        for (const prop in source) {
-            const value = source[prop];
-            if (typeof value === "object") {
-                if (typeof target[prop] !== "object") {
-                    target[prop] = {};
-                }
-                Md5Hasher.deepCopy(source[prop], target[prop]);
-            } else {
-                target[prop] = source[prop];
-            }
-        }
-    }
+    private hasher: SparkMD5
 
-    private hasher: Hasher
-
-    public constructor (hasher?: Hasher) {
-        this.hasher  = hasher || CryptoJS.algo.MD5.create();
+    public constructor (hasher?: SparkMD5) {
+        this.hasher  = hasher || new SparkMD5();
     }
 
     /**
@@ -74,12 +25,7 @@ export default class Md5Hasher{
      * @param chunk 
      */
     public update(chunk: Uint8Array) : void {
-        const wa: any[] = [];
-        for (let i = 0; i < chunk.byteLength; i++) {
-            wa[(i / 4) | 0] |= chunk[i] << (24 - 8 * i);
-        }
-        const word = CryptoJS.lib.WordArray.create(wa, chunk.length);
-        this.hasher.update(word);
+        this.hasher.appendBinary(Buffer.from(chunk.buffer).toString());
     }
 
     /**
@@ -95,6 +41,6 @@ export default class Md5Hasher{
      May only be done once during Md5Hasher lifecycle.
     */
     public digest():string {
-        return this.hasher.finalize().toString()
+        return this.hasher.end()
     }
 }
