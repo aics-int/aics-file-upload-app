@@ -5,6 +5,16 @@ import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 
 import Md5Hasher from "./Md5Hasher";
 
+/* Limit the read stream to 100 MB chunks. This is required because with 300MB chunks the read
+ * stream allocates enough memory to hit Electron's maximum heap usage and crash the app.
+ * 100MB is big enough because our maximum chunk size for an upload should be 500MB, because S3
+ * supports files up to 5TB with up to 10,000 chunks, and 100MB here means at most five reads per
+ * chunk, which doesn't seem like much overhead.
+ * 100MB is small enough because on Philp's Macbook the app did not crash at 200MB; this gives us a
+ * 2x safety factor. Electron's maximum heap size should be consistent across machines.
+ */
+const READ_STREAM_MAX_CHUNK_SIZE = 100 * 1000 * 1000;
+
 // Create an explicit error class to capture cancellations
 export class CancellationError extends Error {
   constructor() {
@@ -55,12 +65,13 @@ export default class ChunkedFileReader {
     partiallyCalculatedMd5?: string
   }): Promise<string> {
     const { uploadId, source, onProgress, chunkSize, offset, partiallyCalculatedMd5 } = config;
+    const readStreamChunkSize = Math.min(chunkSize, READ_STREAM_MAX_CHUNK_SIZE);
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
       start: offset,
       // Control the MAX amount of bytes we read at a time
       // not necessarily guaranteed
-      highWaterMark: chunkSize,
+      highWaterMark: readStreamChunkSize,
     });
 
     let hasher = new Md5Hasher();
