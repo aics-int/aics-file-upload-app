@@ -13,13 +13,13 @@ export default class Md5Hasher{
      * @param serialized_md5 
      * @returns 
      */
-     public deserialize (serialized_md5: string){
+    //  public deserialize (serialized_md5: string){
         // this.hasher.setState();        
-    }
+    // }
 
-    public static deserialize (serialized_md5: string){
+    // public static deserialize (serialized_md5: string){
         // return new Md5Hasher(hasher);        
-    }
+    // }
 
     /**
      * Adds chunk bytes to computes MD5 hash.

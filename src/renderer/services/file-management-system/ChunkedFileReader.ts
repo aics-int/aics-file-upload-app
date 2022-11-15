@@ -64,7 +64,7 @@ export default class ChunkedFileReader {
     offset: number,
     partiallyCalculatedMd5?: string
   }): Promise<string> {
-    const { uploadId, source, onProgress, chunkSize, offset, partiallyCalculatedMd5 } = config;
+    const { uploadId, source, onProgress, chunkSize, offset } = config;
     const readStreamChunkSize = Math.min(chunkSize, READ_STREAM_MAX_CHUNK_SIZE);
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
@@ -74,7 +74,7 @@ export default class ChunkedFileReader {
       highWaterMark: readStreamChunkSize,
     });
 
-    let hasher = new Md5Hasher();
+    const hasher = new Md5Hasher();
     // if (partiallyCalculatedMd5) {
       // hasher = Md5Hasher.deserialize(partiallyCalculatedMd5);
     // }

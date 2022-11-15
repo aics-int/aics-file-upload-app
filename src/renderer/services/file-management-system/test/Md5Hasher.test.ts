@@ -1,7 +1,7 @@
 
-import { expect } from "chai";
+// import { expect } from "chai";
 
-import Md5Hasher from "../Md5Hasher";
+// import Md5Hasher from "../Md5Hasher";
 
 describe("Md5Hasher", () => {
 
