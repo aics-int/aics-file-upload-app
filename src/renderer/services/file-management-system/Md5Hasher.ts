@@ -2,10 +2,10 @@ import * as SparkMD5 from "spark-md5";
 
 export default class Md5Hasher{
 
-    private hasher: SparkMD5
+    private hasher: SparkMD5.ArrayBuffer
 
-    public constructor (hasher?: SparkMD5) {
-        this.hasher  = hasher || new SparkMD5();
+    public constructor (hasher?: SparkMD5.ArrayBuffer) {
+        this.hasher  = hasher || new SparkMD5.ArrayBuffer();
     }
 
     /**
@@ -26,7 +26,7 @@ export default class Md5Hasher{
      * @param chunk 
      */
     public update(chunk: Uint8Array) : void {
-        this.hasher.appendBinary(Buffer.from(chunk.buffer).toString());
+        this.hasher.append(chunk.buffer);
     }
 
     /**
