@@ -27,42 +27,42 @@ describe("ChunkedFileReader", () => {
 
   describe("read", () => {
 
-    it("it calculates md5 correctly starting from a partial (serialized) md5", async () => {
-      // Arrange
-      let chunkNumber = 0;
-      const stoppedChunkNum = 3;
-      const chunkSize = 2000;
-      let partiallyCalculatedMd5: string | undefined;
-      const onProgress = (_: Uint8Array, partialMd5: string) => {
-        chunkNumber += 1;
-        if(chunkNumber === stoppedChunkNum){
-          partiallyCalculatedMd5 = partialMd5;
-        }
-        return Promise.resolve();
-      };
+    // it("it calculates md5 correctly starting from a partial (serialized) md5", async () => {
+    //   // Arrange
+    //   let chunkNumber = 0;
+    //   const stoppedChunkNum = 3;
+    //   const chunkSize = 2000;
+    //   let partiallyCalculatedMd5: string | undefined;
+    //   const onProgress = (_: Uint8Array, partialMd5: string) => {
+    //     chunkNumber += 1;
+    //     if(chunkNumber === stoppedChunkNum){
+    //       partiallyCalculatedMd5 = partialMd5;
+    //     }
+    //     return Promise.resolve();
+    //   };
 
-      // Act
-      const expectedMd5 = await fileReader.read({
-        uploadId: mockUploadId,
-        source: testFilePath,
-        onProgress,
-        chunkSize,
-        offset: 0
-    });
+    //   // Act
+    //   const expectedMd5 = await fileReader.read({
+    //     uploadId: mockUploadId,
+    //     source: testFilePath,
+    //     onProgress,
+    //     chunkSize,
+    //     offset: 0
+    // });
 
-      const actualMd5 = await fileReader.read({
-        uploadId: mockUploadId,
-        source: testFilePath,
-        onProgress,
-        chunkSize,
-        offset: stoppedChunkNum * chunkSize,
-        partiallyCalculatedMd5
-    });
+    //   const actualMd5 = await fileReader.read({
+    //     uploadId: mockUploadId,
+    //     source: testFilePath,
+    //     onProgress,
+    //     chunkSize,
+    //     offset: stoppedChunkNum * chunkSize,
+    //     partiallyCalculatedMd5
+    // });
 
-      // Assert
-      expect(actualMd5).to.not.be.empty
-      expect(actualMd5).to.equal(expectedMd5);
-    });
+    //   // Assert
+    //   expect(actualMd5).to.not.be.empty
+    //   expect(actualMd5).to.equal(expectedMd5);
+    // });
 
     it("starts byte read at offset", async () => {
       // Arrange
@@ -168,44 +168,44 @@ describe("ChunkedFileReader", () => {
       expect(md5OfRecreatedFile).to.equal(md5OfOriginalFile);
     });
 
-    it("provides bytes necessary to recreate file exactly, starting from second chunk using partial MD5", async () => {
-      // Arrange
-      const chunkSize = 1000;
-      const chunks: Uint8Array[] = [];
-      let partialMd5;
-      const onProgress = (chunk: Uint8Array, hashThusFar: string) => {
-        if(!chunks.length){
-          partialMd5 = hashThusFar;
-        }
-        chunks.push(chunk);
-        return Promise.resolve();
-      };
+    // it("provides bytes necessary to recreate file exactly, starting from second chunk using partial MD5", async () => {
+    //   // Arrange
+    //   const chunkSize = 1000;
+    //   const chunks: Uint8Array[] = [];
+    //   let partialMd5;
+    //   const onProgress = (chunk: Uint8Array, hashThusFar: string) => {
+    //     if(!chunks.length){
+    //       partialMd5 = hashThusFar;
+    //     }
+    //     chunks.push(chunk);
+    //     return Promise.resolve();
+    //   };
 
-      // Act
-      const md5OfOriginalFile = await fileReader.read({
-        uploadId: mockUploadId, 
-        source: testFilePath, 
-        onProgress, 
-        chunkSize, 
-        offset: 0
-      });
+    //   // Act
+    //   const md5OfOriginalFile = await fileReader.read({
+    //     uploadId: mockUploadId, 
+    //     source: testFilePath, 
+    //     onProgress, 
+    //     chunkSize, 
+    //     offset: 0
+    //   });
 
-      // (sanity-check) Ensure we have multiple chunks to combine
-      expect(chunks.length).to.be.greaterThan(1);
+    //   // (sanity-check) Ensure we have multiple chunks to combine
+    //   expect(chunks.length).to.be.greaterThan(1);
 
-      // Assert
-      const recreatedFilePath = path.resolve(testDir, "recreated-file-test");
-      await fs.promises.writeFile(recreatedFilePath, Buffer.concat(chunks));
-      const md5OfRecreatedFile = await fileReader.read({
-        uploadId: "103941234",
-        source: recreatedFilePath,
-        onProgress: () => Promise.resolve(), 
-        chunkSize, 
-        offset: chunkSize, //Because this is starting after the first chunk
-        partiallyCalculatedMd5: partialMd5
-    });
-      expect(md5OfRecreatedFile).to.equal(md5OfOriginalFile);
-    });
+    //   // Assert
+    //   const recreatedFilePath = path.resolve(testDir, "recreated-file-test");
+    //   await fs.promises.writeFile(recreatedFilePath, Buffer.concat(chunks));
+    //   const md5OfRecreatedFile = await fileReader.read({
+    //     uploadId: "103941234",
+    //     source: recreatedFilePath,
+    //     onProgress: () => Promise.resolve(), 
+    //     chunkSize, 
+    //     offset: chunkSize, //Because this is starting after the first chunk
+    //     partiallyCalculatedMd5: partialMd5
+    // });
+    //   expect(md5OfRecreatedFile).to.equal(md5OfOriginalFile);
+    // });
 
   });
 

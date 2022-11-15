@@ -75,9 +75,9 @@ export default class ChunkedFileReader {
     });
 
     let hasher = new Md5Hasher();
-    if (partiallyCalculatedMd5) {
-      hasher = Md5Hasher.deserialize(partiallyCalculatedMd5);
-    }
+    // if (partiallyCalculatedMd5) {
+      // hasher = Md5Hasher.deserialize(partiallyCalculatedMd5);
+    // }
 
     // The client of this entity requires a specific chunkSize each time
     // however, streams do not guarantee an exact size each time so this
