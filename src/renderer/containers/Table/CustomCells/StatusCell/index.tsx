@@ -94,14 +94,14 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     let displayForStep = getBytesDisplay(bytesUploaded);
     let totalForStep = getBytesDisplay(totalBytes);
     let progressForStep = 0;
-    // If all bytes have been uploaded then the upload is on the last step
     if (totalBytes > 0 && bytesUploaded >= totalBytes) {
+    // All bytes have been uploaded -> the upload is on the last step
       step = Step.TWO;
       displayForStep = "0";
       totalForStep = "1";
     } 
-    // If uploading bytes, and progress has been made, display progress
     else if (bytesUploaded && totalBytes) {
+     // Uploading bytes, and progress has been made.
       progressForStep = Math.floor((bytesUploaded / totalBytes) * 100);
     }
 
