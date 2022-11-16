@@ -28,7 +28,7 @@ describe("Md5Hasher", () => {
   describe("deserialize", () => {
     it("Produces consistent hasher", () => {
         //ARRANGE
-        const partialMd5 = '{"$super":{"$super":{"cfg":{"$super":{}},"blockSize":16,"$super":{"_minBufferSize":0,"$super":{}}}},"cfg":{"$super":{"$super":{}}},"_data":{"words":[1056964608],"sigBytes":1},"_nDataBytes":1,"_hash":{"words":[1732584193,4023233417,2562383102,271733878],"sigBytes":16}}';
+        const partialMd5 = '{"buff":"?","length":1,"hash":[1732584193,-271733879,-1732584194,271733878]}';
         const expectedMd5 = 'd1457b72c3fb323a2671125aef3eab5d';
 
         //ACT
@@ -43,7 +43,7 @@ describe("Md5Hasher", () => {
   describe("serialize", () => {
     it("Produces consistent hasher", () => {
         //ARRANGE
-        const expectedPartialMd5 = '{"$super":{"$super":{"cfg":{"$super":{}},"blockSize":16,"$super":{"_minBufferSize":0,"$super":{}}}},"cfg":{"$super":{"$super":{}}},"_data":{"words":[1056964608],"sigBytes":1},"_nDataBytes":1,"_hash":{"words":[1732584193,4023233417,2562383102,271733878],"sigBytes":16}}';
+        const expectedPartialMd5 = '{"buff":"?","length":1,"hash":[1732584193,-271733879,-1732584194,271733878]}';
         const firstChunk = new Uint8Array([999999]);
         const hasher = new Md5Hasher();
         hasher.update(firstChunk);
