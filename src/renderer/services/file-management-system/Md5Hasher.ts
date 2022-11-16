@@ -14,8 +14,10 @@ export default class Md5Hasher{
      * @param serialized_md5 
      * @returns 
      */
-     public deserialize (serialized_md5: string){ 
-        this.hasher.setState(JSON.parse(serialized_md5));
+     public static deserialize (serialized_md5: string) : Md5Hasher{ 
+        const hasher = new SparkMD5.ArrayBuffer();
+        hasher.setState(JSON.parse(serialized_md5));
+        return new Md5Hasher(hasher);
     }
 
     /**
