@@ -1,11 +1,11 @@
-import * as SparkMD5 from "spark-md5";
+import { ArrayBuffer } from "spark-md5";
 
 export default class Md5Hasher{
 
-    private hasher: SparkMD5.ArrayBuffer
+    private hasher: ArrayBuffer
 
-    public constructor (hasher?: SparkMD5.ArrayBuffer) {
-        this.hasher  = hasher || new SparkMD5.ArrayBuffer();
+    public constructor (hasher?: ArrayBuffer) {
+        this.hasher  = hasher || new ArrayBuffer();
     }
 
 
@@ -15,7 +15,7 @@ export default class Md5Hasher{
      * @returns 
      */
      public static deserialize (serialized_md5: string) : Md5Hasher{ 
-        const hasher = new SparkMD5.ArrayBuffer();
+        const hasher = new ArrayBuffer();
         hasher.setState(JSON.parse(serialized_md5));
         return new Md5Hasher(hasher);
     }
