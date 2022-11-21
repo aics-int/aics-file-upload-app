@@ -269,6 +269,6 @@ describe("<AnnotationEditorModal />", () => {
     );
 
     // Assert
-    expect(wrapper.text()).to.be.null;
+    expect(wrapper.text()).to.be.empty;
   });
 });
