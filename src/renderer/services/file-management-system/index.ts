@@ -23,6 +23,7 @@ import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
+import Md5Hasher from "./Md5Hasher";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -239,6 +240,7 @@ export default class FileManagementSystem {
 
       if (
         fssStatus?.status === UploadStatus.WORKING ||
+        fssStatus?.status === UploadStatus.RETRY ||
         fssStatus?.status === UploadStatus.COMPLETE
       ) {
         try {
@@ -427,23 +429,30 @@ export default class FileManagementSystem {
           throw new Error("FileId was not published on COMPLETE upload: " + fssStatus.uploadId)
         }
         await this.complete(upload, fileId)
-      } else if (fssStatus.status === UploadStatus.WORKING) {
+      } else if (fssStatus.status === UploadStatus.RETRY || fssStatus.status === UploadStatus.WORKING) {
         // Update status to reflect the resume going smoothly
         await this.jss.updateJob(upload.jobId, {
           status: JSSJobStatus.RETRYING,
         });
-          // If FSS is still available to continue receiving chunks of this upload
-          // simply continue sending the chunks
-          let lastChunkNumber = fssStatus.chunkStatuses.findIndex(
-            (status) => status !== ChunkStatus.COMPLETE
-          );
-          if (lastChunkNumber === -1) {
-            lastChunkNumber = fssStatus.chunkStatuses.length;
-          }
-          if(!upload.serviceFields.md5CalculationInformation?.[`${lastChunkNumber}`]){
-            throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
-          }
 
+        // If FSS is still available to continue receiving chunks of this upload
+        // simply continue sending the chunks
+        let lastChunkNumber = fssStatus.chunkStatuses.findIndex(
+          (status) => status !== ChunkStatus.COMPLETE
+        );
+        if (lastChunkNumber === -1) {
+          lastChunkNumber = fssStatus.chunkStatuses.length;
+        }
+
+        const partiallyCalculatedMd5 = upload.serviceFields.md5CalculationInformation?.[`${lastChunkNumber}`];
+        if (!partiallyCalculatedMd5){
+          throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
+        }
+
+        if (fssStatus.status === UploadStatus.RETRY ) {
+          const md5 = Md5Hasher.deserialize(partiallyCalculatedMd5).digest();
+          await this.fss.retryFinalize(fssUploadId, md5)
+        } else if (fssStatus.status === UploadStatus.WORKING) {
           const { originalPath } = upload.serviceFields.files[0].file;
           const { size: fileSize } = await fs.promises.stat(originalPath);
           await this.uploadInChunks({
@@ -455,10 +464,10 @@ export default class FileManagementSystem {
             onProgress: (bytesUploaded) =>
               onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
             initialChunkNumber: lastChunkNumber,
-            partiallyCalculatedMd5: upload.serviceFields.md5CalculationInformation?.[`${lastChunkNumber}`]
+            partiallyCalculatedMd5
           });
+        }
       }
-      //TODO handle case where UploadStatus == RETRY
     }
   }
 
