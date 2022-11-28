@@ -2,13 +2,14 @@ import { expect } from "chai";
 import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
 import { FileManagementSystem, JobStatusService } from "../../../services";
-import { FSSUpload } from "../../../services/file-storage-service";
+import { FSSUpload, UploadStatus } from "../../../services/file-storage-service";
 import {
   IN_PROGRESS_STATUSES,
   JSSJobStatus,
   UploadJob,
 } from "../../../services/job-status-service/types";
 import { setErrorAlert, setInfoAlert } from "../../feedback/actions";
+import { SET_ALERT } from "../../feedback/constants";
 import {
   createMockReduxStore,
   mockReduxLogicDeps,
@@ -387,6 +388,30 @@ describe("Job logics", () => {
         expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
           .false;
       });
+    });
+
+    it("retries uploads FSS signals require retrying", async () => {
+      // Arrange
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        stateWithMatchingUpload,
+        undefined,
+        undefined,
+        false
+      );
+      const fssUpload = {
+        ...successfulFSSUpload,
+        status: JSSJobStatus.WORKING,
+        currentStage: UploadStatus.RETRY,
+        serviceFields: {},
+      };
+
+      // Act
+      const action = receiveFSSJobCompletionUpdate(fssUpload);
+      store.dispatch(action);
+      await logicMiddleware.whenComplete();
+
+      // Assert
+        expect(actions.includesType(SET_ALERT)).to.be.true;
     });
   });
 });
