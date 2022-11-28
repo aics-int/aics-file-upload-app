@@ -411,7 +411,7 @@ describe("Job logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-        expect(actions.includesType(SET_ALERT)).to.be.true;
+      expect(actions.includesType(SET_ALERT)).to.be.true;
     });
   });
 });

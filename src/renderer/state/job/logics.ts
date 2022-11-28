@@ -111,7 +111,6 @@ const receiveJobUpdateLogics = createLogic({
       isUploadSuccessfulAndComplete(updatedJob) &&
       !isUploadSuccessfulAndComplete(previousJob)
     ) {
-      // TODO: Need to do a check to see if updates include an fss status of RETRY (which is shown to be the stage of the jss job)
       dispatch(uploadSucceeded(jobName));
     } else if (
       previousJob &&
