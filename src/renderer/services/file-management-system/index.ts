@@ -183,6 +183,9 @@ export default class FileManagementSystem {
         {
           status: JSSJobStatus.SUCCEEDED,
           serviceFields: {
+            // Clear the MD5 progress information now that the upload is complete
+            // to reduce the space this job takes up in the DB & in memory later on
+            md5CalculationInformation: {},
             result: [
               {
                 fileId,
