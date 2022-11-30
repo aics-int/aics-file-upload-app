@@ -141,8 +141,8 @@ export default class FileStorageService extends HttpCacheClient {
   }
 
   /**
-   * This is a retry of the final step of the upload, this might be necessary in cases where something goes awry on the server's
-   * side during this step of the upload.
+   * This is a retry of the final asynchronous step of the upload, this might be necessary in cases where something goes awry
+   * on the server's side during this step of the upload.
    * The MD5 is included, and will be used by the server for a checksum.
    * Other post upload tasks may also occur.
    */
