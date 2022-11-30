@@ -141,6 +141,17 @@ export default class FileStorageService extends HttpCacheClient {
   }
 
   /**
+   * This is a retry of the final asynchronous step of the upload, this might be necessary in cases where something goes awry
+   * on the server's side during this step of the upload.
+   * The MD5 is included, and will be used by the server for a checksum.
+   * Other post upload tasks may also occur.
+   */
+  public retryFinalize(uploadId: string, md5: string): Promise<UploadChunkResponse> {
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/retry?md5=${md5}`;
+    return this.patch<UploadChunkResponse>(url, undefined);
+  }
+
+  /**
    * This cancels the upload if it exists and can be canceled from the
    * service's perspective.
    */

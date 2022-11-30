@@ -11,7 +11,7 @@ import {
   RendererProcessEvents,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
-import { FSSUpload } from "../../services/file-storage-service";
+import { FSSUpload, UploadStatus } from "../../services/file-storage-service";
 import {
   JSSJob,
   JSSJobStatus,
@@ -112,10 +112,11 @@ export default function App() {
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
       const job = camelizeKeys(JSON.parse(event.data) as object) as JSSJob;
       // An FSS job update is only important to us when it is signaling
-      // the addition of the fileId i.e. FSS's completion or has failed
+      // the addition of the fileId i.e. FSS's completion, has failed,
+      // or requires this clients intervention to retry
       if (
         job.service === Service.FILE_STORAGE_SERVICE &&
-        (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED)
+        (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED || job.currentStage === UploadStatus.RETRY)
       ) {
         dispatch(receiveFSSJobCompletionUpdate(job as FSSUpload));
       } else if (job.serviceFields?.type === "upload") {

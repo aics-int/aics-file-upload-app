@@ -1,6 +1,7 @@
 import { createLogic } from "redux-logic";
 
 import { UploadProgressInfo } from "../../services/file-management-system";
+import { UploadStatus } from "../../services/file-storage-service";
 import {
   FAILED_STATUSES,
   IN_PROGRESS_STATUSES,
@@ -171,6 +172,26 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
         matchingUploadJob.status !== JSSJobStatus.FAILED
       ) {
         await fms.failUpload(matchingUploadJob.jobId, "FSS upload failed");
+      } else if (
+        fssUpload.currentStage === UploadStatus.RETRY &&
+        matchingUploadJob.status !== JSSJobStatus.RETRYING
+      ) {
+        try {
+          const info = `Checking to see if "${matchingUploadJob.jobName}" can be resumed after server failure.`;
+          dispatch(setInfoAlert(info));
+
+          const onProgress = (
+            uploadId: string,
+            progress: UploadProgressInfo
+          ) => {
+            dispatch(updateUploadProgressInfo(uploadId, progress));
+          };
+          await fms.retry(matchingUploadJob.jobId, onProgress);
+        } catch (e) {
+          const message = `Retry for upload "${matchingUploadJob.jobName}" failed: ${e.message}`;
+          console.error(message, e);
+          dispatch(setErrorAlert(message));
+        }
       }
     }
 
@@ -196,9 +217,10 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
     const isFileIdInLabkey =
       fssUpload.status === JSSJobStatus.SUCCEEDED &&
       fssUpload.serviceFields?.fileId;
+    const requiresRetry = fssUpload.currentStage === UploadStatus.RETRY;
     if (
       !isDuplicateUpdate &&
-      (FAILED_STATUSES.includes(fssUpload.status) || isFileIdInLabkey)
+      (FAILED_STATUSES.includes(fssUpload.status) || isFileIdInLabkey || requiresRetry)
     ) {
       next(action);
     } else {
