@@ -91,7 +91,7 @@ export default class MetadataManagementService extends HttpCacheClient {
     request: UploadRequest
   ): Promise<void> {
     const url = `${mmsURL}/1.0/filemetadata/${fileId}`;
-    await this.post(url, decamelizeKeys(request));
+    await this.patch(url, decamelizeKeys(request));
   }
 
   public async editFileMetadata(
