@@ -10,7 +10,6 @@ import {
   createStubInstance,
 } from "sinon";
 
-import { AnnotationName } from "../../../constants";
 import FileManagementSystem from "../../../services/file-management-system";
 import JobStatusService from "../../../services/job-status-service";
 import { JSSJobStatus } from "../../../services/job-status-service/types";
@@ -364,11 +363,8 @@ describe("Route logics", () => {
       expect(getUpload(state)).to.deep.equal({
         [getUploadRowKey({ file: fileMetadata.localFilePath || "" })]: {
           file: fileMetadata.localFilePath,
-          fileId: "dog",
+          fileId: fileMetadata.fileId,
           "Favorite Color": ["Blue", "Green"],
-          [AnnotationName.WELL]: ["A1", "B6"],
-          [AnnotationName.PLATE_BARCODE]: ["abc"],
-          [AnnotationName.IMAGING_SESSION]: [],
           channelId: undefined,
           fovId: undefined,
           positionIndex: undefined,
@@ -377,15 +373,6 @@ describe("Route logics", () => {
         },
       });
       expect(getAppliedTemplate(state)).to.not.be.undefined;
-      expect(getPlateBarcodeToPlates(state)).to.deep.equal({
-        abc: [
-          {
-            imagingSessionId: 4,
-            name: "3 hours",
-            wells: [],
-          },
-        ],
-      });
     });
   
     it("dispatches requestFailed if boolean annotation type id is not defined", async () => {
@@ -456,6 +443,27 @@ describe("Route logics", () => {
           { ...mockWellAnnotation, values: ["A1", "B6"] },
         ],
       });
+      mmsClient.getTemplate.resolves({
+        annotations: [{
+          annotationId: mockWellAnnotation.annotationId,
+          annotationTypeId: 1,
+          name: "",
+          description: "",
+          orderIndex: 1,
+          required: true,
+          created: new Date(),
+          createdBy: 1024,
+          modified: new Date(),
+          modifiedBy: 1024,
+        }],
+        name: "testTemplate",
+        version: 1,
+        templateId: 4,
+        created: new Date(),
+        createdBy: 1024,
+        modified: new Date(),
+        modifiedBy: 1024,
+      })
       const { actions, logicMiddleware, store } = createMockReduxStore(
         mockStateWithMetadata, mockDeps
       );
