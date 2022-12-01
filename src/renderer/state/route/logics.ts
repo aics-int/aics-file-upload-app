@@ -17,6 +17,7 @@ import {
   Lookup,
   ScalarType,
 } from "../../services/labkey-client/types";
+import { Template } from "../../services/metadata-management-service/types";
 import {
   MMSFileAnnotation,
   FSSResponseFile,
@@ -62,7 +63,7 @@ import { batchActions } from "../util";
 
 import { resetUpload, selectPage, viewUploadsSucceeded } from "./actions";
 import { CLOSE_UPLOAD, START_NEW_UPLOAD, VIEW_UPLOADS } from "./constants";
-import { Upload, ViewUploadsAction } from "./types";
+import { ViewUploadsAction } from "./types";
 
 const stateBranchHistory = [
   {
@@ -132,8 +133,9 @@ const resetUploadLogic = createLogic({
 */
 function convertUploadRequestsToUploadStateBranch(
   files: UploadRequest[],
-  state: State
-): Upload {
+  state: State,
+  template?: Template,
+): UploadStateBranch {
   const annotations = getAnnotations(state);
   const lookups = getLookups(state);
   const annotationLookups = getAnnotationLookups(state);
@@ -146,11 +148,8 @@ function convertUploadRequestsToUploadStateBranch(
     {} as { [annotationId: number]: Lookup | undefined }
   );
 
-  let templateId: number | undefined = undefined;
   const uploadMetadata = files.reduce((uploadSoFar, file) => {
-    templateId = file.customMetadata?.templateId || templateId;
-
-    if (!file.customMetadata?.annotations.length) {
+    if (!file.customMetadata?.annotations.length || !template?.annotations.length) {
       const key = getUploadRowKey({
         file: file.file.originalPath,
       });
@@ -163,11 +162,18 @@ function convertUploadRequestsToUploadStateBranch(
       };
     }
 
+    const setOfAnnotationIdsFromTemplate = new Set(template.annotations.map(annotation => annotation.annotationId));
     return file.customMetadata.annotations.reduce(
       (
         keyToMetadataSoFar: UploadStateBranch,
         annotation: MMSFileAnnotation
       ) => {
+        // Only include annotations that are on the template in the metadata for the branch
+        // otherwise this might try to overwrite metadata from other applications unintentionally
+        if (!setOfAnnotationIdsFromTemplate.has(annotation.annotationId)) {
+          return keyToMetadataSoFar;
+        }
+
         const key = getUploadRowKey({
           file: file.file.originalPath,
           ...annotation,
@@ -252,10 +258,11 @@ function convertUploadRequestsToUploadStateBranch(
     );
   }, {} as UploadStateBranch);
 
-  return { templateId, uploadMetadata };
+  return uploadMetadata;
 }
 
 const RELEVANT_FILE_COLUMNS = [
+  "FileId",
   "FileName",
   "FileSize",
   "FileType",
@@ -289,38 +296,37 @@ const viewUploadsLogic = createLogic({
         requests: UploadRequest[];
         fileIds: string[];
       };
-      const fileIdsAsFiles: UploadRequest[] = await Promise.all(
-        fileIds.map(async (fileId: string) => {
-          const [labkeyFileMetadata, customMetadata] = await Promise.all([
-            labkeyClient.selectFirst<LabKeyFileMetadata>(
-              LK_SCHEMA.FMS,
-              "File",
-              RELEVANT_FILE_COLUMNS,
-              [LabkeyClient.createFilter("FileId", fileId)]
-            ),
-            mmsClient.getFileMetadata(fileId),
-          ]);
-          return {
-            ...labkeyFileMetadata,
-            fileId,
-            customMetadata,
-            file: {
-              originalPath: labkeyFileMetadata.localFilePath as string,
-              fileType: labkeyFileMetadata.fileType,
-            },
-          };
-        })
-      );
-      const uploadsToView = convertUploadRequestsToUploadStateBranch(
-        [...requests, ...fileIdsAsFiles],
-        state
+      const metadataForFiles = await Promise.all(fileIds.map(async (fileId) => await Promise.all([
+        labkeyClient.selectFirst<LabKeyFileMetadata>(
+          LK_SCHEMA.FMS,
+          "File",
+          RELEVANT_FILE_COLUMNS,
+          [LabkeyClient.createFilter("FileId", fileId)]
+        ),
+        mmsClient.getFileMetadata(fileId),
+      ])));
+      const fileIdsAsFiles: UploadRequest[] = metadataForFiles.map(([labkeyFileMetadata, customMetadata]) => ({
+        ...labkeyFileMetadata,
+        customMetadata,
+        file: {
+          originalPath: labkeyFileMetadata.localFilePath as string,
+          fileType: labkeyFileMetadata.fileType,
+        },
+      }));
+      const files = [...requests, ...fileIdsAsFiles];
+      // Find the first templateId (if any) present in the files metadata
+      const templateId = files.find((file) => !!file.customMetadata?.templateId)?.customMetadata?.templateId;
+      const basicTemplateInfo = templateId ? await mmsClient.getTemplate(templateId) : undefined;
+      const uploadMetadata = convertUploadRequestsToUploadStateBranch(
+        files,
+        state,
+        basicTemplateInfo,
       );
 
       // Any barcoded plate can be snapshot in time as that plate at a certain
       // imaging session. The contents & images of the plates at that time (imaging session)
       // may vary so the app needs to provide options for the user to choose between
       const imagingSessions = getImagingSessions(state);
-      const { uploadMetadata } = uploadsToView;
       const plateBarcodeToPlates: PlateBarcodeToPlates = {};
       for (const [key, upload] of Object.entries(uploadMetadata)) {
         // An upload is assumed to only have one plate associated with it
@@ -377,7 +383,7 @@ const viewUploadsLogic = createLogic({
         setPlateBarcodeToPlates(plateBarcodeToPlates),
       ];
 
-      if (uploadsToView.templateId) {
+      if (templateId) {
         const booleanAnnotationTypeId = getBooleanAnnotationTypeId(getState());
         if (!booleanAnnotationTypeId) {
           throw new Error(
@@ -385,7 +391,7 @@ const viewUploadsLogic = createLogic({
           );
         }
         const { template, uploads } = await getApplyTemplateInfo(
-          uploadsToView.templateId,
+          templateId,
           mmsClient,
           dispatch,
           booleanAnnotationTypeId,
