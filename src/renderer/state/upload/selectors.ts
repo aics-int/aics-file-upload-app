@@ -513,41 +513,38 @@ const getAnnotations = (
     forEach(customData, (value: any, annotationName: string) => {
       const annotation = annotationNameToAnnotationMap[annotationName];
       if (annotation) {
-        let addAnnotation = Array.isArray(value)
-          ? !isEmpty(value)
-          : !isNil(value);
+        if (isNil(value)) {
+          value = [];
+        }
         if (annotation.type === ColumnType.BOOLEAN) {
-          addAnnotation = annotation.type === ColumnType.BOOLEAN;
           if (isEmpty(value)) {
             value = [false];
           }
         }
 
-        if (addAnnotation) {
-          result.push({
-            annotationId: annotation.annotationId,
-            channelId: metadatum.channelId,
-            positionIndex: metadatum.positionIndex,
-            scene: metadatum.scene,
-            subImageName: metadatum.subImageName,
-            values: castArray(value).map((v) => {
-              if (annotation.type === ColumnType.DATETIME) {
-                return moment(v).format("YYYY-MM-DD HH:mm:ss");
-              } else if (annotation.type === ColumnType.DATE) {
-                return moment(v).format("YYYY-MM-DD");
-              } else if (annotation.type === ColumnType.DURATION) {
-                const { days, hours, minutes, seconds } = v as Duration;
-                return (
-                  days * DAY_AS_MS +
-                  hours * HOUR_AS_MS +
-                  minutes * MINUTE_AS_MS +
-                  seconds * 1000
-                ).toString();
-              }
-              return v.toString();
-            }),
-          });
-        }
+        result.push({
+          annotationId: annotation.annotationId,
+          channelId: metadatum.channelId,
+          positionIndex: metadatum.positionIndex,
+          scene: metadatum.scene,
+          subImageName: metadatum.subImageName,
+          values: castArray(value).map((v) => {
+            if (annotation.type === ColumnType.DATETIME) {
+              return moment(v).format("YYYY-MM-DD HH:mm:ss");
+            } else if (annotation.type === ColumnType.DATE) {
+              return moment(v).format("YYYY-MM-DD");
+            } else if (annotation.type === ColumnType.DURATION) {
+              const { days, hours, minutes, seconds } = v as Duration;
+              return (
+                days * DAY_AS_MS +
+                hours * HOUR_AS_MS +
+                minutes * MINUTE_AS_MS +
+                seconds * 1000
+              ).toString();
+            }
+            return v.toString();
+          }),
+        });
       } else {
         // tslint:disable-next-line
         console.warn(
