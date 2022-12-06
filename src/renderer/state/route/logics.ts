@@ -296,7 +296,7 @@ const viewUploadsLogic = createLogic({
         requests: UploadRequest[];
         fileIds: string[];
       };
-      const metadataForFiles = await Promise.all(fileIds.map(async (fileId) => await Promise.all([
+      const metadataForFiles = await Promise.all(fileIds.map((fileId) => Promise.all([
         labkeyClient.selectFirst<LabKeyFileMetadata>(
           LK_SCHEMA.FMS,
           "File",
