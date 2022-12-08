@@ -170,6 +170,12 @@ export default class FileManagementSystem {
       const metadata = upload.serviceFields.files[0];
       const metadataWithUploadId = {
         ...metadata,
+        customMetadata: metadata.customMetadata ? {
+          templateId: metadata.customMetadata.templateId,
+          annotations: metadata.customMetadata.annotations.filter(annotation => (
+            annotation.values.length > 0
+          )),
+        } : undefined,
         file: {
           ...metadata.file,
           jobId: upload.jobId,
