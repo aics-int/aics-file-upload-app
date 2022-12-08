@@ -220,7 +220,10 @@ const initiateUploadLogic = createLogic({
       return;
     }
 
-    dispatch(initiateUploadSucceeded(action.payload));
+    dispatch(batchActions([
+      initiateUploadSucceeded(action.payload),
+      resetUpload()
+    ]))
 
     const uploadTasks = uploads.map((upload) => async () => {
       try {
