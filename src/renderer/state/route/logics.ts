@@ -172,8 +172,8 @@ function convertUploadRequestsToUploadStateBranch(
         annotationIdToAnnotationMap[annotation.annotationId]?.[0];
         // Only include annotations that are on the template in the metadata for the branch,
         // otherwise this might try to overwrite metadata from other applications unintentionally
-        // But, do include Well, even though it is not in the template.
-        if (!setOfAnnotationIdsFromTemplate.has(annotation.annotationId) && annotationDefinition?.name !== AnnotationName.WELL) {
+        // But, do include Well and Notes, because they are included in the grid by default.
+        if (!setOfAnnotationIdsFromTemplate.has(annotation.annotationId) && annotationDefinition?.name !== AnnotationName.WELL && annotationDefinition?.name !== AnnotationName.NOTES) {
           return keyToMetadataSoFar;
         }
 
