@@ -10,6 +10,7 @@ import {
   createStubInstance,
 } from "sinon";
 
+import { AnnotationName } from "../../../constants";
 import FileManagementSystem from "../../../services/file-management-system";
 import JobStatusService from "../../../services/job-status-service";
 import { JSSJobStatus } from "../../../services/job-status-service/types";
@@ -365,6 +366,9 @@ describe("Route logics", () => {
           file: fileMetadata.localFilePath,
           fileId: fileMetadata.fileId,
           "Favorite Color": ["Blue", "Green"],
+          [AnnotationName.WELL]: ["A1", "B6"],
+          [AnnotationName.PLATE_BARCODE]: ["abc"],
+          [AnnotationName.IMAGING_SESSION]: [],
           channelId: undefined,
           fovId: undefined,
           positionIndex: undefined,
@@ -373,6 +377,15 @@ describe("Route logics", () => {
         },
       });
       expect(getAppliedTemplate(state)).to.not.be.undefined;
+      expect(getPlateBarcodeToPlates(state)).to.deep.equal({
+        abc: [
+          {
+            imagingSessionId: 4,
+            name: "3 hours",
+            wells: [],
+          },
+        ],
+      });
     });
   
     it("dispatches requestFailed if boolean annotation type id is not defined", async () => {
