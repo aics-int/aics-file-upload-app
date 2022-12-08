@@ -168,9 +168,12 @@ function convertUploadRequestsToUploadStateBranch(
         keyToMetadataSoFar: UploadStateBranch,
         annotation: MMSFileAnnotation
       ) => {
-        // Only include annotations that are on the template in the metadata for the branch
+        const annotationDefinition =
+        annotationIdToAnnotationMap[annotation.annotationId]?.[0];
+        // Only include annotations that are on the template in the metadata for the branch,
         // otherwise this might try to overwrite metadata from other applications unintentionally
-        if (!setOfAnnotationIdsFromTemplate.has(annotation.annotationId)) {
+        // But, do include Well, even though it is not in the template.
+        if (!setOfAnnotationIdsFromTemplate.has(annotation.annotationId) && annotationDefinition?.name !== AnnotationName.WELL) {
           return keyToMetadataSoFar;
         }
 
@@ -178,8 +181,6 @@ function convertUploadRequestsToUploadStateBranch(
           file: file.file.originalPath,
           ...annotation,
         });
-        const annotationDefinition =
-          annotationIdToAnnotationMap[annotation.annotationId]?.[0];
         if (!annotationDefinition) {
           throw new Error(
             `Unable to find matching Annotation for Annotation ID: ${annotation.annotationId}`
