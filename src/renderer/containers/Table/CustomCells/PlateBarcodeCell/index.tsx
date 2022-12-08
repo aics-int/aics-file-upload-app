@@ -1,6 +1,7 @@
 import { PlusCircleOutlined } from "@ant-design/icons";
 import { Divider, Menu, Tooltip } from "antd";
 import SubMenu from "antd/lib/menu/SubMenu";
+import { castArray, isNil } from "lodash";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CellProps } from "react-table";
@@ -59,7 +60,7 @@ export default function PlateBarcodeCell(
     setIsEditing(false);
     dispatch(
       updateUpload(props.row.id, {
-        [props.column.id]: barcode ? [barcode] : [],
+        [props.column.id]: castArray(barcode).filter(barcode => !isNil(barcode)),
       })
     );
   }
