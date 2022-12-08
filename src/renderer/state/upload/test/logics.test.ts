@@ -26,6 +26,7 @@ import { getAlert } from "../../feedback/selectors";
 import { setPlateBarcodeToPlates } from "../../metadata/actions";
 import { SET_PLATE_BARCODE_TO_PLATES } from "../../metadata/constants";
 import { getPlateBarcodeToPlates } from "../../metadata/selectors";
+import { resetUpload } from "../../route/actions";
 import { setAppliedTemplate } from "../../template/actions";
 import {
   createMockReduxStore,
@@ -320,6 +321,30 @@ describe("Upload logics", () => {
         )
       ).to.be.true;
     });
+
+    it("resets upload state after initiate is complete", async () => {
+      // Arrange
+      fms.initiateUpload.resolves(initiatedUpload);
+      jssClient.existsById.resolves(true);
+      const errorMessage = "uploadFile failed";
+      fms.upload.rejects(new Error(errorMessage));
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        nonEmptyStateForInitiatingUpload,
+        mockReduxLogicDeps,
+        uploadLogics
+      );
+
+      // Act
+      store.dispatch(initiateUpload());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(
+        actions.includesMatch(
+          resetUpload()
+        )
+      ).to.be.true;
+    })
   });
   describe("retryUploadsLogic", () => {
     it("calls fms.retry if no missing info on job", async () => {
