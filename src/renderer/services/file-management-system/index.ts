@@ -6,7 +6,6 @@ import * as uuid from "uuid";
 
 import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, {
-  ChunkStatus,
   FSSUpload,
   UploadStatus,
   UploadStatusResponse,
@@ -141,7 +140,6 @@ export default class FileManagementSystem {
 
       // Wait for upload
       await this.uploadInChunks({
-        uploadId: upload.jobId,
         fssUploadId: registration.uploadId,
         source: source,
         chunkSize: registration.chunkSize,
@@ -190,9 +188,6 @@ export default class FileManagementSystem {
         {
           status: JSSJobStatus.SUCCEEDED,
           serviceFields: {
-            // Clear the MD5 progress information now that the upload is complete
-            // to reduce the space this job takes up in the DB & in memory later on
-            md5CalculationInformation: {},
             result: [
               {
                 fileId,
@@ -447,25 +442,31 @@ export default class FileManagementSystem {
         // If FSS is still available to continue receiving chunks of this upload
         // simply continue sending the chunks
         let lastChunkNumber = fssStatus.chunkStatuses.findIndex(
-          (status) => status !== ChunkStatus.COMPLETE
+          (status) => status !== UploadStatus.COMPLETE
         );
         if (lastChunkNumber === -1) {
           lastChunkNumber = fssStatus.chunkStatuses.length;
         }
 
-        const partiallyCalculatedMd5 = upload.serviceFields.md5CalculationInformation?.[`${lastChunkNumber}`];
-        if (!partiallyCalculatedMd5){
-          throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
+        let partiallyCalculatedMd5 = undefined;
+        if (lastChunkNumber > 0) {
+          const chunkResponse = await this.fss.getChunkInfo(fssUploadId, lastChunkNumber);
+          partiallyCalculatedMd5 = chunkResponse.cumulativeMD5;
+          if (!partiallyCalculatedMd5){
+            throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
+          }
         }
 
-        if (fssStatus.status === UploadStatus.RETRY ) {
+        if (fssStatus.status === UploadStatus.RETRY) {
+          if (!partiallyCalculatedMd5){
+            throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
+          }
           const md5 = Md5Hasher.deserialize(partiallyCalculatedMd5).digest();
           await this.fss.retryFinalize(fssUploadId, md5)
         } else if (fssStatus.status === UploadStatus.WORKING) {
           const { originalPath } = upload.serviceFields.files[0].file;
           const { size: fileSize } = await fs.promises.stat(originalPath);
           await this.uploadInChunks({
-            uploadId: upload.jobId,
             fssUploadId,
             source: originalPath,
             chunkSize: fssStatus.chunkSize,
@@ -484,7 +485,6 @@ export default class FileManagementSystem {
    * Uploads the given file to FSS in chunks asynchronously using a NodeJS.
    */
   private async uploadInChunks(config: {
-    uploadId: string,
     fssUploadId: string,
     source: string,
     chunkSize: number,
@@ -493,7 +493,7 @@ export default class FileManagementSystem {
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { uploadId, fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
     
     //Initialize bytes uploaded with progress made previously
@@ -516,18 +516,12 @@ export default class FileManagementSystem {
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
       chunksInFlight++;
-      await this.jss.updateJob(uploadId, {
-        serviceFields: {
-          md5CalculationInformation: {
-            [chunkNumber]: md5ThusFar,
-          },
-        },
-      }, true)
       // Upload chunk
       await this.fss.sendUploadChunk(
         fssUploadId,
         chunkNumber,
         chunkSize * (chunkNumber-1),
+        md5ThusFar,
         chunk,
         user
       );

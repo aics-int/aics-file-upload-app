@@ -25,21 +25,23 @@ export enum UploadStatus {
   POST_PROCESSING = "POST_PROCESSING"   //Chunks were all recieved, /finalize was called, and post upload processing is happening.  
 }
 
-export enum ChunkStatus {
-  COMPLETE = "COMPLETE",
-}
-
 // RESPONSE TYPES
 
 // Receipt of chunk submission
 interface UploadChunkResponse {
   chunkNumber: number;
-  fileId?: string;
+  errorCount: number;
   uploadId: string;
 }
 
+interface ChunkInfoResponse {
+  cumulativeMD5?: string;
+  size: number;
+  status: UploadStatus;
+}
+
 export interface UploadStatusResponse {
-  chunkStatuses: ChunkStatus[];
+  chunkStatuses: UploadStatus[];
   status: UploadStatus;
   uploadId: string; // ID for tracking upload
   chunkSize: number; // Size of chunks to send to service
@@ -116,6 +118,7 @@ export default class FileStorageService extends HttpCacheClient {
     uploadId: string,
     chunkNumber: number,
     rangeStart: number,
+    md5ThusFar: string,
     postBody: Uint8Array,
     user: string
   ): Promise<UploadChunkResponse> {
@@ -125,6 +128,7 @@ export default class FileStorageService extends HttpCacheClient {
       ...FileStorageService.getHttpRequestConfig(),
       headers: {
         "Content-Type": "application/octet-stream",
+        "Cumulative-MD5": md5ThusFar,
         Range: `bytes=${rangeStart}-${rangeEnd}`,
         "X-User-Id": user,
       },
@@ -158,6 +162,14 @@ export default class FileStorageService extends HttpCacheClient {
   public cancelUpload(uploadId: string): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}`;
     return this.delete<UploadStatusResponse>(url, undefined);
+  }
+
+  /**
+   * Get information about the specific chunk requested
+   */
+  public getChunkInfo(uploadId: string, chunkNumber: number): Promise<ChunkInfoResponse> {
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/chunk/${chunkNumber}`;
+    return this.get<ChunkInfoResponse>(url, undefined);
   }
 
   /**

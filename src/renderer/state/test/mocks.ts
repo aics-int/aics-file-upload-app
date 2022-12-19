@@ -447,7 +447,6 @@ export const mockWorkingUploadJob: UploadJob = {
   serviceFields: {
     files: [],
     lastModifiedInMS: new Date().getMilliseconds(),
-    md5CalculationInformation: {},
     type: "upload",
   },
   status: JSSJobStatus.WORKING,
@@ -488,7 +487,6 @@ export const mockFailedUploadJob: UploadJob = {
       },
     ],
     lastModifiedInMS: new Date().getMilliseconds(),
-    md5CalculationInformation: {},
     type: "upload",
   },
   status: JSSJobStatus.FAILED,

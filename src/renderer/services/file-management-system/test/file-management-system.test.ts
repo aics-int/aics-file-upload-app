@@ -156,6 +156,7 @@ describe("FileManagementSystem", () => {
         }
         inFlightFssRequests--;
         return {
+          errorCount: 0,
           chunkNumber: 0,
           uploadId: 'testID',
         };
@@ -267,7 +268,7 @@ describe("FileManagementSystem", () => {
       fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
-        fileId,
+        errorCount: 0,
         chunkNumber: 14,
         uploadId: upload.jobId,
       });
@@ -317,7 +318,7 @@ describe("FileManagementSystem", () => {
       fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
-        fileId,
+        errorCount: 0,
         chunkNumber: 14,
         uploadId: upload.jobId,
       });
@@ -366,7 +367,7 @@ describe("FileManagementSystem", () => {
       fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ status: UploadStatus.WORKING, chunkStatuses: [], uploadId: "091234124", chunkSize: 2424 });
       fss.finalize.resolves({
-        fileId,
+        errorCount: 0,
         chunkNumber: 14,
         uploadId: upload.jobId,
       });
@@ -405,14 +406,12 @@ describe("FileManagementSystem", () => {
             fssUploadId: "234124141",
             type: "upload",
             lastModifiedInMS: fileLastModifiedInMs,
-            md5CalculationInformation:{
-              "0": "testPartialMd5"
-            }
           },
         };
         const fssUpload: JSSJob = {
           ...mockJob,
         };
+        fss.getChunkInfo.resolves({cumulativeMD5: "anyMd5", size: 0, status: UploadStatus.COMPLETE})
         jss.getJob.onFirstCall().resolves(upload);
         fss.getStatus.resolves({
           status: UploadStatus.WORKING,
@@ -449,9 +448,6 @@ describe("FileManagementSystem", () => {
           fssUploadId: "234124141",
           type: "upload",
           lastModifiedInMS: fileLastModifiedInMs,
-          md5CalculationInformation:{
-            "0": "testPartialMd5"
-          }
         },
       };
       const fssUploadJob: FSSUpload = {
@@ -470,7 +466,7 @@ describe("FileManagementSystem", () => {
         chunkStatuses: [],
       });
       fss.finalize.resolves({
-        fileId,
+        errorCount: 0,
         chunkNumber: 14,
         uploadId: fuaUploadJob.jobId,
       });
