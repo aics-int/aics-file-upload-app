@@ -182,21 +182,13 @@ li {
     width: 100%;
 }
 
-.figure-caption {
-    font-style: italic;
-}
-
-.installation-instr .figure-caption {
-    font-style: normal;
-}
-
 .screenshot {
     width: 100%;
     object-fit: contain;
     object-position: center;
 }
 
-.installation-instr .screenshot {
+.screenshot {
     width: 75%;
     max-height: 250px;
 }
@@ -207,9 +199,14 @@ li {
     flex-direction: row;
 }
 
+#tutorial-slide-caption {
+    margin-top: 1em;
+}
+
 #tutorial-list {
     border-right: 1px solid black;
     margin-right: 1em;
+    padding-left: 1.25em;
     padding-right: 0.5em;
 
     /* flex child */
@@ -224,7 +221,16 @@ li {
     color: black;
 }
 
-#tutorial-video-container {
+#tutorial-slide-container {
+    position: relative;
+    width: 100%;
+}
+
+#slide-dot-container {
+    text-align: center;
+}
+
+#slideshow-container {
     /* flex child */
     flex: 1 1 70%;
 
@@ -233,7 +239,50 @@ li {
     flex-direction: column;
     align-items: center;
 }
+  
+#prev-slide-button, #next-slide-button {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    margin-top: -22px;
+    padding: 16px;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    transition: 0.6s ease;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+}
 
-#tutorial-video-caption {
-    margin-top: 0.5em;
+#next-slide-button {
+    border-radius: 3px 0 0 3px;
+    right: 0;
+}
+
+#prev-slide-button {
+    left: 0;
+}
+  
+#prev-slide-button.disabled, #next-slide-button.disabled {
+    cursor: default;
+}
+  
+#prev-slide-button:hover:not(.disabled), #next-slide-button:hover:not(.disabled) {
+    background-color: rgba(0,0,0,0.8);
+}
+  
+.dot {
+    cursor: pointer;
+    height: 15px;
+    width: 15px;
+    margin: 0 2px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    transition: background-color 0.6s ease;
+}
+
+.dot:hover, .dot.selected {
+    background-color: #717171;
 }
