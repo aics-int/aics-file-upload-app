@@ -8,13 +8,12 @@ import { RESET_UPLOAD, VIEW_UPLOADS_SUCCEEDED } from "../route/constants";
 import { ResetUploadAction, ViewUploadsSucceededAction } from "../route/types";
 import { SET_APPLIED_TEMPLATE } from "../template/constants";
 import { SetAppliedTemplateAction } from "../template/types";
-import { TypeToDescriptionMap, FileModelId, UploadStateBranch } from "../types";
+import { TypeToDescriptionMap, UploadStateBranch } from "../types";
 import { getReduxUndoFilterFn, makeReducer } from "../util";
 
 import {
   CLEAR_UPLOAD_HISTORY,
   DELETE_UPLOADS,
-  getUploadRowKey,
   INITIATE_UPLOAD,
   JUMP_TO_PAST_UPLOAD,
   JUMP_TO_UPLOAD,
@@ -43,9 +42,9 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
       action.type === ADD_UPLOAD_FILES,
     perform: (state: UploadStateBranch, action: AddUploadFilesAction) => {
       return action.payload.reduce(
-        (uploads: UploadStateBranch, uploadRowId: FileModelId) => ({
+        (uploads: UploadStateBranch, fileMetadata) => ({
           ...uploads,
-          [getUploadRowKey(uploadRowId)]: { ...uploadRowId },
+          [fileMetadata.file]: fileMetadata,
         }),
         { ...state }
       );

@@ -21,16 +21,15 @@ import {
   getCellAtDragStart,
   getRowsSelectedForDragEvent,
 } from "../../../../state/selection/selectors";
+import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
-import { getUploadRowKey } from "../../../../state/upload/constants";
 import { getFileToAnnotationHasValueMap } from "../../../../state/upload/selectors";
-import { UploadTableRow } from "../../../../state/upload/types";
 import { Duration } from "../../../../types";
 import { ColumnValue } from "../../types";
 
 const styles = require("./styles.pcss");
 
-interface Props extends CellProps<UploadTableRow> {
+interface Props extends CellProps<FileModel> {
   disabled?: boolean;
   onStartEditing: () => void;
   onTabExit?: () => void;
@@ -97,13 +96,11 @@ export default function DisplayCell(props: Props) {
   }
 
   // We want to display a validation error in this cell if there is no value
-  // for a row (OR the rows subrows)
+  // for a row
   const shouldShowError =
     props.column.hasSubmitBeenAttempted &&
     props.column.isRequired &&
-    !fileToAnnotationHasValueMap[
-      getUploadRowKey({ file: props.row.original.file })
-    ]?.[props.column.id];
+    !fileToAnnotationHasValueMap[props.row.original.file]?.[props.column.id];
 
   // Track if any rows have been skipped by the drag
   // possible if the user exited our elements with onDragEnter

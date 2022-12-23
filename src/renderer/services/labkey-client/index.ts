@@ -11,7 +11,6 @@ import {
   AnnotationOption,
   AnnotationType,
   BarcodePrefix,
-  Channel,
   Filter,
   FilterType,
   ImagingSession,
@@ -19,7 +18,6 @@ import {
   LabkeyAnnotationLookup,
   LabkeyAnnotationOption,
   LabkeyAnnotationType,
-  LabkeyChannel,
   LabkeyImagingSession,
   LabkeyLookup,
   LabkeyPlate,
@@ -65,7 +63,6 @@ export default class LabkeyClient extends HttpCacheClient {
     this.getTemplates = this.getTemplates.bind(this);
     this.getUnits = this.getUnits.bind(this);
     this.getColumnValues = this.getColumnValues.bind(this);
-    this.getChannels = this.getChannels.bind(this);
     this.getTemplateHasBeenUsed = this.getTemplateHasBeenUsed.bind(this);
     this.findPlateByWellId = this.findPlateByWellId.bind(this);
     this.findImagingSessionsByPlateBarcode =
@@ -327,18 +324,6 @@ export default class LabkeyClient extends HttpCacheClient {
     // labkey casing may be different than what is saved in the Lookup table
     columnName = response.columnModel[0].dataIndex;
     return response.rows.map((columnValue: any) => columnValue[columnName]);
-  }
-
-  public async getChannels(): Promise<Channel[]> {
-    const query = LabkeyClient.getSelectRowsURL(
-      LK_SCHEMA.PROCESSING,
-      "ContentType"
-    );
-    const response = await this.get(query);
-    return response.rows.map((channel: LabkeyChannel) => ({
-      channelId: channel.Name,
-      description: channel.Description,
-    }));
   }
 
   public async getTemplateHasBeenUsed(templateId: number): Promise<boolean> {

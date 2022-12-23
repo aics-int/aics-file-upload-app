@@ -1,24 +1,18 @@
-import { AnnotationName } from "../../constants";
 import { UploadJob } from "../../services/job-status-service/types";
 import {
   AutoSaveAction,
   FileModel,
-  FileModelId,
   State,
   WriteToStoreAction,
 } from "../types";
 
 export interface MMSAnnotationValueRequest {
   annotationId: number;
-  channelId?: string; // channel name or channel index (not primary key)
-  positionIndex?: number;
-  scene?: number;
-  subImageName?: string;
   values: string[];
 }
 
 export interface AddUploadFilesAction extends AutoSaveAction {
-  payload: FileModelId[];
+  payload: FileModel[]; // array of files to upload
   type: string;
 }
 
@@ -41,23 +35,6 @@ export interface UpdateUploadRowsAction extends AutoSaveAction {
     metadataUpdate: Partial<FileModel>;
   };
   type: string;
-}
-
-export interface UploadTableRow extends FileModel {
-  // react-table property for discovering sub rows for any given row
-  subRows: UploadTableRow[];
-
-  // Keeps track of all positionIndexes - used only on the top-level row
-  positionIndexes: number[];
-
-  // Keeps track of all scenes - used only on top-level row
-  scenes: number[];
-
-  // Keeps track of all sub image names - used only on top-level row
-  subImageNames: string[];
-
-  // Keeps track of all channelIds - used only on the top-level row
-  [AnnotationName.CHANNEL_TYPE]: string[];
 }
 
 export interface JumpToPastUploadAction extends AutoSaveAction {
@@ -145,19 +122,6 @@ export interface UpdateUploadsAction extends AutoSaveAction {
   type: string;
 }
 
-export interface UpdateSubImagesPayload {
-  channelIds: string[];
-  positionIndexes: number[];
-  row: UploadTableRow;
-  scenes: number[];
-  subImageNames: string[];
-}
-
-export interface UpdateSubImagesAction extends AutoSaveAction {
-  payload: UpdateSubImagesPayload;
-  type: string;
-}
-
 export interface SaveUploadDraftAction {
   // represents whether to set uploadDraftFilePath after success
   payload: boolean;
@@ -203,4 +167,12 @@ export interface SaveUploadDraftSuccessAction extends WriteToStoreAction {
   // the store - for example when closing the upload tab we may save the draft but we want this value to be undefined.
   payload?: string;
   type: string;
+}
+
+export enum FileType {
+  CSV = "csv",
+  IMAGE = "image",
+  OTHER = "other",
+  TEXT = "text",
+  ZEISS_CONFIG_FILE = "zeiss-config-file",
 }

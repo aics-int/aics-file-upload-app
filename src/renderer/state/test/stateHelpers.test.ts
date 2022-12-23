@@ -21,7 +21,6 @@ import {
   getWithRetry,
 } from "../stateHelpers";
 import { ReduxLogicTransformDependencies, UploadStateBranch } from "../types";
-import { getUploadRowKey } from "../upload/constants";
 
 import { mockReduxLogicDeps } from "./configure-mock-store";
 import {
@@ -137,7 +136,7 @@ describe("State helpers", () => {
   describe("getApplyTemplateInfo", () => {
     let uploads: UploadStateBranch;
     let previouslyAppliedTemplate: Template;
-    const key = getUploadRowKey({ file: "/path/to/file1" });
+    const file = "/path/to/file1";
     const template = {
       ...mockMMSTemplate,
       annotations: [
@@ -151,12 +150,12 @@ describe("State helpers", () => {
     beforeEach(() => {
       mmsClient = createStubInstance(MetadataManagementService);
       uploads = {
-        [key]: {
+        [file]: {
           Age: 16,
           "Favorite Color": "red",
           barcode: "1234",
-          file: "/path/to/file1",
-          key: getUploadRowKey({ file: "/path/to/file" }),
+          file,
+          key: file,
           shouldBeInArchive: true,
           shouldBeInLocal: true,
           wellIds: [1],
@@ -198,7 +197,7 @@ describe("State helpers", () => {
       expect(resultTemplate).to.deep.equal(template);
       // the Age annotation goes away since it's not part of the applied template
       expect(uploadsResult).to.deep.equal({
-        [key]: {
+        [file]: {
           // This annotation got added and is initialized as undefined
           "Clone Number Garbage": [],
           // this stays here because it is part of the template and does not get cleared out
@@ -207,7 +206,7 @@ describe("State helpers", () => {
           Qc: [false],
           barcode: "1234",
           file: "/path/to/file1",
-          key: getUploadRowKey({ file: "/path/to/file" }),
+          key: file,
           shouldBeInArchive: true,
           shouldBeInLocal: true,
           wellIds: [1],

@@ -13,9 +13,7 @@ import {
   AnnotationLookup,
   AnnotationOption,
   AnnotationType,
-  Channel,
   ColumnType,
-  LabkeyChannel,
   Lookup,
   Unit,
   ImagingSession,
@@ -47,7 +45,6 @@ import {
   TemplateStateBranch,
 } from "../types";
 import { UploadStateBranch } from "../types";
-import { getUploadRowKey } from "../upload/constants";
 
 export const mockAuditInfo = {
   created: new Date(2019, 9, 30),
@@ -198,34 +195,26 @@ export const mockSelection: SelectionStateBranch = {
 };
 
 export const mockWellUpload: UploadStateBranch = {
-  [getUploadRowKey({ file: "/path/to/file1" })]: {
+  "/path/to/file1": {
     barcode: "1234",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file1",
-    key: getUploadRowKey({ file: "/path/to/file1" }),
+    key: "/path/to/file1",
     [AnnotationName.WELL]: [1],
   },
-  [getUploadRowKey({ file: "/path/to/file2" })]: {
+  "/path/to/file2": {
     barcode: "1235",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file2",
-    key: getUploadRowKey({ file: "/path/to/file2" }),
+    key: "/path/to/file2",
     [AnnotationName.WELL]: [2],
   },
-  [getUploadRowKey({ file: "/path/to/file3" })]: {
+  "/path/to/file3": {
     barcode: "1236",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file3",
-    key: getUploadRowKey({ file: "/path/to/file3" }),
+    key: "/path/to/file3",
     [AnnotationName.WELL]: [1, 2, 3],
-  },
-  [getUploadRowKey({ file: "/path/to/file3", positionIndex: 1 })]: {
-    barcode: "1236",
-    ["Favorite Color"]: ["Red"],
-    file: "/path/to/file3",
-    key: getUploadRowKey({ file: "/path/to/file3", positionIndex: 1 }),
-    positionIndex: 1,
-    [AnnotationName.WELL]: [1, 2],
   },
 };
 
@@ -474,7 +463,6 @@ export const mockFailedUploadJob: UploadJob = {
             {
               annotationId: 1,
               values: ["test", "1"],
-              channelId: "Raw 405nm",
             },
           ],
           templateId: 1,
@@ -596,19 +584,6 @@ export const mockBarcodePrefixes: BarcodePrefix[] = [
     prefixId: 2,
   },
 ];
-
-export const mockChannels: LabkeyChannel[] = [
-  {
-    ContentTypeId: 1,
-    Description: "a channel",
-    Name: "Raw 468nm",
-  },
-];
-
-export const mockChannel: Channel = {
-  channelId: "Raw 468 nm",
-  description: "a channel",
-};
 
 export const mockUnit: Unit = {
   description: "description",

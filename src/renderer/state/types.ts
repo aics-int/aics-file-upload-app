@@ -21,7 +21,6 @@ import {
   AnnotationType,
   Audited,
   BarcodePrefix,
-  Channel,
   ImagingSession,
   LabkeyPlateResponse,
   LabkeyTemplate,
@@ -141,7 +140,6 @@ export interface SearchResultRow {
 
 export enum TutorialStep {
   MASS_EDIT,
-  ADD_SCENES,
   INPUT_MULTIPLE_VALUES,
 }
 
@@ -166,22 +164,14 @@ export interface JobStateBranch {
   lastSelectedUpload?: { id: string; index: number };
 }
 
-// Map of the output of getUploadRowKey to the FileModel
+// Map of the fullpath of file to the FileModel
 export interface UploadStateBranch {
-  [fileModelKey: string]: FileModel;
-}
-
-// Think of this group as a composite key. No two rows should have the same combination of these values.
-export interface FileModelId {
-  channelId?: string;
-  file: string; // fullpath
-  positionIndex?: number;
-  scene?: number;
-  subImageName?: string;
+  [file: string]: FileModel;
 }
 
 // Metadata associated with a file
-export interface FileModel extends FileModelId {
+export interface FileModel {
+  file: string; // fullpath
   // Known custom annotations
   [AnnotationName.NOTES]?: string[];
   [AnnotationName.PLATE_BARCODE]?: string[];
@@ -200,7 +190,6 @@ export interface MetadataStateBranch {
   barcode?: string;
   barcodePrefixes: BarcodePrefix[];
   barcodeSearchResults: LabkeyPlateResponse[];
-  channels: Channel[];
   // this represents the filepath to an upload draft that has been saved is currently opened in the upload wizard
   currentUploadFilePath?: string;
   imagingSessions: ImagingSession[];
@@ -256,7 +245,6 @@ export interface UploadTabSelections {
   massEditRow?: MassEditRow;
   rowsSelectedForDragEvent?: UploadRowTableId[];
   rowsSelectedForMassEdit?: string[];
-  subFileSelectionModalFile?: string;
 }
 
 export interface AnnotationDraft extends Audited {

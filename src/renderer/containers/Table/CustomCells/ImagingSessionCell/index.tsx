@@ -4,8 +4,8 @@ import { CellProps } from "react-table";
 
 import { AnnotationName } from "../../../../constants";
 import { getPlateBarcodeToPlates } from "../../../../state/metadata/selectors";
+import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
-import { UploadTableRow } from "../../../../state/upload/types";
 import DisplayCell from "../../DefaultCells/DisplayCell";
 import DropdownEditor from "../../Editors/DropdownEditor";
 import { ColumnValue } from "../../types";
@@ -15,7 +15,7 @@ import { ColumnValue } from "../../types";
  * imaging sessions viable for the given plate barcode
  */
 export default function ImagingSessionCell(
-  props: CellProps<UploadTableRow, string[]>
+  props: CellProps<FileModel, string[]>
 ) {
   const { value } = props;
   const dispatch = useDispatch();

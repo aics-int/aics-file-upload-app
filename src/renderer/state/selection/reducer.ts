@@ -9,16 +9,14 @@ import {
   TypeToDescriptionMap,
   UploadTabSelections,
 } from "../types";
-import { REPLACE_UPLOAD, UPDATE_SUB_IMAGES } from "../upload/constants";
-import { ReplaceUploadAction, UpdateSubImagesAction } from "../upload/types";
+import { REPLACE_UPLOAD } from "../upload/constants";
+import { ReplaceUploadAction } from "../upload/types";
 import { makeReducer } from "../util";
 
 import {
   ADD_ROW_TO_DRAG_EVENT,
   APPLY_MASS_EDIT,
   CANCEL_MASS_EDIT,
-  CLOSE_SUB_FILE_SELECTION_MODAL,
-  OPEN_SUB_FILE_SELECTION_MODAL,
   REMOVE_ROW_FROM_DRAG_EVENT,
   START_CELL_DRAG,
   START_MASS_EDIT,
@@ -29,8 +27,6 @@ import {
   AddRowToDragEventAction,
   ApplyMassEditAction,
   CancelMassEditAction,
-  CloseSubFileSelectionModalAction,
-  OpenSubFileSelectionModalAction,
   RemoveRowFromDragEventAction,
   StartCellDragAction,
   StartMassEditAction,
@@ -43,7 +39,6 @@ const uploadTabSelectionInitialState: UploadTabSelections = {
   uploads: [],
   massEditRow: undefined,
   rowsSelectedForMassEdit: undefined,
-  subFileSelectionModalFile: undefined,
 };
 
 export const initialState: SelectionStateBranch = {
@@ -76,33 +71,6 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
       ...state,
       massEditRow: undefined,
       rowsSelectedForMassEdit: undefined,
-    }),
-  },
-  [UPDATE_SUB_IMAGES]: {
-    accepts: (action: AnyAction): action is UpdateSubImagesAction =>
-      action.type === UPDATE_SUB_IMAGES,
-    perform: (state: SelectionStateBranch) => ({
-      ...state,
-      subFileSelectionModalFile: undefined,
-    }),
-  },
-  [CLOSE_SUB_FILE_SELECTION_MODAL]: {
-    accepts: (action: AnyAction): action is CloseSubFileSelectionModalAction =>
-      action.type === CLOSE_SUB_FILE_SELECTION_MODAL,
-    perform: (state: SelectionStateBranch) => ({
-      ...state,
-      subFileSelectionModalFile: undefined,
-    }),
-  },
-  [OPEN_SUB_FILE_SELECTION_MODAL]: {
-    accepts: (action: AnyAction): action is OpenSubFileSelectionModalAction =>
-      action.type === OPEN_SUB_FILE_SELECTION_MODAL,
-    perform: (
-      state: SelectionStateBranch,
-      action: OpenSubFileSelectionModalAction
-    ) => ({
-      ...state,
-      subFileSelectionModalFile: action.payload,
     }),
   },
   [REPLACE_UPLOAD]: {

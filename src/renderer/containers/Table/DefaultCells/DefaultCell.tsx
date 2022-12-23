@@ -3,8 +3,8 @@ import { useDispatch } from "react-redux";
 import { CellProps } from "react-table";
 
 import { ColumnType } from "../../../services/labkey-client/types";
+import { FileModel } from "../../../state/types";
 import { updateUpload } from "../../../state/upload/actions";
-import { UploadTableRow } from "../../../state/upload/types";
 import { Duration } from "../../../types";
 import BooleanEditor from "../Editors/BooleanEditor";
 import DateEditor from "../Editors/DateEditor";
@@ -21,9 +21,7 @@ import DisplayCell from "./DisplayCell";
   displaying the value supplied as well as creating an interactive
   editor based on the column's annotation type
 */
-export default function DefaultCell(
-  props: CellProps<UploadTableRow, ColumnValue>
-) {
+export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
   const { column, value } = props;
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
