@@ -9,12 +9,14 @@ const styles = require("../defaultInputStyles.pcss");
 interface Props {
   initialValue: string[];
   lookupAnnotationName: keyof MetadataStateBranch;
+  lookupTable?: string;
   commitChanges: (value: string[]) => void;
 }
 
 export default function LookupEditor({
   initialValue,
   lookupAnnotationName,
+  lookupTable,
   commitChanges,
 }: Props) {
   const [value, setValue] = useState<string[]>(initialValue);
@@ -31,6 +33,7 @@ export default function LookupEditor({
         onBlur={handleCommit}
         mode="multiple"
         lookupAnnotationName={lookupAnnotationName}
+        lookupTable={lookupTable}
         selectSearchValue={setValue}
         value={value}
       />

@@ -28,7 +28,10 @@ const MAX_HEADER_WIDTH = 200;
 // Determine best width for column based on its type and header name
 // tries to account for the header text width up to an upper limit
 // to prevent extreme widths
-function getColumnWidthForType(column: string, type?: ColumnType): number {
+export function getColumnWidthForType(
+  column: string,
+  type?: ColumnType
+): number {
   // Find the max width between the words in the column header
   // so we can prevent words from breaking into pieces
   const maxWidth = column
@@ -154,6 +157,13 @@ export const getTemplateColumnsForTable = createSelector(
           const type = annotationTypes.find(
             (type) => type.annotationTypeId === annotation.annotationTypeId
           )?.name;
+          const lookupTypeAttributes =
+            type === ColumnType.LOOKUP
+              ? {
+                  lookupSchema: annotation.lookupSchema,
+                  lookupTable: annotation.lookupTable,
+                }
+              : null;
           return {
             type,
             accessor: annotation.name,
@@ -161,6 +171,7 @@ export const getTemplateColumnsForTable = createSelector(
             dropdownValues: annotation.annotationOptions,
             isRequired: annotation.required,
             width: getColumnWidthForType(annotation.name, type),
+            ...lookupTypeAttributes,
           };
         }),
     ];

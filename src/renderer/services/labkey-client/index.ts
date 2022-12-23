@@ -35,6 +35,7 @@ import {
 
 const BASE_URL = "/labkey";
 const IN_SEPARATOR = "%3B";
+const FMS_FILE_TABLE_NAME = "file";
 
 export default class LabkeyClient extends HttpCacheClient {
   public static createFilter(
@@ -181,8 +182,20 @@ export default class LabkeyClient extends HttpCacheClient {
       `query.maxRows=100`,
     ];
     if (!isEmpty(searchString)) {
+      // The fms.file table is so large that running "contains" queries on it will take forever, so use "eq" instead
+      /*
+       TODO:
+        In a more perfect world, annotations that reference other files (specifically, files fitting certain annotation
+        filters) would involve a more complex UI where users would define how an FES (not LabKey) query would be shaped.
+        e.g.
+         For the one `fms.file` lookup annotation in use at time of writing, "Optical Control Id", the annotation
+         would be defined in a way such that the <LookupSearch> dropdown here in the Upload App would query only for
+         files with the annotation "IsOpticalControl" and with a value of "True".
+        - TF 2022-09-20
+       */
+      const filterMatchType = table === FMS_FILE_TABLE_NAME ? "eq" : "contains";
       additionalQueries.push(
-        `query.${column}~contains=${encodeURIComponent(searchString)}`
+        `query.${column}~${filterMatchType}=${encodeURIComponent(searchString)}`
       );
     }
     const lookupOptionsQuery = LabkeyClient.getSelectRowsURL(
