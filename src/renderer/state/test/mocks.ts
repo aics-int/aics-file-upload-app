@@ -279,6 +279,22 @@ export const mockLookupAnnotation: TemplateAnnotation = {
   required: false,
 };
 
+export const mockFmsFileLookupAnnotation: TemplateAnnotation = {
+  ...mockAuditInfo,
+  annotationId: 3,
+  annotationOptions: [
+    "File 1 (AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+    "File 2 (BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)",
+  ],
+  annotationTypeId: 6,
+  description: "Files from the FMS.File table",
+  lookupSchema: "fms",
+  lookupTable: "file",
+  orderIndex: 4,
+  name: "FileLookupAnnotation",
+  required: false,
+};
+
 export const mockDropdownAnnotation: TemplateAnnotation = {
   ...mockAuditInfo,
   annotationId: 69,

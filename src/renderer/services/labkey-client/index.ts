@@ -36,6 +36,8 @@ import {
 const BASE_URL = "/labkey";
 const IN_SEPARATOR = "%3B";
 const FMS_FILE_TABLE_NAME = "file";
+const FMS_FILE_FILE_NAME = "Filename";
+const FMS_FILE_FILE_ID = "FileId";
 
 export default class LabkeyClient extends HttpCacheClient {
   public static createFilter(
@@ -176,8 +178,12 @@ export default class LabkeyClient extends HttpCacheClient {
     column: string,
     searchString = ""
   ): Promise<string[]> {
+    const queryColumns =
+      table === FMS_FILE_TABLE_NAME
+        ? [FMS_FILE_FILE_ID, FMS_FILE_FILE_NAME].join(",")
+        : column;
     const additionalQueries = [
-      `query.columns=${column}`,
+      `query.columns=${queryColumns}`,
       `query.sort=${column}`,
       `query.maxRows=100`,
     ];
@@ -185,7 +191,7 @@ export default class LabkeyClient extends HttpCacheClient {
       // The fms.file table is so large that running "contains" queries on it will take forever, so use "eq" instead
       /*
        TODO:
-        In a more perfect world, annotations that reference other files (specifically, files fitting certain annotation
+        In a more perfect world, annotations that reference other files (specifically files fitting certain annotation
         filters) would involve a more complex UI where users would define how an FES (not LabKey) query would be shaped.
         e.g.
          For the one `fms.file` lookup annotation in use at time of writing, "Optical Control Id", the annotation
@@ -217,7 +223,11 @@ export default class LabkeyClient extends HttpCacheClient {
         `Could not find column named ${column} in ${schema}.${table}`
       );
     }
-    return rows.map((row: any) => row[properlyCasedKey]);
+    return rows.map((row: any) => {
+      return table === FMS_FILE_TABLE_NAME
+        ? `${row[FMS_FILE_FILE_NAME]} (${row[FMS_FILE_FILE_ID]})`
+        : row[properlyCasedKey];
+    });
   }
 
   /**
@@ -456,7 +466,7 @@ export default class LabkeyClient extends HttpCacheClient {
     return rows[0];
   }
 
-  // Returns LabKey query as a an array of values
+  // Returns LabKey query as an array of values
   public selectRowsAsList<T = any>(
     schema: string,
     table: string,

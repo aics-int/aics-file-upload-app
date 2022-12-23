@@ -379,6 +379,23 @@ const getAnnotations = (
           value = [false];
         }
 
+        // Special case for FMS.File Lookup types
+        // We expect 'value' to be an array of strings like "<file name> (FileIdOf32CharactersAAAAAAAAAAAA)"
+        // However, we only want the fileIDs for the upload
+        if (
+          annotation.type === ColumnType.LOOKUP &&
+          annotation.lookupTable === "file"
+        ) {
+          value = value.map((fileEntry: string) => {
+            const re = RegExp(/\(([a-zA-Z0-9]{32})\)$/); // Find the FileID in parentheses and capture it
+            const match = re.exec(fileEntry);
+            if (match && match.length === 2) {
+              return match[1]; // return captured ID
+            }
+            return fileEntry;
+          });
+        }
+
         const isValuePresent = Array.isArray(value)
           ? !isEmpty(value)
           : !isNil(value);
