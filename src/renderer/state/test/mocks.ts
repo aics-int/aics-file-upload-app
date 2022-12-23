@@ -101,7 +101,7 @@ export const mockNotesAnnotation: Annotation = {
 
 const mockUnusableStructureAnnotation: Annotation = {
   ...mockAuditInfo,
-  annotationId: 3,
+  annotationId: 4,
   annotationTypeId: 1,
   description: "Other information",
   exposeToFileUploadApp: false,
@@ -442,10 +442,46 @@ export const mockFSSUploadJob: FSSUpload = {
   user: "test_user",
 };
 
+export const mockSuccessfulUploadJobWithUnexposedAnnotation: UploadJob = {
+  created: new Date(),
+  currentStage: "Completed",
+  jobId: "123434234",
+  jobName: "mockJob1",
+  modified: new Date(),
+  serviceFields: {
+    files: [
+      {
+        customMetadata: {
+          annotations: [
+            {
+              annotationId: 1,
+              values: ["test", "1"],
+            },
+            {
+              annotationId: 4,
+              values: ["test", "1"],
+            },
+          ],
+          templateId: 1,
+        },
+        file: {
+          originalPath: "/some/filepath",
+          fileType: "other",
+          shouldBeInArchive: true,
+          shouldBeInLocal: true,
+        },
+      },
+    ],
+    type: "upload",
+  },
+  status: JSSJobStatus.SUCCEEDED,
+  user: "test_user",
+};
+
 export const mockWorkingUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Copying files",
-  jobId: "2222222222",
+  jobId: "1111111111",
   jobName: "mockWorkingUploadJob",
   modified: new Date(),
   service: Service.FILE_UPLOAD_APP,
@@ -460,8 +496,38 @@ export const mockWorkingUploadJob: UploadJob = {
 };
 
 export const mockWaitingUploadJob: UploadJob = {
-  ...mockWorkingUploadJob,
+  created: new Date(),
+  currentStage: "Waiting",
+  jobId: "2222222222",
+  jobName: "mockWaitingUploadJob",
+  modified: new Date(),
+  service: Service.FILE_UPLOAD_APP,
+  serviceFields: {
+    files: [
+      {
+        customMetadata: {
+          annotations: [
+            {
+              annotationId: 1,
+              values: ["test", "1"],
+            },
+          ],
+          templateId: 1,
+        },
+        file: {
+          originalPath: "/some/filepath",
+          fileType: "other",
+          shouldBeInArchive: true,
+          shouldBeInLocal: true,
+        },
+      },
+    ],
+    lastModifiedInMS: new Date().getMilliseconds(),
+    md5CalculationInformation: {},
+    type: "upload",
+  },
   status: JSSJobStatus.WAITING,
+  user: "test_user",
 };
 
 export const mockFailedUploadJob: UploadJob = {

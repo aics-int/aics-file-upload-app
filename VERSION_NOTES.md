@@ -1,5 +1,9 @@
 # Version Notes
 
+## 2.10.0 (10/17/22)
+- Feature: FMS.File dropdown selectors now display file names alongside file IDs
+- Bugfix: Querying for files in FMS.File dropdown selectors should now return results much faster
+
 ## 2.8.1 (06/17/22)
 - Bugfix: Date and Datetime annotation values should now be correctly displayed in the post-upload file details screen
 
