@@ -1,29 +1,30 @@
 import { expect } from "chai";
-import { createSandbox, SinonStub } from "sinon";
+import { createSandbox, SinonStub, SinonStubbedInstance } from "sinon";
 
-import FileStorageService from "..";
+import FileStorageService, { UploadStatus } from "..";
 import EnvironmentAwareStorage from "../../../state/EnvironmentAwareStorage";
-import { LocalStorage } from "../../../types";
 import { FileType } from "../../../util";
 import HttpCacheClient from "../../http-cache-client";
 
 describe("FileStorageService", () => {
   const sandbox = createSandbox();
-  const storage = sandbox.createStubInstance(EnvironmentAwareStorage);
-  const httpClient = sandbox.createStubInstance(HttpCacheClient);
-  // Stub `get` specifically, since it is a class property and not on the prototype
-  storage.get = sandbox.stub() as any;
+  let httpClient: SinonStubbedInstance<HttpCacheClient>;
+  let storage: SinonStubbedInstance<EnvironmentAwareStorage>;
+  let fss: FileStorageService;
 
-  const fss = new FileStorageService(
-    httpClient as any as HttpCacheClient,
-    storage as any as LocalStorage
-  );
+  beforeEach(() => {
+    httpClient = sandbox.createStubInstance(HttpCacheClient);
+    storage = sandbox.createStubInstance(EnvironmentAwareStorage);
+    fss = new FileStorageService(
+      httpClient,
+      storage
+    );
 
-  afterEach(() => {
-    sandbox.resetHistory();
+    // Stub `get` specifically, since it is a class property and not on the prototype
+    storage.get = sandbox.stub() as any;
   });
 
-  after(() => {
+  afterEach(() => {
     sandbox.restore();
   });
 
@@ -60,6 +61,49 @@ describe("FileStorageService", () => {
   });
 
   describe("sendUploadChunk", () => {
+    class AxiosError extends Error {
+      public response: any;
+
+      constructor(response: any) {
+        super("test error");
+        this.response = response;
+      }
+    }
+
+    it("retries chunk when error occurs and server status indicates RETRY", async () => {
+      // Arrange
+      const chunkNumber = 2;
+      httpClient.get.resolves({
+        data: {
+          chunkStatuses: [UploadStatus.COMPLETE, UploadStatus.RETRY],
+          status: UploadStatus.WORKING,
+          uploadId: "anyId",
+          chunkSize: 2,
+        }
+      })
+      httpClient.post.onFirstCall().rejects(new AxiosError({status: 400}));
+      httpClient.post.onSecondCall().resolves({
+        status: 200,
+        data: {
+          uploadId: "anyId",
+          chunkNumber: 0,
+        },
+      });
+
+      // Act
+      await fss.sendUploadChunk(
+        "9021312",
+        chunkNumber,
+        1,
+        "anyMd5",
+        new Uint8Array(),
+        "testUser"
+      );
+
+      // Assert
+      expect(httpClient.post.callCount).to.equal(2);
+    });
+
     it("creates the correct range header for the chunk", async () => {
       // Arrange
       const uploadId = "132390123";
@@ -68,18 +112,16 @@ describe("FileStorageService", () => {
       const postBody = new Uint8Array();
       const rangeStart = (chunkNumber - 1) * chunkSize;
       const expectedRange = `bytes=${rangeStart}-${rangeStart - 1}`;
-      const expectedResponse = {
-        uploadId,
-        chunkNumber: chunkNumber + 1,
-      };
-      const response = {
+      httpClient.post.resolves({
         status: 200,
-        data: expectedResponse,
-      };
-      httpClient.post.resolves(response);
+        data: {
+          uploadId,
+          chunkNumber: chunkNumber + 1,
+        },
+      });
 
       // Act
-      const actual = await fss.sendUploadChunk(
+      await fss.sendUploadChunk(
         uploadId,
         chunkNumber,
         rangeStart,
@@ -89,7 +131,6 @@ describe("FileStorageService", () => {
       );
 
       // Assert
-      expect(actual).to.deep.equal(expectedResponse);
       const actualRange = httpClient.post.firstCall.args[2]?.headers?.Range;
       expect(actualRange).to.deep.equal(expectedRange);
     });
