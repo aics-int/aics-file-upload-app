@@ -462,7 +462,7 @@ export default class FileManagementSystem {
             throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
           }
           const md5 = Md5Hasher.deserialize(partiallyCalculatedMd5).digest();
-          await this.fss.retryFinalize(fssUploadId, md5)
+          await this.fss.finalize(fssUploadId, md5)
         } else if (fssStatus.status === UploadStatus.WORKING) {
           const { originalPath } = upload.serviceFields.files[0].file;
           const { size: fileSize } = await fs.promises.stat(originalPath);
