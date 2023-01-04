@@ -83,6 +83,7 @@ describe("FileStorageService", () => {
         uploadId,
         chunkNumber,
         rangeStart,
+        "anyMd5",
         postBody,
         "testUser"
       );

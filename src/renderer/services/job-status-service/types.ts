@@ -27,12 +27,6 @@ export interface UploadServiceFields {
   // useful for grouping uploads that were uploaded together
   groupId?: string;
 
-  md5CalculationInformation?: {
-    // To ensure the MD5 calculation resumes at the same chunk
-    // as next time, save the chunkNumber relative to the partial MD5 calculation
-    [chunkNumber: string]: string
-  }
-
   // Tracks the modified date present in the upload file's metadata at the time
   // the MD5 calculation began. If this date is different than the current
   // upload file's metadata it can be concluded that the MD5 may no longer
