@@ -19,10 +19,10 @@ export interface FSSUpload extends JSSJob {
  */
 export enum UploadStatus {
   COMPLETE = "COMPLETE",
-  WORKING = "WORKING",                  //Upload is in progress and accepting chunks.
-  INACTIVE = "INACTIVE",                //Upload was either cancelled, expired, or failed.
-  RETRY = "RETRY",                      //Upload experienced a recoverable error, and can resume when /upload/retry is called.
-  POST_PROCESSING = "POST_PROCESSING"   //Chunks were all recieved, /finalize was called, and post upload processing is happening.  
+  WORKING = "WORKING",                  // Upload is in progress and accepting chunks.
+  INACTIVE = "INACTIVE",                // Upload was either cancelled, expired, or failed.
+  RETRY = "RETRY",                      // Upload experienced a recoverable error, and can resume when /upload/retry is called.
+  POST_PROCESSING = "POST_PROCESSING"   // Chunks were all recieved, /finalize was called, and post upload processing is happening.  
 }
 
 // RESPONSE TYPES
@@ -114,25 +114,68 @@ export default class FileStorageService extends HttpCacheClient {
    * This is an incremental upload act, after an upload has been registered
    * the file can be send in chunked of pretermined size to the service.
    */
-  public sendUploadChunk(
+  public async sendUploadChunk(
     uploadId: string,
     chunkNumber: number,
     rangeStart: number,
     md5ThusFar: string,
     postBody: Uint8Array,
     user: string
-  ): Promise<UploadChunkResponse> {
+  ): Promise<void> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/chunk/${chunkNumber}`;
     const rangeEnd = rangeStart + postBody.byteLength - 1;
-    return this.post<UploadChunkResponse>(url, postBody, {
-      ...FileStorageService.getHttpRequestConfig(),
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Cumulative-MD5": md5ThusFar,
-        Range: `bytes=${rangeStart}-${rangeEnd}`,
-        "X-User-Id": user,
-      },
-    });
+    const attemptRequest = () => (
+      this.post<UploadChunkResponse>(url, postBody, {
+        ...FileStorageService.getHttpRequestConfig(),
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Cumulative-MD5": md5ThusFar,
+          Range: `bytes=${rangeStart}-${rangeEnd}`,
+          "X-User-Id": user,
+        },
+      }
+      )
+    );
+    try {
+      await attemptRequest();
+    } catch (error) {
+      // Re-throw error if status can't be determine (like when the error doesn't have to do with the server/HTTP request
+      // or if the status is between acceptable ranges indicating another problem is afoot
+      if (!error.response || !error.response.status || (error.response.status >= 200 && error.response.status < 300)) {
+        throw error;
+      }
+
+      // Currently there are infrastructure performance bottlenecks that cause the upload chunk endpoint
+      // to timeout unexpectedly. In this case this client needs to be robust
+      // enough to wait to see what ended up happening the chunk (within a reasonable timeframe)
+      // Additionally, this includes a feature to auto-retry chunks that are determined to need it
+      for (let statusCheckAttemptNumber = 0; statusCheckAttemptNumber < 8; statusCheckAttemptNumber++) {
+        // Geometric backoff up to 15 minutes
+        await new Promise((resolve) => setTimeout(resolve, statusCheckAttemptNumber * 30 * 1000))
+
+        const { chunkStatuses } = await this.getStatus(uploadId);
+        const chunkStatusForThisChunk = chunkStatuses[chunkNumber - 1];
+        if (chunkStatusForThisChunk === UploadStatus.INACTIVE) {
+          throw new Error(
+              `Something went wrong uploading chunk number ${chunkNumber} for upload ${uploadId}. ` +
+              "Chunk was determined to have failed uploading."
+          )
+        } else if (chunkStatusForThisChunk === UploadStatus.COMPLETE) {
+          return;
+        } else if (chunkStatusForThisChunk === UploadStatus.RETRY) {
+          try {
+            await attemptRequest();
+            return;
+          } catch (error) {
+            // no-op, continue loop
+          }
+        }
+      }
+  
+      throw new Error(
+        `Timed out while waiting for chunk ${chunkNumber} to upload`
+      );
+    }
   }
 
   /**

@@ -155,11 +155,6 @@ describe("FileManagementSystem", () => {
           wasParallelising = true;
         }
         inFlightFssRequests--;
-        return {
-          errorCount: 0,
-          chunkNumber: 0,
-          uploadId: 'testID',
-        };
       });
       // Act
       await fms.upload(upload, noop);
