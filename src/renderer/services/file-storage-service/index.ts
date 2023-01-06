@@ -145,7 +145,7 @@ export default class FileStorageService extends HttpCacheClient {
         throw error;
       }
 
-      // Currently there is a bug in FSS that causes the upload chunk endpoint
+      // Currently there are infrastructure performance bottlenecks that cause the upload chunk endpoint
       // to timeout unexpectedly. In this case this client needs to be robust
       // enough to wait to see what ended up happening the chunk (within a reasonable timeframe)
       // Additionally, this includes a feature to auto-retry chunks that are determined to need it
