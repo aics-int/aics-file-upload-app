@@ -6,15 +6,15 @@ import Md5Hasher from "../Md5Hasher";
 describe("Md5Hasher", () => {
 
   describe("update", () => {
-    it("Updates the MD5 calculated", () => {
+    it("Updates the MD5 calculated", async () => {
         //ARRANGE
         const firstChunk = new Uint8Array([999999]);
         const secondChunk = new Uint8Array([888888]);
-        const hasher = new Md5Hasher();
+        const hasher = await Md5Hasher.init();
         hasher.update(firstChunk);
         const partialMd5 = hasher.serialize();
 
-        const deserializedHasher = Md5Hasher.deserialize(partialMd5)
+        const deserializedHasher = await Md5Hasher.deserialize(partialMd5)
         const originalMd5 = deserializedHasher.digest();
         //ACT
         hasher.update(secondChunk);
@@ -26,13 +26,13 @@ describe("Md5Hasher", () => {
   })
 
   describe("deserialize", () => {
-    it("Produces consistent hasher", () => {
+    it("Produces consistent hasher", async () => {
         //ARRANGE
-        const partialMd5 = '{"buff":"?","length":1,"hash":[1732584193,-271733879,-1732584194,271733878]}';
+        const partialMd5 = "155,15,172,125,1,0,0,0,0,0,0,0,1,35,69,103,137,171,205,239,254,220,186,152,118,84,50,16,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0";
         const expectedMd5 = 'd1457b72c3fb323a2671125aef3eab5d';
 
         //ACT
-        const hasher = Md5Hasher.deserialize(partialMd5);
+        const hasher = await Md5Hasher.deserialize(partialMd5);
 
         //ASSERT
         const actualMd5 = hasher.digest();
@@ -41,11 +41,11 @@ describe("Md5Hasher", () => {
   })
 
   describe("serialize", () => {
-    it("Produces consistent hasher", () => {
+    it("Produces consistent hasher", async () => {
         //ARRANGE
-        const expectedPartialMd5 = '{"buff":"?","length":1,"hash":[1732584193,-271733879,-1732584194,271733878]}';
+        const expectedPartialMd5 = "155,15,172,125,1,0,0,0,0,0,0,0,1,35,69,103,137,171,205,239,254,220,186,152,118,84,50,16,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0";
         const firstChunk = new Uint8Array([999999]);
-        const hasher = new Md5Hasher();
+        const hasher = await Md5Hasher.init();
         hasher.update(firstChunk);
         
         //ACT
@@ -58,11 +58,11 @@ describe("Md5Hasher", () => {
 })
 
 describe("digest", () => {
-    it("Produces this error when run twice", () => {
+    it("Produces this error when run twice", async () => {
         //ARRANGE
         const expectedMd5 = 'd1457b72c3fb323a2671125aef3eab5d';
         const firstChunk = new Uint8Array([999999]);
-        const hasher = new Md5Hasher();
+        const hasher = await Md5Hasher.init();
         hasher.update(firstChunk);
         
         //ACT
