@@ -13,9 +13,7 @@ import {
   AnnotationLookup,
   AnnotationOption,
   AnnotationType,
-  Channel,
   ColumnType,
-  LabkeyChannel,
   Lookup,
   Unit,
   ImagingSession,
@@ -47,7 +45,6 @@ import {
   TemplateStateBranch,
 } from "../types";
 import { UploadStateBranch } from "../types";
-import { getUploadRowKey } from "../upload/constants";
 
 export const mockAuditInfo = {
   created: new Date(2019, 9, 30),
@@ -104,7 +101,7 @@ export const mockNotesAnnotation: Annotation = {
 
 const mockUnusableStructureAnnotation: Annotation = {
   ...mockAuditInfo,
-  annotationId: 3,
+  annotationId: 4,
   annotationTypeId: 1,
   description: "Other information",
   exposeToFileUploadApp: false,
@@ -198,34 +195,26 @@ export const mockSelection: SelectionStateBranch = {
 };
 
 export const mockWellUpload: UploadStateBranch = {
-  [getUploadRowKey({ file: "/path/to/file1" })]: {
+  "/path/to/file1": {
     barcode: "1234",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file1",
-    key: getUploadRowKey({ file: "/path/to/file1" }),
+    key: "/path/to/file1",
     [AnnotationName.WELL]: [1],
   },
-  [getUploadRowKey({ file: "/path/to/file2" })]: {
+  "/path/to/file2": {
     barcode: "1235",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file2",
-    key: getUploadRowKey({ file: "/path/to/file2" }),
+    key: "/path/to/file2",
     [AnnotationName.WELL]: [2],
   },
-  [getUploadRowKey({ file: "/path/to/file3" })]: {
+  "/path/to/file3": {
     barcode: "1236",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file3",
-    key: getUploadRowKey({ file: "/path/to/file3" }),
+    key: "/path/to/file3",
     [AnnotationName.WELL]: [1, 2, 3],
-  },
-  [getUploadRowKey({ file: "/path/to/file3", positionIndex: 1 })]: {
-    barcode: "1236",
-    ["Favorite Color"]: ["Red"],
-    file: "/path/to/file3",
-    key: getUploadRowKey({ file: "/path/to/file3", positionIndex: 1 }),
-    positionIndex: 1,
-    [AnnotationName.WELL]: [1, 2],
   },
 };
 
@@ -287,6 +276,22 @@ export const mockLookupAnnotation: TemplateAnnotation = {
   lookupTable: "cas9",
   orderIndex: 4,
   name: "Cas9",
+  required: false,
+};
+
+export const mockFmsFileLookupAnnotation: TemplateAnnotation = {
+  ...mockAuditInfo,
+  annotationId: 3,
+  annotationOptions: [
+    "File 1 (AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+    "File 2 (BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)",
+  ],
+  annotationTypeId: 6,
+  description: "Files from the FMS.File table",
+  lookupSchema: "fms",
+  lookupTable: "file",
+  orderIndex: 4,
+  name: "FileLookupAnnotation",
   required: false,
 };
 
@@ -437,10 +442,46 @@ export const mockFSSUploadJob: FSSUpload = {
   user: "test_user",
 };
 
+export const mockSuccessfulUploadJobWithUnexposedAnnotation: UploadJob = {
+  created: new Date(),
+  currentStage: "Completed",
+  jobId: "123434234",
+  jobName: "mockJob1",
+  modified: new Date(),
+  serviceFields: {
+    files: [
+      {
+        customMetadata: {
+          annotations: [
+            {
+              annotationId: 1,
+              values: ["test", "1"],
+            },
+            {
+              annotationId: 4,
+              values: ["test", "1"],
+            },
+          ],
+          templateId: 1,
+        },
+        file: {
+          originalPath: "/some/filepath",
+          fileType: "other",
+          shouldBeInArchive: true,
+          shouldBeInLocal: true,
+        },
+      },
+    ],
+    type: "upload",
+  },
+  status: JSSJobStatus.SUCCEEDED,
+  user: "test_user",
+};
+
 export const mockWorkingUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Copying files",
-  jobId: "2222222222",
+  jobId: "1111111111",
   jobName: "mockWorkingUploadJob",
   modified: new Date(),
   service: Service.FILE_UPLOAD_APP,
@@ -454,8 +495,38 @@ export const mockWorkingUploadJob: UploadJob = {
 };
 
 export const mockWaitingUploadJob: UploadJob = {
-  ...mockWorkingUploadJob,
+  created: new Date(),
+  currentStage: "Waiting",
+  jobId: "2222222222",
+  jobName: "mockWaitingUploadJob",
+  modified: new Date(),
+  service: Service.FILE_UPLOAD_APP,
+  serviceFields: {
+    files: [
+      {
+        customMetadata: {
+          annotations: [
+            {
+              annotationId: 1,
+              values: ["test", "1"],
+            },
+          ],
+          templateId: 1,
+        },
+        file: {
+          originalPath: "/some/filepath",
+          fileType: "other",
+          shouldBeInArchive: true,
+          shouldBeInLocal: true,
+        },
+      },
+    ],
+    lastModifiedInMS: new Date().getMilliseconds(),
+    md5CalculationInformation: {},
+    type: "upload",
+  },
   status: JSSJobStatus.WAITING,
+  user: "test_user",
 };
 
 export const mockFailedUploadJob: UploadJob = {
@@ -473,7 +544,6 @@ export const mockFailedUploadJob: UploadJob = {
             {
               annotationId: 1,
               values: ["test", "1"],
-              channelId: "Raw 405nm",
             },
           ],
           templateId: 1,
@@ -594,19 +664,6 @@ export const mockBarcodePrefixes: BarcodePrefix[] = [
     prefixId: 2,
   },
 ];
-
-export const mockChannels: LabkeyChannel[] = [
-  {
-    ContentTypeId: 1,
-    Description: "a channel",
-    Name: "Raw 468nm",
-  },
-];
-
-export const mockChannel: Channel = {
-  channelId: "Raw 468 nm",
-  description: "a channel",
-};
 
 export const mockUnit: Unit = {
   description: "description",

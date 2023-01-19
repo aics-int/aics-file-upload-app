@@ -9,17 +9,16 @@ import {
   useResizeColumns,
   SortByFn,
   Row,
+  TableInstance,
 } from "react-table";
 
 import { AnnotationName } from "../../constants";
 import { getMassEditRow } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
-import { getUploadRowKey } from "../../state/upload/constants";
+import { FileModel } from "../../state/types";
 import { getUploadAsTableRows } from "../../state/upload/selectors";
-import { UploadTableRow } from "../../state/upload/types";
 import { useHiddenColumns } from "../../util/hooks";
 import MassEditTable from "../MassEditTable";
-import SubFileSelectionModal from "../SubFileSelectionModal";
 import Table from "../Table";
 import DefaultCell from "../Table/DefaultCells/DefaultCell";
 import DefaultHeader from "../Table/Headers/DefaultHeader";
@@ -40,10 +39,10 @@ interface Props {
 }
 
 // Custom sorting methods for react-table
-const sortTypes: Record<string, SortByFn<UploadTableRow>> = {
+const sortTypes: Record<string, SortByFn<FileModel>> = {
   [ARRAY_SORT]: (
-    rowA: Row<UploadTableRow>,
-    rowB: Row<UploadTableRow>,
+    rowA: Row<FileModel>,
+    rowB: Row<FileModel>,
     columnId: string
   ) => `${rowA.original[columnId]}`.localeCompare(`${rowB.original[columnId]}`),
 };
@@ -77,11 +76,11 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
     [columnDefinitions, hasSubmitBeenAttempted]
   );
 
-  const tableInstance = useTable<UploadTableRow>(
+  const tableInstance: TableInstance<FileModel> = useTable<FileModel>(
     {
       columns,
       data,
-      // Defines the default column properties, can be overriden per column
+      // Defines the default column properties, can be overridden per column
       defaultColumn: {
         Cell: DefaultCell,
         Header: DefaultHeader,
@@ -90,7 +89,7 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
         maxWidth: 500,
         sortType: ARRAY_SORT,
       },
-      getRowId: getUploadRowKey,
+      getRowId: (row) => row.file,
       // Prevent hidden columns from resetting on data changes
       autoResetHiddenColumns: false,
       // This comes from the useExpanded plugin and prevents
@@ -141,7 +140,6 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
       <TableToolHeader selectedRows={tableInstance.selectedFlatRows || []} />
       <Table tableInstance={tableInstance} />
       <TableFooter />
-      <SubFileSelectionModal />
     </>
   );
 }

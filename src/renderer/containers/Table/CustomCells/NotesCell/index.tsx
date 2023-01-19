@@ -15,15 +15,14 @@ import {
   TOOLTIP_LEAVE_DELAY,
 } from "../../../../constants";
 import { setAlert } from "../../../../state/feedback/actions";
-import { AlertType } from "../../../../state/types";
+import { AlertType, FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
-import { UploadTableRow } from "../../../../state/upload/types";
 
 const styles = require("./styles.pcss");
 
 const { TextArea } = Input;
 
-type Props = CellProps<UploadTableRow, string>;
+type Props = CellProps<FileModel, string>;
 
 // Only want user to be able to select 1 file & it must be of type .txt
 const openDialogOptions: OpenDialogOptions = {

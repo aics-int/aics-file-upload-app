@@ -8,8 +8,8 @@ import { CellProps } from "react-table";
 import { AnnotationName } from "../../../../constants";
 import { getPlateBarcodeToPlates } from "../../../../state/metadata/selectors";
 import { Well } from "../../../../state/selection/types";
+import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
-import { UploadTableRow } from "../../../../state/upload/types";
 import Plate from "../../../Plate";
 import DisplayCell from "../../DefaultCells/DisplayCell";
 
@@ -33,7 +33,7 @@ function getWellLabel(well?: AicsGridCell, noneText = "None"): string {
  * This is used in the react-tables when a user is editing a Well annotation cell.
  * It displays the currently selected well labels and a popover with the plate UI for associating more wells.
  */
-export default function WellCell(props: CellProps<UploadTableRow>) {
+export default function WellCell(props: CellProps<FileModel>) {
   const dispatch = useDispatch();
   const plateBarcodeToPlates = useSelector(getPlateBarcodeToPlates);
   const [isEditing, setIsEditing] = React.useState(false);

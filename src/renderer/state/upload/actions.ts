@@ -2,7 +2,7 @@ import {
   PREFERRED_TEMPLATE_ID,
   TEMP_UPLOAD_STORAGE_KEY,
 } from "../../../shared/constants";
-import { State, FileModel, FileModelId, UploadSummaryTableRow } from "../types";
+import { State, FileModel, UploadSummaryTableRow } from "../types";
 
 import {
   APPLY_TEMPLATE,
@@ -25,7 +25,6 @@ import {
   SAVE_UPLOAD_DRAFT,
   SAVE_UPLOAD_DRAFT_SUCCESS,
   SUBMIT_FILE_METADATA_UPDATE,
-  UPDATE_SUB_IMAGES,
   UPDATE_UPLOAD,
   UPDATE_UPLOAD_ROWS,
   UPDATE_UPLOADS,
@@ -56,23 +55,20 @@ import {
   SaveUploadDraftAction,
   SaveUploadDraftSuccessAction,
   SubmitFileMetadataUpdateAction,
-  UpdateSubImagesAction,
-  UpdateSubImagesPayload,
   UpdateUploadAction,
   UpdateUploadRowsAction,
   UpdateUploadsAction,
   UploadFailedAction,
-  UploadTableRow,
   UploadSucceededAction,
   UploadWithoutMetadataAction,
 } from "./types";
 
 export function addUploadFiles(
-  uploadFiles: FileModelId[]
+  filesToUpload: FileModel[]
 ): AddUploadFilesAction {
   return {
     autoSave: true,
-    payload: uploadFiles,
+    payload: filesToUpload,
     type: ADD_UPLOAD_FILES,
   };
 }
@@ -256,23 +252,6 @@ export function updateUploads(
       uploads,
     },
     type: UPDATE_UPLOADS,
-  };
-}
-
-export function updateSubImages(
-  row: UploadTableRow,
-  payload: Partial<UpdateSubImagesPayload>
-): UpdateSubImagesAction {
-  return {
-    autoSave: true,
-    payload: {
-      channelIds: payload.channelIds || [],
-      positionIndexes: payload.positionIndexes || [],
-      row,
-      scenes: payload.scenes || [],
-      subImageNames: payload.subImageNames || [],
-    },
-    type: UPDATE_SUB_IMAGES,
   };
 }
 

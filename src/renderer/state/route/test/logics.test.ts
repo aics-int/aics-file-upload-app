@@ -37,12 +37,12 @@ import {
   mockMMSTemplate,
   mockState,
   mockSuccessfulUploadJob,
+  mockSuccessfulUploadJobWithUnexposedAnnotation,
   mockWellAnnotation,
   mockWellUpload,
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
 import { AlertType, AsyncRequest, Page, State } from "../../types";
-import { getUploadRowKey } from "../../upload/constants";
 import { getUpload } from "../../upload/selectors";
 import { closeUpload, viewUploads } from "../actions";
 import { VIEW_UPLOADS_SUCCEEDED } from "../constants";
@@ -338,7 +338,21 @@ describe("Route logics", () => {
         VIEW_UPLOADS_SUCCEEDED
       );
     });
+    it("allows users to open an upload with unexposed annotations", async () => {
+      stubMethods();
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockStateWithMetadata
+      );
 
+      store.dispatch(
+        viewUploads([mockSuccessfulUploadJobWithUnexposedAnnotation])
+      );
+      await logicMiddleware.whenComplete();
+
+      expect(actions.list.map(({ type }) => type)).includes(
+        VIEW_UPLOADS_SUCCEEDED
+      );
+    });
     it("handles case where upload page is not open yet", async () => {
       // Arrange
       const mockDeps = stubMethods();
@@ -362,18 +376,13 @@ describe("Route logics", () => {
       expect(getPage(state)).to.equal(Page.UploadWithTemplate);
       expect(getView(state)).to.equal(Page.UploadWithTemplate);
       expect(getUpload(state)).to.deep.equal({
-        [getUploadRowKey({ file: fileMetadata.localFilePath || "" })]: {
+        [fileMetadata.localFilePath || ""]: {
           file: fileMetadata.localFilePath,
           fileId: fileMetadata.fileId,
           "Favorite Color": ["Blue", "Green"],
           [AnnotationName.WELL]: ["A1", "B6"],
           [AnnotationName.PLATE_BARCODE]: ["abc"],
           [AnnotationName.IMAGING_SESSION]: [],
-          channelId: undefined,
-          fovId: undefined,
-          positionIndex: undefined,
-          scene: undefined,
-          subImageName: undefined,
         },
       });
       expect(getAppliedTemplate(state)).to.not.be.undefined;

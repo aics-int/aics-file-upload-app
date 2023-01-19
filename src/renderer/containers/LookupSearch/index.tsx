@@ -34,6 +34,7 @@ interface OwnProps {
   error?: boolean;
   getDisplayFromOption?: (option: any) => string;
   lookupAnnotationName: keyof MetadataStateBranch;
+  lookupTable?: string;
   onBlur?: () => void;
   onInputKeyDown?: (e: React.KeyboardEvent) => void;
   placeholder?: string;
@@ -195,7 +196,7 @@ class LookupSearch extends React.Component<Props, { searchValue?: string }> {
   };
 }
 
-const LARGE_LOOKUPS: readonly string[] = Object.freeze(["vial"]);
+const LARGE_LOOKUPS: readonly string[] = Object.freeze(["vial", "file"]);
 function mapStateToProps(
   state: State,
   {
@@ -204,6 +205,7 @@ function mapStateToProps(
     defaultOpen,
     disabled,
     lookupAnnotationName,
+    lookupTable,
     optionsOverride,
     optionsLoadingOverride,
     placeholder,
@@ -215,9 +217,7 @@ function mapStateToProps(
     clearOptionsOverride,
     defaultOpen,
     disabled,
-    isLargeLookup: LARGE_LOOKUPS.includes(
-      `${lookupAnnotationName}`.toLowerCase()
-    ),
+    isLargeLookup: LARGE_LOOKUPS.includes(`${lookupTable}`.toLowerCase()),
     lookupAnnotationName,
     options: optionsOverride || getMetadata(state)[lookupAnnotationName],
     optionsLoading:
