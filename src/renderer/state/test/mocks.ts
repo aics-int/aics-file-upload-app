@@ -522,7 +522,6 @@ export const mockWaitingUploadJob: UploadJob = {
       },
     ],
     lastModifiedInMS: new Date().getMilliseconds(),
-    md5CalculationInformation: {},
     type: "upload",
   },
   status: JSSJobStatus.WAITING,
