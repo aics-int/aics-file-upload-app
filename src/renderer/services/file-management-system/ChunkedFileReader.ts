@@ -74,9 +74,9 @@ export default class ChunkedFileReader {
       highWaterMark: readStreamChunkSize,
     });
 
-    let hasher = new Md5Hasher();
+    let hasher = await Md5Hasher.init();
     if (partiallyCalculatedMd5) {
-      hasher = Md5Hasher.deserialize(partiallyCalculatedMd5);
+      hasher = await Md5Hasher.deserialize(partiallyCalculatedMd5);
     }
 
     // The client of this entity requires a specific chunkSize each time
