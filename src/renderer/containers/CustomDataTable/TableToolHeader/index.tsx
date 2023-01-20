@@ -11,19 +11,18 @@ import {
   getIsExistingUpload,
   getAreSelectedUploadsInFlight,
 } from "../../../state/selection/selectors";
-import { TutorialStep } from "../../../state/types";
+import { FileModel, TutorialStep } from "../../../state/types";
 import { jumpToUpload, removeUploads } from "../../../state/upload/actions";
 import {
   getCanRedoUpload,
   getCanUndoUpload,
 } from "../../../state/upload/selectors";
-import { UploadTableRow } from "../../../state/upload/types";
 import TutorialTooltip from "../../TutorialTooltip";
 
 const styles = require("./styles.pcss");
 
 interface Props {
-  selectedRows: Row<UploadTableRow>[];
+  selectedRows: Row<FileModel>[];
 }
 
 /*

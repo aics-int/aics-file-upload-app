@@ -77,12 +77,6 @@ export interface LabkeyPlateResponse {
   imagingSessionId: number | null;
 }
 
-export interface LabkeyChannel {
-  ContentTypeId: number;
-  Description: string;
-  Name: string;
-}
-
 export interface Annotation extends Audited {
   annotationId: number;
   annotationTypeId: number;
@@ -137,11 +131,6 @@ export interface BarcodePrefix {
   description: string;
   prefixId: number;
   prefix: string;
-}
-
-export interface Channel {
-  channelId: string;
-  description: string;
 }
 
 export interface ImagingSession {

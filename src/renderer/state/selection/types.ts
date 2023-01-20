@@ -30,15 +30,6 @@ export interface LoadFilesAction extends AutoSaveAction {
   type: string;
 }
 
-export interface CloseSubFileSelectionModalAction {
-  type: string;
-}
-
-export interface OpenSubFileSelectionModalAction {
-  payload: string;
-  type: string;
-}
-
 export interface AddRowToDragEventAction {
   payload: {
     id: string;

@@ -11,7 +11,6 @@ import {
   AnnotationOption,
   AnnotationType,
   BarcodePrefix,
-  Channel,
   Filter,
   FilterType,
   ImagingSession,
@@ -19,7 +18,6 @@ import {
   LabkeyAnnotationLookup,
   LabkeyAnnotationOption,
   LabkeyAnnotationType,
-  LabkeyChannel,
   LabkeyImagingSession,
   LabkeyLookup,
   LabkeyPlate,
@@ -37,6 +35,9 @@ import {
 
 const BASE_URL = "/labkey";
 const IN_SEPARATOR = "%3B";
+const FMS_FILE_TABLE_NAME = "file";
+const FMS_FILE_FILE_NAME = "Filename";
+const FMS_FILE_FILE_ID = "FileId";
 
 export default class LabkeyClient extends HttpCacheClient {
   public static createFilter(
@@ -65,7 +66,6 @@ export default class LabkeyClient extends HttpCacheClient {
     this.getTemplates = this.getTemplates.bind(this);
     this.getUnits = this.getUnits.bind(this);
     this.getColumnValues = this.getColumnValues.bind(this);
-    this.getChannels = this.getChannels.bind(this);
     this.getTemplateHasBeenUsed = this.getTemplateHasBeenUsed.bind(this);
     this.findPlateByWellId = this.findPlateByWellId.bind(this);
     this.findImagingSessionsByPlateBarcode =
@@ -178,14 +178,30 @@ export default class LabkeyClient extends HttpCacheClient {
     column: string,
     searchString = ""
   ): Promise<string[]> {
+    const queryColumns =
+      table === FMS_FILE_TABLE_NAME
+        ? [FMS_FILE_FILE_ID, FMS_FILE_FILE_NAME].join(",")
+        : column;
     const additionalQueries = [
-      `query.columns=${column}`,
+      `query.columns=${queryColumns}`,
       `query.sort=${column}`,
       `query.maxRows=100`,
     ];
     if (!isEmpty(searchString)) {
+      // The fms.file table is so large that running "contains" queries on it will take forever, so use "eq" instead
+      /*
+       TODO:
+        In a more perfect world, annotations that reference other files (specifically files fitting certain annotation
+        filters) would involve a more complex UI where users would define how an FES (not LabKey) query would be shaped.
+        e.g.
+         For the one `fms.file` lookup annotation in use at time of writing, "Optical Control Id", the annotation
+         would be defined in a way such that the <LookupSearch> dropdown here in the Upload App would query only for
+         files with the annotation "IsOpticalControl" and with a value of "True".
+        - TF 2022-09-20
+       */
+      const filterMatchType = table === FMS_FILE_TABLE_NAME ? "eq" : "contains";
       additionalQueries.push(
-        `query.${column}~contains=${encodeURIComponent(searchString)}`
+        `query.${column}~${filterMatchType}=${encodeURIComponent(searchString)}`
       );
     }
     const lookupOptionsQuery = LabkeyClient.getSelectRowsURL(
@@ -207,7 +223,11 @@ export default class LabkeyClient extends HttpCacheClient {
         `Could not find column named ${column} in ${schema}.${table}`
       );
     }
-    return rows.map((row: any) => row[properlyCasedKey]);
+    return rows.map((row: any) => {
+      return table === FMS_FILE_TABLE_NAME
+        ? `${row[FMS_FILE_FILE_NAME]} (${row[FMS_FILE_FILE_ID]})`
+        : row[properlyCasedKey];
+    });
   }
 
   /**
@@ -329,18 +349,6 @@ export default class LabkeyClient extends HttpCacheClient {
     return response.rows.map((columnValue: any) => columnValue[columnName]);
   }
 
-  public async getChannels(): Promise<Channel[]> {
-    const query = LabkeyClient.getSelectRowsURL(
-      LK_SCHEMA.PROCESSING,
-      "ContentType"
-    );
-    const response = await this.get(query);
-    return response.rows.map((channel: LabkeyChannel) => ({
-      channelId: channel.Name,
-      description: channel.Description,
-    }));
-  }
-
   public async getTemplateHasBeenUsed(templateId: number): Promise<boolean> {
     const query = LabkeyClient.getSelectRowsURL(
       LK_SCHEMA.UPLOADER,
@@ -458,7 +466,7 @@ export default class LabkeyClient extends HttpCacheClient {
     return rows[0];
   }
 
-  // Returns LabKey query as a an array of values
+  // Returns LabKey query as an array of values
   public selectRowsAsList<T = any>(
     schema: string,
     table: string,

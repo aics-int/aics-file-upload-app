@@ -12,10 +12,11 @@ import {
   mockTemplateStateBranch,
 } from "../../../state/test/mocks";
 import {
-  getColumnsForTable,
-  getSelectedPlateBarcodes,
   getCanShowImagingSessionColumn,
   getCanShowWellColumn,
+  getColumnsForTable,
+  getColumnWidthForType,
+  getSelectedPlateBarcodes,
   getTemplateColumnsForTable,
   PLATE_RELATED_COLUMNS,
 } from "../selectors";
@@ -30,16 +31,26 @@ describe("CustomDataTable selectors", () => {
     annotationTypeId: index,
   }));
   const annotations = ["Cell Line", "Color", "Is Aligned"].map(
-    (name, index) => ({
-      ...mockAuditInfo,
-      annotationId: index,
-      name,
-      description: `${name} description`,
-      annotationTypeId: index === 0 ? 0 : 1,
-      orderIndex: index,
-      annotationOptions: [],
-      required: false,
-    })
+    (name, index) => {
+      const lookupTypeExtras =
+        index === 0
+          ? {
+              lookupSchema: "Celllines",
+              lookupTable: "Cell Line",
+            }
+          : null;
+      return {
+        ...mockAuditInfo,
+        annotationId: index,
+        name,
+        description: `${name} description`,
+        annotationTypeId: annotationTypes[index]["annotationTypeId"],
+        orderIndex: index,
+        annotationOptions: [],
+        required: false,
+        ...lookupTypeExtras,
+      };
+    }
   );
   const appliedTemplate = {
     ...mockMMSTemplate,
@@ -200,14 +211,25 @@ describe("CustomDataTable selectors", () => {
       expect(actual).to.be.lengthOf(6);
       expect(actual).deep.equal([
         ...PLATE_RELATED_COLUMNS,
-        ...annotations.map((a, index) => ({
-          type: index === 0 ? ColumnType.LOOKUP : ColumnType.TEXT,
-          accessor: a.name,
-          description: a.description,
-          dropdownValues: [],
-          isRequired: false,
-          width: index === 0 ? 150 : 100,
-        })),
+        ...annotations.map((a, index) => {
+          const type = annotationTypes[index].name;
+          const lookupTypeExtras =
+            annotationTypes[index].name === ColumnType.LOOKUP
+              ? {
+                  lookupSchema: "Celllines",
+                  lookupTable: "Cell Line",
+                }
+              : null;
+          return {
+            type,
+            accessor: a.name,
+            description: a.description,
+            dropdownValues: [],
+            isRequired: false,
+            width: getColumnWidthForType(a.name, type),
+            ...lookupTypeExtras,
+          };
+        }),
       ]);
     });
 

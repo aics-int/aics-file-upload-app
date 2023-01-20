@@ -60,12 +60,13 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
         <CheckCircleFilled className={styles.success} />
       );
     } else {
-      // Switch the incomplete status tooltip depending on if the post upload
-      // has yet to run vs if it has failed
-      if (etlProcess?.status === JSSJobStatus.FAILED) {
-        tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the FMS File Explorer. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess.status_detail}`;
+      if (
+        etlProcess?.status ===
+        JSSJobStatus.FAILED
+      ) {
+        tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the File Upload App. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess?.status_detail}`;
       } else {
-        tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the FMS File Explorer if it isn't already`;
+        tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the File Upload App if it isn't already`;
       }
 
       content = (

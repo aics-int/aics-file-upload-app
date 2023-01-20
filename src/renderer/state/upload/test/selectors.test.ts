@@ -5,18 +5,17 @@ import { AnnotationName } from "../../../constants";
 import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
 import { UploadRequest } from "../../../services/types";
 import { Duration } from "../../../types";
-import { FileType } from "../../../util";
 import {
   getMockStateWithHistory,
   mockAnnotationTypes,
   mockAuditInfo,
   mockBooleanAnnotation,
-  mockChannel,
   mockDateAnnotation,
   mockDateTimeAnnotation,
   mockDropdownAnnotation,
   mockFavoriteColorAnnotation,
   mockFavoriteColorTemplateAnnotation,
+  mockFmsFileLookupAnnotation,
   mockIntervalTemplate,
   mockLookupAnnotation,
   mockMMSTemplate,
@@ -33,7 +32,6 @@ import {
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
 import { FileModel, State } from "../../types";
-import { getUploadRowKey } from "../constants";
 import {
   getCanUndoUpload,
   getFileToAnnotationHasValueMap,
@@ -42,43 +40,31 @@ import {
   getUploadRequests,
 } from "../selectors";
 import { getUploadAsTableRows, getUploadValidationErrors } from "../selectors";
-import { MMSAnnotationValueRequest } from "../types";
-
-const orderAnnotationValueRequests = (
-  annotations: MMSAnnotationValueRequest[]
-) => {
-  return orderBy(annotations, [
-    "annotationId",
-    "positionId",
-    "scene",
-    "subImageName",
-    "channelId",
-  ]);
-};
+import { FileType } from "../types";
 
 // utility function to allow us to deeply compare expected and actual output without worrying about order
 const standardizeUploads = (uploadRequests: UploadRequest[]): UploadRequest[] =>
-  uploadRequests.map((request) => ({
-    ...request,
-    customMetadata: {
-      ...request.customMetadata,
-      annotations: orderAnnotationValueRequests(
-        request.customMetadata?.annotations || []
-      ),
-    },
-  }));
+    uploadRequests.map((request) => ({
+      ...request,
+      customMetadata: {
+        ...request.customMetadata,
+        annotations: orderBy(request.customMetadata?.annotations || [], [
+          "annotationId",
+        ]),
+      },
+    }));
 
 describe("Upload selectors", () => {
   describe("getCanUndoUpload", () => {
     it("should return true if the past is not empty", () => {
       expect(
-        getCanUndoUpload({
-          ...mockState,
-          upload: {
-            ...mockState.upload,
-            index: 1,
-          },
-        })
+          getCanUndoUpload({
+            ...mockState,
+            upload: {
+              ...mockState.upload,
+              index: 1,
+            },
+          })
       ).to.be.true;
     });
 
@@ -103,7 +89,7 @@ describe("Upload selectors", () => {
           },
         },
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file })]: {
+          [file]: {
             barcode: "452",
             favoriteColor: ["Blue"],
             file,
@@ -115,7 +101,7 @@ describe("Upload selectors", () => {
         }),
       });
       const unexpectedAnnotation = payload[0]?.customMetadata?.annotations.find(
-        (a: { values: string[] }) => a.values.includes("Hello World")
+          (a: { values: string[] }) => a.values.includes("Hello World")
       );
       expect(unexpectedAnnotation).to.be.undefined;
     });
@@ -146,27 +132,71 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockBooleanAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["false"],
               },
+            ],
+            templateId: mockMMSTemplate.templateId,
+          },
+          file: {
+            disposition: "tape",
+            fileType: FileType.IMAGE,
+            originalPath: "/path/to.dot/image.tiff",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
+          microscopy: {},
+        },
+      ];
+      const actual = getUploadRequests(state);
+      expect(actual).to.deep.equal(expectedPayload);
+    });
+    it("Interprets combined 'File Name (File ID)' FMS.File Lookup values into just File IDs", () => {
+      const state: State = {
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...nonEmptyStateForInitiatingUpload.template,
+          appliedTemplate: {
+            ...mockMMSTemplate,
+            annotations: [mockFmsFileLookupAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          "/path/to.dot/image.tiff": {
+            FileLookupAnnotation: [
+              // Over-testing a bit to make sure our regex works. We really only want to upload FileIDs
+              "File 1 (File1AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 2 (File2AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 3 with a considerably longer file name (File3AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+              "File 4",
+              "File 5 parens do not contain ID (A)",
+              "File 6 no paren - File6AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "File 7 missing paren (File7AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "File 8 extra parens (File8AAAAAAAAAAAAAAAAAAAAAAAAAAA) (File8AAAAAAAAAAAAAAAAAAAAAAAAAAA)",
+            ],
+            barcode: "452",
+            file: "/path/to.dot/image.tiff",
+            [AnnotationName.NOTES]: [],
+            plateId: 4,
+            [AnnotationName.WELL]: [],
+          },
+        }),
+      };
+      const expectedPayload = [
+        {
+          customMetadata: {
+            annotations: [
               {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
-                annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
+                annotationId: mockFmsFileLookupAnnotation.annotationId,
+                values: [
+                  "File1AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File2AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File3AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File 4",
+                  "File 5 parens do not contain ID (A)",
+                  "File 6 no paren - File6AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File 7 missing paren (File7AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "File8AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                ],
               },
             ],
             templateId: mockMMSTemplate.templateId,
@@ -191,19 +221,9 @@ describe("Upload selectors", () => {
           "/path/to.dot/image.tiff": {
             barcode: "452",
             file: "/path/to.dot/image.tiff",
-            ["Favorite Color"]: ["blue"],
-            [AnnotationName.NOTES]: [],
-            plateId: 4,
-            [AnnotationName.WELL]: [],
-          },
-          "/path/to.dot/image.tiffscene:1channel:1": {
-            barcode: "452",
-            channelId: "Raw 468 nm",
-            ["Favorite Color"]: "yellow",
-            file: "/path/to.dot/image.tiff",
+            ["Favorite Color"]: ["yellow"],
             [AnnotationName.NOTES]: ["Seeing some interesting things here!"],
             plateId: 4,
-            positionIndex: 1,
             [AnnotationName.WELL]: [6],
           },
           "/path/to/image.czi": {
@@ -278,51 +298,15 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: ["blue"],
-              },
-              {
-                annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: mockChannel.channelId,
-                positionIndex: 1,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["yellow"],
               },
               {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: mockChannel.channelId,
-                positionIndex: 1,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["6"],
               },
               {
                 annotationId: mockNotesAnnotation.annotationId,
-                channelId: mockChannel.channelId,
-                positionIndex: 1,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["Seeing some interesting things here!"],
-              },
-              {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
-                annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
               },
             ],
             templateId: mockMMSTemplate.templateId,
@@ -343,27 +327,11 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["red"],
               },
               {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["1"],
-              },
-              {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
               },
             ],
             templateId: mockMMSTemplate.templateId,
@@ -384,27 +352,11 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["green"],
               },
               {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["2"],
-              },
-              {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
               },
             ],
             templateId: mockMMSTemplate.templateId,
@@ -425,26 +377,10 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["purple"],
               },
               {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["3"],
               },
             ],
@@ -466,26 +402,10 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["orange"],
               },
               {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["4"],
               },
             ],
@@ -507,26 +427,10 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["pink"],
               },
               {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["5", "6", "7"],
               },
             ],
@@ -548,26 +452,10 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["gold"],
               },
               {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["7"],
               },
             ],
@@ -589,26 +477,10 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["grey"],
               },
               {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["8"],
               },
             ],
@@ -630,26 +502,10 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockFavoriteColorAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["black"],
               },
               {
-                annotationId: mockNotesAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
-                values: [],
-              },
-              {
                 annotationId: mockWellAnnotation.annotationId,
-                channelId: undefined,
-                positionIndex: undefined,
-                scene: undefined,
-                subImageName: undefined,
                 values: ["5"],
               },
             ],
@@ -670,7 +526,7 @@ describe("Upload selectors", () => {
 
       const payload = getUploadRequests(state);
       expect(standardizeUploads(payload)).to.have.deep.members(
-        standardizeUploads(expected)
+          standardizeUploads(expected)
       );
     });
 
@@ -701,7 +557,7 @@ describe("Upload selectors", () => {
       const payload = getUploadRequests(state);
 
       expect(payload[0].customMetadata?.annotations[0].values[0]).to.equal(
-        "356521111"
+          "356521111"
       );
     });
 
@@ -732,7 +588,7 @@ describe("Upload selectors", () => {
       const payload = getUploadRequests(state);
 
       expect(payload[0].customMetadata?.annotations[0].values[0]).to.equal(
-        "121111"
+          "121111"
       );
     });
   });
@@ -762,8 +618,7 @@ describe("Upload selectors", () => {
         },
         template: mockTemplateStateBranchWithAppliedTemplate,
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "/path/to/file3" })]:
-            mockWellUpload[getUploadRowKey({ file: "/path/to/file3" })],
+          "/path/to/file3": mockWellUpload["/path/to/file3"],
         }),
       });
       expect(jobName).to.deep.equal(["file3"]);
@@ -785,256 +640,92 @@ describe("Upload selectors", () => {
   });
 
   describe("getUploadAsTableRows", () => {
-    it("handles files without scenes or channels", () => {
+    it("handles files", () => {
       const rows = getUploadAsTableRows({
         ...mockState,
         selection: mockSelection,
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "/path/to/file1" })]: {
+          "/path/to/file1": {
             barcode: "1234",
             ["Favorite Color"]: ["Red"],
             file: "/path/to/file1",
-            key: getUploadRowKey({ file: "/path/to/file1" }),
+            key: "/path/to/file1",
             [AnnotationName.WELL]: [1],
           },
-          [getUploadRowKey({ file: "/path/to/file2" })]: {
+          "/path/to/file2": {
             barcode: "1235",
             ["Favorite Color"]: ["Red"],
             file: "/path/to/file2",
-            key: getUploadRowKey({ file: "/path/to/file2" }),
+            key: "/path/to/file2",
             [AnnotationName.WELL]: [2],
           },
-          [getUploadRowKey({ file: "/path/to/file3" })]: {
+          "/path/to/file3": {
             barcode: "1236",
             ["Favorite Color"]: ["Red"],
             file: "/path/to/file3",
-            key: getUploadRowKey({ file: "/path/to/file3" }),
+            key: "/path/to/file3",
             [AnnotationName.WELL]: [1, 2, 3],
           },
         }),
       });
-      expect(rows.length).to.equal(3); // no rows expanded yet so excluding the row with a positionIndex
+      expect(rows.length).to.equal(3);
       expect(rows).to.deep.include({
         barcode: "1234",
-        [AnnotationName.CHANNEL_TYPE]: [],
         ["Favorite Color"]: ["Red"],
         file: "/path/to/file1",
-        key: getUploadRowKey({ file: "/path/to/file1" }),
+        key: "/path/to/file1",
         [AnnotationName.IMAGING_SESSION]: [],
         [AnnotationName.NOTES]: [],
         [AnnotationName.PLATE_BARCODE]: [],
-        positionIndexes: [],
-        scenes: [],
-        subImageNames: [],
-        subRows: [],
         [AnnotationName.WELL]: [1],
       });
       expect(rows).to.deep.include({
         barcode: "1235",
-        [AnnotationName.CHANNEL_TYPE]: [],
         ["Favorite Color"]: ["Red"],
         file: "/path/to/file2",
-        key: getUploadRowKey({ file: "/path/to/file2" }),
+        key: "/path/to/file2",
         [AnnotationName.IMAGING_SESSION]: [],
         [AnnotationName.NOTES]: [],
         [AnnotationName.PLATE_BARCODE]: [],
-        positionIndexes: [],
-        scenes: [],
-        subImageNames: [],
-        subRows: [],
         [AnnotationName.WELL]: [2],
       });
       expect(rows).to.deep.include({
         barcode: "1236",
-        [AnnotationName.CHANNEL_TYPE]: [],
         ["Favorite Color"]: ["Red"],
         file: "/path/to/file3",
-        key: getUploadRowKey({ file: "/path/to/file3" }),
+        key: "/path/to/file3",
         [AnnotationName.IMAGING_SESSION]: [],
         [AnnotationName.NOTES]: [],
         [AnnotationName.PLATE_BARCODE]: [],
-        positionIndexes: [],
-        scenes: [],
-        subImageNames: [],
-        subRows: [],
         [AnnotationName.WELL]: [1, 2, 3],
       });
-    });
-    it("shows scene and channel only rows if file row is not present", () => {
-      const rows = getUploadAsTableRows({
-        ...mockState,
-        selection: mockSelection,
-        upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "/path/to/file1", positionIndex: 1 })]: {
-            barcode: "1234",
-            file: "/path/to/file1",
-            key: getUploadRowKey({ file: "/path/to/file1", positionIndex: 1 }),
-            [AnnotationName.NOTES]: [],
-            positionIndex: 1,
-            [AnnotationName.WELL]: [2],
-          },
-          [getUploadRowKey({
-            file: "/path/to/file1",
-            positionIndex: undefined,
-            channelId: "Raw 405nm",
-          })]: {
-            barcode: "1234",
-            channelId: "Raw 405nm",
-            file: "/path/to/file1",
-            key: getUploadRowKey({
-              file: "/path/to/file1",
-              positionIndex: undefined,
-              channelId: "Raw 405nm",
-            }),
-            [AnnotationName.NOTES]: [],
-            positionIndex: undefined,
-            [AnnotationName.WELL]: [2],
-          },
-        }),
-      });
-      expect(rows.length).to.equal(2);
-      expect(rows[0]).to.deep.equal({
-        barcode: "1234",
-        channelId: "Raw 405nm",
-        [AnnotationName.CHANNEL_TYPE]: [],
-        [AnnotationName.IMAGING_SESSION]: [],
-        file: "/path/to/file1",
-        key: getUploadRowKey({
-          file: "/path/to/file1",
-          positionIndex: undefined,
-          channelId: "Raw 405nm",
-        }),
-        [AnnotationName.NOTES]: [],
-        [AnnotationName.PLATE_BARCODE]: [],
-        positionIndex: undefined,
-        positionIndexes: [],
-        scenes: [],
-        subImageNames: [],
-        subRows: [],
-        [AnnotationName.WELL]: [2],
-      });
-      expect(rows[1]).to.deep.equal({
-        barcode: "1234",
-        [AnnotationName.CHANNEL_TYPE]: [],
-        file: "/path/to/file1",
-        key: getUploadRowKey({ file: "/path/to/file1", positionIndex: 1 }),
-        [AnnotationName.IMAGING_SESSION]: [],
-        [AnnotationName.NOTES]: [],
-        [AnnotationName.PLATE_BARCODE]: [],
-        positionIndex: 1,
-        positionIndexes: [],
-        scenes: [],
-        subImageNames: [],
-        subRows: [],
-        [AnnotationName.WELL]: [2],
-      });
-    });
-    it("handles files with channels", () => {
-      const rows = getUploadAsTableRows({
-        ...mockState,
-        selection: {
-          ...mockSelection,
-        },
-        upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "/path/to/file1" })]: {
-            barcode: "1234",
-            [AnnotationName.CHANNEL_TYPE]: ["Raw 405nm"],
-            file: "/path/to/file1",
-            [AnnotationName.NOTES]: undefined,
-            [AnnotationName.WELL]: [1],
-          },
-          [getUploadRowKey({
-            file: "/path/to/file1",
-            positionIndex: undefined,
-            channelId: "Raw 405nm",
-          })]: {
-            barcode: "1234",
-            channelId: "Raw 405nm",
-            file: "/path/to/file1",
-            [AnnotationName.NOTES]: undefined,
-            positionIndex: undefined,
-            [AnnotationName.WELL]: [],
-          },
-        }),
-      });
-      expect(rows).to.be.lengthOf(1);
-      expect(rows[0].subRows).to.be.lengthOf(1);
-    });
-    it("handles files with scenes and channels", () => {
-      const rows = getUploadAsTableRows({
-        ...mockState,
-        selection: {
-          ...mockSelection,
-        },
-        upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "/path/to/file1" })]: {
-            barcode: "1234",
-            [AnnotationName.CHANNEL_TYPE]: ["Raw 405nm"],
-            file: "/path/to/file1",
-            [AnnotationName.NOTES]: [],
-            [AnnotationName.WELL]: [],
-          },
-          [getUploadRowKey({ file: "/path/to/file1", positionIndex: 1 })]: {
-            barcode: "1234",
-            file: "/path/to/file1",
-            [AnnotationName.NOTES]: [],
-            positionIndex: 1,
-            [AnnotationName.WELL]: [],
-          },
-          [getUploadRowKey({
-            file: "/path/to/file1",
-            positionIndex: 1,
-            channelId: "Raw 405nm",
-          })]: {
-            barcode: "1234",
-            channelId: "Raw 405nm",
-            file: "/path/to/file1",
-            [AnnotationName.NOTES]: [],
-            positionIndex: 1,
-            [AnnotationName.WELL]: [1],
-          },
-          [getUploadRowKey({
-            file: "/path/to/file1",
-            positionIndex: undefined,
-            channelId: "Raw 405nm",
-          })]: {
-            barcode: "1234",
-            channelId: "Raw 405nm",
-            file: "/path/to/file1",
-            [AnnotationName.NOTES]: [],
-            [AnnotationName.WELL]: [],
-          },
-        }),
-      });
-      expect(rows).to.be.lengthOf(1);
-      expect(rows[0].subRows).to.be.lengthOf(2);
     });
     it("does not throw error for annotations that don't exist on the template", () => {
       const file = "/path/to/file1";
       const getRows = () =>
-        getUploadAsTableRows({
-          ...nonEmptyStateForInitiatingUpload,
-          template: {
-            ...mockState.template,
-            appliedTemplate: {
-              ...mockAuditInfo,
-              annotations: [mockFavoriteColorTemplateAnnotation],
-              name: "foo",
-              templateId: 1,
-              version: 1,
+          getUploadAsTableRows({
+            ...nonEmptyStateForInitiatingUpload,
+            template: {
+              ...mockState.template,
+              appliedTemplate: {
+                ...mockAuditInfo,
+                annotations: [mockFavoriteColorTemplateAnnotation],
+                name: "foo",
+                templateId: 1,
+                version: 1,
+              },
             },
-          },
-          upload: getMockStateWithHistory({
-            [getUploadRowKey({ file })]: {
-              barcode: "1234",
-              favoriteColor: "Red",
-              file,
-              [AnnotationName.NOTES]: [],
-              somethingUnexpected: "Hello World",
-              [AnnotationName.WELL]: [],
-            },
-          }),
-        });
+            upload: getMockStateWithHistory({
+              [file]: {
+                barcode: "1234",
+                favoriteColor: "Red",
+                file,
+                [AnnotationName.NOTES]: [],
+                somethingUnexpected: "Hello World",
+                [AnnotationName.WELL]: [],
+              },
+            }),
+          });
       expect(getRows).to.not.throw();
     });
   });
@@ -1045,7 +736,7 @@ describe("Upload selectors", () => {
       const result = getFileToAnnotationHasValueMap({
         ...mockState,
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file })]: {
+          [file]: {
             age: undefined,
             barcode: "abcd",
             file,
@@ -1062,54 +753,14 @@ describe("Upload selectors", () => {
         [AnnotationName.WELL]: false,
       });
     });
-
-    it("sets annotation to true if one of the dimensions has that annotation set for a file", () => {
-      const result = getFileToAnnotationHasValueMap({
-        ...mockState,
-        upload: getMockStateWithHistory({
-          [getUploadRowKey({ file })]: {
-            age: undefined,
-            barcode: "abcd",
-            file,
-            [AnnotationName.NOTES]: [],
-            [AnnotationName.WELL]: [],
-          },
-          [getUploadRowKey({ file, positionIndex: 1 })]: {
-            age: undefined,
-            barcode: "abcd",
-            file,
-            [AnnotationName.NOTES]: [],
-            [AnnotationName.WELL]: [1],
-          },
-          [getUploadRowKey({
-            file,
-            positionIndex: 1,
-            channelId: "Raw 405 nm",
-          })]: {
-            age: 19,
-            barcode: "abcd",
-            file,
-            [AnnotationName.NOTES]: [],
-            [AnnotationName.WELL]: [],
-          },
-        }),
-      });
-      expect(result[file]).to.deep.equal({
-        age: true,
-        barcode: true,
-        file: true,
-        [AnnotationName.NOTES]: false,
-        [AnnotationName.WELL]: true,
-      });
-    });
   });
 
   describe("getUploadKeyToAnnotationErrorMap", () => {
-    const uploadRowKey = getUploadRowKey({ file: "/path/to/file1" });
+    const file = "/path/to/file1";
     let goodUploadRow: FileModel;
     const getValidations = (
-      annotationToTest: TemplateAnnotation,
-      value: string | string[] | number[]
+        annotationToTest: TemplateAnnotation,
+        value: any
     ) => {
       return getUploadKeyToAnnotationErrorMap({
         ...nonEmptyStateForInitiatingUpload,
@@ -1118,7 +769,7 @@ describe("Upload selectors", () => {
           appliedTemplate: mockTemplateWithManyValues,
         },
         upload: getMockStateWithHistory({
-          [uploadRowKey]: {
+          [file]: {
             ...goodUploadRow,
             [annotationToTest.name]: value,
           },
@@ -1148,7 +799,7 @@ describe("Upload selectors", () => {
           appliedTemplate: mockTemplateWithManyValues,
         },
         upload: getMockStateWithHistory({
-          [uploadRowKey]: goodUploadRow,
+          [file]: goodUploadRow,
         }),
       });
       expect(result).to.deep.equal({});
@@ -1156,7 +807,7 @@ describe("Upload selectors", () => {
     it("sets error if an annotation value is not an array", () => {
       const result = getValidations(mockTextAnnotation, "BAD, BAD, BAD");
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockTextAnnotation.name]: "Invalid format, expected list",
         },
       });
@@ -1164,34 +815,34 @@ describe("Upload selectors", () => {
     it("sets error if a lookup annotation contains a value that is not an annotation option", () => {
       const result = getValidations(mockLookupAnnotation, ["BAD"]);
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockLookupAnnotation.name]:
-            "BAD did not match any of the expected values: spCas9, Not Recorded",
+              "BAD did not match any of the expected values: spCas9, Not Recorded",
         },
       });
     });
     it("sets error if a dropdown annotation contains a value that is not a dropdown option", () => {
       const result = getValidations(mockDropdownAnnotation, ["BAD"]);
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockDropdownAnnotation.name]:
-            "BAD did not match any of the expected values: A, B, C, D",
+              "BAD did not match any of the expected values: A, B, C, D",
         },
       });
     });
     it("sets error if a boolean annotation contains a value that is not a boolean", () => {
       const result = getValidations(mockBooleanAnnotation, ["BAD"]);
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockBooleanAnnotation.name]:
-            "BAD did not match expected type: YesNo",
+              "BAD did not match expected type: YesNo",
         },
       });
     });
     it("sets error if a text annotation contains a value that is not text", () => {
       const result = getValidations(mockTextAnnotation, [1]);
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockTextAnnotation.name]: "1 did not match expected type: Text",
         },
       });
@@ -1199,27 +850,27 @@ describe("Upload selectors", () => {
     it("sets error if a number annotation contains a value that is not number", () => {
       const result = getValidations(mockNumberAnnotation, ["BAD"]);
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockNumberAnnotation.name]:
-            "BAD did not match expected type: Number",
+              "BAD did not match expected type: Number",
         },
       });
     });
     it("sets error if a date annotation contains a value that is not date", () => {
       const result = getValidations(mockDateAnnotation, ["1-20"]);
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockDateAnnotation.name]:
-            "1-20 did not match expected type: Date or DateTime",
+              "1-20 did not match expected type: Date or DateTime",
         },
       });
     });
     it("sets error if a datetime annotation contains a value that is not datetime", () => {
       const result = getValidations(mockDateTimeAnnotation, ["BAD"]);
       expect(result).to.deep.equal({
-        [uploadRowKey]: {
+        [file]: {
           [mockDateTimeAnnotation.name]:
-            "BAD did not match expected type: Date or DateTime",
+              "BAD did not match expected type: Date or DateTime",
         },
       });
     });
@@ -1236,10 +887,10 @@ describe("Upload selectors", () => {
       const errors = getUploadValidationErrors({
         ...mockState,
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "foo" })]: {
+          foo: {
             barcode: "abc",
             file: "foo",
-            key: getUploadRowKey({ file: "foo" }),
+            key: "foo",
             [AnnotationName.NOTES]: ["Valid String"],
             [AnnotationName.WELL]: [1],
             [annotation]: [value],
@@ -1247,9 +898,9 @@ describe("Upload selectors", () => {
         }),
       });
       expect(
-        errors.includes(
-          `Annotations cannot have special characters like in "${value}" for ${annotation}`
-        )
+          errors.includes(
+              `Annotations cannot have special characters like in "${value}" for ${annotation}`
+          )
       );
     });
     it("adds error if a row does not have a well annotation and is meant to", () => {
@@ -1259,10 +910,10 @@ describe("Upload selectors", () => {
           ...nonEmptyStateForInitiatingUpload.selection,
         },
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "foo" })]: {
+          foo: {
             "Favorite Color": 1,
             file: "foo",
-            key: getUploadRowKey({ file: "foo" }),
+            key: "foo",
             [AnnotationName.NOTES]: [],
             [AnnotationName.PLATE_BARCODE]: ["1491201"],
             [AnnotationName.WELL]: [],
@@ -1270,29 +921,29 @@ describe("Upload selectors", () => {
         }),
       });
       expect(
-        errors.includes(
-          `"foo" is missing the following required annotations: ${AnnotationName.WELL}`
-        )
+          errors.includes(
+              `"foo" is missing the following required annotations: ${AnnotationName.WELL}`
+          )
       ).to.be.true;
     });
     it("adds error if row is missing an annotation value that is required", () => {
       const errors = getUploadValidationErrors({
         ...nonEmptyStateForInitiatingUpload,
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "foo" })]: {
+          foo: {
             "Favorite Color": undefined,
             barcode: "abc",
             file: "foo",
-            key: getUploadRowKey({ file: "foo" }),
+            key: "foo",
             [AnnotationName.NOTES]: [],
             [AnnotationName.WELL]: [1],
           },
         }),
       });
       expect(
-        errors.includes(
-          '"foo" is missing the following required annotations: Favorite Color'
-        )
+          errors.includes(
+              '"foo" is missing the following required annotations: Favorite Color'
+          )
       ).to.be.true;
     });
     it("adds error if imaging sessions available, but not selected", () => {
@@ -1312,11 +963,11 @@ describe("Upload selectors", () => {
           },
         },
         upload: getMockStateWithHistory({
-          [getUploadRowKey({ file: "foo" })]: {
+          foo: {
             "Favorite Color": ["blue"],
             barcode: "abc",
             file: "foo",
-            key: getUploadRowKey({ file: "foo" }),
+            key: "foo",
             [AnnotationName.NOTES]: [],
             [AnnotationName.IMAGING_SESSION]: [],
             [AnnotationName.PLATE_BARCODE]: [plateBarcode],
@@ -1325,31 +976,30 @@ describe("Upload selectors", () => {
         }),
       });
       expect(
-        errors.includes(
-          `"foo" is missing the following required annotations: ${AnnotationName.IMAGING_SESSION}`
-        )
+          errors.includes(
+              `"foo" is missing the following required annotations: ${AnnotationName.IMAGING_SESSION}`
+          )
       ).to.be.true;
     });
     it("adds error if an annotation value is not formatted correctly", () => {
       const file = "foo";
-      const key = getUploadRowKey({ file });
       const errors = getUploadValidationErrors({
         ...nonEmptyStateForInitiatingUpload,
         upload: getMockStateWithHistory({
-          [key]: {
+          [file]: {
             "Favorite Color": "red",
             barcode: "1234",
             file,
-            key,
+            key: file,
             [AnnotationName.NOTES]: [],
             [AnnotationName.WELL]: [1],
           },
         }),
       });
       expect(
-        errors.includes(
-          "Unexpected format for annotation type. Hover red x icons for more information."
-        )
+          errors.includes(
+              "Unexpected format for annotation type. Hover red x icons for more information."
+          )
       ).to.be.true;
     });
   });

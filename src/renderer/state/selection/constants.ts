@@ -8,15 +8,7 @@ export const ADD_ROW_TO_DRAG_EVENT = makeConstant(
 );
 export const APPLY_MASS_EDIT = makeConstant(BRANCH_NAME, "apply-mass-edit");
 export const CANCEL_MASS_EDIT = makeConstant(BRANCH_NAME, "cancel-mass-edit");
-export const CLOSE_SUB_FILE_SELECTION_MODAL = makeConstant(
-  BRANCH_NAME,
-  "close-sub-file-selection-modal"
-);
 export const LOAD_FILES = makeConstant(BRANCH_NAME, "load-files");
-export const OPEN_SUB_FILE_SELECTION_MODAL = makeConstant(
-  BRANCH_NAME,
-  "open-sub-file-selection-modal"
-);
 export const OPEN_TEMPLATE_EDITOR = makeConstant(
   BRANCH_NAME,
   "open-template-editor"

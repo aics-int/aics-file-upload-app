@@ -6,7 +6,7 @@ import { ColumnInstance } from "react-table";
 
 import { DATE_FORMAT, DATETIME_FORMAT } from "../../../../constants";
 import { ColumnType } from "../../../../services/labkey-client/types";
-import { UploadTableRow } from "../../../../state/upload/types";
+import { FileModel } from "../../../../state/types";
 
 const styles = require("./styles.pcss");
 
@@ -14,7 +14,7 @@ const CLEAR_BUTTON = "clear-button";
 
 interface Props {
   initialValue: Date[];
-  column: ColumnInstance<UploadTableRow>;
+  column: ColumnInstance<FileModel>;
   commitChanges: (value: Date[]) => void;
 }
 
@@ -54,8 +54,8 @@ export default function DateEditor({
         className={styles.datePicker}
         showTime={column.type === ColumnType.DATETIME}
         placeholder="Add a Date"
-        value={value ? moment(value) : undefined}
-        onSelect={(selectedValue) => setValue(selectedValue?.toDate() ?? undefined)}
+        value={value ? moment(value).utc() : undefined}
+        onChange={(selectedValue) => setValue(selectedValue?.toDate() ?? undefined)}
         renderExtraFooter={() => (
           <div className={styles.footer}>
             <Button

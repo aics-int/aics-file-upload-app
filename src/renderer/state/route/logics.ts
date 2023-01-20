@@ -28,8 +28,8 @@ import { requestFailed } from "../actions";
 import { setErrorAlert } from "../feedback/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
+  getAllAnnotations,
   getAnnotationLookups,
-  getAnnotations,
   getBooleanAnnotationTypeId,
   getCurrentUploadFilePath,
   getImagingSessions,
@@ -57,7 +57,6 @@ import {
   clearUploadHistory,
   jumpToPastUpload,
 } from "../upload/actions";
-import { getUploadRowKey } from "../upload/constants";
 import { getCanSaveUploadDraft } from "../upload/selectors";
 import { batchActions } from "../util";
 
@@ -89,17 +88,17 @@ export const handleStartingNewUploadJob = (): AnyAction[] => [
 const resetUploadLogic = createLogic({
   type: [CLOSE_UPLOAD, START_NEW_UPLOAD] as string[],
   validate: async (
-    deps: ReduxLogicTransformDependencies,
-    next: ReduxLogicNextCb,
-    reject: ReduxLogicRejectCb
+      deps: ReduxLogicTransformDependencies,
+      next: ReduxLogicNextCb,
+      reject: ReduxLogicRejectCb
   ) => {
     const { action, getState } = deps;
 
     try {
       const { cancelled } = await ensureDraftGetsSaved(
-        deps,
-        getCanSaveUploadDraft(getState()),
-        getCurrentUploadFilePath(getState())
+          deps,
+          getCanSaveUploadDraft(getState()),
+          getCurrentUploadFilePath(getState())
       );
 
       if (cancelled) {
@@ -132,30 +131,27 @@ const resetUploadLogic = createLogic({
   were created from.
 */
 function convertUploadRequestsToUploadStateBranch(
-  files: UploadRequest[],
-  state: State,
-  template?: Template,
+    files: UploadRequest[],
+    state: State,
+    template?: Template,
 ): UploadStateBranch {
-  const annotations = getAnnotations(state);
+  const annotations = getAllAnnotations(state);
   const lookups = getLookups(state);
   const annotationLookups = getAnnotationLookups(state);
   const annotationIdToAnnotationMap = groupBy(annotations, "annotationId");
   const annotationIdToLookupMap = annotationLookups.reduce(
-    (mapSoFar, curr) => ({
-      [curr.annotationId]: lookups.find((l) => l.lookupId === curr.lookupId),
-      ...mapSoFar,
-    }),
-    {} as { [annotationId: number]: Lookup | undefined }
+      (mapSoFar, curr) => ({
+        [curr.annotationId]: lookups.find((l) => l.lookupId === curr.lookupId),
+        ...mapSoFar,
+      }),
+      {} as { [annotationId: number]: Lookup | undefined }
   );
 
   const uploadMetadata = files.reduce((uploadSoFar, file) => {
     if (!file.customMetadata?.annotations.length || !template?.annotations.length) {
-      const key = getUploadRowKey({
-        file: file.file.originalPath,
-      });
       return {
         ...uploadSoFar,
-        [key]: {
+        [file.file.originalPath]: {
           file: file.file.originalPath,
           fileId: file.fileId,
         },
@@ -164,98 +160,90 @@ function convertUploadRequestsToUploadStateBranch(
 
     const setOfAnnotationIdsFromTemplate = new Set(template.annotations.map(annotation => annotation.annotationId));
     return file.customMetadata.annotations.reduce(
-      (
-        keyToMetadataSoFar: UploadStateBranch,
-        annotation: MMSFileAnnotation
-      ) => {
-        const annotationDefinition =
-        annotationIdToAnnotationMap[annotation.annotationId]?.[0];
-        // Only include annotations that are on the template in the metadata for the branch,
-        // otherwise this might try to overwrite metadata from other applications unintentionally
-        // But, do include Well and Notes, because they are included in the grid by default.
-        if (!setOfAnnotationIdsFromTemplate.has(annotation.annotationId) && annotationDefinition?.name !== AnnotationName.WELL && annotationDefinition?.name !== AnnotationName.NOTES) {
-          return keyToMetadataSoFar;
-        }
+        (
+            keyToMetadataSoFar: UploadStateBranch,
+            annotation: MMSFileAnnotation
+        ) => {
+          const annotationDefinition =
+              annotationIdToAnnotationMap[annotation.annotationId]?.[0];
+          // Only include annotations that are on the template in the metadata for the branch,
+          // otherwise this might try to overwrite metadata from other applications unintentionally
+          // But, do include Well and Notes, because they are included in the grid by default.
+          if (!setOfAnnotationIdsFromTemplate.has(annotation.annotationId) && annotationDefinition?.name !== AnnotationName.WELL && annotationDefinition?.name !== AnnotationName.NOTES) {
+            return keyToMetadataSoFar;
+          }
 
-        const key = getUploadRowKey({
-          file: file.file.originalPath,
-          ...annotation,
-        });
-        if (!annotationDefinition) {
-          throw new Error(
-            `Unable to find matching Annotation for Annotation ID: ${annotation.annotationId}`
-          );
-        }
+          if (!annotationDefinition) {
+            throw new Error(
+                `Unable to find matching Annotation for Annotation ID: ${annotation.annotationId}`
+            );
+          }
 
-        let values: any[] = annotation.values;
-        switch (annotationDefinition["annotationTypeId/Name"]) {
-          case ColumnType.BOOLEAN:
-            values = values.map((v) => `${v}`.toLowerCase() === "true");
-            break;
-          case ColumnType.DATE:
-          case ColumnType.DATETIME:
-            values = values.map((v) => new Date(`${v}`));
-            break;
-          case ColumnType.LOOKUP:
-            if (
-              annotationIdToLookupMap[annotation.annotationId]?.[
-                "scalarTypeId/Name"
-              ] === ScalarType.INT
-            ) {
-              values = values.map((v) => parseInt(v, 10));
-            }
-            break;
-          case ColumnType.NUMBER:
-            values = values.map((v) => {
-              try {
-                return parseFloat(v);
-              } catch (e) {
-                return v;
+          let values: any[] = annotation.values;
+          switch (annotationDefinition["annotationTypeId/Name"]) {
+            case ColumnType.BOOLEAN:
+              values = values.map((v) => `${v}`.toLowerCase() === "true");
+              break;
+            case ColumnType.DATE:
+            case ColumnType.DATETIME:
+              values = values.map((v) => new Date(`${v}`));
+              break;
+            case ColumnType.LOOKUP:
+              if (
+                  annotationIdToLookupMap[annotation.annotationId]?.[
+                      "scalarTypeId/Name"
+                      ] === ScalarType.INT
+              ) {
+                values = values.map((v) => parseInt(v, 10));
               }
-            });
-            break;
-          case ColumnType.DURATION:
-            values = values.map((v: string): Duration => {
-              let remainingMs = parseInt(v);
-
-              function calculateUnit(unitAsMs: number, useFloor = true) {
-                const numUnit = useFloor
-                  ? Math.floor(remainingMs / unitAsMs)
-                  : remainingMs / unitAsMs;
-                if (numUnit > 0) {
-                  remainingMs -= numUnit * unitAsMs;
+              break;
+            case ColumnType.NUMBER:
+              values = values.map((v) => {
+                try {
+                  return parseFloat(v);
+                } catch (e) {
+                  return v;
                 }
-                return numUnit;
-              }
+              });
+              break;
+            case ColumnType.DURATION:
+              values = values.map((v: string): Duration => {
+                let remainingMs = parseInt(v);
 
-              const days = calculateUnit(DAY_AS_MS);
-              const hours = calculateUnit(HOUR_AS_MS);
-              const minutes = calculateUnit(MINUTE_AS_MS);
-              const seconds = calculateUnit(1000, false);
+                function calculateUnit(unitAsMs: number, useFloor = true) {
+                  const numUnit = useFloor
+                      ? Math.floor(remainingMs / unitAsMs)
+                      : remainingMs / unitAsMs;
+                  if (numUnit > 0) {
+                    remainingMs -= numUnit * unitAsMs;
+                  }
+                  return numUnit;
+                }
 
-              return { days, hours, minutes, seconds };
-            });
-        }
+                const days = calculateUnit(DAY_AS_MS);
+                const hours = calculateUnit(HOUR_AS_MS);
+                const minutes = calculateUnit(MINUTE_AS_MS);
+                const seconds = calculateUnit(1000, false);
 
-        return {
-          ...keyToMetadataSoFar,
-          [key]: {
-            ...(keyToMetadataSoFar[key] || {}),
-            file: file.file.originalPath,
-            fileId: file.fileId,
-            channelId: annotation.channelId,
-            fovId: annotation.fovId,
-            positionIndex: annotation.positionIndex,
-            scene: annotation.scene,
-            subImageName: annotation.subImageName,
-            [annotationDefinition.name]: uniq([
-              ...(keyToMetadataSoFar[key]?.[annotationDefinition.name] || []),
-              ...values,
-            ]),
-          },
-        };
-      },
-      uploadSoFar
+                return { days, hours, minutes, seconds };
+              });
+          }
+
+          const filePath = file.file.originalPath;
+          return {
+            ...keyToMetadataSoFar,
+            [filePath]: {
+              ...(keyToMetadataSoFar[filePath] || {}),
+              file: filePath,
+              fileId: file.fileId,
+              [annotationDefinition.name]: uniq([
+                ...(keyToMetadataSoFar[filePath]?.[annotationDefinition.name] || []),
+                ...values,
+              ]),
+            },
+          };
+        },
+        uploadSoFar
     );
   }, {} as UploadStateBranch);
 
@@ -278,14 +266,14 @@ const RELEVANT_FILE_COLUMNS = [
 
 const viewUploadsLogic = createLogic({
   process: async (
-    {
-      ctx,
-      getState,
-      labkeyClient,
-      mmsClient,
-    }: ReduxLogicProcessDependenciesWithAction<ViewUploadsAction>,
-    dispatch: ReduxLogicNextCb,
-    done: ReduxLogicDoneCb
+      {
+        ctx,
+        getState,
+        labkeyClient,
+        mmsClient,
+      }: ReduxLogicProcessDependenciesWithAction<ViewUploadsAction>,
+      dispatch: ReduxLogicNextCb,
+      done: ReduxLogicDoneCb
   ) => {
     const state = getState();
     try {
@@ -299,10 +287,10 @@ const viewUploadsLogic = createLogic({
       };
       const metadataForFiles = await Promise.all(fileIds.map((fileId) => Promise.all([
         labkeyClient.selectFirst<LabKeyFileMetadata>(
-          LK_SCHEMA.FMS,
-          "File",
-          RELEVANT_FILE_COLUMNS,
-          [LabkeyClient.createFilter("FileId", fileId)]
+            LK_SCHEMA.FMS,
+            "File",
+            RELEVANT_FILE_COLUMNS,
+            [LabkeyClient.createFilter("FileId", fileId)]
         ),
         mmsClient.getFileMetadata(fileId),
       ])));
@@ -319,9 +307,9 @@ const viewUploadsLogic = createLogic({
       const templateId = files.find((file) => !!file.customMetadata?.templateId)?.customMetadata?.templateId;
       const basicTemplateInfo = templateId ? await mmsClient.getTemplate(templateId) : undefined;
       const uploadMetadata = convertUploadRequestsToUploadStateBranch(
-        files,
-        state,
-        basicTemplateInfo,
+          files,
+          state,
+          basicTemplateInfo,
       );
 
       // Any barcoded plate can be snapshot in time as that plate at a certain
@@ -334,40 +322,40 @@ const viewUploadsLogic = createLogic({
         const representativeWellId = upload[AnnotationName.WELL]?.[0];
         if (representativeWellId) {
           const plate = await labkeyClient.findPlateByWellId(
-            representativeWellId
+              representativeWellId
           );
 
           // Derive and apply the plate barcode and imaging session found via the well
           const imagingSession = imagingSessions.find(
-            (is) => is.imagingSessionId === plate.ImagingSessionId
+              (is) => is.imagingSessionId === plate.ImagingSessionId
           );
           uploadMetadata[key][AnnotationName.PLATE_BARCODE] = [plate.BarCode];
           uploadMetadata[key][AnnotationName.IMAGING_SESSION] = imagingSession
-            ? [imagingSession.name]
-            : [];
+              ? [imagingSession.name]
+              : [];
 
           // Avoid re-querying for the imaging sessions if this
           // plate barcode has been selected before
           if (!Object.keys(plateBarcodeToPlates).includes(plate.BarCode)) {
             const imagingSessionsForPlateBarcode =
-              await labkeyClient.findImagingSessionsByPlateBarcode(
-                plate.BarCode
-              );
+                await labkeyClient.findImagingSessionsByPlateBarcode(
+                    plate.BarCode
+                );
             const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
-              await Promise.all(
-                imagingSessionsForPlateBarcode.map(async (is) => {
-                  const { wells } = await mmsClient.getPlate(
-                    plate.BarCode,
-                    is["ImagingSessionId"]
-                  );
+                await Promise.all(
+                    imagingSessionsForPlateBarcode.map(async (is) => {
+                      const { wells } = await mmsClient.getPlate(
+                          plate.BarCode,
+                          is["ImagingSessionId"]
+                      );
 
-                  return {
-                    wells,
-                    imagingSessionId: is["ImagingSessionId"],
-                    name: is["ImagingSessionId/Name"],
-                  };
-                })
-              );
+                      return {
+                        wells,
+                        imagingSessionId: is["ImagingSessionId"],
+                        name: is["ImagingSessionId/Name"],
+                      };
+                    })
+                );
 
             // If the barcode has no imaging sessions, find info of plate without
             if (!imagingSessionsWithPlateInfo.length) {
@@ -388,19 +376,19 @@ const viewUploadsLogic = createLogic({
         const booleanAnnotationTypeId = getBooleanAnnotationTypeId(getState());
         if (!booleanAnnotationTypeId) {
           throw new Error(
-            "Boolean annotation type id not found. Contact Software."
+              "Boolean annotation type id not found. Contact Software."
           );
         }
         const { template, uploads } = await getApplyTemplateInfo(
-          templateId,
-          mmsClient,
-          dispatch,
-          booleanAnnotationTypeId,
-          uploadMetadata
+            templateId,
+            mmsClient,
+            dispatch,
+            booleanAnnotationTypeId,
+            uploadMetadata
         );
         actions.push(
-          setAppliedTemplate(template, uploads),
-          viewUploadsSucceeded(uploads)
+            setAppliedTemplate(template, uploads),
+            viewUploadsSucceeded(uploads)
         );
       } else {
         actions.push(viewUploadsSucceeded(uploadMetadata));
@@ -409,26 +397,26 @@ const viewUploadsLogic = createLogic({
       dispatch(batchActions(actions));
     } catch (e) {
       dispatch(
-        requestFailed(
-          "Could not open upload editor: " + e.message,
-          AsyncRequest.GET_FILE_METADATA_FOR_JOB
-        )
+          requestFailed(
+              "Could not open upload editor: " + e.message,
+              AsyncRequest.GET_FILE_METADATA_FOR_JOB
+          )
       );
     }
     done();
   },
   type: VIEW_UPLOADS,
   validate: async (
-    deps: ReduxLogicTransformDependenciesWithAction<ViewUploadsAction>,
-    next: ReduxLogicNextCb,
-    reject: ReduxLogicRejectCb
+      deps: ReduxLogicTransformDependenciesWithAction<ViewUploadsAction>,
+      next: ReduxLogicNextCb,
+      reject: ReduxLogicRejectCb
   ) => {
     const { action, ctx, getState } = deps;
     try {
       const { cancelled } = await ensureDraftGetsSaved(
-        deps,
-        getCanSaveUploadDraft(getState()),
-        getCurrentUploadFilePath(getState())
+          deps,
+          getCanSaveUploadDraft(getState()),
+          getCurrentUploadFilePath(getState())
       );
       if (cancelled) {
         reject({ type: "ignore" });
@@ -445,17 +433,17 @@ const viewUploadsLogic = createLogic({
     try {
       action.payload.forEach((upload) => {
         if (
-          upload.status === JSSJobStatus.SUCCEEDED &&
-          upload.serviceFields?.result &&
-          Array.isArray(upload?.serviceFields?.result)
+            upload.status === JSSJobStatus.SUCCEEDED &&
+            upload.serviceFields?.result &&
+            Array.isArray(upload?.serviceFields?.result)
         ) {
           const originalFileIds = upload.serviceFields.result.map(
-            ({ fileId }: FSSResponseFile) => fileId
+              ({ fileId }: FSSResponseFile) => fileId
           );
           ctx.fileIds = [...ctx.fileIds, ...originalFileIds];
         } else if (
-          upload.serviceFields?.files &&
-          !isEmpty(upload.serviceFields?.files)
+            upload.serviceFields?.files &&
+            !isEmpty(upload.serviceFields?.files)
         ) {
           ctx.requests = [...ctx.requests, ...upload.serviceFields?.files];
         } else {

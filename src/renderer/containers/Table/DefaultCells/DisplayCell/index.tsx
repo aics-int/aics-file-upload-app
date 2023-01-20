@@ -21,16 +21,15 @@ import {
   getCellAtDragStart,
   getRowsSelectedForDragEvent,
 } from "../../../../state/selection/selectors";
+import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
-import { getUploadRowKey } from "../../../../state/upload/constants";
 import { getFileToAnnotationHasValueMap } from "../../../../state/upload/selectors";
-import { UploadTableRow } from "../../../../state/upload/types";
 import { Duration } from "../../../../types";
 import { ColumnValue } from "../../types";
 
 const styles = require("./styles.pcss");
 
-interface Props extends CellProps<UploadTableRow> {
+interface Props extends CellProps<FileModel> {
   disabled?: boolean;
   onStartEditing: () => void;
   onTabExit?: () => void;
@@ -46,11 +45,11 @@ export const useDisplayValue = (value?: ColumnValue, type?: ColumnType) =>
         return value[0] ? "Yes" : "No";
       case ColumnType.DATE:
         return (value as Date[])
-          .map((d) => moment(d).format("M/D/YYYY"))
+          .map((d) => moment(d).utc().format("M/D/YYYY"))
           .join(", ");
       case ColumnType.DATETIME:
         return (value as Date[])
-          .map((d) => moment(d).format("M/D/YYYY H:m:s"))
+          .map((d) => moment(d).utc().format("M/D/YYYY H:m:s"))
           .join(", ");
       case ColumnType.DURATION: {
         const { days, hours, minutes, seconds } = value[0] as Duration;
@@ -97,13 +96,11 @@ export default function DisplayCell(props: Props) {
   }
 
   // We want to display a validation error in this cell if there is no value
-  // for a row (OR the rows subrows)
+  // for a row
   const shouldShowError =
     props.column.hasSubmitBeenAttempted &&
     props.column.isRequired &&
-    !fileToAnnotationHasValueMap[
-      getUploadRowKey({ file: props.row.original.file })
-    ]?.[props.column.id];
+    !fileToAnnotationHasValueMap[props.row.original.file]?.[props.column.id];
 
   // Track if any rows have been skipped by the drag
   // possible if the user exited our elements with onDragEnter
