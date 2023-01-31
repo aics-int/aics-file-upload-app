@@ -49,3 +49,6 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # Windows certs
+          CSC_LINK: ${{secrets.CSC_LINK}}
+          CSC_KEY_PASSWORD: ${{secrets.CSC_KEY_PASSWORD}}
