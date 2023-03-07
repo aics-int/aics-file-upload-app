@@ -48,7 +48,10 @@ export default class FileManagementSystem {
   private readonly jss: JobStatusService;
   private readonly mms: MetadataManagementService;
 
-  private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
+  private static readonly CHUNKS_CEILING_IN_FLIGHT_REQUEST_CEILING_DEFAULT = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
+  private static readonly LARGEST_CUNK_SIZE = 432000000 //Max chunk size tested, from a bug report.  Generated for a 4+TB file SWE-784
+  private static readonly LARGEST_SUCCESSFUL_CHUNKS_IN_FLIGHT = 5; //Largest value used (in combination with LARGEST_CUNK_SIZE) in a succesfull test SWE-784
+  private static readonly BYTES_IN_FLIGHT_CEILING = FileManagementSystem.LARGEST_CUNK_SIZE * FileManagementSystem.LARGEST_SUCCESSFUL_CHUNKS_IN_FLIGHT;
 
   /**
    * Returns JSS friendly UUID to group files
@@ -481,6 +484,16 @@ export default class FileManagementSystem {
     }
   }
 
+  private static chunksInFlight(chunkSize: number){
+    for( let chunksInFlight = FileManagementSystem.CHUNKS_CEILING_IN_FLIGHT_REQUEST_CEILING_DEFAULT; chunksInFlight > 0; chunksInFlight-- ){
+      const bytesInFlight = chunksInFlight * chunkSize;
+      if(bytesInFlight <= FileManagementSystem.BYTES_IN_FLIGHT_CEILING){
+        return chunksInFlight;
+      }
+    }
+    return 1;//Should never reach here.
+  }
+
   /**
    * Uploads the given file to FSS in chunks asynchronously using a NodeJS.
    */
@@ -511,7 +524,11 @@ export default class FileManagementSystem {
     
     // For rate throttling how many chunks are sent in parallel
     let chunksInFlight = 0;
-    const chunksInFlightLimit = FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING;
+
+    const chunksInFlightLimit = FileManagementSystem.chunksInFlight(chunkSize);
+    //TODO remove after we observe bugfix effacacy in the field -chrishu 3/7/23
+    console.log("chunksInFlightLimit: " + chunksInFlightLimit)
+    console.log("chunkSize: " + chunkSize)
 
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
