@@ -6,6 +6,7 @@ export const getLimsHost = (state: State) => state.setting.limsHost;
 export const getLimsPort = (state: State) => state.setting.limsPort;
 export const getLimsProtocol = (state: State) => state.setting.limsProtocol;
 export const getShowUploadHint = (state: State) => state.setting.showUploadHint;
+export const getShowAddAnnotationHint = (state: State) => state.setting.showAddAnnotationHint;
 export const getShowTemplateHint = (state: State) =>
   state.setting.showTemplateHint;
 export const getLoggedInUser = (state: State) => state.setting.username;
@@ -14,10 +15,11 @@ export const getEnabledNotifications = (state: State) =>
   state.setting.enabledNotifications;
 
 export const getEditableSettings = createSelector(
-  [getEnabledNotifications, getShowUploadHint, getShowTemplateHint],
-  (enabledNotifications, showUploadHint, showTemplateHint) => {
+  [getEnabledNotifications, getShowAddAnnotationHint, getShowUploadHint, getShowTemplateHint],
+  (enabledNotifications, showAddAnnotationHint, showUploadHint, showTemplateHint) => {
     return {
       enabledNotifications,
+      showAddAnnotationHint,
       showUploadHint,
       showTemplateHint,
     };

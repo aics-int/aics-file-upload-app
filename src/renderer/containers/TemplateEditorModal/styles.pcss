@@ -14,8 +14,9 @@
 
 .add-annotation-button {
     border-radius: 20px;
-    margin-left: 0.5em;
-    padding-top: 2px;
+    flex-basis: 30px;
+    flex-shrink: 0; /* Minimum width is flex-basis */
+    margin-bottom: 0.5em;
 }
 
 .annotation-label {
@@ -48,6 +49,12 @@
 
 .annotation-list-header {
     display: flex;
+    align-items: flex-end;
+    gap: 0.5em;
+}
+
+.annotation-list-header > .alert {
+    margin-bottom: 0.5em;
 }
 
 .annotation-list-header > h4 {

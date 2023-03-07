@@ -287,6 +287,7 @@ export interface EnabledNotifications {
 
 export interface SettingStateBranch extends LimsUrl {
   metadataColumns: string[];
+  showAddAnnotationHint: boolean;
   // if true show hints on how to use the grid to enter data
   showUploadHint: boolean;
   showTemplateHint: boolean;

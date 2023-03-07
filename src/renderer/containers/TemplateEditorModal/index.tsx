@@ -28,7 +28,7 @@ import {
   getTemplateEditorVisible,
 } from "../../state/feedback/selectors";
 import { getAnnotationsWithAnnotationOptions } from "../../state/metadata/selectors";
-import { getShowTemplateHint } from "../../state/setting/selectors";
+import { getShowTemplateHint, getShowAddAnnotationHint } from "../../state/setting/selectors";
 import {
   addExistingAnnotation,
   addExistingTemplate,
@@ -54,6 +54,9 @@ const styles = require("./styles.pcss");
 
 const { Search } = Input;
 
+const ADD_ANNOTATION_DESCRIPTION = `Certain annotations trigger automated processes for new uploads.
+Optical Control ID and Is Optical Control are used to submit images for automatic alignment.
+Well is used to automatically add metadata from Labkey.`
 const COLUMN_TEMPLATE_DESCRIPTION = `A ${SCHEMA_SYNONYM} defines a group of annotations to associate with files.
 When applied to a batch of files to upload, the annotations associated with that template
 will be added as additional columns to fill out for each file. They can be shared and discovered by anyone.`;
@@ -108,6 +111,7 @@ function TemplateEditorModal(props: Props) {
   const dispatch = useDispatch();
   const template = useSelector(getTemplateDraft);
   const originalTemplate = useSelector(getOriginalTemplate);
+  const showAnnotationHint = useSelector(getShowAddAnnotationHint);
   const showTemplateHint = useSelector(getShowTemplateHint);
   const allAnnotations = useSelector(getAnnotationsWithAnnotationOptions);
   const requestsInProgress = useSelector(
@@ -426,6 +430,15 @@ function TemplateEditorModal(props: Props) {
               <Popover content={annotationOptionList} placement="right">
                 <Button icon={<PlusOutlined />} className={styles.addAnnotationButton} />
               </Popover>
+              {showAnnotationHint && (
+                <Alert
+                  className={styles.alert}
+                  closable={true}
+                  showIcon={true}
+                  type="info"
+                  message={ADD_ANNOTATION_DESCRIPTION}
+                />
+              )}
             </div>
             <div className={styles.annotationContainer}>
               <Table

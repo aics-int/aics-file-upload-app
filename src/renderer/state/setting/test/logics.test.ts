@@ -27,6 +27,7 @@ import {
 import { updateSettingsLogic } from "../logics";
 import {
   getLimsHost,
+  getShowAddAnnotationHint,
   getShowTemplateHint,
   getShowUploadHint,
   getTemplateId,
@@ -82,6 +83,21 @@ describe("Setting logics", () => {
       store.dispatch(updateSettings({ templateId: 3 }));
 
       expect(getTemplateId(store.getState())).to.equal(3);
+    });
+
+    it("sets whether to show the template hint in settings", () => {
+      const { store } = createMockReduxStore({
+        ...mockState,
+        setting: {
+          ...mockState.setting,
+        },
+      });
+
+      expect(getShowTemplateHint(store.getState())).to.be.true;
+
+      store.dispatch(updateSettings({ showTemplateHint: false }));
+
+      expect(getShowTemplateHint(store.getState())).to.be.false;
     });
 
     it("sets whether to show the upload hint in settings", () => {
