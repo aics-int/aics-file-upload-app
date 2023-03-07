@@ -485,13 +485,9 @@ export default class FileManagementSystem {
   }
 
   public static chunksInFlightMaxForChunkSize(chunkSize: number){
-    for( let chunksInFlight = FileManagementSystem.CHUNKS_CEILING_IN_FLIGHT_REQUEST_CEILING_DEFAULT; chunksInFlight > 0; chunksInFlight-- ){
-      const bytesInFlight = chunksInFlight * chunkSize;
-      if(bytesInFlight <= FileManagementSystem.BYTES_IN_FLIGHT_CEILING){
-        return chunksInFlight;
-      }
-    }
-    return 1;//Should never reach here.
+    const chunksInFlightForChunkSize = Math.floor(FileManagementSystem.BYTES_IN_FLIGHT_CEILING/chunkSize);
+    //Size chunks inInFlight for the chunksSize, but maintain the default ceiling (for small chunk sizes).
+    return Math.min(FileManagementSystem.CHUNKS_CEILING_IN_FLIGHT_REQUEST_CEILING_DEFAULT, chunksInFlightForChunkSize);
   }
 
   /**
