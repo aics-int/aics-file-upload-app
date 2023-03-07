@@ -484,7 +484,7 @@ export default class FileManagementSystem {
     }
   }
 
-  private static chunksInFlight(chunkSize: number){
+  public static chunksInFlightMaxForChunkSize(chunkSize: number){
     for( let chunksInFlight = FileManagementSystem.CHUNKS_CEILING_IN_FLIGHT_REQUEST_CEILING_DEFAULT; chunksInFlight > 0; chunksInFlight-- ){
       const bytesInFlight = chunksInFlight * chunkSize;
       if(bytesInFlight <= FileManagementSystem.BYTES_IN_FLIGHT_CEILING){
@@ -525,7 +525,7 @@ export default class FileManagementSystem {
     // For rate throttling how many chunks are sent in parallel
     let chunksInFlight = 0;
 
-    const chunksInFlightLimit = FileManagementSystem.chunksInFlight(chunkSize);
+    const chunksInFlightLimit = FileManagementSystem.chunksInFlightMaxForChunkSize(chunkSize);
     //TODO remove after we observe bugfix effacacy in the field -chrishu 3/7/23
     console.log("chunksInFlightLimit: " + chunksInFlightLimit)
     console.log("chunkSize: " + chunkSize)

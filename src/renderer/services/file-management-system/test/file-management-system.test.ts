@@ -576,4 +576,14 @@ describe("FileManagementSystem", () => {
       await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
     });
   });
+
+  describe("Dynamically set chunksInFlight according to chunkSize", () => {
+    expect(FileManagementSystem.chunksInFlightMaxForChunkSize(50000000)).to.equal(20); //chunkSize 50MB or less will allow the default chunksInFlight.
+    expect(FileManagementSystem.chunksInFlightMaxForChunkSize(100000000)).to.equal(20); //chunkSize 100MB or less will allow the default chunksInFlight.
+    expect(FileManagementSystem.chunksInFlightMaxForChunkSize(150000000)).to.equal(14); //Above that, the chunks in flight will dynamically decrease to stay below a ceiling.
+    expect(FileManagementSystem.chunksInFlightMaxForChunkSize(300000000)).to.equal(7);
+    expect(FileManagementSystem.chunksInFlightMaxForChunkSize(500000000)).to.equal(4);  
+    expect(FileManagementSystem.chunksInFlightMaxForChunkSize(800000000)).to.equal(2);
+    expect(FileManagementSystem.chunksInFlightMaxForChunkSize(1200000000)).to.equal(1);
+  })
 });
