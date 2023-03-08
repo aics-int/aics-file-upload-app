@@ -48,7 +48,7 @@ export default class FileManagementSystem {
   private readonly jss: JobStatusService;
   private readonly mms: MetadataManagementService;
 
-  private static readonly CHUNKS_CEILING_IN_FLIGHT_REQUEST_CEILING_DEFAULT = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
+  private static readonly CHUNKS_IN_FLIGHT_REQUEST_CEILING_DEFAULT = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
   private static readonly LARGEST_CUNK_SIZE = 432000000 //Max chunk size tested, from a bug report.  Generated for a 4+TB file SWE-784
   private static readonly LARGEST_SUCCESSFUL_CHUNKS_IN_FLIGHT = 5; //Largest value used (in combination with LARGEST_CUNK_SIZE) in a succesfull test SWE-784
   private static readonly BYTES_IN_FLIGHT_CEILING = FileManagementSystem.LARGEST_CUNK_SIZE * FileManagementSystem.LARGEST_SUCCESSFUL_CHUNKS_IN_FLIGHT;
@@ -487,7 +487,7 @@ export default class FileManagementSystem {
   public static chunksInFlightMaxForChunkSize(chunkSize: number){
     const chunksInFlightForChunkSize = Math.floor(FileManagementSystem.BYTES_IN_FLIGHT_CEILING/chunkSize);
     //Size chunks inInFlight for the chunksSize, but maintain the default ceiling (for small chunk sizes).
-    return Math.min(FileManagementSystem.CHUNKS_CEILING_IN_FLIGHT_REQUEST_CEILING_DEFAULT, chunksInFlightForChunkSize);
+    return Math.min(FileManagementSystem.CHUNKS_IN_FLIGHT_REQUEST_CEILING_DEFAULT, chunksInFlightForChunkSize);
   }
 
   /**
