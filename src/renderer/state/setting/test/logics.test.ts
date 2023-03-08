@@ -93,11 +93,11 @@ describe("Setting logics", () => {
         },
       });
 
-      expect(getShowTemplateHint(store.getState())).to.be.true;
+      expect(getShowAddAnnotationHint(store.getState())).to.be.true;
 
-      store.dispatch(updateSettings({ showTemplateHint: false }));
+      store.dispatch(updateSettings({ showAddAnnotationHint: false }));
 
-      expect(getShowTemplateHint(store.getState())).to.be.false;
+      expect(getShowAddAnnotationHint(store.getState())).to.be.false;
     });
 
     it("sets whether to show the upload hint in settings", () => {
