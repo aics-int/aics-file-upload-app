@@ -28,7 +28,7 @@ import {
   getTemplateEditorVisible,
 } from "../../state/feedback/selectors";
 import { getAnnotationsWithAnnotationOptions } from "../../state/metadata/selectors";
-import { getShowTemplateHint, getShowAddAnnotationHint } from "../../state/setting/selectors";
+import { getShowTemplateHint } from "../../state/setting/selectors";
 import {
   addExistingAnnotation,
   addExistingTemplate,
@@ -111,7 +111,6 @@ function TemplateEditorModal(props: Props) {
   const dispatch = useDispatch();
   const template = useSelector(getTemplateDraft);
   const originalTemplate = useSelector(getOriginalTemplate);
-  const showAnnotationHint = useSelector(getShowAddAnnotationHint);
   const showTemplateHint = useSelector(getShowTemplateHint);
   const allAnnotations = useSelector(getAnnotationsWithAnnotationOptions);
   const requestsInProgress = useSelector(
@@ -430,7 +429,7 @@ function TemplateEditorModal(props: Props) {
               <Popover content={annotationOptionList} placement="right">
                 <Button icon={<PlusOutlined />} className={styles.addAnnotationButton} />
               </Popover>
-              {showAnnotationHint && (
+              {showTemplateHint && (
                 <Alert
                   className={styles.alert}
                   closable={true}

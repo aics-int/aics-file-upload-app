@@ -18,7 +18,6 @@ export const initialState: SettingStateBranch = {
   limsPort: LIMS_PORT,
   limsProtocol: LIMS_PROTOCOL,
   metadataColumns: [],
-  showAddAnnotationHint: true,
   showUploadHint: true,
   showTemplateHint: true,
   username: userInfo().username,
