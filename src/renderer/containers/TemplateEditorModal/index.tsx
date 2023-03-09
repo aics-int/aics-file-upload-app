@@ -54,9 +54,8 @@ const styles = require("./styles.pcss");
 
 const { Search } = Input;
 
-const ADD_ANNOTATION_DESCRIPTION = `Certain annotations trigger automated processes for new uploads.
-Optical Control ID and Is Optical Control are used to submit images for automatic alignment.
-Well is used to automatically add metadata from Labkey.`
+const ADD_ANNOTATION_DESCRIPTION = `The annotations 'Optical Control ID' (for biological images) and
+'Is Optical Control' (for optical control images) are used to trigger automatic alignment.`
 const COLUMN_TEMPLATE_DESCRIPTION = `A ${SCHEMA_SYNONYM} defines a group of annotations to associate with files.
 When applied to a batch of files to upload, the annotations associated with that template
 will be added as additional columns to fill out for each file. They can be shared and discovered by anyone.`;
