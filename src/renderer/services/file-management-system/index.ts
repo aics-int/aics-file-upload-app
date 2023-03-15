@@ -490,9 +490,13 @@ export default class FileManagementSystem {
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const { fssUploadId, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
-    
+    const chunkSize = 500000000;
+    const hardBytesCeil = 3000000000; // on my computer, the crash occurrs when external exceeds 4G chrishu 3/14/23
+    const chunksInFlightCeil = 20;
+    const dynamicBytesCeil = Math.min(chunksInFlightCeil * chunkSize, hardBytesCeil);
+    console.log("dynamicBytesCeil " + dynamicBytesCeil);
     //Initialize bytes uploaded with progress made previously
     onProgress(chunkSize * initialChunkNumber);
 
@@ -533,13 +537,14 @@ export default class FileManagementSystem {
      */
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be loaded into memory
-      const externalCeil = 3000000000; // on my computer, the crash occurrs when external exceeds 4G chrishu 3/14.23
-      while (process.memoryUsage().external >= externalCeil) {
-        console.log("&&&&&&&&&&&&&&&Pausing for GC&&&&");
+      while (process.memoryUsage().external >= dynamicBytesCeil) {
+        console.log("&&&&&&&&&&&&&&& Wating for GC &&&&");
+        console.log(process.memoryUsage().external);
+        console.log("&&&&&&&&&&&&&&")
         await FileManagementSystem.sleep();
       }
-      console.log("getSystemMemoryInfo: " + Object.entries(process.getSystemMemoryInfo()).map((k)=>console.log(k[0], k[1])))
-      console.log("memoryUsage: " + Object.entries(process.memoryUsage()).map((k)=>console.log(k[0], k[1])));
+      console.log("**************")
+      console.log(process.memoryUsage().external);
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
