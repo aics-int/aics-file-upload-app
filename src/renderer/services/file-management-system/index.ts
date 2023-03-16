@@ -49,7 +49,9 @@ export default class FileManagementSystem {
   private readonly mms: MetadataManagementService;
 
   private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
-  private static readonly EXTERNAL_BYTES_USED_CEILING = 3000000000; // on my computer, the crash occurrs when external exceeds 4G chrishu 3/14/23
+  // on my computer, the crash occurrs when external exceeds 4G chrishu 3/14/23 
+  // on my ws, I observed a crash at 2.84G 3/16 chrishu
+  private static readonly EXTERNAL_BYTES_USED_CEILING = 2500000000; 
 
   /**
    * Returns JSS friendly UUID to group files
