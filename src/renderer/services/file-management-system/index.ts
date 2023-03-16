@@ -61,7 +61,7 @@ export default class FileManagementSystem {
     return uuid.v1().replace(/-/g, "");
   }
 
-  private static sleep(timeoutInMs = 2000){
+  private static sleep(timeoutInMs = 10000){
     return new Promise(resolve => setTimeout(resolve, timeoutInMs))
   }
 
@@ -545,13 +545,13 @@ export default class FileManagementSystem {
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be loaded into memory
       while ((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) || (chunksInFlight >= FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING)) {
-        console.log("chunksInFlight " + chunksInFlight + " &&&&&&&&&&&&&&& Wating for GC &&&&");
-        console.log(process.memoryUsage().external);
         console.log("&&&&&&&&&&&&&&")
+        console.log("chunksInFlight " + chunksInFlight);
+        console.log("external mem " + process.memoryUsage().external);
         await FileManagementSystem.sleep();
       }
-      console.log("chunksInFlight " + chunksInFlight + "**************")
-      console.log(process.memoryUsage().external);
+      console.log("chunksInFlight " + chunksInFlight);
+      console.log("external mem " + process.memoryUsage().external);
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
