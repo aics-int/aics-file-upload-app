@@ -47,6 +47,10 @@ export default class FileManagementSystem {
   private readonly fss: FileStorageService;
   private readonly jss: JobStatusService;
   private readonly mms: MetadataManagementService;
+
+  private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
+  private static readonly EXTERNAL_BYTES_USED_CEILING = 3000000000; // on my computer, the crash occurrs when external exceeds 4G chrishu 3/14/23
+
   /**
    * Returns JSS friendly UUID to group files
    * uploaded together
@@ -490,13 +494,9 @@ export default class FileManagementSystem {
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { fssUploadId, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
-    const chunkSize = 500000000;
-    const hardBytesCeil = 3000000000; // on my computer, the crash occurrs when external exceeds 4G chrishu 3/14/23
-    const chunksInFlightCeil = 20;
-    const dynamicBytesCeil = Math.min(chunksInFlightCeil * chunkSize, hardBytesCeil);
-    console.log("dynamicBytesCeil " + dynamicBytesCeil);
+    
     //Initialize bytes uploaded with progress made previously
     onProgress(chunkSize * initialChunkNumber);
 
@@ -510,8 +510,12 @@ export default class FileManagementSystem {
     let bytesUploaded = initialChunkNumber * chunkSize;
     const uploadChunkPromises: Promise<void>[] = [];
     
+    // For rate throttling how many chunks are sent in parallel
+    let chunksInFlight = 0;
+
     // Handles submitting chunks to FSS, and updating progress
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
+      chunksInFlight++;
       // Upload chunk
       console.log("uploadChunk sending chunk " + chunkNumber);
       await this.fss.sendUploadChunk(
@@ -525,6 +529,7 @@ export default class FileManagementSystem {
       // Submit progress to callback
       bytesUploaded += chunk.byteLength;
       throttledOnProgress(bytesUploaded);
+      chunksInFlight--;
     };
 
     /**
@@ -537,13 +542,13 @@ export default class FileManagementSystem {
      */
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be loaded into memory
-      while (process.memoryUsage().external >= dynamicBytesCeil) {
-        console.log("&&&&&&&&&&&&&&& Wating for GC &&&&");
+      while ((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) || (chunksInFlight >= FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING)) {
+        console.log("chunksInFlight " + chunksInFlight + " &&&&&&&&&&&&&&& Wating for GC &&&&");
         console.log(process.memoryUsage().external);
         console.log("&&&&&&&&&&&&&&")
         await FileManagementSystem.sleep();
       }
-      console.log("**************")
+      console.log("chunksInFlight " + chunksInFlight + "**************")
       console.log(process.memoryUsage().external);
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
