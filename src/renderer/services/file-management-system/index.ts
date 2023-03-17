@@ -520,7 +520,6 @@ export default class FileManagementSystem {
     const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
       chunksInFlight++;
       // Upload chunk
-      console.log("uploadChunk sending chunk " + chunkNumber);
       await this.fss.sendUploadChunk(
         fssUploadId,
         chunkNumber,
@@ -557,8 +556,6 @@ export default class FileManagementSystem {
         console.log("external mem " + process.memoryUsage().external);
         console.log("&&&&&&&&&&&&&&")
       }
-      // console.log("chunksInFlight " + chunksInFlight);
-      // console.log("external mem " + process.memoryUsage().external);
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
