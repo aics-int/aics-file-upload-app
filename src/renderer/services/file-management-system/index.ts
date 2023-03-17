@@ -546,11 +546,11 @@ export default class FileManagementSystem {
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be loaded into memory
       while ((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) || (chunksInFlight >= FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING)) {
-        console.log("&&&&&&&&&&&&&&")
+        console.log("&&&&&& throttling &&&&&&&&")
         console.log("chunksInFlight " + chunksInFlight);
         console.log("external mem " + process.memoryUsage().external);
         await FileManagementSystem.sleep();
-        if((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) && (chunksInFlight < bytesThatShouldFitInExternal)){
+        if(global.gc && (process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) && (chunksInFlight < bytesThatShouldFitInExternal)){
           global.gc();
           console.log("**** manual GC ****");
         }
