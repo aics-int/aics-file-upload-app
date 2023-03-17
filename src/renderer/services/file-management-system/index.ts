@@ -23,7 +23,6 @@ import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
 import Md5Hasher from "./Md5Hasher";
-import { app } from "electron";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
