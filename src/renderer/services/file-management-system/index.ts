@@ -550,8 +550,8 @@ export default class FileManagementSystem {
         console.log("external mem " + process.memoryUsage().external);
         await FileManagementSystem.sleep();
         console.log("external mem " + process.memoryUsage().external);
-        global.gc();
-        console.log("external mem " + process.memoryUsage().external);
+        // global.gc();
+        // console.log("external mem " + process.memoryUsage().external);
         console.log("&&&&&&&&&&&&&&")
 
       }
