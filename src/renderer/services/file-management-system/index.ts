@@ -552,13 +552,13 @@ export default class FileManagementSystem {
         await FileManagementSystem.sleep();
         if((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) && (chunksInFlight < bytesThatShouldFitInExternal)){
           global.gc();
-          console.log("&&&& manual GC &&&&");
+          console.log("**** manual GC ****");
         }
         console.log("external mem " + process.memoryUsage().external);
         console.log("&&&&&&&&&&&&&&")
       }
-      console.log("chunksInFlight " + chunksInFlight);
-      console.log("external mem " + process.memoryUsage().external);
+      // console.log("chunksInFlight " + chunksInFlight);
+      // console.log("external mem " + process.memoryUsage().external);
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
