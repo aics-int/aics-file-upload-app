@@ -23,6 +23,7 @@ import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
 import Md5Hasher from "./Md5Hasher";
+import { app } from "electron";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -61,7 +62,7 @@ export default class FileManagementSystem {
     return uuid.v1().replace(/-/g, "");
   }
 
-  private static sleep(timeoutInMs = 10000){
+  private static sleep(timeoutInMs = 2000){
     return new Promise(resolve => setTimeout(resolve, timeoutInMs))
   }
 
@@ -498,6 +499,7 @@ export default class FileManagementSystem {
   }): Promise<void> {
     const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
+    const bytesThatShouldFitInExternal = Math.floor(FileManagementSystem.EXTERNAL_BYTES_USED_CEILING/chunkSize)
     
     //Initialize bytes uploaded with progress made previously
     onProgress(chunkSize * initialChunkNumber);
@@ -549,11 +551,12 @@ export default class FileManagementSystem {
         console.log("chunksInFlight " + chunksInFlight);
         console.log("external mem " + process.memoryUsage().external);
         await FileManagementSystem.sleep();
+        if((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) && (chunksInFlight < bytesThatShouldFitInExternal)){
+          global.gc();
+          console.log("&&&& manual GC &&&&");
+        }
         console.log("external mem " + process.memoryUsage().external);
-        // global.gc();
-        // console.log("external mem " + process.memoryUsage().external);
         console.log("&&&&&&&&&&&&&&")
-
       }
       console.log("chunksInFlight " + chunksInFlight);
       console.log("external mem " + process.memoryUsage().external);
