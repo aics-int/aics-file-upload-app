@@ -549,6 +549,11 @@ export default class FileManagementSystem {
         console.log("chunksInFlight " + chunksInFlight);
         console.log("external mem " + process.memoryUsage().external);
         await FileManagementSystem.sleep();
+        console.log("external mem " + process.memoryUsage().external);
+        global.gc();
+        console.log("external mem " + process.memoryUsage().external);
+        console.log("&&&&&&&&&&&&&&")
+
       }
       console.log("chunksInFlight " + chunksInFlight);
       console.log("external mem " + process.memoryUsage().external);
