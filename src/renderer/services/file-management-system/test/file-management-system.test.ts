@@ -576,5 +576,4 @@ describe("FileManagementSystem", () => {
       await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
     });
   });
-
 });
