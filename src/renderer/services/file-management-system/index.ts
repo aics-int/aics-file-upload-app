@@ -496,8 +496,7 @@ export default class FileManagementSystem {
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { fssUploadId, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
-    const chunkSize = 500000000;
+    const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
     const bytesThatShouldFitInExternal = Math.floor(FileManagementSystem.EXTERNAL_BYTES_USED_CEILING/chunkSize)
     
@@ -554,11 +553,11 @@ export default class FileManagementSystem {
           if(global.gc){
             // global.gc();
             console.log("**** manual GC ****");
+            console.log("external mem " + process.memoryUsage().external);
           } else {
             console.log("**** manual GC NOT enabled ****");
           }
         }
-        console.log("external mem " + process.memoryUsage().external);
         console.log("&&&&&&&&&&&&&&")
       }
       chunkNumber += 1;
