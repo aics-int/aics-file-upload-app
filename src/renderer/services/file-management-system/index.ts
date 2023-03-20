@@ -551,7 +551,7 @@ export default class FileManagementSystem {
         await FileManagementSystem.sleep();
         if((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) && (chunksInFlight < bytesThatShouldFitInExternal)){
           if(global.gc){
-            // global.gc();
+            global.gc();
             console.log("**** manual GC ****");
             console.log("external mem " + process.memoryUsage().external);
           } else {
