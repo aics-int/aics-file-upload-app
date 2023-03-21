@@ -27,25 +27,25 @@ jobs:
           ELECTRON_WEBPACK_APP_AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
         run: |
           yarn --link-duplicates --production=false
-          yarn compile-prod
+          yarn compile-prod --js-flags="--expose-gc"
 
       - name: Build artifact and release Mac
         if: matrix.os == 'macos-latest'
-        run: yarn run electron-builder --mac --publish always
+        run: yarn run electron-builder --js-flags="--expose-gc" --mac --publish always
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Build artifact and release Linux
         if: matrix.os == 'ubuntu-latest'
-        run: yarn run electron-builder --linux --publish always
+        run: yarn run electron-builder --js-flags="--expose-gc" --linux --publish always
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Build artifact and release Windows
         if: matrix.os == 'windows-latest'
-        run: yarn run electron-builder --windows --publish always
+        run: yarn run electron-builder --js-flags="--expose-gc" --windows --publish always
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
