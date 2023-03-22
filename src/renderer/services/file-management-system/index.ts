@@ -51,7 +51,7 @@ export default class FileManagementSystem {
   private static readonly CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING = 20; //ceiling on concurrent chunk requests (even if more can fit in memory)
   // on my computer, the crash occurrs when external exceeds 4G chrishu 3/14/23 
   // on my ws, I observed a crash at 2.84G 3/16 chrishu
-  private static readonly EXTERNAL_BYTES_USED_CEILING = 2500000000; 
+  private static readonly EXTERNAL_BYTES_USED_CEILING = 2000000000; 
 
   /**
    * Returns JSS friendly UUID to group files
@@ -549,14 +549,14 @@ export default class FileManagementSystem {
         console.log("chunksInFlight " + chunksInFlight);
         console.log("external mem " + process.memoryUsage().external);
         await FileManagementSystem.sleep();
-        if((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) && (chunksInFlight < bytesThatShouldFitInExternal)){
-          if(global.gc){
-            global.gc();
-            console.log("**** manual GC ****");
-            console.log("external mem " + process.memoryUsage().external);
-          } else {
-            console.log("**** manual GC NOT enabled ****");
-          }
+        if(global.gc){
+          global.gc();
+          console.log(process.getHeapStatistics());
+          console.log("**** manual GC ****");
+          console.log(process.getHeapStatistics());
+          console.log("external mem " + process.memoryUsage().external);
+        } else {
+          console.log("**** manual GC NOT enabled ****");
         }
         console.log("&&&&&&&&&&&&&&")
       }
