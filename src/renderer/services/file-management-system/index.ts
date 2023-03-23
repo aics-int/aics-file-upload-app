@@ -496,8 +496,9 @@ export default class FileManagementSystem {
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const { fssUploadId, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
+    const chunkSize = 500000000;
     const bytesThatShouldFitInExternal = Math.floor(FileManagementSystem.EXTERNAL_BYTES_USED_CEILING/chunkSize)
     
     //Initialize bytes uploaded with progress made previously
@@ -517,7 +518,7 @@ export default class FileManagementSystem {
     let chunksInFlight = 0;
 
     // Handles submitting chunks to FSS, and updating progress
-    const uploadChunk = async (chunk: Uint8Array, chunkNumber: number, md5ThusFar: string): Promise<void> => {
+    const uploadChunk = async (chunk: any, chunkNumber: number, md5ThusFar: string): Promise<void> => {
       chunksInFlight++;
       // Upload chunk
       await this.fss.sendUploadChunk(
@@ -525,11 +526,12 @@ export default class FileManagementSystem {
         chunkNumber,
         chunkSize * (chunkNumber-1),
         md5ThusFar,
-        chunk,
+        chunk['chunk'],
         user
       );
       // Submit progress to callback
-      bytesUploaded += chunk.byteLength;
+      bytesUploaded += chunk['chunk'].byteLength;
+      delete chunk['chunk'];
       throttledOnProgress(bytesUploaded);
       chunksInFlight--;
     };
@@ -544,24 +546,25 @@ export default class FileManagementSystem {
      */
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be loaded into memory
-      while ((process.memoryUsage().external >= FileManagementSystem.EXTERNAL_BYTES_USED_CEILING) || (chunksInFlight >= FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING)) {
-        console.log("&&&&&& throttling &&&&&&&&")
-        console.log("chunksInFlight " + chunksInFlight);
-        console.log("external mem " + process.memoryUsage().external);
+      while ((chunksInFlight >= 5)) {
+        // console.log("&&&&&& throttling &&&&&&&&")
+        // console.log("chunksInFlight " + chunksInFlight);
+        // console.log("external mem " + process.memoryUsage());
         await FileManagementSystem.sleep();
-        if(global.gc){
-          global.gc();
-          console.log(process.getHeapStatistics());
-          console.log("**** manual GC ****");
-          console.log(process.getHeapStatistics());
-          console.log("external mem " + process.memoryUsage().external);
-        } else {
-          console.log("**** manual GC NOT enabled ****");
-        }
-        console.log("&&&&&&&&&&&&&&")
+        // if(global.gc){
+          // global.gc();
+          // console.log(process.getHeapStatistics());
+          // console.log("**** manual GC ****");
+          // console.log(process.getHeapStatistics());
+          // console.log("external mem " + process.memoryUsage().external);
+        // } else {
+          // console.log("**** manual GC NOT enabled ****");
+        // }
+        // console.log("&&&&&&&&&&&&&&")
       }
       chunkNumber += 1;
-      uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
+      uploadChunkPromises.push(uploadChunk({chunk}, chunkNumber, md5ThusFar));
+      console.log(process.memoryUsage());
     }
 
     const md5 = await this.fileReader.read({
