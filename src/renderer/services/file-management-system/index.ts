@@ -499,7 +499,7 @@ export default class FileManagementSystem {
     const { fssUploadId, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
     const chunkSize = 500000000;
-    const bytesThatShouldFitInExternal = Math.floor(FileManagementSystem.EXTERNAL_BYTES_USED_CEILING/chunkSize)
+    
     
     //Initialize bytes uploaded with progress made previously
     onProgress(chunkSize * initialChunkNumber);
@@ -546,7 +546,7 @@ export default class FileManagementSystem {
      */
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be loaded into memory
-      while ((chunksInFlight >= 5)) {
+      while ((chunksInFlight >= 3)) {
         // console.log("&&&&&& throttling &&&&&&&&")
         // console.log("chunksInFlight " + chunksInFlight);
         // console.log("external mem " + process.memoryUsage());
