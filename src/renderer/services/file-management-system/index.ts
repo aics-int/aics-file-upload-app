@@ -497,7 +497,8 @@ export default class FileManagementSystem {
   }): Promise<void> {
     const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
-    const chunksInFlightLimit = Math.floor(FileManagementSystem.EXTERNAL_BYTES_USED_CEILING/chunkSize);
+    const dynamicChunksInFlight = Math.floor(FileManagementSystem.EXTERNAL_BYTES_USED_CEILING/chunkSize);
+    const chunksInFlightLimit = Math.min(dynamicChunksInFlight, 10);
     console.log("chunksInFlightLimit: " + chunksInFlightLimit);
     
     //Initialize bytes uploaded with progress made previously
