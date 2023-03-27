@@ -548,15 +548,15 @@ export default class FileManagementSystem {
       while (chunksInFlight >= chunksInFlightLimit) {
         console.log(process.memoryUsage());
         await FileManagementSystem.sleep();
-        if(process.memoryUsage().external>FileManagementSystem.EXTERNAL_BYTES_USED_CEILING){
-          if(global.gc){
-            console.log("**** manual GC ****");
-            global.gc();
-            console.log(process.memoryUsage());
-            console.log('********************')
-          } else {
-            console.log("**** manual GC NOT enabled ****");
-          }
+      }
+      if(process.memoryUsage().external > FileManagementSystem.EXTERNAL_BYTES_USED_CEILING){
+        if(global.gc){
+          console.log("**** manual GC ****");
+          global.gc();
+          console.log(process.memoryUsage());
+          console.log('********************')
+        } else {
+          console.log("**** manual GC NOT enabled ****");
         }
       }
       chunkNumber += 1;
