@@ -545,12 +545,10 @@ export default class FileManagementSystem {
      */
     const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be loaded into memory
-      while ((chunksInFlight >= chunksInFlightLimit)) {
-        console.log("&&&&&& throttling &&&&&&&&")
+      while (chunksInFlight >= chunksInFlightLimit) {
         console.log(process.memoryUsage());
         await FileManagementSystem.sleep();
         if(process.memoryUsage().external>FileManagementSystem.EXTERNAL_BYTES_USED_CEILING){
-          console.log("&&&& chunksInFLight below limit, external memory still above &&&&")
           if(global.gc){
             console.log("**** manual GC ****");
             global.gc();
@@ -562,7 +560,6 @@ export default class FileManagementSystem {
         }
       }
       chunkNumber += 1;
-      console.log(">>>> next chunk: " + chunkNumber);
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
       console.log(process.memoryUsage());
     }
