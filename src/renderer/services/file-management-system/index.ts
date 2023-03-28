@@ -556,13 +556,10 @@ export default class FileManagementSystem {
           global.gc();
           console.log(process.memoryUsage());
           console.log('********************')
-        } else {
-          console.log("**** manual GC NOT enabled ****");
         }
       }
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
-      console.log(process.memoryUsage());
     }
 
     const md5 = await this.fileReader.read({
