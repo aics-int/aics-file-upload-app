@@ -24,11 +24,11 @@
     }
   },
   "scripts": {
-    "dev": "electron-webpack dev --js-flags='--expose-gc'",
-    "compile": "electron-webpack --js-flags='--expose-gc'",
+    "dev": "electron-webpack dev",
+    "compile": "electron-webpack",
     "compile-cache": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"stg-aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 ELECTRON_WEBPACK_USE_CACHE=true yarn compile",
     "compile-stage": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"stg-aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 yarn compile",
-    "compile-prod": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 NODE_ENV=production yarn compile --js-flags='--expose-gc'",
+    "compile-prod": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 NODE_ENV=production yarn compile",
     "build-executable": "yarn compile && yarn electron-builder",
     "dist": "electron-builder -p always",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.commonjs.json TS_NODE_FILES=true NODE_ENV=production mocha --exit src/**/test/*.{ts,tsx}",

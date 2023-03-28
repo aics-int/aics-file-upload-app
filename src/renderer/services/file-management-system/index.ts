@@ -500,6 +500,7 @@ export default class FileManagementSystem {
     const dynamicChunksInFlight = Math.floor(FileManagementSystem.EXTERNAL_BYTES_USED_CEILING/chunkSize);
     const chunksInFlightLimit = Math.min(dynamicChunksInFlight, 10);
     console.log("chunksInFlightLimit: " + chunksInFlightLimit);
+    console.log("GC enabled: " + new Boolean(global.gc !== undefined));
     
     //Initialize bytes uploaded with progress made previously
     onProgress(chunkSize * initialChunkNumber);
