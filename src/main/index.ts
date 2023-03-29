@@ -96,7 +96,7 @@ function createMainWindow() {
 
 // This is a temporary fix for this issue: https://github.com/electron/electron/issues/23664
 app.commandLine.appendSwitch("disable-features", "OutOfBlinkCors");
-// This is to enable maula garbage collection SWE-784
+// This is to enable manual garbage collection SWE-784
 app.commandLine.appendSwitch('js-flags', '--expose-gc --trace-gc');
 
 // quit application when all windows are closed
