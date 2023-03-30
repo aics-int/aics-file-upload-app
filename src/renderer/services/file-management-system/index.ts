@@ -361,10 +361,10 @@ export default class FileManagementSystem {
         if (fssStatus.status === UploadStatus.COMPLETE) {
           throw new Error(`Upload has progressed too far to be canceled`);
         }
-
-        // Cancel upload in FSS
-        await this.fss.cancelUpload(fssUploadId);
       }
+
+      // Cancel upload in FSS
+      await this.fss.cancelUpload(fssUploadId);
     }
 
     // Update the job to provide feedback
