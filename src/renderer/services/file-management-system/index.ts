@@ -128,7 +128,6 @@ export default class FileManagementSystem {
         fileType,
         fileSize,
       );
-
       // Update parent job with upload job created by FSS
       // for tracking in the event of a retry
       await this.jss.updateJob(upload.jobId, {
@@ -137,15 +136,26 @@ export default class FileManagementSystem {
           lastModifiedInMS: fileLastModifiedInMs,
         },
       });
-
-      // Wait for upload
-      await this.uploadInChunks({
-        fssUploadId: registration.uploadId,
-        source: source,
-        chunkSize: registration.chunkSize,
-        user: upload.user,
-        onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
-      });
+      if (registration.chunkStatuses && registration.chunkStatuses[0]){
+        // update the maongodb fua.upload job with the fss uplaod_id field
+        const onRetryProgress = (
+            uploadId: string,
+            progress: UploadProgressInfo
+        ) => {
+          onProgress(progress)
+        };
+        // create the FUA jss uplaod id and info here
+        await this.retry(upload.jobId, onRetryProgress);
+      } else {
+        // Wait for upload
+        await this.uploadInChunks({
+          fssUploadId: registration.uploadId,
+          source: source,
+          chunkSize: registration.chunkSize,
+          user: upload.user,
+          onProgress: (bytesUploaded) => onProgress({bytesUploaded, totalBytes: fileSize})
+        });
+      }
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -230,7 +240,6 @@ export default class FileManagementSystem {
         `Upload cannot be retried if already successful, actual status is ${upload.status}.`
       );
     }
-
     // Attempt to resume an ongoing upload if possible before scraping this one entirely
     const { fssUploadId } = upload.serviceFields;
     let resumeError: Error | undefined;
