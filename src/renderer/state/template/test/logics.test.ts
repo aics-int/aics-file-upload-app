@@ -387,6 +387,7 @@ describe("Template Logics", () => {
         },
       });
       const result: DropResult = {
+        combine: null,
         draggableId: "unused",
         source: {
           droppableId: "unused",
@@ -428,6 +429,8 @@ describe("Template Logics", () => {
         },
       });
       const result: DropResult = {
+        destination: null,
+        combine: null,
         draggableId: "unused",
         source: {
           droppableId: "unused",
