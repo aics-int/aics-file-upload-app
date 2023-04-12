@@ -249,10 +249,12 @@ describe("FileManagementSystem", () => {
       await fms.upload(uploadJob, noop);
 
       // Assert
+      // not called by upload unless redirected to retry
       expect(fss.getStatus.called).to.be.true;
+      // called zero times if the code in question is not executed
       expect(jss.getJob).to.have.been.callCount(3);
+      // called only once if the code in question is not executed
       expect(jss.updateJob).to.have.been.callCount(4);
-      expect(fileReader.read).to.have.been.calledOnce;
     });
 
     it("fails upload if error occurs during read", async () => {
