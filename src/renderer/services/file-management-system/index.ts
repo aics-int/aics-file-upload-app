@@ -137,7 +137,7 @@ export default class FileManagementSystem {
         },
       });
       if (registration.chunkStatuses && registration.chunkStatuses[0]){
-        // update the maongodb fua.upload job with the fss uplaod_id field
+        // Update the JSS FUA upload job with the FSS upload ID field
         const onRetryProgress = (
             uploadId: string,
             progress: UploadProgressInfo
