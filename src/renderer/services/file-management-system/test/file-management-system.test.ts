@@ -2,15 +2,23 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
-import {expect} from "chai";
-import {noop} from "lodash";
-import {createSandbox, SinonStubbedInstance} from "sinon";
+import { expect } from "chai";
+import { noop } from "lodash";
+import { createSandbox, SinonStubbedInstance } from "sinon";
 
 import FileManagementSystem from "..";
-import {FileStorageService, JobStatusService, MetadataManagementService,} from "../..";
-import {mockJob, mockWorkingUploadJob} from "../../../state/test/mocks";
-import {FSSUpload, UploadStatus} from "../../file-storage-service";
-import {JSSJob, JSSJobStatus, UploadJob,} from "../../job-status-service/types";
+import {
+  FileStorageService,
+  JobStatusService,
+  MetadataManagementService,
+} from "../..";
+import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
+import { FSSUpload, UploadStatus } from "../../file-storage-service";
+import {
+  JSSJob,
+  JSSJobStatus,
+  UploadJob,
+} from "../../job-status-service/types";
 import ChunkedFileReader from "../ChunkedFileReader";
 
 class TestError extends Error {
