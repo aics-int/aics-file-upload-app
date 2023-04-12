@@ -144,7 +144,7 @@ export default class FileManagementSystem {
         ) => {
           onProgress(progress)
         };
-        // create the FUA jss uplaod id and info here
+        // create the FUA JSS upload id and info here
         await this.retry(upload.jobId, onRetryProgress);
       } else {
         // Wait for upload
