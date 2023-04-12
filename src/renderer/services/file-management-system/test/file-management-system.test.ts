@@ -156,7 +156,7 @@ describe("FileManagementSystem", () => {
       expect(inFlightFssRequests).to.be.equal(0);
     });
 
-    it("restarts job WORKING in FSS", async () => {
+    it("restarts 'WORKING' job in FSS", async () => {
       // Arrange
       const uploadId = "elephant091234124";
       const { mtime: fileLastModified } =
