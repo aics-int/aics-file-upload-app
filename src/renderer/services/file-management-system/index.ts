@@ -145,15 +145,12 @@ export default class FileManagementSystem {
         try {
           const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
           fssStatus = fssStatusResponse?.status
-          console.log("&*&^&*^&*sofar: " + fssStatusResponse.currentFileSize);
           onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
         } catch (error) {
           // No-op: move on if this failed
         }
       }
       const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
-      fssStatus = fssStatusResponse?.status
-      console.log("&*&^&*^&*sofar: " + fssStatusResponse.currentFileSize);
       onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
 
       // await this.uploadInChunks({
@@ -504,8 +501,7 @@ export default class FileManagementSystem {
             try {
               const fssStatusResponse = await this.fss.getStatus(fssUploadId);
               fssStatus = fssStatusResponse?.status
-              console.log("&*&^&*^&*sofar: " + fssStatusResponse.currentFileSize);
-              // onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+              onProgress(fssUploadId, { bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
             } catch (error) {
               // No-op: move on if this failed
             }

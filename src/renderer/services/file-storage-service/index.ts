@@ -40,12 +40,15 @@ interface ChunkInfoResponse {
   status: UploadStatus;
 }
 
-export interface UploadStatusResponse {
+export interface UploadStatusResponse extends RegisterUploadResponse{
   chunkStatuses: UploadStatus[];
+  currentFileSize: number; //Current Size of file on disk
+}
+
+export interface RegisterUploadResponse {
   status: UploadStatus;
   uploadId: string; // ID for tracking upload
   chunkSize: number; // Size of chunks to send to service
-  currentFileSize: number; //Current Size of file on disk
 }
 
 interface FileRecord {
@@ -93,8 +96,8 @@ export default class FileStorageService extends HttpCacheClient {
     fileName: string,
     fileType: FileType,
     fileSize: number,
-    source: string,
-  ): Promise<UploadStatusResponse> {
+    source?: string,
+  ): Promise<RegisterUploadResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
     const postBody = {
       // Unfortunately FSS expects snake_case
