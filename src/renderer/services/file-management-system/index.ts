@@ -127,6 +127,7 @@ export default class FileManagementSystem {
         fileName,
         fileType,
         fileSize,
+        source,
       );
 
       // Update parent job with upload job created by FSS
@@ -138,14 +139,30 @@ export default class FileManagementSystem {
         },
       });
 
-      // Wait for upload
-      await this.uploadInChunks({
-        fssUploadId: registration.uploadId,
-        source: source,
-        chunkSize: registration.chunkSize,
-        user: upload.user,
-        onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
-      });
+      let fssStatus = UploadStatus.WORKING;
+      while(fssStatus != UploadStatus.COMPLETE){
+        await FileManagementSystem.sleep(10000);
+        try {
+          const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
+          fssStatus = fssStatusResponse?.status
+          console.log("&*&^&*^&*sofar: " + fssStatusResponse.currentFileSize);
+          onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+        } catch (error) {
+          // No-op: move on if this failed
+        }
+      }
+      const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
+      fssStatus = fssStatusResponse?.status
+      console.log("&*&^&*^&*sofar: " + fssStatusResponse.currentFileSize);
+      onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+
+      // await this.uploadInChunks({
+        // fssUploadId: registration.uploadId,
+        // source: source,
+        // chunkSize: registration.chunkSize,
+        // user: upload.user,
+        // onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
+      // });
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -462,20 +479,37 @@ export default class FileManagementSystem {
             throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
           }
           const deserailizedMd5Hasher = await Md5Hasher.deserialize(partiallyCalculatedMd5);
-          await this.fss.finalize(fssUploadId, deserailizedMd5Hasher.digest());
+          // await this.fss.finalize(fssUploadId, deserailizedMd5Hasher.digest());
         } else if (fssStatus.status === UploadStatus.WORKING) {
           const { originalPath } = upload.serviceFields.files[0].file;
           const { size: fileSize } = await fs.promises.stat(originalPath);
-          await this.uploadInChunks({
-            fssUploadId,
-            source: originalPath,
-            chunkSize: fssStatus.chunkSize,
-            user: upload.user,
-            onProgress: (bytesUploaded) =>
-              onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
-            initialChunkNumber: lastChunkNumber,
-            partiallyCalculatedMd5
-          });
+          // await this.uploadInChunks({
+          //   fssUploadId,
+          //   source: originalPath,
+          //   chunkSize: fssStatus.chunkSize,
+          //   user: upload.user,
+          //   onProgress: (bytesUploaded) =>
+          //     onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
+          //   initialChunkNumber: lastChunkNumber,
+          //   partiallyCalculatedMd5
+          // });
+          // const registration = await this.fss.registerUpload(
+            // fileName, TODO get from fssStatus
+            // fileType,
+            // fileSize,
+            // originalPath,
+          // );
+          let fssStatus = UploadStatus.WORKING;
+          while(fssStatus === UploadStatus.WORKING){
+            try {
+              const fssStatusResponse = await this.fss.getStatus(fssUploadId);
+              fssStatus = fssStatusResponse?.status
+              console.log("&*&^&*^&*sofar: " + fssStatusResponse.currentFileSize);
+              // onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+            } catch (error) {
+              // No-op: move on if this failed
+            }
+          }
         }
       }
     }
@@ -564,6 +598,6 @@ export default class FileManagementSystem {
     throttledOnProgress.flush();
 
     // Trigger asynchrous finalize step in FSS
-    await this.fss.finalize(fssUploadId, md5);
+    // await this.fss.finalize(fssUploadId, md5);
   }
 }
