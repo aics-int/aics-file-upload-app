@@ -140,7 +140,7 @@ export default class FileManagementSystem {
       });
 
       let fssStatus = UploadStatus.WORKING;
-      while(fssStatus != UploadStatus.COMPLETE){
+      while(fssStatus !== UploadStatus.COMPLETE){
         await FileManagementSystem.sleep(10000);
         try {
           const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
