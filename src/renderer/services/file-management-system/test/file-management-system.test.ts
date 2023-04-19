@@ -334,7 +334,7 @@ describe("FileManagementSystem", () => {
       expect(jss.createJob).to.have.been.calledOnce;
     });
 
-    it("creates multiple new uploads for backwards compatibility", async () => {
+    it.only("creates multiple new uploads for backwards compatibility", async () => {
       // Arrange
       const upload: UploadJob = {
         ...mockJob,
