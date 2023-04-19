@@ -98,6 +98,7 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     if (totalBytes > 0 && bytesUploaded >= totalBytes) {
       // All bytes have been uploaded -> the upload is on the last step
       step = Step.TWO;
+      console.log("upload complete")
       displayForStep = "0";
       totalForStep = "1";
     } 
@@ -107,6 +108,8 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     }
 
     tooltip = `${tooltip} - ${STEP_INFO[step]}`;
+    console.log(`Step ${step}`)
+    console.log(`${displayForStep} / ${totalForStep}`)
     content = (
       <>
         <Progress
