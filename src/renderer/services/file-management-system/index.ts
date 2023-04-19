@@ -541,7 +541,7 @@ export default class FileManagementSystem {
       initialChunkNumber?: number,
       partiallyCalculatedMd5?: string,
     },
-    localNasShortcut: boolean = false
+    localNasShortcut = false
   ): Promise<void> {
     const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
