@@ -60,6 +60,9 @@ export interface UploadServiceFields {
   // A marker we have used for upload jobs in the past that we are now stuck with
   // hopefully eventually we can fully rely on using something like the 'service' field
   type: "upload";
+
+  // Controls whether the file is send over the network in chunks, or if it is accessible directly via a path on the local NAS.
+  localNasShortcut?: boolean;
 }
 
 export interface JSSJob {
