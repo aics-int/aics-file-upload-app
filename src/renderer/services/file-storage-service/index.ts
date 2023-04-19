@@ -96,7 +96,7 @@ export default class FileStorageService extends HttpCacheClient {
     fileName: string,
     fileType: FileType,
     fileSize: number,
-    source?: string,
+    localNasPath?: string,
   ): Promise<RegisterUploadResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
     const postBody = {
@@ -107,8 +107,8 @@ export default class FileStorageService extends HttpCacheClient {
       // Unfortunately FSS expects snake_case
       // so the conversion must be manual each request
       file_size: fileSize,
-      local_nas_shortcut: true,
-      local_nas_path: source
+      local_nas_shortcut: localNasPath !== undefined,
+      local_nas_path: localNasPath
     };
     return this.post<UploadStatusResponse>(
       url,

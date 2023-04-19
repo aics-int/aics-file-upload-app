@@ -47,6 +47,8 @@ describe("FileStorageService", () => {
         file_name: fileName,
         file_type: fileType,
         file_size: fileSize,
+        local_nas_path: undefined,
+        local_nas_shortcut: false
       };
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
