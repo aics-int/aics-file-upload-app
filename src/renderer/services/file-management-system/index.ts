@@ -531,17 +531,15 @@ export default class FileManagementSystem {
   /**
    * Uploads the given file to FSS in chunks asynchronously using a NodeJS.
    */
-  private async uploadInChunks(
-    config: {
-      fssUploadId: string,
-      source: string,
-      chunkSize: number,
-      user: string,
-      onProgress: (bytesUploaded: number) => void,
-      initialChunkNumber?: number,
-      partiallyCalculatedMd5?: string,
-    },
-  ): Promise<void> {
+  private async uploadInChunks(config: {
+    fssUploadId: string,
+    source: string,
+    chunkSize: number,
+    user: string,
+    onProgress: (bytesUploaded: number) => void,
+    initialChunkNumber?: number,
+    partiallyCalculatedMd5?: string,
+  }): Promise<void> {
     const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
     
