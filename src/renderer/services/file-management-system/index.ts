@@ -541,7 +541,6 @@ export default class FileManagementSystem {
       initialChunkNumber?: number,
       partiallyCalculatedMd5?: string,
     },
-    localNasShortcut = false
   ): Promise<void> {
     const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     let chunkNumber = initialChunkNumber;
@@ -614,8 +613,6 @@ export default class FileManagementSystem {
     throttledOnProgress.flush();
 
     // Trigger asynchrous finalize step in FSS
-    if(!localNasShortcut){
-      await this.fss.finalize(fssUploadId, md5);
-    }
+    await this.fss.finalize(fssUploadId, md5);
   }
 }
