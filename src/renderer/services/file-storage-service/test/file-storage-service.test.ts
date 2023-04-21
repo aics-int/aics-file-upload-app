@@ -62,6 +62,41 @@ describe("FileStorageService", () => {
     });
   });
 
+  describe("registerUpload", () => {
+    it("sends correctly formatted post body", async () => {
+      // Arrange
+      const expectedResponse = {
+        uploadId: "12930132",
+        chunkSize: 14,
+      };
+      const response = {
+        status: 200,
+        data: expectedResponse,
+      };
+      const localNasPath = '/test/nas/path';
+      const postStub = sandbox.stub().resolves(response);
+      const fileName = "my_cool_czi.czi";
+      const fileType = FileType.IMAGE;
+      const fileSize = 13941234;
+      const expectedPostBody = {
+        file_name: fileName,
+        file_type: fileType,
+        file_size: fileSize,
+        local_nas_path: localNasPath,
+        local_nas_shortcut: true
+      };
+      sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
+
+      // Act
+      const actual = await fss.registerUpload(fileName, fileType, fileSize, localNasPath);
+
+      // Assert
+      expect(actual).to.deep.equal(expectedResponse);
+      const actualPostBody = postStub.firstCall.args[1];
+      expect(actualPostBody).to.deep.equal(expectedPostBody);
+    });
+  });
+
   describe("sendUploadChunk", () => {
     class AxiosError extends Error {
       public response: any;
