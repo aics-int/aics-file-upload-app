@@ -86,7 +86,7 @@ export default class FileManagementSystem {
       serviceFields: {
         files: [metadata],
         type: "upload",
-        localNasShortcut: false,
+        localNasShortcut: true, //TODO
         ...serviceFields,
       },
       
