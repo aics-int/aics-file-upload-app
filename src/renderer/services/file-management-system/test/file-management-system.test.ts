@@ -82,6 +82,72 @@ describe("FileManagementSystem", () => {
   });
 
   describe("upload", () => {
+
+    it.only("Does NOT use local_nas_shortcut when instructed", async () => {
+      // Arrange
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [
+            {
+              file: {
+                fileType: "text",
+                originalPath: testFilePath,
+              },
+            },
+          ],
+          type: "upload",
+        },
+      };
+      const uploadId = "091234124";
+      const expectedMd5 = "testMd5";
+      fss.fileExistsByNameAndSize.resolves(false);
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424 });
+      fileReader.read.resolves(expectedMd5)
+
+      // Act
+      await fms.upload(upload, noop);
+
+      // Assert
+      expect(fileReader.read).to.have.been.calledOnce;
+      expect(fss.finalize.calledOnceWithExactly(uploadId, expectedMd5)).to.be.true;
+    });
+
+    it.only("Uses local_nas_shortcut when instructed", async () => {
+      // Arrange
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [
+            {
+              file: {
+                fileType: "text",
+                originalPath: testFilePath,
+              },
+            },
+          ],
+          type: "upload",
+          localNasShortcut: true
+        },
+      };
+      const uploadId = "091234124";
+      fss.fileExistsByNameAndSize.resolves(false);
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424 });
+      fss.getStatus.resolves({ 
+        status: UploadStatus.COMPLETE, 
+        uploadId, 
+        chunkSize: 2424, 
+        chunkStatuses: [],
+        currentFileSize: 99
+      });
+      // Act
+      await fms.upload(upload, noop);
+
+      // Assert
+      expect(fileReader.read).to.have.not.been.called;
+      expect(fss.finalize).to.have.not.been.called;
+    });
+
     it("creates appropriate metadata & completes tracking job", async () => {
       // Arrange
       const upload: UploadJob = {

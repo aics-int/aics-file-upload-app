@@ -144,7 +144,7 @@ export default class FileManagementSystem {
       if(upload.serviceFields.localNasShortcut){
         let fssStatus = UploadStatus.WORKING;
         while(fssStatus !== UploadStatus.COMPLETE){
-          await FileManagementSystem.sleep(10000);
+          await FileManagementSystem.sleep(1000); //TODO too short?  Tests timeout if > 2 sec
           try {
             const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
             fssStatus = fssStatusResponse?.status
