@@ -86,7 +86,7 @@ export default class FileManagementSystem {
       serviceFields: {
         files: [metadata],
         type: "upload",
-        localNasShortcut: true, //TODO
+        localNasShortcut: true, //TODO accept from ui control chrishu 4/21/23
         ...serviceFields,
       },
       
@@ -283,7 +283,7 @@ export default class FileManagementSystem {
         upload.serviceFields?.groupId ||
         FileManagementSystem.createUploadGroupId(),
       originalJobId: uploadId,
-      localNasShortcut: false //TODO accept from user
+      localNasShortcut: false //TODO accept from ui control chrishu 4/21/23
     };
 
     // Create a separate upload for each file in this job
