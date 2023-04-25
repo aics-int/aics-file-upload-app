@@ -283,7 +283,7 @@ export default class FileManagementSystem {
         upload.serviceFields?.groupId ||
         FileManagementSystem.createUploadGroupId(),
       originalJobId: uploadId,
-      localNasShortcut: false //TODO accept from ui control chrishu 4/21/23
+      localNasShortcut: upload.serviceFields?.localNasShortcut
     };
 
     // Create a separate upload for each file in this job
