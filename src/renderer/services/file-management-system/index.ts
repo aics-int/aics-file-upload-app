@@ -143,18 +143,7 @@ export default class FileManagementSystem {
 
       if(upload.serviceFields.localNasShortcut){
         let fssStatus = UploadStatus.WORKING;
-        while(fssStatus !== UploadStatus.COMPLETE){
-          await FileManagementSystem.sleep(1000); //TODO too short?  Tests timeout if > 2 sec
-          try {
-            const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
-            fssStatus = fssStatusResponse?.status
-            onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
-          } catch (error) {
-            // No-op: move on if this failed
-          }
-        }
-        const fssStatusResponse = await this.fss.getStatus(registration.uploadId);
-        onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+        this.updateProgress(fssStatus, registration.uploadId, fileSize, onProgress);
       } else {
         await this.uploadInChunks({
           fssUploadId: registration.uploadId,
@@ -488,7 +477,11 @@ export default class FileManagementSystem {
         } else if (fssStatus.status === UploadStatus.WORKING) {
           const { originalPath } = upload.serviceFields.files[0].file;
           const { size: fileSize } = await fs.promises.stat(originalPath);
-          if(!upload.serviceFields.localNasShortcut){
+          if(upload.serviceFields.localNasShortcut){ 
+            const fssStatusResponse = await this.fss.getStatus(fssUploadId);
+            let fssStatus = fssStatusResponse?.status           
+            this.updateProgress(fssStatus, fssUploadId, fileSize, (progress: UploadProgressInfo) => onProgress(fssUploadId, progress));
+          } else {
             await this.uploadInChunks({
               fssUploadId,
               source: originalPath,
@@ -498,34 +491,37 @@ export default class FileManagementSystem {
                 onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
               initialChunkNumber: lastChunkNumber,
               partiallyCalculatedMd5
-            });  
-          } else { 
-            const fssStatusResponse = await this.fss.getStatus(fssUploadId);
-            let fssStatus = fssStatusResponse?.status           
-            if(fssStatus !== UploadStatus.WORKING){
-              //TODO call register again
-              // const registration = await this.fss.registerUpload(
-                // fileName, //TODO get from fssStatus
-                // fileType,
-                // fileSize,
-                // originalPath,
-              // );
-              //TODO handle errors
-            } else {
-              while(fssStatus === UploadStatus.WORKING){
-                try {
-                  const fssStatusResponse = await this.fss.getStatus(fssUploadId);
-                  fssStatus = fssStatusResponse?.status
-                  onProgress(fssUploadId, { bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
-                } catch (error) {
-                  // No-op: move on if this failed
-                }
-              }  
-            }
+            });
           }
         }
       }
     }
+  }
+
+  private async updateProgress(
+    fssStatus: UploadStatus, 
+    fssUploadId: string,
+    fileSize: number,
+    onProgress: (progress: UploadProgressInfo) => void) {
+      while(fssStatus !== UploadStatus.COMPLETE){
+        await FileManagementSystem.sleep(1000); //TODO too short?  Tests timeout if > 2 sec
+        const fssStatusResponse = await this.fss.getStatus(fssUploadId);
+        fssStatus = fssStatusResponse?.status;
+        switch(fssStatus){
+          case UploadStatus.WORKING:
+            onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+            break;
+          case UploadStatus.POST_PROCESSING:
+            onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+            break;
+          case UploadStatus.INACTIVE:
+          case UploadStatus.RETRY:
+            throw new Error(
+              `Something went wrong during a local NAS shortcut upload: ${fssUploadId}.  Upload state is: ${fssStatus}.  Please contact #support_aics_software (on Slack).`
+            )
+            break;
+        }
+      }
   }
 
   /**
