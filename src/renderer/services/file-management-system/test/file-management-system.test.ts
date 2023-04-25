@@ -83,7 +83,7 @@ describe("FileManagementSystem", () => {
 
   describe("upload", () => {
 
-    it.only("Does NOT use local_nas_shortcut when instructed", async () => {
+    it("Inits chunked upload when instructed not to", async () => {
       // Arrange
       const upload: UploadJob = {
         ...mockJob,
@@ -97,6 +97,7 @@ describe("FileManagementSystem", () => {
             },
           ],
           type: "upload",
+          localNasShortcut: false
         },
       };
       const uploadId = "091234124";
@@ -113,7 +114,7 @@ describe("FileManagementSystem", () => {
       expect(fss.finalize.calledOnceWithExactly(uploadId, expectedMd5)).to.be.true;
     });
 
-    it.only("Uses local_nas_shortcut when instructed", async () => {
+    it("Inits local_nas_shortcut when instructed", async () => {
       // Arrange
       const upload: UploadJob = {
         ...mockJob,
