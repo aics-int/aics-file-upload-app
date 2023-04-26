@@ -251,10 +251,12 @@ describe("FileManagementSystem", () => {
       // Assert
       // not called by upload unless redirected to retry
       expect(fss.getStatus.called).to.be.true;
-      // called zero times if the code in question is not executed
-      expect(jss.getJob).to.have.been.callCount(3);
-      // called only once if the code in question is not executed
-      expect(jss.updateJob).to.have.been.callCount(4);
+      // Make sure the job get set to state RETRYING
+      expect(jss.updateJob.calledWith(uploadJob.jobId, {
+        status: JSSJobStatus.RETRYING,
+      })).to.be.true;
+
+
     });
 
     it("fails upload if error occurs during read", async () => {
