@@ -83,7 +83,7 @@ describe("FileManagementSystem", () => {
 
   describe("upload", () => {
 
-    it("Inits chunked upload when instructed not to", async () => {
+    it("Inits chunked upload instead of local_nas_shortcut", async () => {
       // Arrange
       const upload: UploadJob = {
         ...mockJob,
@@ -114,7 +114,7 @@ describe("FileManagementSystem", () => {
       expect(fss.finalize.calledOnceWithExactly(uploadId, expectedMd5)).to.be.true;
     });
 
-    it("Inits local_nas_shortcut when instructed", async () => {
+    it("Inits local_nas_shortcut instead of chunked.", async () => {
       // Arrange
       const upload: UploadJob = {
         ...mockJob,
@@ -492,6 +492,59 @@ describe("FileManagementSystem", () => {
         expect(jss.createJob.called).to.be.false;
         expect(fileReader.read).to.have.been.calledOnce;
       });
+
+      it(`resumes local_nas_shortcut upload with an WORKING FSS status`, async () => {
+        // Arrange
+        const uploadId = "234124141";
+        const { mtime: fileLastModified } =
+        await fs.promises.stat(testFilePath);
+        const fileLastModifiedInMs = fileLastModified.getTime();
+        const upload: UploadJob = {
+          ...mockJob,
+          serviceFields: {
+            files: [
+              {
+                file: {
+                  fileType: "text",
+                  originalPath: testFilePath,
+                },
+              },
+            ],
+            localNasShortcut: true,
+            fssUploadId: uploadId,
+            type: "upload",
+            lastModifiedInMS: fileLastModifiedInMs,
+          },
+        };
+        const fssUpload: JSSJob = {
+          ...mockJob,
+        };
+        jss.getJob.onFirstCall().resolves(upload);
+        fss.getStatus.resolves({
+          status: UploadStatus.WORKING,
+          chunkSize: -1,
+          uploadId: "-1",
+          chunkStatuses: [],
+          currentFileSize: -1
+        });
+        jss.getJob.onSecondCall().resolves(fssUpload);
+        fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424 });
+
+        // Act
+        await fms.retry(uploadId, noop);
+
+        // Assert
+        // expect(fss.cancelUpload.called).to.be.false;
+        expect(jss.createJob.called).to.be.false;        
+        expect(jss.updateJob.calledWith(upload.jobId, {
+          status: JSSJobStatus.RETRYING,
+        })).to.be.true;
+        expect(fss.registerUpload.called).to.be.true;
+        expect(fileReader.read.called).to.be.false;
+      });
+
+    it("calls retryFinalize on a chunked upload");
+    it("calls retryFinalize on a localNasShortcut upload");
 
     it("resumes an upload that just needs finalizing", async () => {
       // Arrange
