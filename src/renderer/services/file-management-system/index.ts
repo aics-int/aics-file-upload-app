@@ -233,66 +233,52 @@ export default class FileManagementSystem {
     onProgress: (uploadId: string, progress: UploadProgressInfo) => void
   ): Promise<void> {
     // Request job from JSS & validate if it is retryable
-    const upload = (await this.jss.getJob(uploadId)) as UploadJob;
+    const fuaUpload = (await this.jss.getJob(uploadId)) as UploadJob;
 
     // Avoid attempting to retry a successful job, should be an update in that case
-    if (upload.status === JSSJobStatus.SUCCEEDED) {
+    if (fuaUpload.status === JSSJobStatus.SUCCEEDED) {
       throw new Error(
-        `Upload cannot be retried if already successful, actual status is ${upload.status}.`
+        `Upload cannot be retried if already successful, actual status is ${fuaUpload.status}.`
       );
     }
 
     // Attempt to resume an ongoing upload if possible before scraping this one entirely
-    const { fssUploadId } = upload.serviceFields;
+    const { fssUploadId } = fuaUpload.serviceFields;
     let resumeError: Error | undefined;
+    
     if (fssUploadId) {
-      let fssStatus;
-      try {
-        fssStatus = await this.fss.getStatus(fssUploadId);
-      } catch (error) {
-        // No-op: move on if this failed
-      }
-
-      switch(fssStatus?.status){
-        case UploadStatus.WORKING:
-        case UploadStatus.RETRY:
-        case UploadStatus.COMPLETE:
-          try {
-            await this.resume(upload, fssStatus, onProgress);
-            return;
-          } catch (error) {
-            // Cancel FSS upload to retry again from scratch
-            resumeError = error
-            await this.fss.cancelUpload(fssUploadId);
-            break;
-          }
-        case UploadStatus.POST_PROCESSING:
-          onProgress(fssUploadId, { bytesUploaded: fssStatus.currentFileSize, totalBytes: fssStatus.currentFileSize });
-          break;
-        default:
-          break;
+      const fssStatus = await this.fss.getStatus(fssUploadId);
+      if(fssStatus?.status !== UploadStatus.INACTIVE){
+        try {
+          await this.resume(fuaUpload, fssStatus, onProgress);
+          return;
+        } catch (error) {
+          // Cancel FSS upload to retry again from scratch
+          resumeError = error
+          await this.fss.cancelUpload(fssStatus.uploadId);
+        }
       }
     }
 
     // Start new upload jobs that will replace the current one
     const newJobServiceFields = {
       groupId:
-        upload.serviceFields?.groupId ||
+        fuaUpload.serviceFields?.groupId ||
         FileManagementSystem.createUploadGroupId(),
       originalJobId: uploadId,
-      localNasShortcut: upload.serviceFields?.localNasShortcut
+      localNasShortcut: fuaUpload.serviceFields?.localNasShortcut
     };
 
     // Create a separate upload for each file in this job
     // One job for multiple files is deprecated, this is here
     // for backwards-compatibility
     const results = await Promise.all(
-      (upload.serviceFields?.files || []).map(async (metadata) => {
+      (fuaUpload.serviceFields?.files || []).map(async (metadata) => {
         try {
           // Get a fresh upload job to track the upload with
           const newUpload = await this.initiateUpload(
             metadata,
-            upload.user,
+            fuaUpload.user,
             newJobServiceFields
           );
 
@@ -309,7 +295,7 @@ export default class FileManagementSystem {
                 serviceFields: {
                   error: errorMessage,
                   replacementJobIds: uniq([
-                    ...(upload?.serviceFields?.replacementJobIds || []),
+                    ...(fuaUpload?.serviceFields?.replacementJobIds || []),
                     newUpload.jobId,
                   ]),
                 },
@@ -415,53 +401,48 @@ export default class FileManagementSystem {
    * already done to upload the file.
    */
   private async resume(
-    upload: UploadJob,
+    fuaUpload: UploadJob,
     fssStatus: UploadStatusResponse,
     onProgress: (uploadId: string, progress: UploadProgressInfo) => void
   ): Promise<void> {
-    const { fssUploadId, localNasShortcut, lastModifiedInMS, files } = upload.serviceFields;
-    const { mtime: fileLastModified } =
-      await fs.promises.stat(files[0].file.originalPath);
+    const { localNasShortcut, lastModifiedInMS, files } = fuaUpload.serviceFields;
+    const { mtime: fileLastModified } = await fs.promises.stat(files[0].file.originalPath);
     const fileLastModifiedInMs = fileLastModified.getTime();
-
     if (lastModifiedInMS !== fileLastModifiedInMs) {
       throw new Error("File has been modified since last upload attempt");
     }
-
-    // Skip trying to resume if there is no FSS upload to check
-    if (fssUploadId) {
-      // Retrive job FSS uses to track its upload portion
-      let fssUpload;
-      try {
-        fssUpload = (await this.jss.getJob(fssUploadId)) as FSSUpload;
-      } catch (error) {
-        // Because FSS uses a queue to interact with JSS this job
-        // may not exist even though the upload is in progress
-        // in which case the app can just wait it out
-        console.error("Failed to get FSS job")
-        return;
-      }
-
-      if (fssStatus.status === UploadStatus.COMPLETE) {
-        // If an FSS upload status is complete it has performed everything
-        // it needs to and may just need the client to finish its portion
-        const { fileId } = fssUpload.serviceFields;
-        if(!fileId){
-          throw new Error("FileId was not published on COMPLETE upload: " + fssStatus.uploadId)
-        }
-        await this.complete(upload, fileId)
-      } else if (fssStatus.status === UploadStatus.RETRY || fssStatus.status === UploadStatus.WORKING) {
+    switch(fssStatus.status){
+      case UploadStatus.WORKING:
         // Update status to reflect the resume going smoothly
-        await this.jss.updateJob(upload.jobId, {
+        await this.jss.updateJob(fuaUpload.jobId, {
           status: JSSJobStatus.RETRYING,
         });
         if(localNasShortcut) {
-          await this.resumeLocalNasShortcut(fssUploadId, upload, fssStatus, onProgress);
+          await this.resumeLocalNasShortcut(fssStatus.uploadId, fuaUpload, fssStatus, onProgress);
         } else {
-          await this.resumeChunked(upload, fssStatus, onProgress);
+          await this.resumeChunked(fuaUpload, fssStatus, onProgress);
         }
-      }
+        break;
+      case UploadStatus.RETRY:
+        //TODO
+        break;
+      case UploadStatus.COMPLETE:
+        // If an FSS upload status is complete it has performed everything
+        // it needs to and may just need the client to finish its portion
+        const { fileId } = fssStatus;
+        if(!fileId){
+          throw new Error("FileId was not published on COMPLETE upload: " + fssStatus.uploadId)
+        }
+        await this.complete(fuaUpload, fileId)
+        break;
+      case UploadStatus.POST_PROCESSING:
+        onProgress(fssStatus.uploadId, { bytesUploaded: fssStatus.currentFileSize, totalBytes: fssStatus.currentFileSize });
+        break;
+      default:
+        console.error(`Unexpected FSS UploadStatus encountered: ${fssStatus?.status}`);
+        break;
     }
+    return;
   }
 
   private async resumeLocalNasShortcut(
