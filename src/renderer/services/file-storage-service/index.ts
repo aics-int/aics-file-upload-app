@@ -41,8 +41,12 @@ interface ChunkInfoResponse {
 }
 
 export interface UploadStatusResponse extends RegisterUploadResponse{
+  chunkSize: number;
   chunkStatuses: UploadStatus[];
   currentFileSize: number; //Current Size of file on disk
+  fileId?: string;
+  status: UploadStatus;
+  uploadId: string;
 }
 
 export interface RegisterUploadResponse {

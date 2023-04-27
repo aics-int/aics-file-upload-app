@@ -493,7 +493,7 @@ describe("FileManagementSystem", () => {
         expect(fileReader.read).to.have.been.calledOnce;
       });
 
-      it(`resumes local_nas_shortcut upload with an WORKING FSS status`, async () => {
+      it.only(`resumes local_nas_shortcut upload with an WORKING FSS status`, async () => {
         // Arrange
         const uploadId = "234124141";
         const { mtime: fileLastModified } =
@@ -530,8 +530,11 @@ describe("FileManagementSystem", () => {
         jss.getJob.onSecondCall().resolves(fssUpload);
         fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424 });
 
+        console.log("run test")
         // Act
         await fms.retry(uploadId, noop);
+
+        console.log("completed test")
 
         // Assert
         // expect(fss.cancelUpload.called).to.be.false;
