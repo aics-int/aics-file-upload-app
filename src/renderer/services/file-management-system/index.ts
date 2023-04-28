@@ -433,7 +433,7 @@ export default class FileManagementSystem {
         // If an FSS upload status is complete it has performed everything
         // it needs to and may just need the client to finish its portion
         const { fileId } = fssStatus;
-        if (!fileId) {
+        if(!fileId){
           throw new Error("FileId was not published on COMPLETE upload: " + fssStatus.uploadId)
         }
         await this.complete(fuaUpload, fileId)
