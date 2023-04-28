@@ -57,7 +57,7 @@ export default class FileManagementSystem {
     return uuid.v1().replace(/-/g, "");
   }
 
-  private static sleep(timeoutInMs = 2000) {
+  private static sleep(timeoutInMs = 2000){
     return new Promise(resolve => setTimeout(resolve, timeoutInMs))
   }
 
