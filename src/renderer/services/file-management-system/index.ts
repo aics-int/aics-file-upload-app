@@ -598,7 +598,7 @@ export default class FileManagementSystem {
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
     const offset = chunkSize * initialChunkNumber;
-    //TODO only read if offset < fssStatus
+    //TODO SWE-865 only read if offset < fssStatus
     const md5 = await this.fileReader.read({
       uploadId: fssUploadId,
       source,

@@ -178,7 +178,6 @@ export const FAILED_STATUSES = [
   JSSJobStatus.FAILED,
   JSSJobStatus.UNRECOVERABLE,
 ];
-//TODO why these are here
 export const IN_PROGRESS_STATUSES = [
   JSSJobStatus.BLOCKED,
   JSSJobStatus.RETRYING,
