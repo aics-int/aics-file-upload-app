@@ -569,7 +569,7 @@ export default class FileManagementSystem {
       await this.fss.sendUploadChunk(
         fssUploadId,
         chunkNumber,
-        chunkSize * (chunkNumber - 1),
+        chunkSize * (chunkNumber-1),
         md5ThusFar,
         chunk,
         user
@@ -588,7 +588,7 @@ export default class FileManagementSystem {
      * When chunksInFlight is not saturated, onChunkRead is also responsible for submitting chunks to this.fss (via uploadChunk) and has the 
      * side effect of populating uploadChunkPromises.
      */
-    const onChunkRead = async (chunk: Uint8Array, md5ThusFar: string): Promise<void> => {
+    const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be uploaded in parallel
       while (chunksInFlight >= chunksInFlightLimit) {
         await FileManagementSystem.sleep();
@@ -605,11 +605,11 @@ export default class FileManagementSystem {
       chunkSize,
       offset,
       partiallyCalculatedMd5,
-    });
+  });
 
     //Block until all chunk uploads have completed
     await Promise.all(uploadChunkPromises);
-
+    
     // Ensure final progress events are sent
     throttledOnProgress.flush();
 
