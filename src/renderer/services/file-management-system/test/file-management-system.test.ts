@@ -207,18 +207,18 @@ describe("FileManagementSystem", () => {
       fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
       fileReader.read.callsFake(
         async (
-          args: { uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void> }): Promise<string> => {
-          for (let i = 0; i < 5; i++) {
-            await args.onProgress(new Uint8Array(), "");
-          }
-          return md5;
-        });
+          args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
+        for(let i = 0; i < 5; i++){
+          await args.onProgress(new Uint8Array(), "");
+        }
+        return md5;
+      });
       let inFlightFssRequests = 0;
       let wasParallelising = false;
-      fss.sendUploadChunk.callsFake(async () => {
+      fss.sendUploadChunk.callsFake(async ()=>{
         inFlightFssRequests++;
-        await new Promise((resolve) => setTimeout(resolve, 25));
-        if (inFlightFssRequests > 1) {
+        await new Promise((resolve)=>setTimeout(resolve, 25));
+        if(inFlightFssRequests > 1){
           wasParallelising = true;
         }
         inFlightFssRequests--;
@@ -294,11 +294,11 @@ describe("FileManagementSystem", () => {
       fss.fileExistsByNameAndSize.resolves(false);
       fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
       // p.getName.callsFake(() => { return "Alex Smith"; });
-      fileReader.read.callsFake(async (args: { uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void> }): Promise<string> => {
+      fileReader.read.callsFake(async (args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
         await args.onProgress(new Uint8Array(), "testMd5");
         return "completeMd5";
       });
-      fss.sendUploadChunk.callsFake(async () => {
+      fss.sendUploadChunk.callsFake(async ()=>{
         throw new TestError();
       });
       // Act, Assert
@@ -630,7 +630,7 @@ describe("FileManagementSystem", () => {
     it("resumes an upload that just needs finalizing", async () => {
       // Arrange
       const { mtime: fileLastModified } =
-        await fs.promises.stat(testFilePath);
+      await fs.promises.stat(testFilePath);
       const fileLastModifiedInMs = fileLastModified.getTime();
       const fuaUploadJob: UploadJob = {
         ...mockJob,

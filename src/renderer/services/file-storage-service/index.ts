@@ -74,11 +74,11 @@ export default class FileStorageService extends HttpCacheClient {
     size: number
   ): Promise<boolean> {
     const url = `${FileStorageService.BASE_FILE_PATH}?name=${name}&size=${size}`;
-    try {
+    try{
       await this.get<FileRecord>(url);
       return true;
-    } catch (error) {
-      if (error.response.status === 404) {
+    } catch (error){
+      if(error.response.status === 404){
         return false;
       }
       throw error;
@@ -162,8 +162,8 @@ export default class FileStorageService extends HttpCacheClient {
         const chunkStatusForThisChunk = chunkStatuses[chunkNumber - 1];
         if (chunkStatusForThisChunk === UploadStatus.INACTIVE) {
           throw new Error(
-            `Something went wrong uploading chunk number ${chunkNumber} for upload ${uploadId}. ` +
-            "Chunk was determined to have failed uploading."
+              `Something went wrong uploading chunk number ${chunkNumber} for upload ${uploadId}. ` +
+              "Chunk was determined to have failed uploading."
           )
         } else if (chunkStatusForThisChunk === UploadStatus.COMPLETE) {
           return;
