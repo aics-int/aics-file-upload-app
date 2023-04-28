@@ -40,19 +40,13 @@ interface ChunkInfoResponse {
   status: UploadStatus;
 }
 
-export interface UploadStatusResponse extends RegisterUploadResponse{
+export interface UploadStatusResponse {
   chunkSize: number;
   chunkStatuses: UploadStatus[];
   currentFileSize: number; //Current Size of file on disk
   fileId?: string;
   status: UploadStatus;
   uploadId: string;
-}
-
-export interface RegisterUploadResponse {
-  status: UploadStatus;
-  uploadId: string; // ID for tracking upload
-  chunkSize: number; // Size of chunks to send to service
 }
 
 interface FileRecord {
@@ -80,11 +74,11 @@ export default class FileStorageService extends HttpCacheClient {
     size: number
   ): Promise<boolean> {
     const url = `${FileStorageService.BASE_FILE_PATH}?name=${name}&size=${size}`;
-    try{
+    try {
       await this.get<FileRecord>(url);
       return true;
-    } catch (error){
-      if(error.response.status === 404){
+    } catch (error) {
+      if (error.response.status === 404) {
         return false;
       }
       throw error;
@@ -101,7 +95,7 @@ export default class FileStorageService extends HttpCacheClient {
     fileType: FileType,
     fileSize: number,
     localNasPath?: string,
-  ): Promise<RegisterUploadResponse> {
+  ): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
     const postBody = {
       // Unfortunately FSS expects snake_case
@@ -168,8 +162,8 @@ export default class FileStorageService extends HttpCacheClient {
         const chunkStatusForThisChunk = chunkStatuses[chunkNumber - 1];
         if (chunkStatusForThisChunk === UploadStatus.INACTIVE) {
           throw new Error(
-              `Something went wrong uploading chunk number ${chunkNumber} for upload ${uploadId}. ` +
-              "Chunk was determined to have failed uploading."
+            `Something went wrong uploading chunk number ${chunkNumber} for upload ${uploadId}. ` +
+            "Chunk was determined to have failed uploading."
           )
         } else if (chunkStatusForThisChunk === UploadStatus.COMPLETE) {
           return;
@@ -204,8 +198,19 @@ export default class FileStorageService extends HttpCacheClient {
    * The MD5 is included, and will be used by the server for a checksum.
    * Other post upload tasks may also occur.
    */
-  public retryFinalize(uploadId: string, md5: string): Promise<UploadChunkResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/retry?md5=${md5}`;
+  public retryFinalizeMd5(uploadId: string, md5?: string): Promise<UploadChunkResponse> {
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize?md5=${md5}`;
+    return this.patch<UploadChunkResponse>(url, undefined);
+  }
+
+  /**
+   * This is a retry of the final asynchronous step of the upload, this might be necessary in cases where something goes awry
+   * on the server's side during this step of the upload.
+   * 
+   * This method is meant for locaNasShortcut upload only; MD5 is not included.
+   */
+  public retryFinalizeLocalNasShortcut(uploadId: string): Promise<UploadChunkResponse> {
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize?localNasShortcut=true`; //TODO SWE-867
     return this.patch<UploadChunkResponse>(url, undefined);
   }
 
