@@ -584,7 +584,7 @@ describe("FileManagementSystem", () => {
       await fms.retry(fssUploadId, noop);
 
       // Assert
-      expect(fss.retryFinalizeLocalNasShortcut.calledWith(fssUploadId, "770134b98f3fc804f593ea0098af8490")).to.be.true;
+      expect(fss.retryFinalizeMd5.calledWith(fssUploadId, "770134b98f3fc804f593ea0098af8490")).to.be.true;
     });
 
     it("calls retryFinalize on a localNasShortcut upload", async () => {
@@ -624,7 +624,7 @@ describe("FileManagementSystem", () => {
 
       // Assert
       expect(jss.createJob.called).to.be.false;
-      expect(fss.retryFinalizeLocalNasShortcut.calledWith(fssUploadId, undefined)).to.be.true;
+      expect(fss.retryFinalizeLocalNasShortcut.calledWith(fssUploadId)).to.be.true;
     });
 
     it("resumes an upload that just needs finalizing", async () => {

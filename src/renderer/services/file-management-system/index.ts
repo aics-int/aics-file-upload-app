@@ -416,7 +416,8 @@ export default class FileManagementSystem {
         });
         if (localNasShortcut) {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
-          const [registration, _, fileSize] = await this.register(fuaUpload);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [registration, _s, fileSize] = await this.register(fuaUpload);
           this.updateProgress(registration.uploadId, fileSize, (progress: UploadProgressInfo) => onProgress(registration.uploadId, progress))
         } else {
           await this.resumeUploadInChunks(fuaUpload, fssStatus, onProgress);
