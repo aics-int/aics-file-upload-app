@@ -6,8 +6,6 @@ import * as uuid from "uuid";
 
 import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, {
-  FSSUpload,
-  RegisterUploadResponse,
   UploadStatus,
   UploadStatusResponse,
 } from "../file-storage-service";
@@ -59,7 +57,7 @@ export default class FileManagementSystem {
     return uuid.v1().replace(/-/g, "");
   }
 
-  private static sleep(timeoutInMs = 2000){
+  private static sleep(timeoutInMs = 2000) {
     return new Promise(resolve => setTimeout(resolve, timeoutInMs))
   }
 
@@ -90,13 +88,13 @@ export default class FileManagementSystem {
         localNasShortcut: true, //TODO accept from ui control chrishu 4/21/23
         ...serviceFields,
       },
-      
+
     });
   }
 
   private async register(
     upload: UploadJob,
-  ): Promise<[RegisterUploadResponse, string, number]> {
+  ): Promise<[UploadStatusResponse, string, number]> {
     // Grab file details
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
@@ -144,14 +142,13 @@ export default class FileManagementSystem {
     onProgress: (progress: UploadProgressInfo) => void
   ): Promise<void> {
     try {
-      const [registration, source, fileSize] = await this.register(upload);
-      if(upload.serviceFields.localNasShortcut){
-        this.updateProgress(registration.uploadId, fileSize, onProgress);
+      const [fssStatus, source, fileSize] = await this.register(upload);
+      if (upload.serviceFields.localNasShortcut) {
+        this.updateProgress(fssStatus.uploadId, fileSize, onProgress);
       } else {
         await this.uploadInChunks({
-          fssUploadId: registration.uploadId,
-          source: source,
-          chunkSize: registration.chunkSize,
+          fssStatus,
+          source,
           user: upload.user,
           onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
         });
@@ -245,10 +242,10 @@ export default class FileManagementSystem {
     // Attempt to resume an ongoing upload if possible before scraping this one entirely
     const { fssUploadId } = fuaUpload.serviceFields;
     let resumeError: Error | undefined;
-    
+
     if (fssUploadId) {
       const fssStatus = await this.fss.getStatus(fssUploadId);
-      if(fssStatus?.status !== UploadStatus.INACTIVE){
+      if (fssStatus?.status !== UploadStatus.INACTIVE) {
         try {
           await this.resume(fuaUpload, fssStatus, onProgress);
           return;
@@ -411,26 +408,32 @@ export default class FileManagementSystem {
     if (lastModifiedInMS !== fileLastModifiedInMs) {
       throw new Error("File has been modified since last upload attempt");
     }
-    switch(fssStatus.status){
+    switch (fssStatus.status) {
       case UploadStatus.WORKING:
         // Update status to reflect the resume going smoothly
         await this.jss.updateJob(fuaUpload.jobId, {
           status: JSSJobStatus.RETRYING,
         });
-        if(localNasShortcut) {
-          await this.resumeLocalNasShortcut(fssStatus.uploadId, fuaUpload, fssStatus, onProgress);
+        if (localNasShortcut) {
+          // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
+          const [registration, _, fileSize] = await this.register(fuaUpload);
+          this.updateProgress(registration.uploadId, fileSize, (progress: UploadProgressInfo) => onProgress(registration.uploadId, progress))
         } else {
-          await this.resumeChunked(fuaUpload, fssStatus, onProgress);
+          await this.resumeUploadInChunks(fuaUpload, fssStatus, onProgress);
         }
         break;
       case UploadStatus.RETRY:
-        //TODO
+        if (localNasShortcut) {
+          await this.fss.retryFinalizeLocalNasShortcut(fssStatus.uploadId);
+        } else {
+          await this.retryChunkedUpload(fssStatus);
+        }
         break;
       case UploadStatus.COMPLETE:
         // If an FSS upload status is complete it has performed everything
         // it needs to and may just need the client to finish its portion
         const { fileId } = fssStatus;
-        if(!fileId){
+        if (!fileId) {
           throw new Error("FileId was not published on COMPLETE upload: " + fssStatus.uploadId)
         }
         await this.complete(fuaUpload, fileId)
@@ -445,34 +448,9 @@ export default class FileManagementSystem {
     return;
   }
 
-  private async resumeLocalNasShortcut(
-    fssUploadId: string,
-    upload: UploadJob,
-    fssStatus: UploadStatusResponse,
-    onProgress: (uploadId: string, progress: UploadProgressInfo) => void
-  ){
-    switch(fssStatus.status){
-      case UploadStatus.WORKING:
-        // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
-        const [_, __, fileSize] = await this.register(upload);
-        this.updateProgress(fssUploadId, fileSize, (progress: UploadProgressInfo) => onProgress(fssUploadId, progress))
-        break;
-      case UploadStatus.RETRY:
-        //TODO call /retryFinalize
-        break;
-    }
-  }
-
-  private async resumeChunked(
-    upload: UploadJob,
-    fssStatus: UploadStatusResponse,
-    onProgress: (uploadId: string, progress: UploadProgressInfo) => void
-  ) {
-    const { fssUploadId } = upload.serviceFields;
-    if (!fssUploadId) {
-      // Skip trying to resume if there is no FSS upload to check
-      return;
-    }
+  private async getChunkedUploadProgress(
+    fssStatus: UploadStatusResponse
+  ): Promise<[number, string?]> {
     // If FSS is still available to continue receiving chunks of this upload
     // simply continue sending the chunks
     let lastChunkNumber = fssStatus.chunkStatuses.findIndex(
@@ -484,77 +462,89 @@ export default class FileManagementSystem {
 
     let partiallyCalculatedMd5 = undefined;
     if (lastChunkNumber > 0) {
-      const chunkResponse = await this.fss.getChunkInfo(fssUploadId, lastChunkNumber);
+      const chunkResponse = await this.fss.getChunkInfo(fssStatus.uploadId, lastChunkNumber);
       partiallyCalculatedMd5 = chunkResponse.cumulativeMD5;
-      if (!partiallyCalculatedMd5){
+      if (!partiallyCalculatedMd5) {
         throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
       }
     }
+    return [lastChunkNumber, partiallyCalculatedMd5];
+  }
 
-    if (fssStatus.status === UploadStatus.RETRY) {
-      if (!partiallyCalculatedMd5){
-        throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
-      }
-      const deserailizedMd5Hasher = await Md5Hasher.deserialize(partiallyCalculatedMd5);
-      await this.fss.retryFinalize(fssUploadId, deserailizedMd5Hasher.digest());
-    } else if (fssStatus.status === UploadStatus.WORKING) {
-      const { originalPath } = upload.serviceFields.files[0].file;
-      const { size: fileSize } = await fs.promises.stat(originalPath);
-      await this.uploadInChunks({
-        fssUploadId,
-        source: originalPath,
-        chunkSize: fssStatus.chunkSize,
-        user: upload.user,
-        onProgress: (bytesUploaded) =>
-          onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
-        initialChunkNumber: lastChunkNumber,
-        partiallyCalculatedMd5
-      });
+  private async retryChunkedUpload(
+    fssStatus: UploadStatusResponse
+  ) {
+    const [lastChunkNumber, partiallyCalculatedMd5] = await this.getChunkedUploadProgress(fssStatus);
+    if (!partiallyCalculatedMd5) {
+      throw new Error('No partial MD5 for chunk ' + lastChunkNumber);
     }
+    const deserailizedMd5Hasher = await Md5Hasher.deserialize(partiallyCalculatedMd5);
+    await this.fss.retryFinalizeMd5(fssStatus.uploadId, deserailizedMd5Hasher.digest());
+  }
+
+  private async resumeUploadInChunks(
+    upload: UploadJob,
+    fssStatus: UploadStatusResponse,
+    onProgress: (uploadId: string, progress: UploadProgressInfo) => void
+  ) {
+    const { originalPath } = upload.serviceFields.files[0].file;
+    const { size: fileSize } = await fs.promises.stat(originalPath);
+    const [lastChunkNumber, partiallyCalculatedMd5] = await this.getChunkedUploadProgress(fssStatus);
+
+    await this.uploadInChunks({
+      fssStatus,
+      source: originalPath,
+      user: upload.user,
+      onProgress: (bytesUploaded) =>
+        onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
+      initialChunkNumber: lastChunkNumber,
+      partiallyCalculatedMd5
+    });
   }
 
   private async updateProgress(
     fssUploadId: string,
     fileSize: number,
     onProgress: (progress: UploadProgressInfo) => void) {
+    const fssStatusResponse = await this.fss.getStatus(fssUploadId);
+    let fssStatus = fssStatusResponse?.status;
+    while (fssStatus !== UploadStatus.COMPLETE) {
+      await FileManagementSystem.sleep(1000); //TODO too short?  Tests timeout if > 2 sec
       const fssStatusResponse = await this.fss.getStatus(fssUploadId);
-      let fssStatus = fssStatusResponse?.status;
-      while(fssStatus !== UploadStatus.COMPLETE){
-        await FileManagementSystem.sleep(1000); //TODO too short?  Tests timeout if > 2 sec
-        const fssStatusResponse = await this.fss.getStatus(fssUploadId);
-        fssStatus = fssStatusResponse?.status;
-        switch(fssStatus){
-          case UploadStatus.WORKING:
-            onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
-            break;
-          case UploadStatus.POST_PROCESSING:
-            onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
-            break;
-          case UploadStatus.INACTIVE:
-          case UploadStatus.RETRY:
-            throw new Error(
-              `Something went wrong during a local NAS shortcut upload: ${fssUploadId}.  Upload state is: ${fssStatus}.  Please contact #support_aics_software (on Slack).`
-            )
-            break;
-        }
+      fssStatus = fssStatusResponse?.status;
+      switch (fssStatus) {
+        case UploadStatus.WORKING:
+          onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+          break;
+        case UploadStatus.POST_PROCESSING:
+          onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+          break;
+        case UploadStatus.INACTIVE:
+        case UploadStatus.RETRY:
+          throw new Error(
+            `Something went wrong during a local NAS shortcut upload: ${fssUploadId}.  Upload state is: ${fssStatus}.  Please contact #support_aics_software (on Slack).`
+          )
+          break;
       }
+    }
   }
 
   /**
    * Uploads the given file to FSS in chunks asynchronously using a NodeJS.
    */
   private async uploadInChunks(config: {
-    fssUploadId: string,
+    fssStatus: UploadStatusResponse,
     source: string,
-    chunkSize: number,
     user: string,
     onProgress: (bytesUploaded: number) => void,
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { fssUploadId, source, chunkSize, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const { fssStatus, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const fssUploadId = fssStatus.uploadId;
+    const chunkSize = fssStatus.chunkSize;
     let chunkNumber = initialChunkNumber;
-    
+
     //Initialize bytes uploaded with progress made previously
     onProgress(chunkSize * initialChunkNumber);
 
@@ -567,7 +557,7 @@ export default class FileManagementSystem {
 
     let bytesUploaded = initialChunkNumber * chunkSize;
     const uploadChunkPromises: Promise<void>[] = [];
-    
+
     // For rate throttling how many chunks are sent in parallel
     let chunksInFlight = 0;
     const chunksInFlightLimit = FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING;
@@ -579,7 +569,7 @@ export default class FileManagementSystem {
       await this.fss.sendUploadChunk(
         fssUploadId,
         chunkNumber,
-        chunkSize * (chunkNumber-1),
+        chunkSize * (chunkNumber - 1),
         md5ThusFar,
         chunk,
         user
@@ -598,7 +588,7 @@ export default class FileManagementSystem {
      * When chunksInFlight is not saturated, onChunkRead is also responsible for submitting chunks to this.fss (via uploadChunk) and has the 
      * side effect of populating uploadChunkPromises.
      */
-    const onChunkRead = async (chunk:Uint8Array, md5ThusFar: string): Promise<void> => {
+    const onChunkRead = async (chunk: Uint8Array, md5ThusFar: string): Promise<void> => {
       // Throttle how many chunks will be uploaded in parallel
       while (chunksInFlight >= chunksInFlightLimit) {
         await FileManagementSystem.sleep();
@@ -606,19 +596,20 @@ export default class FileManagementSystem {
       chunkNumber += 1;
       uploadChunkPromises.push(uploadChunk(chunk, chunkNumber, md5ThusFar));
     }
-
+    const offset = chunkSize * initialChunkNumber;
+    //TODO only read if offset < fssStatus
     const md5 = await this.fileReader.read({
       uploadId: fssUploadId,
       source,
       onProgress: onChunkRead,
       chunkSize,
-      offset: chunkSize * initialChunkNumber,
+      offset,
       partiallyCalculatedMd5,
-  });
+    });
 
     //Block until all chunk uploads have completed
     await Promise.all(uploadChunkPromises);
-    
+
     // Ensure final progress events are sent
     throttledOnProgress.flush();
 
