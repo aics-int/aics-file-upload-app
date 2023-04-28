@@ -88,7 +88,6 @@ export default class FileManagementSystem {
         localNasShortcut: true, //TODO accept from ui control chrishu 4/21/23
         ...serviceFields,
       },
-
     });
   }
 
@@ -545,7 +544,7 @@ export default class FileManagementSystem {
     const fssUploadId = fssStatus.uploadId;
     const chunkSize = fssStatus.chunkSize;
     let chunkNumber = initialChunkNumber;
-
+    
     //Initialize bytes uploaded with progress made previously
     onProgress(chunkSize * initialChunkNumber);
 
@@ -558,7 +557,7 @@ export default class FileManagementSystem {
 
     let bytesUploaded = initialChunkNumber * chunkSize;
     const uploadChunkPromises: Promise<void>[] = [];
-
+    
     // For rate throttling how many chunks are sent in parallel
     let chunksInFlight = 0;
     const chunksInFlightLimit = FileManagementSystem.CHUNKS_CEILING_INFLIGHT_REQUEST_CEILING;
