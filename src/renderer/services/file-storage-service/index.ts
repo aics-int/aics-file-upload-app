@@ -209,7 +209,7 @@ export default class FileStorageService extends HttpCacheClient {
    * 
    * This method is meant for locaNasShortcut upload only; MD5 is not included.
    */
-  public retryFinalizeLocalNasShortcut(uploadId: string): Promise<UploadChunkResponse> {
+  public retryFinalizeForLocalNasShortcutUpload(uploadId: string): Promise<UploadChunkResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/finalize?localNasShortcut=true`; //TODO SWE-867
     return this.patch<UploadChunkResponse>(url, undefined);
   }
