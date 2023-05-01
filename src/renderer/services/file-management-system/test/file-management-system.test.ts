@@ -624,7 +624,7 @@ describe("FileManagementSystem", () => {
 
       // Assert
       expect(jss.createJob.called).to.be.false;
-      expect(fss.retryFinalizeLocalNasShortcut.calledWith(fssUploadId)).to.be.true;
+      expect(fss.retryFinalizeForLocalNasShortcutUpload.calledWith(fssUploadId)).to.be.true;
     });
 
     it("resumes an upload that just needs finalizing", async () => {

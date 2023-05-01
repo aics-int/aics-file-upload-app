@@ -424,9 +424,9 @@ export default class FileManagementSystem {
         break;
       case UploadStatus.RETRY:
         if (localNasShortcut) {
-          await this.fss.retryFinalizeLocalNasShortcut(fssStatus.uploadId);
+          await this.fss.retryFinalizeForLocalNasShortcutUpload(fssStatus.uploadId);
         } else {
-          await this.retryChunkedUpload(fssStatus);
+          await this.retryFinalizeForChunkedUpload(fssStatus);
         }
         break;
       case UploadStatus.COMPLETE:
@@ -471,7 +471,7 @@ export default class FileManagementSystem {
     return [lastChunkNumber, partiallyCalculatedMd5];
   }
 
-  private async retryChunkedUpload(
+  private async retryFinalizeForChunkedUpload(
     fssStatus: UploadStatusResponse
   ) {
     const [lastChunkNumber, partiallyCalculatedMd5] = await this.getChunkedUploadProgress(fssStatus);
@@ -509,7 +509,7 @@ export default class FileManagementSystem {
     const fssStatusResponse = await this.fss.getStatus(fssUploadId);
     let fssStatus = fssStatusResponse?.status;
     while (fssStatus !== UploadStatus.COMPLETE) {
-      await FileManagementSystem.sleep(1000); //TODO too short?  Tests timeout if > 2 sec
+      await FileManagementSystem.sleep(5000); //TODO too short?  Tests timeout if > 2 sec
       const fssStatusResponse = await this.fss.getStatus(fssUploadId);
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
@@ -519,12 +519,16 @@ export default class FileManagementSystem {
         case UploadStatus.POST_PROCESSING:
           onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
           break;
-        case UploadStatus.INACTIVE:
-        case UploadStatus.RETRY:
-          throw new Error(
-            `Something went wrong during a local NAS shortcut upload: ${fssUploadId}.  Upload state is: ${fssStatus}.  Please contact #support_aics_software (on Slack).`
-          )
-          break;
+          case UploadStatus.RETRY:
+            throw new Error(
+              'Your file uploaded and is safe, but a post-upload task failed on the backend.  Please wait a few moments, and the retry (select the box to the right of your upload, and use the "retry" button.'
+            );
+            break;
+          case UploadStatus.INACTIVE:
+            throw new Error(
+              `Something went wrong during a local NAS shortcut upload: ${fssUploadId}.  Upload state is: ${fssStatus}.  Please contact #support_aics_software (on Slack).`
+            );
+            break;
       }
     }
   }
