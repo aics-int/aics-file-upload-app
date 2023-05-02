@@ -442,7 +442,7 @@ export default class FileManagementSystem {
         onProgress(fssStatus.uploadId, { bytesUploaded: fssStatus.currentFileSize, totalBytes: fssStatus.currentFileSize });
         break;
       default:
-        console.error(`Unexpected FSS UploadStatus encountered: ${fssStatus?.status}`);
+        throw new Error(`Unexpected FSS UploadStatus encountered: ${fssStatus?.status}`);
         break;
     }
     return;
