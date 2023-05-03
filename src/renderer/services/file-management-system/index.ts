@@ -142,14 +142,15 @@ export default class FileManagementSystem {
   ): Promise<void> {
     try {
       const [fssStatus, source, fileSize] = await this.register(upload);
+      const innerOnProgress = (bytesUploaded: number) => onProgress({ bytesUploaded, totalBytes: fileSize })
       if (upload.serviceFields.localNasShortcut) {
-        this.updateProgress(fssStatus.uploadId, fileSize, onProgress);
+        this.updateProgress(fssStatus.uploadId, fileSize, innerOnProgress);
       } else {
         await this.uploadInChunks({
           fssStatus,
           source,
           user: upload.user,
-          onProgress: (bytesUploaded) => onProgress({ bytesUploaded, totalBytes: fileSize })
+          onProgress: innerOnProgress
         });
       }
 
@@ -417,7 +418,7 @@ export default class FileManagementSystem {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const [registration, _s, fileSize] = await this.register(fuaUpload);
-          this.updateProgress(registration.uploadId, fileSize, (progress: UploadProgressInfo) => onProgress(registration.uploadId, progress))
+          this.updateProgress(registration.uploadId, fileSize, (bytesUploaded) => onProgress(registration.uploadId, { bytesUploaded, totalBytes: fileSize }))
         } else {
           await this.resumeUploadInChunks(fuaUpload, fssStatus, onProgress);
         }
@@ -505,7 +506,7 @@ export default class FileManagementSystem {
   private async updateProgress(
     fssUploadId: string,
     fileSize: number,
-    onProgress: (progress: UploadProgressInfo) => void) {
+    onProgress: (bytesUploaded: number) => void) {
     const fssStatusResponse = await this.fss.getStatus(fssUploadId);
     let fssStatus = fssStatusResponse?.status;
     while (fssStatus !== UploadStatus.COMPLETE) {
@@ -514,10 +515,11 @@ export default class FileManagementSystem {
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
         case UploadStatus.WORKING:
-          onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+          console.log("update prog: " + fssStatusResponse.currentFileSize + " / " + fileSize);
+          onProgress(fssStatusResponse.currentFileSize);
           break;
         case UploadStatus.POST_PROCESSING:
-          onProgress({ bytesUploaded: fssStatusResponse.currentFileSize, totalBytes: fileSize });
+          onProgress(fssStatusResponse.currentFileSize);
           break;
           case UploadStatus.RETRY:
             throw new Error(
