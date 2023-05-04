@@ -84,7 +84,9 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       <CloseCircleFilled
         className={styles.unrecoverable}
       />
-    );
+    ); 
+    // TODO SWE-875 update progress for pre and post upload 
+    // based on props.row.original.progress.status=[PRE | UPLOAD | POST]
   } else {
     const {
       bytesUploaded = 0,

@@ -77,6 +77,7 @@ export default class FileManagementSystem {
     user: string,
     serviceFields: Partial<UploadServiceFields> = {}
   ): Promise<UploadJob> {
+    console.log(metadata.file.originalPath); // TODO remove after pilot testing
     return this.jss.createJob({
       jobName: path.basename(metadata.file.originalPath),
       service: Service.FILE_UPLOAD_APP,
@@ -85,7 +86,8 @@ export default class FileManagementSystem {
       serviceFields: {
         files: [metadata],
         type: "upload",
-        localNasShortcut: true, //TODO accept from ui control chrishu 4/21/23
+        localNasShortcut: true, // TODO for reliable pilot testing
+        // localNasShortcut: metadata.file.originalPath.startsWith('/allen'), //TODO accept from ui control chrishu 4/21/23
         ...serviceFields,
       },
     });
@@ -138,22 +140,21 @@ export default class FileManagementSystem {
    */
   public async upload(
     upload: UploadJob,
-    onProgress: (progress: UploadProgressInfo) => void
+    onProgressInfo: (progress: UploadProgressInfo) => void
   ): Promise<void> {
     try {
       const [fssStatus, source, fileSize] = await this.register(upload);
-      const innerOnProgress = (bytesUploaded: number) => onProgress({ bytesUploaded, totalBytes: fileSize })
-      if (upload.serviceFields.localNasShortcut) {
-        this.updateProgress(fssStatus.uploadId, fileSize, innerOnProgress);
-      } else {
+      const onProgressBytes = (bytesUploaded: number) => onProgressInfo({ bytesUploaded, totalBytes: fileSize })
+      if (!upload.serviceFields.localNasShortcut) {
         await this.uploadInChunks({
           fssStatus,
           source,
           user: upload.user,
-          onProgress: innerOnProgress
+          onProgress: onProgressBytes
         });
       }
-
+      await this.updateProgress(fssStatus.uploadId, onProgressBytes);
+      //poll->onProgress
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -244,15 +245,22 @@ export default class FileManagementSystem {
     let resumeError: Error | undefined;
 
     if (fssUploadId) {
-      const fssStatus = await this.fss.getStatus(fssUploadId);
-      if (fssStatus?.status !== UploadStatus.INACTIVE) {
-        try {
+      try {
+        // In case the req fails, handle by cancelling in the catch, 
+        // so that the FUA can then create a new upload for the file
+        const fssStatus = await this.fss.getStatus(fssUploadId);
+        if (fssStatus?.status !== UploadStatus.INACTIVE) {
           await this.resume(fuaUpload, fssStatus, onProgress);
           return;
-        } catch (error) {
-          // Cancel FSS upload to retry again from scratch
-          resumeError = error
-          await this.fss.cancelUpload(fssStatus.uploadId);
+        }
+      } catch (error) {
+        // Cancel FSS upload to retry again from scratch
+        resumeError = error
+        try{
+          await this.fss.cancelUpload(fssUploadId);
+        } catch (calcelError){
+          // In case fssUploadId does not exist on server, 
+          // no-op so that control continues to routine where new jobs are created (below)
         }
       }
     }
@@ -418,7 +426,7 @@ export default class FileManagementSystem {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const [registration, _s, fileSize] = await this.register(fuaUpload);
-          this.updateProgress(registration.uploadId, fileSize, (bytesUploaded) => onProgress(registration.uploadId, { bytesUploaded, totalBytes: fileSize }))
+          this.updateProgress(registration.uploadId, (bytesUploaded) => onProgress(registration.uploadId, { bytesUploaded, totalBytes: fileSize }))
         } else {
           await this.resumeUploadInChunks(fuaUpload, fssStatus, onProgress);
         }
@@ -505,21 +513,23 @@ export default class FileManagementSystem {
 
   private async updateProgress(
     fssUploadId: string,
-    fileSize: number,
     onProgress: (bytesUploaded: number) => void) {
     const fssStatusResponse = await this.fss.getStatus(fssUploadId);
     let fssStatus = fssStatusResponse?.status;
+    // Throttle the progress callback to avoid sending
+    // too many updates on fast uploads
+    const throttledOnProgress = throttle(
+      onProgress,
+      ChunkedFileReader.THROTTLE_DELAY_IN_MS
+    );
     while (fssStatus !== UploadStatus.COMPLETE) {
       await FileManagementSystem.sleep(5000); //TODO too short?  Tests timeout if > 2 sec
       const fssStatusResponse = await this.fss.getStatus(fssUploadId);
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
         case UploadStatus.WORKING:
-          console.log("update prog: " + fssStatusResponse.currentFileSize + " / " + fileSize);
-          onProgress(fssStatusResponse.currentFileSize);
-          break;
         case UploadStatus.POST_PROCESSING:
-          onProgress(fssStatusResponse.currentFileSize);
+          throttledOnProgress(fssStatusResponse.currentFileSize);
           break;
           case UploadStatus.RETRY:
             throw new Error(
