@@ -86,8 +86,8 @@ export default class FileManagementSystem {
       serviceFields: {
         files: [metadata],
         type: "upload",
-        // localNasShortcut: true, // TODO for reliable pilot testing
-        localNasShortcut: metadata.file.originalPath.startsWith('/allen'), //TODO accept from ui control chrishu 4/21/23
+        localNasShortcut: true, // TODO for reliable pilot testing
+        // localNasShortcut: metadata.file.originalPath.startsWith('/allen'), //TODO accept from ui control chrishu 4/21/23
         ...serviceFields,
       },
     });
@@ -108,7 +108,6 @@ export default class FileManagementSystem {
       );
     }
 
-    // Start job in FSS
     const fileType = extensionToFileTypeMap[
       path.extname(upload.serviceFields.files[0]?.file.originalPath).toLowerCase()
     ] || FileType.OTHER;
