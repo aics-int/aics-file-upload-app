@@ -43,7 +43,8 @@ interface ChunkInfoResponse {
 export interface UploadStatusResponse {
   chunkSize: number;
   chunkStatuses: UploadStatus[];
-  currentFileSize: number; //Current Size of file on disk
+  currentFileSize: number;
+  fileSize: number;
   fileId?: string;
   status: UploadStatus;
   uploadId: string;
