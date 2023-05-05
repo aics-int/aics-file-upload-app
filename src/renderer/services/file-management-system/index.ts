@@ -522,7 +522,7 @@ export default class FileManagementSystem {
       ChunkedFileReader.THROTTLE_DELAY_IN_MS
     );
     while (![UploadStatus.COMPLETE, UploadStatus.POST_PROCESSING].includes(fssStatus)) {
-      // await FileManagementSystem.sleep(5000); //TODO too short?  Tests timeout if > 2 sec
+      await FileManagementSystem.sleep(5000); //TODO too short?  Tests timeout if > 2 sec
       const fssStatusResponse = await this.fss.getStatus(fssUploadId);
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
