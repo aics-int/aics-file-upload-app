@@ -103,7 +103,7 @@ describe("FileManagementSystem", () => {
       const uploadId = "091234124";
       const expectedMd5 = "testMd5";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fileReader.read.resolves(expectedMd5)
 
       // Act
@@ -133,13 +133,14 @@ describe("FileManagementSystem", () => {
       };
       const uploadId = "091234124";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fss.getStatus.resolves({
         status: UploadStatus.COMPLETE,
         uploadId,
         chunkSize: 2424,
         chunkStatuses: [],
-        currentFileSize: 99
+        currentFileSize: 99,
+        fileSize: -1
       });
       // Act
       await fms.upload(upload, noop);
@@ -168,7 +169,7 @@ describe("FileManagementSystem", () => {
       const uploadId = "091234124";
       const expectedMd5 = "testMd5";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fileReader.read.resolves(expectedMd5)
 
       // Act
@@ -204,7 +205,7 @@ describe("FileManagementSystem", () => {
       };
       const uploadId = "091234124";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fileReader.read.callsFake(
         async (
           args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
@@ -249,7 +250,7 @@ describe("FileManagementSystem", () => {
         },
       };
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: "091234124", chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: "091234124", chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fileReader.read.rejects(new Error(error));
 
       // Act
@@ -292,7 +293,7 @@ describe("FileManagementSystem", () => {
       };
       const uploadId = "091234124";
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       // p.getName.callsFake(() => { return "Alex Smith"; });
       fileReader.read.callsFake(async (args:{uploadId: string, source: string, onProgress: (chunk: Uint8Array, partialMd5: string) => Promise<void>}):Promise<string>=>{
         await args.onProgress(new Uint8Array(), "testMd5");
@@ -328,7 +329,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: "091234124", chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: "091234124", chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fss.finalize.resolves({
         errorCount: 0,
         chunkNumber: 14,
@@ -346,7 +347,6 @@ describe("FileManagementSystem", () => {
       await fms.retry("mockUploadId", noop);
 
       // Assert
-      expect(fss.getStatus.called).to.be.false;
       expect(jss.createJob).to.have.been.calledOnce;
     });
 
@@ -369,17 +369,20 @@ describe("FileManagementSystem", () => {
       };
       const fileId = "12343124";
       const localPath = "/some/path/into/fms/at/test_file.txt";
+      const inactiveUploadId = "mockUploadId";
+      const newUploadId = "091234124";
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
-      fss.getStatus.resolves({
-        uploadId: "-1",
+      fss.getStatus.onFirstCall().resolves({
+        uploadId: inactiveUploadId,
         chunkSize: -1,
         status: UploadStatus.INACTIVE,
         chunkStatuses: [],
         currentFileSize: -1,
+        fileSize: -1
       });
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: "091234124", chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: newUploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fss.finalize.resolves({
         errorCount: 0,
         chunkNumber: 14,
@@ -394,10 +397,73 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry("mockUploadId", noop);
+      await fms.retry(inactiveUploadId, noop);
 
       // Assert
-      expect(fss.getStatus).to.have.been.calledOnce;
+      expect(jss.createJob).to.have.been.calledOnce;
+    });
+
+    it("Recreated upload succeeds if fss upload not in progress (able to resume)", async () => {
+      // Arrange
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [
+            {
+              file: {
+                fileType: "text",
+                originalPath: testFilePath,
+              },
+            },
+          ],
+          fssUploadId: "234124141",
+          type: "upload",
+        },
+      };
+      const md5 = "test_md5";
+      const fileId = "12343124";
+      const localPath = "/some/path/into/fms/at/test_file.txt";
+      const inactiveUploadId = "mockUploadId";
+      const newUploadId = "091234124";
+      jss.getJob.resolves(upload);
+      jss.createJob.resolves(upload);
+      fss.getStatus.onFirstCall().resolves({
+        uploadId: inactiveUploadId,
+        chunkSize: -1,
+        status: UploadStatus.INACTIVE,
+        chunkStatuses: [],
+        currentFileSize: -1,
+        fileSize: -1
+      }).onSecondCall().resolves(
+      {
+        uploadId: inactiveUploadId,
+        chunkSize: -1,
+        status: UploadStatus.COMPLETE,
+        chunkStatuses: [],
+        currentFileSize: -1,
+        fileSize: -1
+      });
+      fss.fileExistsByNameAndSize.resolves(false);
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: newUploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
+      fss.finalize.resolves({
+        errorCount: 0,
+        chunkNumber: 14,
+        uploadId: upload.jobId,
+      });
+      fss.getFileAttributes.resolves({
+        fileId,
+        localPath,
+        name: "",
+        size: 4,
+        md5: "",
+      });
+      fileReader.read.resolves(md5)
+
+      // Act
+      await fms.retry(inactiveUploadId, noop);
+
+      // Assert
+      expect(fss.finalize.calledWith(newUploadId, md5)).to.be.true;
       expect(jss.createJob).to.have.been.calledOnce;
     });
 
@@ -428,7 +494,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.resolves(upload);
       jss.createJob.resolves(upload);
       fss.fileExistsByNameAndSize.resolves(false);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: "091234124", chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId: "091234124", chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
       fss.finalize.resolves({
         errorCount: 0,
         chunkNumber: 14,
@@ -446,7 +512,8 @@ describe("FileManagementSystem", () => {
       await fms.retry("mockUploadId", noop);
 
       // Assert
-      expect(fss.getStatus.called).to.be.false;
+      expect(fss.finalize.calledTwice).to.be.true;
+      expect(fss.registerUpload.calledTwice).to.be.true;
       expect(jss.createJob.getCalls()).to.be.lengthOf(2);
     });
 
@@ -481,7 +548,8 @@ describe("FileManagementSystem", () => {
         chunkSize: -1,
         uploadId: "-1",
         chunkStatuses: [],
-        currentFileSize: -1
+        currentFileSize: -1,
+        fileSize: -1
       });
       jss.getJob.onSecondCall().resolves(fssUpload);
 
@@ -520,15 +588,26 @@ describe("FileManagementSystem", () => {
         ...mockJob,
       };
       jss.getJob.onFirstCall().resolves(upload);
-      fss.getStatus.resolves({
+      jss.getJob.onSecondCall().resolves(fssUpload);
+      fss.registerUpload.resolves({ 
+        status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 
+      });
+      fss.getStatus.onFirstCall().resolves({
         status: UploadStatus.WORKING,
         chunkSize: -1,
         uploadId: "-1",
         chunkStatuses: [],
-        currentFileSize: -1
+        currentFileSize: -1,
+        fileSize: -1
       });
-      jss.getJob.onSecondCall().resolves(fssUpload);
-      fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1 });
+      fss.getStatus.onSecondCall().resolves({
+        status: UploadStatus.COMPLETE,
+        chunkSize: -1,
+        uploadId: "-1",
+        chunkStatuses: [],
+        currentFileSize: -1,
+        fileSize: -1
+      });
 
       // Act
       await fms.retry(uploadId, noop);
@@ -573,6 +652,7 @@ describe("FileManagementSystem", () => {
         status: UploadStatus.RETRY,
         chunkStatuses: [UploadStatus.COMPLETE],
         currentFileSize: 5,
+        fileSize: -1
       });
       fss.getChunkInfo.resolves({
         cumulativeMD5: "155,15,172,125,232,3,0,0,0,0,0,0,251,202,102,144,7,248,49,200,135,184,123,11,17,82,191,19,96,32,156,6,0,0,0,0,1,0,128,19,0,0,0,0,100,0,0,0,153,6,0,102,144,31,156,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
@@ -611,12 +691,20 @@ describe("FileManagementSystem", () => {
         },
       };
       jss.getJob.onFirstCall().resolves(fuaUploadJob);
-      fss.getStatus.resolves({
+      fss.getStatus.onFirstCall().resolves({
         uploadId: fssUploadId,
         chunkSize: -1,
         status: UploadStatus.RETRY,
         chunkStatuses: [],
-        currentFileSize: -1
+        currentFileSize: -1,
+        fileSize: -1
+      }).onSecondCall().resolves({
+        uploadId: fssUploadId,
+        chunkSize: -1,
+        status: UploadStatus.COMPLETE,
+        chunkStatuses: [],
+        currentFileSize: -1,
+        fileSize: -1
       });
 
       // Act
@@ -662,7 +750,8 @@ describe("FileManagementSystem", () => {
         chunkSize: -1,
         status: UploadStatus.WORKING,
         chunkStatuses: [],
-        currentFileSize: -1
+        currentFileSize: -1,
+        fileSize: -1
       });
       fss.finalize.resolves({
         errorCount: 0,
@@ -722,6 +811,7 @@ describe("FileManagementSystem", () => {
         status: UploadStatus.WORKING,
         chunkStatuses: [],
         currentFileSize: -1,
+        fileSize: -1
       });
 
       // Act
@@ -766,7 +856,8 @@ describe("FileManagementSystem", () => {
         chunkSize: -1,
         status: UploadStatus.COMPLETE,
         chunkStatuses: [],
-        currentFileSize: -1
+        currentFileSize: -1,
+        fileSize: -1
       });
 
       // Act / Assert
