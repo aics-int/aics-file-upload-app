@@ -145,7 +145,7 @@ export default class FileManagementSystem {
       const [fssStatus, source, fileSize] = await this.register(upload);
       const onProgressBytes = (bytesUploaded: number) => onProgressInfo({ bytesUploaded, totalBytes: fileSize })
       if (upload.serviceFields.localNasShortcut) {
-        this.waitForServerCopy(fssStatus.uploadId, onProgressBytes);
+        await this.waitForServerCopy(fssStatus.uploadId, onProgressBytes);
       } else {
         await this.uploadInChunks({
           fssStatus,
@@ -154,7 +154,6 @@ export default class FileManagementSystem {
           onProgress: onProgressBytes
         });
       }
-      //poll->onProgress
     } catch (error) {
       // Ignore cancellation errors
       if (!(error instanceof CancellationError)) {
@@ -513,17 +512,19 @@ export default class FileManagementSystem {
   private async waitForServerCopy(
     fssUploadId: string,
     onProgress: (bytesUploaded: number) => void) {
-    const fssStatusResponse = await this.fss.getStatus(fssUploadId);
-    let fssStatus = fssStatusResponse?.status;
     // Throttle the progress callback to avoid sending
     // too many updates on fast uploads
     const throttledOnProgress = throttle(
       onProgress,
       ChunkedFileReader.THROTTLE_DELAY_IN_MS
     );
+    const pollingFrequency = 1000;                  //millisec
+    let fssStatus = UploadStatus.WORKING;           // Assume WORKING state when we enter the loop.
     while (![UploadStatus.COMPLETE, UploadStatus.POST_PROCESSING].includes(fssStatus)) {
-      await FileManagementSystem.sleep(5000); //TODO too short?  Tests timeout if > 2 sec
-      const fssStatusResponse = await this.fss.getStatus(fssUploadId);
+      const [fssStatusResponse] = await Promise.all([
+        this.fss.getStatus(fssUploadId),
+        FileManagementSystem.sleep(pollingFrequency) // minimum time before proceeding
+      ]);
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
         case UploadStatus.WORKING:
