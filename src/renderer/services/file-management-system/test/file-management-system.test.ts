@@ -927,7 +927,7 @@ describe("FileManagementSystem", () => {
   });
 
   describe("posixPath", () => {
-    it.only("converts Windows path to posix.",async () => {
+    it("converts Windows path to posix.",async () => {
       expect(fms.posixPath("//Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
       expect(fms.posixPath("/Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
       expect(fms.posixPath("/ALLEN/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
