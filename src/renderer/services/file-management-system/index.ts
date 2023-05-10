@@ -93,6 +93,10 @@ export default class FileManagementSystem {
     });
   }
 
+  public posixPath(source: string){
+    return path.normalize(source).toLocaleLowerCase().split(path.sep).join(path.posix.sep);
+  }
+
   private async register(
     upload: UploadJob,
   ): Promise<[UploadStatusResponse, string, number]> {
@@ -116,7 +120,7 @@ export default class FileManagementSystem {
       fileName,
       fileType,
       fileSize,
-      upload.serviceFields.localNasShortcut ? source : undefined,
+      upload.serviceFields.localNasShortcut ? this.posixPath(source) : undefined,
     );
 
     // Update parent job with upload job created by FSS

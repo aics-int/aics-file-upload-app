@@ -925,4 +925,12 @@ describe("FileManagementSystem", () => {
       await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
     });
   });
+
+  describe("posixPath", () => {
+    it.only("converts Windows path to posix.",async () => {
+      expect(fms.posixPath("//Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
+      expect(fms.posixPath("/Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
+      expect(fms.posixPath("/ALLEN/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
+    });
+  });
 });
