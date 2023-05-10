@@ -93,8 +93,16 @@ export default class FileManagementSystem {
     });
   }
 
+  /**
+   * 
+   * @param source Converts Windows style FMS path to Unix style.
+   * @returns 
+   */
   public posixPath(source: string){
-    return path.normalize(source).toLocaleLowerCase().split(path.sep).join(path.posix.sep);
+    const mntPointForcedLowerCase = source.replace(/allen/gi, 'allen'); // Windows is inconsistent here (have seen both 'ALLEN' and Allen' generated in the wild), 
+                                                                        // and unix paths are case sensitive.
+    const normalizedPath = path.normalize(mntPointForcedLowerCase);     // Drop proceeding / from //allen.
+    return normalizedPath.split(path.sep).join(path.posix.sep);         // convert path separators.
   }
 
   private async register(
