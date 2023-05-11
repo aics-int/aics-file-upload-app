@@ -159,6 +159,16 @@ export default class FileManagementSystem {
       const onProgressBytes = (bytesUploaded: number) => onProgressInfo({ bytesUploaded, totalBytes: fileSize })
       if (upload.serviceFields.localNasShortcut) {
         await this.waitForServerCopy(fssStatus.uploadId, onProgressBytes);
+      } else if(fssStatus.chunkStatuses && fssStatus.chunkStatuses[0]) {  //Handles the case where FUA believes this is a new upload, 
+                                                                          //but actually, it is partially complete already.
+
+        const onRetryProgress = (                                         // Update the JSS FUA upload job with the FSS upload ID field
+          uploadId: string,
+          progress: UploadProgressInfo
+        ) => {
+          onProgressInfo(progress)
+        };
+        await this.retry(upload.jobId, onRetryProgress);                  // create the FUA JSS upload id and info here                  
       } else {
         await this.uploadInChunks({
           fssStatus,
