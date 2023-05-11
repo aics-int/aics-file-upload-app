@@ -101,6 +101,8 @@ export default class FileManagementSystem {
     const mntPointForcedLowerCase = source.replace(/allen/gi, 'allen'); // Windows is inconsistent here (have seen both 'ALLEN' and Allen' generated in the wild), 
                                                                         // and unix paths are case sensitive.
     const normalizedPath = path.normalize(mntPointForcedLowerCase);     // Drop proceeding / from //allen.
+    console.log("Source path: " + source);
+    console.log("Converted path: " + normalizedPath.split(path.sep).join(path.posix.sep));
     return normalizedPath.split(path.sep).join(path.posix.sep);         // convert path separators.
   }
 
