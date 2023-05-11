@@ -92,8 +92,9 @@ export default class FileManagementSystem {
   }
 
   /**
+   * Converts Windows style FMS path to Unix style.
    * 
-   * @param source Converts Windows style FMS path to Unix style.
+   * @param source
    * @returns 
    */
   public posixPath(source: string){
