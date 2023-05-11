@@ -77,7 +77,6 @@ export default class FileManagementSystem {
     user: string,
     serviceFields: Partial<UploadServiceFields> = {}
   ): Promise<UploadJob> {
-    console.log(metadata.file.originalPath); // TODO remove after pilot testing
     return this.jss.createJob({
       jobName: path.basename(metadata.file.originalPath),
       service: Service.FILE_UPLOAD_APP,
@@ -86,8 +85,7 @@ export default class FileManagementSystem {
       serviceFields: {
         files: [metadata],
         type: "upload",
-        localNasShortcut: true, // TODO for reliable pilot testing
-        // localNasShortcut: metadata.file.originalPath.startsWith('/allen'), //TODO accept from ui control chrishu 4/21/23
+        localNasShortcut: this.posixPath(metadata.file.originalPath).startsWith('/allen'),
         ...serviceFields,
       },
     });
