@@ -102,13 +102,12 @@ export default class FileManagementSystem {
    * @returns 
    */
   public posixPath(source: string){
-    const mntPointForcedLowerCase = source.replace(/allen/gi, 'allen');         // Windows is inconsistent here (have seen both 'ALLEN' and Allen' generated in the wild), 
-    console.log("lower cased: " + mntPointForcedLowerCase);
-                                                                                // and unix paths are case sensitive.
-    const convertedPosix = mntPointForcedLowerCase.split(path.sep).join(path.posix.sep); // convert path separators.
-    console.log("convertedPosiz: " + convertedPosix);
-    const replaced = convertedPosix.replace('//', '/');                                  //Remove double slash, from windows format
-    console.log("replaced: " + replaced);
+    // Windows is inconsistent here (have seen both 'ALLEN' and Allen' generated in the wild)
+    const mntPointForcedLowerCase = source.replace(/allen/gi, 'allen');
+    // convert path separators from Windows to Unix style.
+    const convertedPosix = mntPointForcedLowerCase.split(path.sep).join(path.posix.sep);
+    // Remove double slash, from windows format
+    const replaced = convertedPosix.replace('//', '/');                                  
     return replaced;
   }
 
@@ -539,13 +538,17 @@ export default class FileManagementSystem {
     );
     const pollingFrequency = 1000;                  //millisec
     let fssStatus = UploadStatus.WORKING;           // Assume WORKING state when we enter the loop.
-    while (![UploadStatus.COMPLETE, UploadStatus.POST_PROCESSING].includes(fssStatus)) {
+    do {
       const [fssStatusResponse] = await Promise.all([
         this.fss.getStatus(fssUploadId),
         FileManagementSystem.sleep(pollingFrequency) // minimum time before proceeding
       ]);
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
+        case UploadStatus.COMPLETE:
+        case UploadStatus.POST_PROCESSING:
+          throttledOnProgress(fssStatusResponse.fileSize);
+          break;
         case UploadStatus.WORKING:
           throttledOnProgress(fssStatusResponse.currentFileSize);
           break;
@@ -559,6 +562,7 @@ export default class FileManagementSystem {
           );
       }
     }
+    while (![UploadStatus.COMPLETE, UploadStatus.POST_PROCESSING].includes(fssStatus))
   }
 
   /**
