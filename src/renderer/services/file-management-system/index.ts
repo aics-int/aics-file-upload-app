@@ -85,12 +85,16 @@ export default class FileManagementSystem {
       serviceFields: {
         files: [metadata],
         type: "upload",
-        localNasShortcut: this.posixPath(metadata.file.originalPath).startsWith('/allen'),
+        localNasShortcut: this.shouldBeLocalNasUpload(metadata.file.originalPath),
         ...serviceFields,
       },
     });
   }
 
+  public shouldBeLocalNasUpload(path: string){
+    return this.posixPath(path).startsWith('/allen');
+  }
+    
   /**
    * Converts Windows style FMS path to Unix style.
    * 
@@ -98,10 +102,13 @@ export default class FileManagementSystem {
    * @returns 
    */
   public posixPath(source: string){
-    const mntPointForcedLowerCase = source.replace(/allen/gi, 'allen'); // Windows is inconsistent here (have seen both 'ALLEN' and Allen' generated in the wild), 
-                                                                        // and unix paths are case sensitive.
-    const normalizedPath = path.normalize(mntPointForcedLowerCase);     // Drop proceeding / from //allen.
-    return normalizedPath.split(path.sep).join(path.posix.sep);         // convert path separators.
+    // Windows is inconsistent here (have seen both 'ALLEN' and Allen' generated in the wild)
+    const mntPointForcedLowerCase = source.replace(/allen/gi, 'allen');
+    // convert path separators from Windows to Unix style.
+    const convertedPosix = mntPointForcedLowerCase.split(path.sep).join(path.posix.sep);
+    // Remove double slash, from windows format
+    const replaced = convertedPosix.replace('//', '/');                                  
+    return replaced;
   }
 
   private async register(
@@ -531,13 +538,17 @@ export default class FileManagementSystem {
     );
     const pollingFrequency = 1000;                  //millisec
     let fssStatus = UploadStatus.WORKING;           // Assume WORKING state when we enter the loop.
-    while (![UploadStatus.COMPLETE, UploadStatus.POST_PROCESSING].includes(fssStatus)) {
+    do {
       const [fssStatusResponse] = await Promise.all([
         this.fss.getStatus(fssUploadId),
         FileManagementSystem.sleep(pollingFrequency) // minimum time before proceeding
       ]);
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
+        case UploadStatus.COMPLETE:
+        case UploadStatus.POST_PROCESSING:
+          throttledOnProgress(fssStatusResponse.fileSize);
+          break;
         case UploadStatus.WORKING:
           throttledOnProgress(fssStatusResponse.currentFileSize);
           break;
@@ -551,6 +562,7 @@ export default class FileManagementSystem {
           );
       }
     }
+    while (![UploadStatus.COMPLETE, UploadStatus.POST_PROCESSING].includes(fssStatus))
   }
 
   /**
