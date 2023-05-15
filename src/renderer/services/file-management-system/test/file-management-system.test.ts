@@ -1019,12 +1019,17 @@ describe("FileManagementSystem", () => {
     });
   });
 
-  describe("posixPath", () => {
+  describe("Path normalization, convert to posix.", () => {
     it("converts Windows path to posix.",async () => {
       expect(fms.posixPath("//Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
       expect(fms.posixPath("/Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
       expect(fms.posixPath("/ALLEN/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
       expect(fms.posixPath("/allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
     });
+
+    it("Evaluates true when asked if Isilon path should be a localNasShortcut upload.", async () => {
+      expect(fms.shouldBeLocalNasUpload("//allen/aics/assay-dev/MicroscopyData/Sara/2023/20230420/ZSD2notes.txt")).to.be.true;
+    });
+
   });
 });
