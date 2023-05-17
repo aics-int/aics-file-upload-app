@@ -3,7 +3,7 @@
 ## 3.1.0 (5/17/23)
 - Feature: LocalNasShortcut uploads (files on /allen are copied by server, not sent in chunks by client).
 
-## 3.0.0 ()
+## 3.0.0 (2/15/23)
 - Feature: FSS2 chunked uploads: Client sends file in chunks to FSS2 server over HTTP.
 
 ## 2.10.0 (10/17/22)
