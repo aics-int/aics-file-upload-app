@@ -1,5 +1,11 @@
 # Version Notes
 
+## 3.1.0 (5/17/23)
+- Feature: LocalNasShortcut uploads (files on /allen are copied by server, not sent in chunks by client).
+
+## 3.0.0 ()
+- Feature: FSS2 chunked uploads: Client sends file in chunks to FSS2 server over HTTP.
+
 ## 2.10.0 (10/17/22)
 - Feature: FMS.File dropdown selectors now display file names alongside file IDs
 - Bugfix: Querying for files in FMS.File dropdown selectors should now return results much faster
