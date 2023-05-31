@@ -32,6 +32,7 @@ import {
   receiveJobInsert,
   receiveJobs,
   receiveJobUpdate,
+  updateUploadProgressInfo,
 } from "../../state/job/actions";
 import { getIsSafeToExit } from "../../state/job/selectors";
 import {
@@ -53,6 +54,7 @@ import TemplateEditorModal from "../TemplateEditorModal";
 import UploadWithTemplatePage from "../UploadWithTemplatePage";
 
 import AutoReconnectingEventSource from "./AutoReconnectingEventSource";
+import { Step } from "../Table/CustomCells/StatusCell/Step";
 
 const styles = require("./styles.pcss");
 
@@ -122,6 +124,12 @@ export default function App() {
       } else if (job.serviceFields?.type === "upload") {
         // Otherwise separate user's other jobs from ones created by this app
         dispatch(receiveJobUpdate(job as UploadJob));
+      } else if(job.serviceFields?.pre_upload_md5 != job.serviceFields?.file_size) {
+        dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.pre_upload_md5, totalBytes: job.serviceFields?.file_size, step: Step.ONE }));
+      } else if(job.serviceFields?.current_file_size != job.serviceFields?.file_size) {
+        dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.pre_upload_md5, totalBytes: job.serviceFields?.file_size, step: Step.TWO }));
+      } else if(job.serviceFields?.post_upload_md5 != job.serviceFields?.file_size) {
+        dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.pre_upload_md5, totalBytes: job.serviceFields?.file_size, step: Step.THREE }));
       }
     });
 

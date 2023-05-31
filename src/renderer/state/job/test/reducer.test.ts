@@ -13,6 +13,7 @@ import {
 } from "../actions";
 import reducer from "../reducer";
 import { initialState } from "../reducer";
+import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 
 describe("job reducer", () => {
   describe("receiveJobs", () => {
@@ -58,11 +59,11 @@ describe("job reducer", () => {
   });
   describe("updateUploadProgressInfo", () => {
     it("adds progress info for a jobId without overwriting other progress info", () => {
-      const newProgress = { md5BytesComputed: 1, totalBytes: 2 };
+      const newProgress = { md5BytesComputed: 1, totalBytes: 2, step: Step.TWO};
       const result = reducer(
         {
           ...initialState,
-          copyProgress: { abc: { md5BytesComputed: 0, totalBytes: 100 } },
+          copyProgress: { abc: { md5BytesComputed: 0, totalBytes: 100, step: Step.TWO } },
         },
         updateUploadProgressInfo("def", newProgress)
       );
