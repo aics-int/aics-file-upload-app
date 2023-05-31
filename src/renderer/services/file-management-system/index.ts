@@ -22,6 +22,7 @@ import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
 import Md5Hasher from "./Md5Hasher";
+import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -34,6 +35,7 @@ export interface UploadProgressInfo {
   md5BytesComputed?: number;
   bytesUploaded?: number;
   totalBytes: number;
+  step: Step;
 }
 
 /**
@@ -161,7 +163,7 @@ export default class FileManagementSystem {
   ): Promise<void> {
     try {
       const [fssStatus, source, fileSize] = await this.register(upload);
-      const onProgressBytes = (bytesUploaded: number) => onProgressInfo({ bytesUploaded, totalBytes: fileSize })
+      const onProgressBytes = (bytesUploaded: number) => onProgressInfo({ bytesUploaded, totalBytes: fileSize, step: Step.TWO })
       if (upload.serviceFields.localNasShortcut) {
         await this.waitForServerCopy(fssStatus.uploadId, onProgressBytes);
       } else if(fssStatus.chunkStatuses && fssStatus.chunkStatuses[0]) {  //Handles the case where FUA believes this is a new upload, 
@@ -453,7 +455,7 @@ export default class FileManagementSystem {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const [registration, _s, fileSize] = await this.register(fuaUpload);
-          await this.waitForServerCopy(registration.uploadId, (bytesUploaded) => onProgress(registration.uploadId, { bytesUploaded, totalBytes: fileSize }))
+          await this.waitForServerCopy(registration.uploadId, (bytesUploaded) => onProgress(registration.uploadId, { bytesUploaded, totalBytes: fileSize, step: Step.TWO }))
         } else {
           await this.resumeUploadInChunks(fuaUpload, fssStatus, onProgress);
         }
@@ -475,7 +477,7 @@ export default class FileManagementSystem {
         await this.complete(fuaUpload, fileId)
         break;
       case UploadStatus.POST_PROCESSING:
-        onProgress(fssStatus.uploadId, { bytesUploaded: fssStatus.currentFileSize, totalBytes: fssStatus.fileSize });
+        onProgress(fssStatus.uploadId, { bytesUploaded: fssStatus.currentFileSize, totalBytes: fssStatus.fileSize, step: Step.TWO });
         break;
       default:
         throw new Error(`Unexpected FSS UploadStatus encountered: ${fssStatus?.status}`);
@@ -531,7 +533,7 @@ export default class FileManagementSystem {
       source: originalPath,
       user: upload.user,
       onProgress: (bytesUploaded) =>
-        onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize }),
+        onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize, step: Step.TWO }),
       initialChunkNumber: lastChunkNumber,
       partiallyCalculatedMd5
     });

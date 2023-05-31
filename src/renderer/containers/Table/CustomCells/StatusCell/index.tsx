@@ -10,6 +10,7 @@ import {
 import { JSSJobStatus } from "../../../../services/job-status-service/types";
 import { UploadSummaryTableRow } from "../../../../state/types";
 import { getPowerOf1000 } from "../../../../util";
+import { Step } from "./Step";
 
 const styles = require("./styles.pcss");
 
@@ -21,14 +22,10 @@ const POWER_OF_1000_TO_ABBREV = new Map<number, string>([
   [4, "TB"],
 ]);
 
-enum Step {
-  ONE,
-  TWO,
-}
-
 const STEP_INFO = {
-  [Step.ONE]: "Step 1 of 2: Uploading file",
-  [Step.TWO]: "Step 2 of 2: Adding metadata",
+  [Step.ONE]: "Step 1 of 3: Pre-upload tasks",
+  [Step.TWO]: "Step 2 of 3: Uploading file",
+  [Step.THREE]: "Step 3 of 3: Post-upload tasks",
 };
 
 function getBytesDisplay(bytes: number): string {
@@ -91,19 +88,13 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     const {
       bytesUploaded = 0,
       totalBytes = 0,
+      step = 0,
     } = props.row.original.progress || {};
 
-    let step = Step.ONE;
     let displayForStep = getBytesDisplay(bytesUploaded);
     let totalForStep = getBytesDisplay(totalBytes);
     let progressForStep = 0;
-    if (totalBytes > 0 && bytesUploaded >= totalBytes) {
-      // All bytes have been uploaded -> the upload is on the last step
-      step = Step.TWO;
-      displayForStep = "0";
-      totalForStep = "1";
-    } 
-    else if (bytesUploaded && totalBytes) {
+    if (bytesUploaded && totalBytes) {
       // Uploading bytes, and progress has been made.
       progressForStep = Math.floor((bytesUploaded / totalBytes) * 100);
     }

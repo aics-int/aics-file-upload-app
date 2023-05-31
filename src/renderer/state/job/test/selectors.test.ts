@@ -16,6 +16,7 @@ import {
   getJobIdToUploadJobMap,
   getUploadsByTemplateUsage,
 } from "../selectors";
+import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 
 describe("Job selectors", () => {
   describe("getUploadsByTemplateUsage", () => {
@@ -29,6 +30,7 @@ describe("Job selectors", () => {
             [mockWorkingUploadJob.jobId]: {
               completedBytes: 2,
               totalBytes: 100,
+              step: Step.TWO,
             },
           },
         },

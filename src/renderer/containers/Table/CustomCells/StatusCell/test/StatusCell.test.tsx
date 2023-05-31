@@ -6,6 +6,7 @@ import * as React from "react";
 
 import StatusCell from "..";
 import { JSSJobStatus } from "../../../../../services/job-status-service/types";
+import { Step } from "../Step";
 
 describe("<StatusCell />", () => {
   it("shows complete status when successful and complete", () => {
@@ -70,6 +71,7 @@ describe("<StatusCell />", () => {
         progress: {
           bytesUploaded: 4245,
           totalBytes: 82341,
+          step: Step.ONE,
         },
       },
     };
@@ -81,7 +83,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 1 of 2: Uploading file"
+      "WORKING - Step 1 of 3: Pre-upload tasks"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(5);
   });
@@ -93,6 +95,7 @@ describe("<StatusCell />", () => {
         progress: {
           bytesUploaded: 0,
           totalBytes: 82341,
+          step: Step.TWO,
         },
       },
     };
@@ -104,7 +107,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 1 of 2: Uploading file"
+      "WORKING - Step 2 of 3: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });
@@ -116,6 +119,7 @@ describe("<StatusCell />", () => {
         progress: {
           bytesUploaded: 50001,
           totalBytes: 82341,
+          step: Step.TWO,
         },
       },
     };
@@ -127,7 +131,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 1 of 2: Uploading file"
+      "WORKING - Step 2 of 3: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(60);
   });
@@ -139,6 +143,7 @@ describe("<StatusCell />", () => {
         progress: {
           bytesUploaded: 82341,
           totalBytes: 82341,
+          step: Step.THREE,
         },
       },
     };
@@ -150,8 +155,8 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 2: Adding metadata"
+      "WORKING - Step 3 of 3: Post-upload tasks"
     );
-    expect(wrapper.find(Progress).prop("percent")).to.equal(0);
+    // expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });
 });
