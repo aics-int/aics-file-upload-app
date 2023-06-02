@@ -216,7 +216,7 @@ const initiateUploadLogic = createLogic({
     const uploadTasks = uploads.map((upload) => async () => {
       try {
         const onProgress = (progress: UploadProgressInfo) => {
-          dispatch(updateUploadProgressInfo(upload.jobId, progress));
+          // dispatch(updateUploadProgressInfo(upload.jobId, progress));
         };
         await fms.upload(upload, onProgress);
       } catch (error) {
@@ -299,7 +299,7 @@ const retryUploadsLogic = createLogic({
             uploadId: string,
             progress: UploadProgressInfo
           ) => {
-            dispatch(updateUploadProgressInfo(uploadId, progress));
+            // dispatch(updateUploadProgressInfo(uploadId, progress));
           };
           await fms.retry(upload.jobId, onProgress);
         } catch (e) {
@@ -770,7 +770,7 @@ const uploadWithoutMetadataLogic = createLogic({
       const name = upload.jobName;
       try {
         const onProgress = (progress: UploadProgressInfo) => {
-          dispatch(updateUploadProgressInfo(upload.jobId, progress));
+          // dispatch(updateUploadProgressInfo(upload.jobId, progress));
         };
         await deps.fms.upload(upload, onProgress);
       } catch (error) {
