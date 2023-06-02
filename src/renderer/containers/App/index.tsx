@@ -117,19 +117,19 @@ export default function App() {
       // the addition of the fileId i.e. FSS's completion, has failed,
       // or requires this clients intervention to retry
       if (
-        job.service === Service.FILE_STORAGE_SERVICE &&
-        (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED || job.currentStage === UploadStatus.RETRY)
-      ) {
-        dispatch(receiveFSSJobCompletionUpdate(job as FSSUpload));
-      } else if (job.serviceFields?.type === "upload") {
+        job.service === Service.FILE_STORAGE_SERVICE) {
+          if (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED || job.currentStage === UploadStatus.RETRY) {
+            dispatch(receiveFSSJobCompletionUpdate(job as FSSUpload));
+          } else if(job.serviceFields?.preUploadMd5 && (job.serviceFields.preUploadMd5 != job.serviceFields?.fileSize)) {
+            dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.preUploadMd5, totalBytes: job.serviceFields?.fileSize, step: Step.ONE }));
+          } else if(job.serviceFields?.currentFileSize && (job.serviceFields.currentFileSize!= job.serviceFields?.fileSize)) {
+            dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.currentFileSize, totalBytes: job.serviceFields?.fileSize, step: Step.TWO }));
+          } else if(job.serviceFields?.postUploadMd5 && (job.serviceFields.postUploadMd5 != job.serviceFields?.fileSize)) {
+            dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.postUploadMd5, totalBytes: job.serviceFields?.fileSize, step: Step.THREE }));
+          }
+        } else if (job.serviceFields?.type === "upload") {
         // Otherwise separate user's other jobs from ones created by this app
         dispatch(receiveJobUpdate(job as UploadJob));
-      } else if(job.serviceFields?.pre_upload_md5 != job.serviceFields?.file_size) {
-        dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.pre_upload_md5, totalBytes: job.serviceFields?.file_size, step: Step.ONE }));
-      } else if(job.serviceFields?.current_file_size != job.serviceFields?.file_size) {
-        dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.pre_upload_md5, totalBytes: job.serviceFields?.file_size, step: Step.TWO }));
-      } else if(job.serviceFields?.post_upload_md5 != job.serviceFields?.file_size) {
-        dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.pre_upload_md5, totalBytes: job.serviceFields?.file_size, step: Step.THREE }));
       }
     });
 

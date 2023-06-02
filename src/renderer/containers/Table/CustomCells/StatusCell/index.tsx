@@ -109,7 +109,7 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
           status="active"
         />
         <div className={styles.activeInfo}>
-          <p>Step {step + 1} of 2</p>
+          <p>Step {step + 1} of 3</p>
           <p>
             {displayForStep} / {totalForStep}
           </p>

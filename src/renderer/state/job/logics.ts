@@ -8,6 +8,7 @@ import {
   UploadJob,
   JSSJobStatus,
   JSSJob,
+  Service,
 } from "../../services/job-status-service/types";
 import {
   removeRequestFromInProgress,
@@ -38,6 +39,7 @@ import {
   ReceiveJobsAction,
   ReceiveJobUpdateAction,
 } from "./types";
+import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
 export const handleAbandonedJobsLogic = createLogic({
   process: async (
@@ -63,7 +65,7 @@ export const handleAbandonedJobsLogic = createLogic({
             uploadId: string,
             progress: UploadProgressInfo
           ) => {
-            dispatch(updateUploadProgressInfo(uploadId, progress));
+            // dispatch(updateUploadProgressInfo(uploadId, progress));
           };
           await fms.retry(abandonedUpload.jobId, onProgress);
         } catch (e) {
@@ -140,6 +142,23 @@ const receiveJobUpdateLogics = createLogic({
   type: RECEIVE_JOB_UPDATE,
 });
 
+const receiveFSSJobProgressUpdateLogics = createLogic({ 
+  transform: (
+    { action, ctx, getState }: ReduxLogicTransformDependencies,
+    next: ReduxLogicNextCb
+  ) => {
+    // if(action.payload.service === Service.FILE_STORAGE_SERVICE){
+    const fssUpload = action.payload;
+    const uploads = getUploadJobs(getState());
+    const matchingUploadJob = uploads.find(
+      (upload) => upload.serviceFields?.fssUploadId === fssUpload.jobId
+    );
+    next(updateUploadProgressInfo(matchingUploadJob?.jobId as string, fssUpload.progress));
+    // }
+  },
+  type: UPDATE_UPLOAD_PROGRESS_INFO,
+});
+
 // Responds to when a newly completed FSS upload job has been found
 const receiveFSSJobCompletionUpdateLogics = createLogic({
   process: async (
@@ -184,7 +203,7 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
             uploadId: string,
             progress: UploadProgressInfo
           ) => {
-            dispatch(updateUploadProgressInfo(uploadId, progress));
+            // dispatch(updateUploadProgressInfo(uploadId, progress));
           };
           await fms.retry(matchingUploadJob.jobId, onProgress);
         } catch (e) {
@@ -233,5 +252,6 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
 export default [
   handleAbandonedJobsLogic,
   receiveJobUpdateLogics,
+  receiveFSSJobProgressUpdateLogics,
   receiveFSSJobCompletionUpdateLogics,
 ];
