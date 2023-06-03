@@ -60,14 +60,7 @@ export const handleAbandonedJobsLogic = createLogic({
           // Alert user to abandoned job
           const info = `Checking to see if "${abandonedUpload.jobName}" was abandoned and can be resumed or retried.`;
           dispatch(setInfoAlert(info));
-
-          const onProgress = (
-            uploadId: string,
-            progress: UploadProgressInfo
-          ) => {
-            // dispatch(updateUploadProgressInfo(uploadId, progress));
-          };
-          await fms.retry(abandonedUpload.jobId, onProgress);
+          await fms.retry(abandonedUpload.jobId);
         } catch (e) {
           const message = `Retry for upload "${abandonedUpload.jobName}" failed: ${e.message}`;
           console.error(message, e);
@@ -147,14 +140,12 @@ const receiveFSSJobProgressUpdateLogics = createLogic({
     { action, ctx, getState }: ReduxLogicTransformDependencies,
     next: ReduxLogicNextCb
   ) => {
-    // if(action.payload.service === Service.FILE_STORAGE_SERVICE){
     const fssUpload = action.payload;
     const uploads = getUploadJobs(getState());
     const matchingUploadJob = uploads.find(
       (upload) => upload.serviceFields?.fssUploadId === fssUpload.jobId
     );
     next(updateUploadProgressInfo(matchingUploadJob?.jobId as string, fssUpload.progress));
-    // }
   },
   type: UPDATE_UPLOAD_PROGRESS_INFO,
 });
@@ -198,14 +189,7 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
         try {
           const info = `Checking to see if "${matchingUploadJob.jobName}" can be resumed after server failure.`;
           dispatch(setInfoAlert(info));
-
-          const onProgress = (
-            uploadId: string,
-            progress: UploadProgressInfo
-          ) => {
-            // dispatch(updateUploadProgressInfo(uploadId, progress));
-          };
-          await fms.retry(matchingUploadJob.jobId, onProgress);
+          await fms.retry(matchingUploadJob.jobId);
         } catch (e) {
           const message = `Retry for upload "${matchingUploadJob.jobName}" failed: ${e.message}`;
           console.error(message, e);

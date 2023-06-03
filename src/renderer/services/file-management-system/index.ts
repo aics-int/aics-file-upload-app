@@ -159,29 +159,20 @@ export default class FileManagementSystem {
    */
   public async upload(
     upload: UploadJob,
-    onProgressInfo: (progress: UploadProgressInfo) => void
   ): Promise<void> {
     try {
-      const [fssStatus, source, fileSize] = await this.register(upload);
-      const onProgressBytes = (bytesUploaded: number) => onProgressInfo({ bytesUploaded, totalBytes: fileSize, step: Step.TWO })
+      const [fssStatus, source] = await this.register(upload);
       if (upload.serviceFields.localNasShortcut) {
-        await this.waitForServerCopy(fssStatus.uploadId, onProgressBytes);
+        await this.waitForServerCopy(fssStatus.uploadId);
       } else if(fssStatus.chunkStatuses && fssStatus.chunkStatuses[0]) {  //Handles the case where FUA believes this is a new upload, 
                                                                           //but actually, it is partially complete already.
 
-        const onRetryProgress = (                                         // Update the JSS FUA upload job with the FSS upload ID field
-          uploadId: string,
-          progress: UploadProgressInfo
-        ) => {
-          onProgressInfo(progress)
-        };
-        await this.retry(upload.jobId, onRetryProgress);                  // create the FUA JSS upload id and info here                  
+        await this.retry(upload.jobId);                  // create the FUA JSS upload id and info here                  
       } else {
         await this.uploadInChunks({
           fssStatus,
           source,
-          user: upload.user,
-          onProgress: onProgressBytes
+          user: upload.user
         });
       }
     } catch (error) {
@@ -256,8 +247,7 @@ export default class FileManagementSystem {
    * with files in which case this will split the uploads into many different uploads.
    */
   public async retry(
-    uploadId: string,
-    onProgress: (uploadId: string, progress: UploadProgressInfo) => void
+    uploadId: string
   ): Promise<void> {
     // Request job from JSS & validate if it is retryable
     const fuaUpload = (await this.jss.getJob(uploadId)) as UploadJob;
@@ -279,7 +269,7 @@ export default class FileManagementSystem {
         // so that the FUA can then create a new upload for the file
         const fssStatus = await this.fss.getStatus(fssUploadId);
         if (fssStatus?.status !== UploadStatus.INACTIVE) {
-          await this.resume(fuaUpload, fssStatus, onProgress);
+          await this.resume(fuaUpload, fssStatus);
           return;
         }
       } catch (error) {
@@ -343,9 +333,7 @@ export default class FileManagementSystem {
           }
 
           // Perform upload with new job and current job's metadata, forgoing the current job
-          await this.upload(newUpload, (progress) =>
-            onProgress(newUpload.jobId, progress)
-          );
+          await this.upload(newUpload);
           return;
         } catch (error) {
           // Catch exceptions to allow other jobs to run before re-throwing the error
@@ -436,8 +424,7 @@ export default class FileManagementSystem {
    */
   private async resume(
     fuaUpload: UploadJob,
-    fssStatus: UploadStatusResponse,
-    onProgress: (uploadId: string, progress: UploadProgressInfo) => void
+    fssStatus: UploadStatusResponse
   ): Promise<void> {
     const { localNasShortcut, lastModifiedInMS, files } = fuaUpload.serviceFields;
     const { mtime: fileLastModified } = await fs.promises.stat(files[0].file.originalPath);
@@ -454,10 +441,10 @@ export default class FileManagementSystem {
         if (localNasShortcut) {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const [registration, _s, fileSize] = await this.register(fuaUpload);
-          await this.waitForServerCopy(registration.uploadId, (bytesUploaded) => onProgress(registration.uploadId, { bytesUploaded, totalBytes: fileSize, step: Step.TWO }))
+          const [registration, _s] = await this.register(fuaUpload);
+          await this.waitForServerCopy(registration.uploadId)
         } else {
-          await this.resumeUploadInChunks(fuaUpload, fssStatus, onProgress);
+          await this.resumeUploadInChunks(fuaUpload, fssStatus);
         }
         break;
       case UploadStatus.RETRY:
@@ -477,7 +464,6 @@ export default class FileManagementSystem {
         await this.complete(fuaUpload, fileId)
         break;
       case UploadStatus.POST_PROCESSING:
-        onProgress(fssStatus.uploadId, { bytesUploaded: fssStatus.currentFileSize, totalBytes: fssStatus.fileSize, step: Step.TWO });
         break;
       default:
         throw new Error(`Unexpected FSS UploadStatus encountered: ${fssStatus?.status}`);
@@ -522,32 +508,22 @@ export default class FileManagementSystem {
   private async resumeUploadInChunks(
     upload: UploadJob,
     fssStatus: UploadStatusResponse,
-    onProgress: (uploadId: string, progress: UploadProgressInfo) => void
   ) {
     const { originalPath } = upload.serviceFields.files[0].file;
-    const { size: fileSize } = await fs.promises.stat(originalPath);
     const [lastChunkNumber, partiallyCalculatedMd5] = await this.getChunkedUploadProgress(fssStatus);
 
     await this.uploadInChunks({
       fssStatus,
       source: originalPath,
       user: upload.user,
-      onProgress: (bytesUploaded) =>
-        onProgress(upload.jobId, { bytesUploaded, totalBytes: fileSize, step: Step.TWO }),
       initialChunkNumber: lastChunkNumber,
       partiallyCalculatedMd5
     });
   }
 
-  private async waitForServerCopy(
-    fssUploadId: string,
-    onProgress: (bytesUploaded: number) => void) {
-    // Throttle the progress callback to avoid sending
-    // too many updates on fast uploads
-    const throttledOnProgress = throttle(
-      onProgress,
-      ChunkedFileReader.THROTTLE_DELAY_IN_MS
-    );
+  private async waitForServerCopy(  //TODO Do we still need this?
+    fssUploadId: string
+    ) {
     const pollingFrequency = 1000;                  //millisec
     let fssStatus = UploadStatus.WORKING;           // Assume WORKING state when we enter the loop.
     do {
@@ -557,13 +533,6 @@ export default class FileManagementSystem {
       ]);
       fssStatus = fssStatusResponse?.status;
       switch (fssStatus) {
-        case UploadStatus.COMPLETE:
-        case UploadStatus.POST_PROCESSING:
-          throttledOnProgress(fssStatusResponse.fileSize);
-          break;
-        case UploadStatus.WORKING:
-          throttledOnProgress(fssStatusResponse.currentFileSize);
-          break;
         case UploadStatus.RETRY:
           throw new Error(
             'Your file uploaded and is safe, but a post-upload task failed on the backend.  Please wait a few moments, and the retry (select the box to the right of your upload, and use the "retry" button.'
@@ -584,25 +553,14 @@ export default class FileManagementSystem {
     fssStatus: UploadStatusResponse,
     source: string,
     user: string,
-    onProgress: (bytesUploaded: number) => void,
     initialChunkNumber?: number,
     partiallyCalculatedMd5?: string,
   }): Promise<void> {
-    const { fssStatus, source, user, onProgress, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
+    const { fssStatus, source, user, initialChunkNumber = 0, partiallyCalculatedMd5 } = config;
     const fssUploadId = fssStatus.uploadId;
     const chunkSize = fssStatus.chunkSize;
     let chunkNumber = initialChunkNumber;
     
-    //Initialize bytes uploaded with progress made previously
-    onProgress(chunkSize * initialChunkNumber);
-
-    // Throttle the progress callback to avoid sending
-    // too many updates on fast uploads
-    const throttledOnProgress = throttle(
-      onProgress,
-      ChunkedFileReader.THROTTLE_DELAY_IN_MS
-    );
-
     let bytesUploaded = initialChunkNumber * chunkSize;
     const uploadChunkPromises: Promise<void>[] = [];
     
@@ -624,7 +582,6 @@ export default class FileManagementSystem {
       );
       // Submit progress to callback
       bytesUploaded += chunk.byteLength;
-      throttledOnProgress(bytesUploaded);
       chunksInFlight--;
     };
 
@@ -658,9 +615,6 @@ export default class FileManagementSystem {
     //Block until all chunk uploads have completed
     await Promise.all(uploadChunkPromises);
     
-    // Ensure final progress events are sent
-    throttledOnProgress.flush();
-
     // Trigger asynchrous finalize step in FSS
     await this.fss.finalize(fssUploadId, md5);
   }
