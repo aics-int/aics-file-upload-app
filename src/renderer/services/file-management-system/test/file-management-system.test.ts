@@ -3,7 +3,6 @@ import * as os from "os";
 import * as path from "path";
 
 import { expect } from "chai";
-import { noop } from "lodash";
 import { createSandbox, SinonStubbedInstance } from "sinon";
 
 import FileManagementSystem from "..";
@@ -165,7 +164,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.upload(uploadJob, noop);
+      await fms.upload(uploadJob);
 
       // Assert
       // not called by upload unless redirected to retry
@@ -200,7 +199,7 @@ describe("FileManagementSystem", () => {
       fileReader.read.resolves(expectedMd5)
 
       // Act
-      await fms.upload(upload, noop);
+      await fms.upload(upload);
 
       // Assert
       expect(fileReader.read).to.have.been.calledOnce;
@@ -236,7 +235,7 @@ describe("FileManagementSystem", () => {
         fileSize: -1
       });
       // Act
-      await fms.upload(upload, noop);
+      await fms.upload(upload);
 
       // Assert
       expect(fileReader.read).to.have.not.been.called;
@@ -263,21 +262,13 @@ describe("FileManagementSystem", () => {
         };
         const uploadId = "091234124";
         fss.fileExistsByNameAndSize.resolves(false);
-        fss.registerUpload.resolves({ status: UploadStatus.WORKING, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
-        fss.getStatus.resolves({
-          status: failState,
-          uploadId,
-          chunkSize: 2424,
-          chunkStatuses: [],
-          currentFileSize: 99,
-          fileSize: -1
-        });
+        fss.registerUpload.resolves({ status: failState, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
   
         // Act
         let threw = false
-        try{
-          await fms.upload(upload, noop);
-        }catch(e){
+        try {
+          await fms.upload(upload);
+        } catch(e) {
           threw = true;
         }
 
@@ -316,7 +307,7 @@ describe("FileManagementSystem", () => {
       fileReader.read.resolves(expectedMd5)
 
       // Act
-      await fms.upload(upload, noop);
+      await fms.upload(upload);
 
       // Assert
       expect(
@@ -368,7 +359,7 @@ describe("FileManagementSystem", () => {
         inFlightFssRequests--;
       });
       // Act
-      await fms.upload(upload, noop);
+      await fms.upload(upload);
 
       // Assert
       expect(wasParallelising).to.be.true;
@@ -397,7 +388,7 @@ describe("FileManagementSystem", () => {
       fileReader.read.rejects(new Error(error));
 
       // Act
-      await expect(fms.upload(upload, noop)).to.be.rejectedWith(Error);
+      await expect(fms.upload(upload)).to.be.rejectedWith(Error);
 
       // Assert
       expect(
@@ -446,7 +437,7 @@ describe("FileManagementSystem", () => {
         throw new TestError();
       });
       // Act, Assert
-      expect(fms.upload(upload, noop)).to.be.rejectedWith(TestError);
+      expect(fms.upload(upload)).to.be.rejectedWith(TestError);
     });
   });
 
@@ -487,7 +478,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry("mockUploadId", noop);
+      await fms.retry("mockUploadId");
 
       // Assert
       expect(jss.createJob).to.have.been.calledOnce;
@@ -540,7 +531,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry(inactiveUploadId, noop);
+      await fms.retry(inactiveUploadId);
 
       // Assert
       expect(jss.createJob).to.have.been.calledOnce;
@@ -603,7 +594,7 @@ describe("FileManagementSystem", () => {
       fileReader.read.resolves(md5)
 
       // Act
-      await fms.retry(inactiveUploadId, noop);
+      await fms.retry(inactiveUploadId);
 
       // Assert
       expect(fss.finalize.calledWith(newUploadId, md5)).to.be.true;
@@ -652,7 +643,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry("mockUploadId", noop);
+      await fms.retry("mockUploadId");
 
       // Assert
       expect(fss.finalize.calledTwice).to.be.true;
@@ -697,7 +688,7 @@ describe("FileManagementSystem", () => {
       jss.getJob.onSecondCall().resolves(fssUpload);
 
       // Act
-      await fms.retry("mockUploadId", noop);
+      await fms.retry("mockUploadId");
 
       // Assert
       expect(jss.createJob.called).to.be.false;
@@ -753,7 +744,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry(uploadId, noop);
+      await fms.retry(uploadId);
 
       // Assert
       // expect(fss.cancelUpload.called).to.be.false;
@@ -804,7 +795,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry(fssUploadId, noop);
+      await fms.retry(fssUploadId);
 
       // Assert
       expect(fss.retryFinalizeMd5.calledWith(fssUploadId, "770134b98f3fc804f593ea0098af8490")).to.be.true;
@@ -851,7 +842,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry(fssUploadId, noop);
+      await fms.retry(fssUploadId);
 
       // Assert
       expect(jss.createJob.called).to.be.false;
@@ -910,7 +901,7 @@ describe("FileManagementSystem", () => {
       });
 
       // Act
-      await fms.retry("mockUploadId", noop);
+      await fms.retry("mockUploadId");
 
       // Assert
       expect(jss.createJob.called).to.be.false;
