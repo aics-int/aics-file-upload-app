@@ -16,7 +16,6 @@ import { RendererProcessEvents } from "../../../shared/constants";
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 import FileManagementSystem, {
-  UploadProgressInfo,
 } from "../../services/file-management-system";
 import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
@@ -24,7 +23,6 @@ import { Template } from "../../services/metadata-management-service/types";
 import { determineFilesFromNestedPaths, extensionToFileTypeMap, FileType, splitTrimAndFilter } from "../../util";
 import { requestFailed } from "../actions";
 import { setErrorAlert } from "../feedback/actions";
-import { updateUploadProgressInfo } from "../job/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
   getAnnotations,

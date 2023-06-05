@@ -1,6 +1,5 @@
 import { createLogic } from "redux-logic";
 
-import { UploadProgressInfo } from "../../services/file-management-system";
 import { UploadStatus } from "../../services/file-storage-service";
 import {
   FAILED_STATUSES,
@@ -8,7 +7,6 @@ import {
   UploadJob,
   JSSJobStatus,
   JSSJob,
-  Service,
 } from "../../services/job-status-service/types";
 import {
   removeRequestFromInProgress,

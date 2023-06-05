@@ -147,6 +147,16 @@ export default class FileManagementSystem {
         lastModifiedInMS: fileLastModifiedInMs,
       },
     });
+    switch (registration.status) {
+      case UploadStatus.RETRY:
+        throw new Error(
+          'Your file uploaded and is safe, but a post-upload task failed on the backend.  Please wait a few moments, and the retry (select the box to the right of your upload, and use the "retry" button.'
+        );
+      case UploadStatus.INACTIVE:
+        throw new Error(
+          `Something went wrong during upload: ${registration.uploadId}.  Upload state is: ${registration.status}.  Please contact #support_aics_software (on Slack).`
+        );
+    }
     return [registration, source, fileSize];
   }
   /**
@@ -162,13 +172,11 @@ export default class FileManagementSystem {
   ): Promise<void> {
     try {
       const [fssStatus, source] = await this.register(upload);
-      if (upload.serviceFields.localNasShortcut) {
-        await this.waitForServerCopy(fssStatus.uploadId);
-      } else if(fssStatus.chunkStatuses && fssStatus.chunkStatuses[0]) {  //Handles the case where FUA believes this is a new upload, 
-                                                                          //but actually, it is partially complete already.
-
+      if(fssStatus.chunkStatuses && fssStatus.chunkStatuses[0]) {  
+        //Handles the case where FUA believes this is a new upload, 
+        //but actually, it is partially complete already.
         await this.retry(upload.jobId);                  // create the FUA JSS upload id and info here                  
-      } else {
+      } else if (!upload.serviceFields.localNasShortcut) {
         await this.uploadInChunks({
           fssStatus,
           source,
@@ -441,8 +449,7 @@ export default class FileManagementSystem {
         if (localNasShortcut) {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const [registration, _s] = await this.register(fuaUpload);
-          await this.waitForServerCopy(registration.uploadId)
+          await this.register(fuaUpload);
         } else {
           await this.resumeUploadInChunks(fuaUpload, fssStatus);
         }
@@ -519,31 +526,6 @@ export default class FileManagementSystem {
       initialChunkNumber: lastChunkNumber,
       partiallyCalculatedMd5
     });
-  }
-
-  private async waitForServerCopy(  //TODO Do we still need this?
-    fssUploadId: string
-    ) {
-    const pollingFrequency = 1000;                  //millisec
-    let fssStatus = UploadStatus.WORKING;           // Assume WORKING state when we enter the loop.
-    do {
-      const [fssStatusResponse] = await Promise.all([
-        this.fss.getStatus(fssUploadId),
-        FileManagementSystem.sleep(pollingFrequency) // minimum time before proceeding
-      ]);
-      fssStatus = fssStatusResponse?.status;
-      switch (fssStatus) {
-        case UploadStatus.RETRY:
-          throw new Error(
-            'Your file uploaded and is safe, but a post-upload task failed on the backend.  Please wait a few moments, and the retry (select the box to the right of your upload, and use the "retry" button.'
-          );
-        case UploadStatus.INACTIVE:
-          throw new Error(
-            `Something went wrong during a local NAS shortcut upload: ${fssUploadId}.  Upload state is: ${fssStatus}.  Please contact #support_aics_software (on Slack).`
-          );
-      }
-    }
-    while (![UploadStatus.COMPLETE, UploadStatus.POST_PROCESSING].includes(fssStatus))
   }
 
   /**
