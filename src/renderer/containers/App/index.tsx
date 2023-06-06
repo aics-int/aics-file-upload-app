@@ -50,11 +50,11 @@ import { openUploadDraft, saveUploadDraft } from "../../state/upload/actions";
 import MyUploadsPage from "../MyUploadsPage";
 import NavigationBar from "../NavigationBar";
 import OpenTemplateModal from "../OpenTemplateModal";
+import { Step } from "../Table/CustomCells/StatusCell/Step";
 import TemplateEditorModal from "../TemplateEditorModal";
 import UploadWithTemplatePage from "../UploadWithTemplatePage";
 
 import AutoReconnectingEventSource from "./AutoReconnectingEventSource";
-import { Step } from "../Table/CustomCells/StatusCell/Step";
 
 const styles = require("./styles.pcss");
 
@@ -120,11 +120,11 @@ export default function App() {
         job.service === Service.FILE_STORAGE_SERVICE) {
           if (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED || job.currentStage === UploadStatus.RETRY) {
             dispatch(receiveFSSJobCompletionUpdate(job as FSSUpload));
-          } else if(job.serviceFields?.preUploadMd5 && (job.serviceFields.preUploadMd5 != job.serviceFields?.fileSize)) {
+          } else if(job.serviceFields?.preUploadMd5 && (job.serviceFields.preUploadMd5 !== job.serviceFields?.fileSize)) {
             dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.preUploadMd5, totalBytes: job.serviceFields?.fileSize, step: Step.ONE }));
-          } else if(job.serviceFields?.currentFileSize && (job.serviceFields.currentFileSize!= job.serviceFields?.fileSize)) {
+          } else if(job.serviceFields?.currentFileSize && (job.serviceFields.currentFileSize!== job.serviceFields?.fileSize)) {
             dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.currentFileSize, totalBytes: job.serviceFields?.fileSize, step: Step.TWO }));
-          } else if(job.serviceFields?.postUploadMd5 && (job.serviceFields.postUploadMd5 != job.serviceFields?.fileSize)) {
+          } else if(job.serviceFields?.postUploadMd5 && (job.serviceFields.postUploadMd5 !== job.serviceFields?.fileSize)) {
             dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.postUploadMd5, totalBytes: job.serviceFields?.fileSize, step: Step.THREE }));
           }
         } else if (job.serviceFields?.type === "upload") {

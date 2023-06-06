@@ -1,5 +1,6 @@
 import { expect } from "chai";
 
+import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 import {
   UploadJob,
   JSSJobStatus,
@@ -16,7 +17,6 @@ import {
   getJobIdToUploadJobMap,
   getUploadsByTemplateUsage,
 } from "../selectors";
-import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 
 describe("Job selectors", () => {
   describe("getUploadsByTemplateUsage", () => {

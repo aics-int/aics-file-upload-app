@@ -1,9 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { throttle, uniq } from "lodash";
+import { uniq } from "lodash";
 import * as uuid from "uuid";
 
+import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
 import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, {
   UploadStatus,
@@ -22,7 +23,6 @@ import { UploadRequest } from "../types";
 
 import ChunkedFileReader, { CancellationError } from "./ChunkedFileReader";
 import Md5Hasher from "./Md5Hasher";
-import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
 
 interface FileManagementClientConfig {
   fileReader: ChunkedFileReader;
@@ -543,7 +543,6 @@ export default class FileManagementSystem {
     const chunkSize = fssStatus.chunkSize;
     let chunkNumber = initialChunkNumber;
     
-    let bytesUploaded = initialChunkNumber * chunkSize;
     const uploadChunkPromises: Promise<void>[] = [];
     
     // For rate throttling how many chunks are sent in parallel
@@ -563,7 +562,6 @@ export default class FileManagementSystem {
         user
       );
       // Submit progress to callback
-      bytesUploaded += chunk.byteLength;
       chunksInFlight--;
     };
 

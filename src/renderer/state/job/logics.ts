@@ -24,6 +24,7 @@ import {
   ReduxLogicTransformDependenciesWithAction,
 } from "../types";
 import { uploadFailed, uploadSucceeded } from "../upload/actions";
+import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
 import { updateUploadProgressInfo } from "./actions";
 import {
@@ -37,7 +38,6 @@ import {
   ReceiveJobsAction,
   ReceiveJobUpdateAction,
 } from "./types";
-import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
 export const handleAbandonedJobsLogic = createLogic({
   process: async (
@@ -135,7 +135,7 @@ const receiveJobUpdateLogics = createLogic({
 
 const receiveFSSJobProgressUpdateLogics = createLogic({ 
   transform: (
-    { action, ctx, getState }: ReduxLogicTransformDependencies,
+    { action, getState }: ReduxLogicTransformDependencies,
     next: ReduxLogicNextCb
   ) => {
     const fssUpload = action.payload;

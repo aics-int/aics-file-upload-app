@@ -10,6 +10,7 @@ import {
 import { JSSJobStatus } from "../../../../services/job-status-service/types";
 import { UploadSummaryTableRow } from "../../../../state/types";
 import { getPowerOf1000 } from "../../../../util";
+
 import { Step } from "./Step";
 
 const styles = require("./styles.pcss");
@@ -91,8 +92,8 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       step = 0,
     } = props.row.original.progress || {};
 
-    let displayForStep = getBytesDisplay(bytesUploaded);
-    let totalForStep = getBytesDisplay(totalBytes);
+    const displayForStep = getBytesDisplay(bytesUploaded);
+    const totalForStep = getBytesDisplay(totalBytes);
     let progressForStep = 0;
     if (bytesUploaded && totalBytes) {
       // Uploading bytes, and progress has been made.

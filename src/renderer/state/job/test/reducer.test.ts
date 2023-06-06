@@ -1,5 +1,6 @@
 import { expect } from "chai";
 
+import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 import { JSSJobStatus } from "../../../services/job-status-service/types";
 import {
   mockSuccessfulUploadJob,
@@ -13,7 +14,6 @@ import {
 } from "../actions";
 import reducer from "../reducer";
 import { initialState } from "../reducer";
-import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 
 describe("job reducer", () => {
   describe("receiveJobs", () => {
