@@ -9,7 +9,6 @@ import {
   UploadJob,
 } from "../../../services/job-status-service/types";
 import { setErrorAlert, setInfoAlert } from "../../feedback/actions";
-import { SET_ALERT } from "../../feedback/constants";
 import {
   createMockReduxStore,
   mockReduxLogicDeps,
@@ -352,7 +351,8 @@ describe("Job logics", () => {
         );
         const fssUpload = {
           ...successfulFSSUpload,
-          status: JSSJobStatus.UNRECOVERABLE, // Dummy value; Currently, FSS2 does not gauree that it will update jss status fields when it updates stage
+          // Dummy value; Currently, FSS2 does not gauree that it will update jss status fields when it updates stage
+          status: JSSJobStatus.UNRECOVERABLE,
           currentStage,
         };
   
