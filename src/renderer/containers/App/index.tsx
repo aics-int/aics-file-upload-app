@@ -64,9 +64,10 @@ message.config({
 });
 
 export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>){
-        // An FSS job update is only important to us when it is signaling
-      // the addition of the fileId i.e. FSS's completion, has failed,
-      // or requires this clients intervention to retry
+      // An FSS job update happens when:
+      //   * fileId has been published
+      //   * progress has been published on a pre-upload md5, file upload, or post-upload md5
+      //   * requires this clients intervention to retry
       if (job.service === Service.FILE_STORAGE_SERVICE) {
         const fssJob = job as FSSUpload;
         const totalBytes = fssJob.serviceFields.fileSize || 0; // 0 is a safe default, but in practice filesize is initialized immediately after job creation.
