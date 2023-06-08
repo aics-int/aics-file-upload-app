@@ -167,6 +167,8 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
 
     // Ensure this isn't completing the upload more than once
     if (matchingUploadJob) {
+      const jobShouldFailAccordingToFSSJobStage = fssUpload.currentStage === UploadStatus.INACTIVE || fssUpload.currentStage === UploadStatus.RETRY;
+      const jobHasNotFailedAlready = matchingUploadJob.status !== JSSJobStatus.FAILED;
       if (
         fssUpload.status === JSSJobStatus.SUCCEEDED &&
         matchingUploadJob.status !== JSSJobStatus.SUCCEEDED
@@ -176,23 +178,10 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
           fssUpload.serviceFields?.fileId as string
         );
       } else if (
-        fssUpload.status === JSSJobStatus.FAILED &&
-        matchingUploadJob.status !== JSSJobStatus.FAILED
+        jobShouldFailAccordingToFSSJobStage &&
+        jobHasNotFailedAlready
       ) {
         await fms.failUpload(matchingUploadJob.jobId, "FSS upload failed");
-      } else if (
-        fssUpload.currentStage === UploadStatus.RETRY &&
-        matchingUploadJob.status !== JSSJobStatus.RETRYING
-      ) {
-        try {
-          const info = `Checking to see if "${matchingUploadJob.jobName}" can be resumed after server failure.`;
-          dispatch(setInfoAlert(info));
-          await fms.retry(matchingUploadJob.jobId);
-        } catch (e) {
-          const message = `Retry for upload "${matchingUploadJob.jobName}" failed: ${e.message}`;
-          console.error(message, e);
-          dispatch(setErrorAlert(message));
-        }
       }
     }
 
@@ -218,10 +207,11 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
     const isFileIdInLabkey =
       fssUpload.status === JSSJobStatus.SUCCEEDED &&
       fssUpload.serviceFields?.fileId;
+    const isFailed = fssUpload.currentStage === UploadStatus.INACTIVE;
     const requiresRetry = fssUpload.currentStage === UploadStatus.RETRY;
     if (
       !isDuplicateUpdate &&
-      (FAILED_STATUSES.includes(fssUpload.status) || isFileIdInLabkey || requiresRetry)
+      (isFailed || isFileIdInLabkey || requiresRetry)
     ) {
       next(action);
     } else {

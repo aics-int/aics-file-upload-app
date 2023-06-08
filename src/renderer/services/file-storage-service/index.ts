@@ -11,10 +11,10 @@ import { HttpClient } from "../types";
 export interface FSSUpload extends JSSJob {
   serviceFields: {
     fileId?: string;
-    pre_upload_md5?: number;
-    post_upload_md5?: number;
-    file_size?: number;
-    current_file_size?: number;
+    preUploadMd5?: number;
+    postUploadMd5?: number;
+    fileSize?: number;
+    currentFileSize?: number;
   };
 }
 
