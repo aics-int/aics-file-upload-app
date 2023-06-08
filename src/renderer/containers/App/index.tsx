@@ -64,11 +64,11 @@ message.config({
 });
 
 export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>){
-      // An FSS job update happens when:
-      //   * fileId has been published
-      //   * progress has been published on a pre-upload md5, file upload, or post-upload md5
-      //   * requires this clients intervention to retry
       if (job.service === Service.FILE_STORAGE_SERVICE) {
+        // An FSS job update happens when:
+        //   * fileId has been published
+        //   * progress has been published on a pre-upload md5, file upload, or post-upload md5
+        //   * requires this clients intervention to retry
         const fssJob = job as FSSUpload;
         const totalBytes = fssJob.serviceFields.fileSize || 0; // 0 is a safe default, but in practice filesize is initialized immediately after job creation.
         if (fssJob.serviceFields?.fileId || fssJob.currentStage === UploadStatus.INACTIVE || fssJob.currentStage === UploadStatus.RETRY) {
