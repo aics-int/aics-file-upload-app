@@ -3,7 +3,7 @@ import { message } from "antd";
 import { ipcRenderer } from "electron";
 import { camelizeKeys } from "humps";
 import * as React from "react";
-import { useEffect } from "react";
+import { Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -14,7 +14,6 @@ import StatusBar from "../../components/StatusBar";
 import { FSSUpload, UploadStatus } from "../../services/file-storage-service";
 import {
   JSSJob,
-  JSSJobStatus,
   Service,
   UploadJob,
 } from "../../services/job-status-service/types";
@@ -63,6 +62,28 @@ const ALERT_DURATION = 2;
 message.config({
   maxCount: 1,
 });
+
+export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>){
+        // An FSS job update is only important to us when it is signaling
+      // the addition of the fileId i.e. FSS's completion, has failed,
+      // or requires this clients intervention to retry
+      if (job.service === Service.FILE_STORAGE_SERVICE) {
+        const fssJob = job as FSSUpload;
+        const totalBytes = fssJob.serviceFields.fileSize || 0; // 0 is a safe default, but in practice filesize is initialized immediately after job creation.
+        if (fssJob.serviceFields?.fileId || fssJob.currentStage === UploadStatus.INACTIVE || fssJob.currentStage === UploadStatus.RETRY) {
+          dispatch(receiveFSSJobCompletionUpdate(fssJob));
+        } else if (fssJob.serviceFields?.preUploadMd5 && (fssJob.serviceFields.preUploadMd5 !== fssJob.serviceFields.fileSize)) {
+          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.preUploadMd5, totalBytes, step: Step.ONE }));
+        } else if (fssJob.serviceFields?.currentFileSize && (fssJob.serviceFields.currentFileSize !== fssJob.serviceFields?.fileSize)) {
+          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.currentFileSize, totalBytes, step: Step.TWO }));
+        } else if (fssJob.serviceFields?.postUploadMd5 && (fssJob.serviceFields.postUploadMd5 !== fssJob.serviceFields?.fileSize)) {
+          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.postUploadMd5, totalBytes, step: Step.THREE }));
+        }
+      } else if (job.serviceFields?.type === "upload") {
+        // Otherwise separate user's other jobs from ones created by this app
+        dispatch(receiveJobUpdate(job as UploadJob));
+      }
+}
 
 export default function App() {
   const dispatch = useDispatch();
@@ -113,24 +134,7 @@ export default function App() {
 
     eventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
       const job = camelizeKeys(JSON.parse(event.data) as object) as JSSJob;
-      // An FSS job update is only important to us when it is signaling
-      // the addition of the fileId i.e. FSS's completion, has failed,
-      // or requires this clients intervention to retry
-      if (
-        job.service === Service.FILE_STORAGE_SERVICE) {
-          if (job.serviceFields?.fileId || job.status === JSSJobStatus.FAILED || job.currentStage === UploadStatus.RETRY) {
-            dispatch(receiveFSSJobCompletionUpdate(job as FSSUpload));
-          } else if(job.serviceFields?.preUploadMd5 && (job.serviceFields.preUploadMd5 !== job.serviceFields?.fileSize)) {
-            dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.preUploadMd5, totalBytes: job.serviceFields?.fileSize, step: Step.ONE }));
-          } else if(job.serviceFields?.currentFileSize && (job.serviceFields.currentFileSize!== job.serviceFields?.fileSize)) {
-            dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.currentFileSize, totalBytes: job.serviceFields?.fileSize, step: Step.TWO }));
-          } else if(job.serviceFields?.postUploadMd5 && (job.serviceFields.postUploadMd5 !== job.serviceFields?.fileSize)) {
-            dispatch(updateUploadProgressInfo(job.jobId, { bytesUploaded: job.serviceFields?.postUploadMd5, totalBytes: job.serviceFields?.fileSize, step: Step.THREE }));
-          }
-        } else if (job.serviceFields?.type === "upload") {
-        // Otherwise separate user's other jobs from ones created by this app
-        dispatch(receiveJobUpdate(job as UploadJob));
-      }
+      handleUploadJobUpdates(job, dispatch);
     });
 
     eventSource.onDisconnect(() =>

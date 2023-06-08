@@ -242,48 +242,6 @@ describe("FileManagementSystem", () => {
       expect(fss.finalize).to.have.not.been.called;
     });
 
-    [UploadStatus.INACTIVE, UploadStatus.RETRY].forEach((failState) => {
-      it("Handles error path for local_nas_shortcut uploads.", async () => {
-        // Arrange
-        const upload: UploadJob = {
-          ...mockJob,
-          serviceFields: {
-            files: [
-              {
-                file: {
-                  fileType: "text",
-                  originalPath: testFilePath,
-                },
-              },
-            ],
-            type: "upload",
-            localNasShortcut: true
-          },
-        };
-        const uploadId = "091234124";
-        fss.fileExistsByNameAndSize.resolves(false);
-        fss.registerUpload.resolves({ status: failState, uploadId, chunkSize: 2424, chunkStatuses: [], currentFileSize: -1, fileSize: -1 });
-  
-        // Act
-        let threw = false
-        try {
-          await fms.upload(upload);
-        } catch(e) {
-          threw = true;
-        }
-
-        // Assert
-        expect(threw).to.be.true;
-        expect(fileReader.read).to.have.not.been.called; //it was a localNas upload
-        expect(fss.finalize).to.have.not.been.called;
-        expect(                                          //the error path executed
-          jss.updateJob.calledWithMatch(upload.jobId, {
-            status: JSSJobStatus.FAILED,
-          })
-        ).to.be.true;
-      });  
-    });
-
     it("creates appropriate metadata & completes tracking job", async () => {
       // Arrange
       const upload: UploadJob = {

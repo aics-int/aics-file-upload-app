@@ -147,16 +147,6 @@ export default class FileManagementSystem {
         lastModifiedInMS: fileLastModifiedInMs,
       },
     });
-    switch (registration.status) {
-      case UploadStatus.RETRY:
-        throw new Error(
-          'Your file uploaded and is safe, but a post-upload task failed on the backend.  Please wait a few moments, and the retry (select the box to the right of your upload, and use the "retry" button.'
-        );
-      case UploadStatus.INACTIVE:
-        throw new Error(
-          `Something went wrong during upload: ${registration.uploadId}.  Upload state is: ${registration.status}.  Please contact #support_aics_software (on Slack).`
-        );
-    }
     return [registration, source, fileSize];
   }
   /**
@@ -172,16 +162,19 @@ export default class FileManagementSystem {
   ): Promise<void> {
     try {
       const [fssStatus, source] = await this.register(upload);
-      if(fssStatus.chunkStatuses && fssStatus.chunkStatuses[0]) {  
-        //Handles the case where FUA believes this is a new upload, 
-        //but actually, it is partially complete already.
-        await this.retry(upload.jobId);                 
-      } else if (!upload.serviceFields.localNasShortcut) {
-        await this.uploadInChunks({
-          fssStatus,
-          source,
-          user: upload.user
-        });
+      if (!upload.serviceFields.localNasShortcut) {
+        const isAlreadyInProgress = fssStatus.chunkStatuses && fssStatus.chunkStatuses[0];
+        if(isAlreadyInProgress) {
+          //Handles the case where FUA believes this is a new upload, 
+          //but actually, it is partially complete already.
+          await this.retry(upload.jobId);                 
+        } else {
+          await this.uploadInChunks({
+            fssStatus,
+            source,
+            user: upload.user
+          });
+        }
       }
     } catch (error) {
       // Ignore cancellation errors

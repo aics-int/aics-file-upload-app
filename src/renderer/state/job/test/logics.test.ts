@@ -315,29 +315,6 @@ describe("Job logics", () => {
       ).to.be.lengthOf(1);
     });
 
-    it("fails upload if FSS job failed", async () => {
-      // Arrange
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        stateWithMatchingUpload,
-        undefined,
-        undefined,
-        false
-      );
-      const fssUpload = {
-        ...successfulFSSUpload,
-        status: JSSJobStatus.FAILED,
-      };
-
-      // Act
-      store.dispatch(receiveFSSJobCompletionUpdate(fssUpload));
-      await logicMiddleware.whenComplete();
-
-      // Assert
-      expect(fms.failUpload).to.have.been.calledOnce;
-      expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
-        .true;
-    });
-
     it("rejects updates without file ids", async () => {
       // Arrange
       const { actions, logicMiddleware, store } = createMockReduxStore(
@@ -364,6 +341,31 @@ describe("Job logics", () => {
         .false;
     });
 
+    [UploadStatus.INACTIVE, UploadStatus.RETRY].forEach((currentStage) => {
+      it(`fails upload if FSS stage is ${currentStage}`, async () => {
+        // Arrange
+        const { actions, logicMiddleware, store } = createMockReduxStore(
+          stateWithMatchingUpload,
+          undefined,
+          undefined,
+          false
+        );
+        const fssUpload = {
+          ...successfulFSSUpload,
+          status: JSSJobStatus.UNRECOVERABLE, // Dummy value; Currently, FSS2 does not gauree that it will update jss status fields when it updates stage
+          currentStage,
+        };
+  
+        // Act
+        store.dispatch(receiveFSSJobCompletionUpdate(fssUpload));
+        await logicMiddleware.whenComplete();
+  
+        // Assert
+        expect(fms.failUpload).to.have.been.calledOnce;
+        expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
+          .true;
+      });
+    });
     IN_PROGRESS_STATUSES.forEach((status) => {
       it(`rejects updates with ${status} status`, async () => {
         // Arrange
@@ -388,30 +390,6 @@ describe("Job logics", () => {
         expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
           .false;
       });
-    });
-
-    it("retries uploads FSS signals require retrying", async () => {
-      // Arrange
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        stateWithMatchingUpload,
-        undefined,
-        undefined,
-        false
-      );
-      const fssUpload = {
-        ...successfulFSSUpload,
-        status: JSSJobStatus.WORKING,
-        currentStage: UploadStatus.RETRY,
-        serviceFields: {},
-      };
-
-      // Act
-      const action = receiveFSSJobCompletionUpdate(fssUpload);
-      store.dispatch(action);
-      await logicMiddleware.whenComplete();
-
-      // Assert
-      expect(actions.includesType(SET_ALERT)).to.be.true;
     });
   });
 });
