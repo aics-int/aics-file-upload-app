@@ -1,10 +1,11 @@
 import { expect } from "chai";
+import { Action } from "redux-logic";
+
 import { JSSJobStatus, Service } from "../../../services/job-status-service/types";
 import { JSSJob } from "../../../services/job-status-service/types";
-import { handleUploadJobUpdates } from "../index";
-import { Step } from "../../Table/CustomCells/StatusCell/Step";
 import { updateUploadProgressInfo } from "../../../state/job/actions";
-import { Action } from "redux-logic";
+import { Step } from "../../Table/CustomCells/StatusCell/Step";
+import { handleUploadJobUpdates } from "../index";
 
 describe("App", () => {
     describe("handleUploadJobUpdates", () => {
@@ -37,7 +38,7 @@ describe("App", () => {
                 progressField: "postUploadMd5"
             },
         ].forEach(({serviceFields, step, progressField}) => {
-            it.only("dispatches updateUploadProgressInfo when pre-upload-md5 is in progress", () => {
+            it("dispatches updateUploadProgressInfo when pre-upload-md5 is in progress", () => {
                 // Arrange
                 const fssJob: JSSJob = {
                     created: new Date(),
