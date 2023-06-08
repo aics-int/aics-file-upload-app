@@ -157,6 +157,5 @@ describe("<StatusCell />", () => {
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
       "WORKING - Step 3 of 3: Post-upload tasks"
     );
-    // expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });
 });
