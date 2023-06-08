@@ -175,7 +175,7 @@ export default class FileManagementSystem {
       if(fssStatus.chunkStatuses && fssStatus.chunkStatuses[0]) {  
         //Handles the case where FUA believes this is a new upload, 
         //but actually, it is partially complete already.
-        await this.retry(upload.jobId);                  // create the FUA JSS upload id and info here                  
+        await this.retry(upload.jobId);                 
       } else if (!upload.serviceFields.localNasShortcut) {
         await this.uploadInChunks({
           fssStatus,
