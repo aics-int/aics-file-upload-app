@@ -9,6 +9,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 16
+      - name: Corepack enable
+        run: corepack enable
+      - name: Yarn Version
+        run: yarn set version stable
       - name: Install Dependencies
         run: yarn
       - name: Lint
