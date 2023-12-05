@@ -164,6 +164,5 @@
       "text-summary"
     ],
     "report-dir": "coverage"
-  },
-  "packageManager": "yarn@4.0.2"
+  }
 }

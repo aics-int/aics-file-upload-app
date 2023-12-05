@@ -8,11 +8,7 @@ jobs:
       - name: Initialize
         uses: actions/setup-node@v1
         with:
-          node-version: 18
-      - name: Corepack enable
-        run: corepack enable
-      - name: Yarn Version
-        run: yarn set version stable
+          node-version: 16
       - name: Install Dependencies
         run: yarn
       - name: Lint
