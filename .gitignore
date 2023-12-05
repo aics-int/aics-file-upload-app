@@ -10,3 +10,7 @@ yarn-error.log
 build/
 .eslintcache
 .env
+coverage/
+.nyc_output/
+.yarn/
+```
