@@ -45,11 +45,6 @@ You can configure the LIMS Host URL to a custom one by going to: File > Settings
 yarn test
 ```
 
-Generate a coverage report:
-```bash
-yarn test:coverage
-```
-
 ## Run Linter
 
 ```bash
