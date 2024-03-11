@@ -88,7 +88,10 @@ export interface UploadFailedAction {
 }
 
 export interface UploadWithoutMetadataAction {
-  payload: string[];
+  payload: {
+    filePaths: string[],
+    isMultifile: boolean
+  };
   type: string;
 }
 

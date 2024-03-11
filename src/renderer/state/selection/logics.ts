@@ -43,7 +43,8 @@ const loadFilesLogic = createLogic({
     dispatch(startLoading());
     try {
       const filePaths = await determineFilesFromNestedPaths(
-        deps.action.payload
+        deps.action.payload,
+        false
       );
       dispatch(stopLoading());
       dispatch(addUploadFiles(filePaths.map((file) => ({ file }))));

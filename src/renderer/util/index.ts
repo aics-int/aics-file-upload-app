@@ -38,12 +38,13 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
 // if so it extracts the file paths for the files within said directory
 // otherwise just returns the file path as is.
 export async function determineFilesFromNestedPaths(
-  paths: string[]
+  paths: string[],
+  isMultifile: boolean
 ): Promise<string[]> {
   const filePaths = await Promise.all(
     paths.flatMap(async (fullPath) => {
       const stats = await fsPromises.stat(fullPath);
-      if (!stats.isDirectory()) {
+      if (!stats.isDirectory() || isMultifile) {
         return [fullPath];
       }
       const canRead = await canUserRead(fullPath);

@@ -156,10 +156,14 @@ export function uploadFailed(
 }
 
 export function uploadWithoutMetadata(
-  filePaths: string[]
+    filePaths: string[],
+    isMultifile: boolean
 ): UploadWithoutMetadataAction {
   return {
-    payload: filePaths,
+    payload: {
+      filePaths,
+      isMultifile
+    },
     type: UPLOAD_WITHOUT_METADATA,
   };
 }

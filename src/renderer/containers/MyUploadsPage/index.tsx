@@ -106,10 +106,10 @@ export default function MyUploadsPage() {
     )
   }
 
-  function onUploadWithoutTemplate(filePaths: string[]) {
+  function onUploadWithoutTemplate(filePaths: string[], isMultifile: boolean) {
     // If cancel is clicked, this callback gets called and filePaths is undefined
     if (!isEmpty(filePaths)) {
-      dispatch(uploadWithoutMetadata(filePaths));
+      dispatch(uploadWithoutMetadata(filePaths, isMultifile));
     }
   }
 
