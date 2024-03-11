@@ -15,7 +15,7 @@ interface DragAndDropProps {
   openDialogOptions?: OpenDialogOptions;
   className?: string;
   overlayChildren?: boolean;
-  onDrop: (files: string[]) => void;
+  onDrop: (files: string[], isMultifile: boolean) => void;
 }
 
 const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -46,7 +46,7 @@ export default function DragAndDrop(props: DragAndDropProps) {
 
     // If cancel is clicked, this callback gets called and filePaths is undefined
     if (filePaths && !isEmpty(filePaths)) {
-      props.onDrop(filePaths);
+      props.onDrop(filePaths, false); // TODO multifile upload value
     }
   };
 
@@ -79,7 +79,7 @@ export default function DragAndDrop(props: DragAndDropProps) {
       // Prevent drag and drop events from stacking (like notes over upload job page)
       e.stopPropagation();
       setDragEnterCount(0);
-      props.onDrop(Array.from(e.dataTransfer.files, (f) => f.path));
+      props.onDrop(Array.from(e.dataTransfer.files, (f) => f.path), false); // TODO multifile upload value
     }
   };
 
