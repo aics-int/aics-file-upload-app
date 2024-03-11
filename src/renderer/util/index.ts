@@ -1,5 +1,6 @@
 import { constants, promises as fsPromises } from "fs";
-import { resolve } from "path";
+import { join, resolve } from "path";
+import { readdir, stat } from 'fs/promises';
 
 import { trim } from "lodash";
 import { flatten, memoize, uniq } from "lodash";
@@ -59,6 +60,28 @@ export async function determineFilesFromNestedPaths(
   );
 
   return uniq(flatten(filePaths));
+}
+
+// TODO comments and typing
+// TODO I stole this from StackOverflow and should probably make sure it works the way I want it to
+export async function getDirectorySize(dir) {
+  const files = await readdir( dir, { withFileTypes: true } );
+
+  const paths = files.map( async file => {
+    const path = join( dir, file.name );
+
+    if ( file.isDirectory() ) return await getDirectorySize( path );
+
+    if ( file.isFile() ) {
+      const { size } = await stat( path );
+
+      return size;
+    }
+
+    return 0;
+  } );
+
+  return ( await Promise.all( paths ) ).flat( Infinity ).reduce( ( i, size ) => i + size, 0 );
 }
 
 /**
