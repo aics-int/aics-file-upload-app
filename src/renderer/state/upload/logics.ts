@@ -213,7 +213,7 @@ const initiateUploadLogic = createLogic({
 
     const uploadTasks = uploads.map((upload) => async () => {
       try {
-        await fms.upload(upload);
+        await fms.upload(upload, false); // todo multifile value
       } catch (error) {
         dispatch(
           uploadFailed(
@@ -721,7 +721,8 @@ const uploadWithoutMetadataLogic = createLogic({
     let uploads: UploadJob[];
     try {
       const filePaths = await determineFilesFromNestedPaths(
-        deps.action.payload
+        deps.action.payload.filePaths,
+        deps.action.payload.isMultifile
       );
       uploads = await Promise.all(
         filePaths.map((filePath) =>
@@ -748,7 +749,7 @@ const uploadWithoutMetadataLogic = createLogic({
       dispatch(
         uploadFailed(
           `Something went wrong while initiating the upload. Details: ${error?.message}`,
-          deps.action.payload.join(", ")
+          deps.action.payload.filePaths.join(", ")
         )
       );
       done();
@@ -758,7 +759,7 @@ const uploadWithoutMetadataLogic = createLogic({
     const uploadTasks = uploads.map((upload) => async () => {
       const name = upload.jobName;
       try {
-        await deps.fms.upload(upload);
+        await deps.fms.upload(upload, deps.action.payload.isMultifile);
       } catch (error) {
         dispatch(
           uploadFailed(

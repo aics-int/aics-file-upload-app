@@ -5,7 +5,7 @@ import { uniq } from "lodash";
 import * as uuid from "uuid";
 
 import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
-import { extensionToFileTypeMap, FileType } from "../../util";
+import { extensionToFileTypeMap, FileType, getDirectorySize } from "../../util";
 import FileStorageService, {
   UploadStatus,
   UploadStatusResponse,
@@ -115,11 +115,21 @@ export default class FileManagementSystem {
 
   private async register(
     upload: UploadJob,
+    isMultifile: boolean
   ): Promise<[UploadStatusResponse, string, number]> {
     // Grab file details
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
-    const { size: fileSize, mtime: fileLastModified } = await fs.promises.stat(source);
+    let fileSize: number = 0; // todo this should not initialize to 0
+    if (isMultifile) {
+      // Multifiles require us to recursively find the full size of a directory. // todo comment-smithning
+      fileSize = await getDirectorySize(source);
+    }
+    const statReturn = await fs.promises.stat(source); // todo I hate this on a stylistic level
+    const fileLastModified = statReturn.mtime;
+    if (!isMultifile) {
+      fileSize = statReturn.size;
+    }
     const fileLastModifiedInMs = fileLastModified.getTime();
     // Heuristic which in most cases, prevents attempting to upload a duplicate
     if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
@@ -133,9 +143,11 @@ export default class FileManagementSystem {
     ] || FileType.OTHER;
 
     const registration = await this.fss.registerUpload(
+      source,
       fileName,
       fileType,
       fileSize,
+      isMultifile,
       upload.serviceFields.localNasShortcut ? this.posixPath(source) : undefined,
     );
 
@@ -159,9 +171,10 @@ export default class FileManagementSystem {
    */
   public async upload(
     upload: UploadJob,
+    isMultifile: boolean
   ): Promise<void> {
     try {
-      const [fssStatus, source] = await this.register(upload);
+      const [fssStatus, source] = await this.register(upload, isMultifile);
       if (!upload.serviceFields.localNasShortcut) {
         const isAlreadyInProgress = fssStatus.chunkStatuses && fssStatus.chunkStatuses[0];
         if(isAlreadyInProgress) {
@@ -334,7 +347,7 @@ export default class FileManagementSystem {
           }
 
           // Perform upload with new job and current job's metadata, forgoing the current job
-          await this.upload(newUpload);
+          await this.upload(newUpload, false); // TODO multifile upload value
           return;
         } catch (error) {
           // Catch exceptions to allow other jobs to run before re-throwing the error
@@ -442,7 +455,7 @@ export default class FileManagementSystem {
         if (localNasShortcut) {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          await this.register(fuaUpload);
+          await this.register(fuaUpload, false); // TODO multifile upload value
         } else {
           await this.resumeUploadInChunks(fuaUpload, fssStatus);
         }

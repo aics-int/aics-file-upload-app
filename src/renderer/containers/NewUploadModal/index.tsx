@@ -28,10 +28,10 @@ export default function NewUploadModal(props: Props) {
     dispatch(selectView(page));
   }
 
-  function onUploadWithoutTemplate(filePaths: string[]) {
+  function onUploadWithoutTemplate(filePaths: string[], isMultifile: boolean) {
     // If cancel is clicked, this callback gets called and filePaths is undefined
     if (!isEmpty(filePaths)) {
-      dispatch(uploadWithoutMetadata(filePaths));
+      dispatch(uploadWithoutMetadata(filePaths, isMultifile));
     }
     dispatch(selectView(page));
   }

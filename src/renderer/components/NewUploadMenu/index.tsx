@@ -17,16 +17,16 @@ const OPEN_FOLDER_DIALOG_OPTIONS: OpenDialogOptions = {
 
 interface Props {
   onUploadWithTemplate: () => void;
-  onUploadWithoutTemplate: (filePaths: string[]) => void;
+  onUploadWithoutTemplate: (filePaths: string[], isMultifile: boolean) => void;
 }
 
 export default function NewUploadMenu(props: Props) {
-  async function openFileBrowser(dialogOptions: OpenDialogOptions) {
+  async function openFileBrowser(dialogOptions: OpenDialogOptions, isMultifile: boolean) {
     const filePaths = await ipcRenderer.invoke(
       RendererProcessEvents.SHOW_DIALOG,
       dialogOptions
     );
-    props.onUploadWithoutTemplate(filePaths);
+    props.onUploadWithoutTemplate(filePaths, isMultifile);
   }
 
   return (
@@ -34,15 +34,18 @@ export default function NewUploadMenu(props: Props) {
       <div className={styles.menuDivider}>Upload Without Metadata Template</div>
       <div
         className={styles.menuItem}
-        onClick={() => openFileBrowser(OPEN_FILES_DIALOG_OPTIONS)}
+        onClick={() => openFileBrowser(OPEN_FILES_DIALOG_OPTIONS, false)}
       >
         Files
       </div>
       <div
         className={styles.menuItem}
-        onClick={() => openFileBrowser(OPEN_FOLDER_DIALOG_OPTIONS)}
+        onClick={() => openFileBrowser(OPEN_FOLDER_DIALOG_OPTIONS, false    )}
       >
         Folder
+      </div>
+      <div className={styles.menuItem} onClick={() => openFileBrowser(OPEN_FOLDER_DIALOG_OPTIONS, true)}>
+        Multifile (SLDY, Zarr, etc.)
       </div>
       <div className={styles.menuDivider}>Upload With Metadata Template</div>
       <div className={styles.menuItem} onClick={props.onUploadWithTemplate}>
@@ -50,6 +53,9 @@ export default function NewUploadMenu(props: Props) {
       </div>
       <div className={styles.menuItem} onClick={props.onUploadWithTemplate}>
         Folder
+      </div>
+      <div className={styles.menuItem} onClick={props.onUploadWithTemplate}>
+        Multifile (SLDY, Zarr, etc.)
       </div>
     </div>
   );

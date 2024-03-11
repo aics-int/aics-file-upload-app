@@ -96,9 +96,11 @@ export default class FileStorageService extends HttpCacheClient {
    * file itself.
    */
   public registerUpload(
+    fullFilePath: string,
     fileName: string,
     fileType: FileType,
     fileSize: number,
+    isMultifile: boolean,
     localNasPath?: string,
   ): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
@@ -111,7 +113,8 @@ export default class FileStorageService extends HttpCacheClient {
       // so the conversion must be manual each request
       file_size: fileSize,
       local_nas_shortcut: localNasPath !== undefined,
-      local_nas_path: localNasPath
+      local_nas_path: localNasPath,
+      multifile: isMultifile
     };
     return this.post<UploadStatusResponse>(
       url,
