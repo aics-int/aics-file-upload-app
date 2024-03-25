@@ -1,5 +1,6 @@
 import { constants, promises as fsPromises } from "fs";
-import { resolve } from "path";
+import { readdir, stat } from 'fs/promises';
+import { join, resolve } from "path";
 
 import { trim } from "lodash";
 import { flatten, memoize, uniq } from "lodash";
@@ -59,6 +60,33 @@ export async function determineFilesFromNestedPaths(
   );
 
   return uniq(flatten(filePaths));
+}
+
+/**
+ * Returns the total size of a given directory's children, sub-children, etc.
+ * If the given path points to a file rather than a directory, returns the size of the file.
+ * @param dir Local path to a directory.
+ *
+ * Borrowed from StackOverflow: https://stackoverflow.com/a/69418940
+ */
+export async function getDirectorySize(dir: string): Promise<number> {
+  const files = await readdir(dir, { withFileTypes: true });
+
+  const paths = files.map(async file => {
+    const path = join(dir, file.name);
+
+    if (file.isDirectory()) {
+      return await getDirectorySize(path);
+    }
+
+    if (file.isFile()) {
+      const { size } = await stat(path);
+      return size;
+    }
+    return 0;
+  } );
+
+  return (await Promise.all(paths)).flat(Infinity).reduce((i, size) => i + size, 0);
 }
 
 /**
