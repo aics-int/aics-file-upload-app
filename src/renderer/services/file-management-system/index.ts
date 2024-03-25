@@ -114,13 +114,13 @@ export default class FileManagementSystem {
   }
 
   private async register(
-    upload: UploadJob,
-    isMultifile: boolean
+    upload: UploadJob
   ): Promise<[UploadStatusResponse, string, number]> {
     // Grab file details
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
-    let fileSize: number = 0; // todo this should not initialize to 0
+    const isMultifile = upload.serviceFields.multifile || false;
+    let fileSize = 0; // todo this should not initialize to 0
     if (isMultifile) {
       // Multifiles require us to recursively find the full size of a directory. // todo comment-smithning
       fileSize = await getDirectorySize(source);
@@ -173,8 +173,7 @@ export default class FileManagementSystem {
     upload: UploadJob
   ): Promise<void> {
     try {
-      const isMultifile = upload.serviceFields.multifile || false;
-      const [fssStatus, source] = await this.register(upload, isMultifile);
+      const [fssStatus, source] = await this.register(upload);
       if (!upload.serviceFields.localNasShortcut) {
         const isAlreadyInProgress = fssStatus.chunkStatuses && fssStatus.chunkStatuses[0];
         if(isAlreadyInProgress) {
@@ -455,7 +454,7 @@ export default class FileManagementSystem {
         if (localNasShortcut) {
           // For localNasShortcut uploads, the way to reume an in progress upload is to call /register on it again. 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          await this.register(fuaUpload, false); // TODO multifile upload value
+          await this.register(fuaUpload);
         } else {
           await this.resumeUploadInChunks(fuaUpload, fssStatus);
         }
