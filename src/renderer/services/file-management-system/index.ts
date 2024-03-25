@@ -170,10 +170,10 @@ export default class FileManagementSystem {
    * determine when it is time to complete the upload.
    */
   public async upload(
-    upload: UploadJob,
-    isMultifile: boolean
+    upload: UploadJob
   ): Promise<void> {
     try {
+      const isMultifile = upload.serviceFields.multifile || false;
       const [fssStatus, source] = await this.register(upload, isMultifile);
       if (!upload.serviceFields.localNasShortcut) {
         const isAlreadyInProgress = fssStatus.chunkStatuses && fssStatus.chunkStatuses[0];
@@ -347,7 +347,7 @@ export default class FileManagementSystem {
           }
 
           // Perform upload with new job and current job's metadata, forgoing the current job
-          await this.upload(newUpload, false); // TODO multifile upload value
+          await this.upload(newUpload);
           return;
         } catch (error) {
           // Catch exceptions to allow other jobs to run before re-throwing the error

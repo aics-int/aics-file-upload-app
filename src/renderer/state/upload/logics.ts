@@ -213,7 +213,7 @@ const initiateUploadLogic = createLogic({
 
     const uploadTasks = uploads.map((upload) => async () => {
       try {
-        await fms.upload(upload, false); // todo multifile value
+        await fms.upload(upload);
       } catch (error) {
         dispatch(
           uploadFailed(
@@ -718,11 +718,13 @@ const uploadWithoutMetadataLogic = createLogic({
 
     const user = getSelectedUser(deps.getState());
 
+    const isMultifile = deps.action.payload.isMultifile;
+
     let uploads: UploadJob[];
     try {
       const filePaths = await determineFilesFromNestedPaths(
         deps.action.payload.filePaths,
-        deps.action.payload.isMultifile
+        isMultifile
       );
       uploads = await Promise.all(
         filePaths.map((filePath) =>
@@ -741,7 +743,10 @@ const uploadWithoutMetadataLogic = createLogic({
               microscopy: {},
             },
             user,
-            { groupId }
+            {
+              groupId,
+              multifile: isMultifile
+            }
           )
         )
       );
@@ -759,7 +764,7 @@ const uploadWithoutMetadataLogic = createLogic({
     const uploadTasks = uploads.map((upload) => async () => {
       const name = upload.jobName;
       try {
-        await deps.fms.upload(upload, deps.action.payload.isMultifile);
+        await deps.fms.upload(upload);
       } catch (error) {
         dispatch(
           uploadFailed(
