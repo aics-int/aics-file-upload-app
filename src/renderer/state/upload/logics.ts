@@ -173,6 +173,7 @@ const addUploadFilesLogic = createLogic({
   type: ADD_UPLOAD_FILES,
 });
 
+// Initiates a file upload with added metadata
 const initiateUploadLogic = createLogic({
   process: async (
     {

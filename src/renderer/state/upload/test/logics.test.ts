@@ -1387,7 +1387,7 @@ describe("Upload logics", () => {
       );
 
       // Act
-      store.dispatch(uploadWithoutMetadata(filePaths));
+      store.dispatch(uploadWithoutMetadata(filePaths, false)); // todo something re: multifiles?
       await logicMiddleware.whenComplete();
 
       // Assert
@@ -1413,7 +1413,7 @@ describe("Upload logics", () => {
       fms.upload.rejects(new Error(error));
 
       // Act
-      store.dispatch(uploadWithoutMetadata(filePaths));
+      store.dispatch(uploadWithoutMetadata(filePaths, false)); // todo something re: multifiles?
       await logicMiddleware.whenComplete();
 
       // Assert

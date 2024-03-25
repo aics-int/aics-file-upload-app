@@ -35,7 +35,7 @@ describe("General utilities", () => {
 
     it("returns files as is", async () => {
       // Act
-      const result = await determineFilesFromNestedPaths([MOCK_FILE1]);
+      const result = await determineFilesFromNestedPaths([MOCK_FILE1], false); // todo something re: multifiles?
 
       // Assert
       expect(result).to.deep.equal([MOCK_FILE1]);
@@ -46,7 +46,7 @@ describe("General utilities", () => {
       const result = await determineFilesFromNestedPaths([
         MOCK_DIRECTORY,
         MOCK_FILE1,
-      ]);
+      ], false); // todo something re: multifiles?
 
       // Assert
       expect(result).to.deep.equal([MOCK_FILE1, MOCK_FILE2]);

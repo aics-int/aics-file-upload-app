@@ -41,6 +41,7 @@ describe("FileStorageService", () => {
       };
       const postStub = sandbox.stub().resolves(response);
       const fileName = "my_cool_czi.czi";
+      const fullFilePath = `path/to/${fileName}`;
       const fileType = FileType.IMAGE;
       const fileSize = 13941234;
       const expectedPostBody = {
@@ -48,12 +49,13 @@ describe("FileStorageService", () => {
         file_type: fileType,
         file_size: fileSize,
         local_nas_path: undefined,
-        local_nas_shortcut: false
+        local_nas_shortcut: false,
+        multifile: false
       };
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
       // Act
-      const actual = await fss.registerUpload(fileName, fileType, fileSize);
+      const actual = await fss.registerUpload(fullFilePath, fileName, fileType, fileSize);
 
       // Assert
       expect(actual).to.deep.equal(expectedResponse);
@@ -76,6 +78,7 @@ describe("FileStorageService", () => {
       const localNasPath = '/test/nas/path';
       const postStub = sandbox.stub().resolves(response);
       const fileName = "my_cool_czi.czi";
+      const fullFilePath = `path/to/${fileName}`;
       const fileType = FileType.IMAGE;
       const fileSize = 13941234;
       const expectedPostBody = {
@@ -83,12 +86,13 @@ describe("FileStorageService", () => {
         file_type: fileType,
         file_size: fileSize,
         local_nas_path: localNasPath,
-        local_nas_shortcut: true
+        local_nas_shortcut: true,
+        multifile: false
       };
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
       // Act
-      const actual = await fss.registerUpload(fileName, fileType, fileSize, localNasPath);
+      const actual = await fss.registerUpload(fullFilePath, fileName, fileType, fileSize, undefined, localNasPath);
 
       // Assert
       expect(actual).to.deep.equal(expectedResponse);
