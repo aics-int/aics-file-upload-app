@@ -12,7 +12,13 @@ import FileManagementSystem from "../../services/file-management-system";
 import {UploadJob} from "../../services/job-status-service/types";
 import {AnnotationType, ColumnType} from "../../services/labkey-client/types";
 import {Template} from "../../services/metadata-management-service/types";
-import {determineFilesFromNestedPaths, extensionToFileTypeMap, FileType, splitTrimAndFilter} from "../../util";
+import {
+  determineFilesFromNestedPaths,
+  determineIsMultifile,
+  extensionToFileTypeMap,
+  FileType,
+  splitTrimAndFilter
+} from "../../util";
 import {requestFailed} from "../actions";
 import {setErrorAlert} from "../feedback/actions";
 import {setPlateBarcodeToPlates} from "../metadata/actions";
@@ -687,23 +693,6 @@ const submitFileMetadataUpdateLogic = createLogic({
   },
   type: SUBMIT_FILE_METADATA_UPDATE,
 });
-
-/**
- * Use a given filepath's extension to determine if it is a "multifile".
- * @param filePath Path to the file
- */
-function determineIsMultifile(filePath: string): boolean {
-  const multifileExtensions = ['.zarr', '.sldy'];
-  const combinedExtensions = multifileExtensions.join('|');
-
-  // "ends with one of the listed extensions, ignoring casing"
-  // otherwise written like: /.zarr|.sldy$/i
-  const matcher = new RegExp(combinedExtensions + "$", 'i');
-
-  // If the regex matches it will return an array (truthy).
-  // If the regex doesn't match it will return null (falsy).
-  return Boolean(filePath.match(matcher));
-}
 
 const uploadWithoutMetadataLogic = createLogic({
   process: async (
