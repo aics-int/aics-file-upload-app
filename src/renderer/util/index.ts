@@ -64,6 +64,23 @@ export async function determineFilesFromNestedPaths(
 }
 
 /**
+ * Use a given filepath's extension to determine if it is a "multifile".
+ * @param filePath Path to the file
+ */
+export function determineIsMultifile(filePath: string): boolean {
+  const multifileExtensions = ['.zarr', '.sldy'];
+  const combinedExtensions = multifileExtensions.join('|');
+
+  // "ends with one of the listed extensions, ignoring casing"
+  // otherwise written like: /.zarr|.sldy$/i
+  const matcher = new RegExp(combinedExtensions + "$", 'i');
+
+  // If the regex matches it will return an array (truthy).
+  // If the regex doesn't match it will return null (falsy).
+  return Boolean(filePath.match(matcher));
+}
+
+/**
  * Returns the total size of a given directory's children, sub-children, etc.
  * If the given path points to a file rather than a directory, returns the size of the file.
  * @param dir Local path to a directory.

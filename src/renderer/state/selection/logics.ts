@@ -1,7 +1,7 @@
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
-import { determineFilesFromNestedPaths } from "../../util";
+import {determineFilesFromNestedPaths, determineIsMultifile} from "../../util";
 import { setAlert, startLoading, stopLoading } from "../feedback/actions";
 import { getBooleanAnnotationTypeId } from "../metadata/selectors";
 import { getAppliedTemplate } from "../template/selectors";
@@ -42,11 +42,13 @@ const loadFilesLogic = createLogic({
   ) => {
     dispatch(startLoading());
     try {
-      const filePaths = await determineFilesFromNestedPaths(
-        deps.action.payload
-      );
+      const filePaths = await Promise.all(deps.action.payload.map(async (filePath) => {
+        const isMultifile = determineIsMultifile(filePath);
+        // todo determineFilesFromNestedPaths first arg may not need to be an array?
+        return await determineFilesFromNestedPaths([filePath], isMultifile);
+      }));
       dispatch(stopLoading());
-      dispatch(addUploadFiles(filePaths.map((file) => ({ file }))));
+      dispatch(addUploadFiles(filePaths.flat().map((file) => ({ file }))));
       done();
     } catch (e) {
       dispatch(
