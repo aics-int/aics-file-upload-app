@@ -1,7 +1,7 @@
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
-import {determineFilesFromNestedPaths, determineIsMultifile} from "../../util";
+import { determineFilesFromNestedPaths, determineIsMultifile } from "../../util";
 import { setAlert, startLoading, stopLoading } from "../feedback/actions";
 import { getBooleanAnnotationTypeId } from "../metadata/selectors";
 import { getAppliedTemplate } from "../template/selectors";
