@@ -1,17 +1,25 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import {castArray, flatMap, forEach, get, isNil, trim,} from "lodash";
-import {isDate, isMoment} from "moment";
-import {createLogic} from "redux-logic";
+import {
+  castArray,
+  flatMap,
+  forEach,
+  get,
+  isNil,
+  trim,
+} from "lodash";
+import { isDate, isMoment } from "moment";
+import { createLogic } from "redux-logic";
 
-import {RendererProcessEvents} from "../../../shared/constants";
-import {AnnotationName, LIST_DELIMITER_SPLIT} from "../../constants";
+import { RendererProcessEvents } from "../../../shared/constants";
+import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
-import FileManagementSystem from "../../services/file-management-system";
-import {UploadJob} from "../../services/job-status-service/types";
-import {AnnotationType, ColumnType} from "../../services/labkey-client/types";
-import {Template} from "../../services/metadata-management-service/types";
+import FileManagementSystem, {
+} from "../../services/file-management-system";
+import { UploadJob } from "../../services/job-status-service/types";
+import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
+import { Template } from "../../services/metadata-management-service/types";
 import {
   determineFilesFromNestedPaths,
   determineIsMultifile,
@@ -19,9 +27,9 @@ import {
   FileType,
   splitTrimAndFilter
 } from "../../util";
-import {requestFailed} from "../actions";
-import {setErrorAlert} from "../feedback/actions";
-import {setPlateBarcodeToPlates} from "../metadata/actions";
+import { requestFailed } from "../actions";
+import { setErrorAlert } from "../feedback/actions";
+import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
   getAnnotations,
   getAnnotationTypes,
@@ -31,14 +39,21 @@ import {
   getDateTimeAnnotationTypeId,
   getPlateBarcodeToPlates,
 } from "../metadata/selectors";
-import {closeUpload, resetUpload, viewUploads} from "../route/actions";
-import {handleStartingNewUploadJob} from "../route/logics";
-import {updateMassEditRow} from "../selection/actions";
-import {getMassEditRow, getSelectedUploads, getSelectedUser,} from "../selection/selectors";
-import {getTemplateId} from "../setting/selectors";
-import {ensureDraftGetsSaved, getApplyTemplateInfo,} from "../stateHelpers";
-import {setAppliedTemplate} from "../template/actions";
-import {getAppliedTemplate} from "../template/selectors";
+import { closeUpload, viewUploads, resetUpload } from "../route/actions";
+import { handleStartingNewUploadJob } from "../route/logics";
+import { updateMassEditRow } from "../selection/actions";
+import {
+  getMassEditRow,
+  getSelectedUploads,
+  getSelectedUser,
+} from "../selection/selectors";
+import { getTemplateId } from "../setting/selectors";
+import {
+  ensureDraftGetsSaved,
+  getApplyTemplateInfo,
+} from "../stateHelpers";
+import { setAppliedTemplate } from "../template/actions";
+import { getAppliedTemplate } from "../template/selectors";
 import {
   AsyncRequest,
   FileModel,
@@ -50,7 +65,7 @@ import {
   ReduxLogicRejectCb,
   ReduxLogicTransformDependenciesWithAction,
 } from "../types";
-import {batchActions} from "../util";
+import { batchActions } from "../util";
 
 import {
   addUploadFiles,
@@ -78,7 +93,12 @@ import {
   UPDATE_UPLOAD_ROWS,
   UPLOAD_WITHOUT_METADATA,
 } from "./constants";
-import {getCanSaveUploadDraft, getUpload, getUploadFileNames, getUploadRequests,} from "./selectors";
+import {
+  getCanSaveUploadDraft,
+  getUpload,
+  getUploadFileNames,
+  getUploadRequests,
+} from "./selectors";
 import {
   ApplyTemplateAction,
   CancelUploadAction,
