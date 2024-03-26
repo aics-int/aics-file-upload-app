@@ -8,6 +8,7 @@ import { restore } from "sinon";
 
 import {
   determineFilesFromNestedPaths,
+  determineIsMultifile,
   getPowerOf1000,
   splitTrimAndFilter,
 } from "../";
@@ -50,6 +51,33 @@ describe("General utilities", () => {
 
       // Assert
       expect(result).to.deep.equal([MOCK_FILE1, MOCK_FILE2]);
+    });
+  });
+
+  describe("determineIsMultifile", () => {
+    it("returns true when files have expected extensions", () => {
+      // Arrange
+      const MOCK_FILE1 = "file.sldy";
+      const MOCK_FILE2 = "file.zarr";
+
+      // Act
+      const result1 = determineIsMultifile(MOCK_FILE1);
+      const result2 = determineIsMultifile(MOCK_FILE2);
+
+      // Assert
+      expect(result1).to.equal(true);
+      expect(result2).to.equal(true);
+    });
+
+    it("returns false when files do not have expected extensions", () => {
+      // Arrange
+      const MOCK_FILE1 = "image.png";
+
+      // Act
+      const result = determineIsMultifile(MOCK_FILE1);
+
+      // Assert
+      expect(result).to.equal(false);
     });
   });
 
