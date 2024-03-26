@@ -120,16 +120,18 @@ export default class FileManagementSystem {
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
     const isMultifile = upload.serviceFields.multifile || false;
-    let fileSize = 0; // todo this should not initialize to 0
-    if (isMultifile) {
-      // Multifiles require us to recursively find the full size of a directory. // todo comment-smithing
-      fileSize = await getDirectorySize(source);
-    }
-    const statReturn = await fs.promises.stat(source); // todo I hate this on a stylistic level
+    const statReturn = await fs.promises.stat(source);
     const fileLastModified = statReturn.mtime;
-    if (!isMultifile) {
+
+    let fileSize: number;
+    // Multifile uploads require us to get the total size of all relevant sub-files
+    // For any other upload, we can just grab the size returned by fs
+    if (isMultifile) {
+      fileSize = await getDirectorySize(source);
+    } else {
       fileSize = statReturn.size;
     }
+
     const fileLastModifiedInMs = fileLastModified.getTime();
     // Heuristic which in most cases, prevents attempting to upload a duplicate
     if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
