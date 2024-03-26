@@ -5,7 +5,7 @@ import { uniq } from "lodash";
 import * as uuid from "uuid";
 
 import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
-import { extensionToFileTypeMap, FileType } from "../../util";
+import { extensionToFileTypeMap, FileType, getDirectorySize } from "../../util";
 import FileStorageService, {
   UploadStatus,
   UploadStatusResponse,
@@ -119,7 +119,17 @@ export default class FileManagementSystem {
     // Grab file details
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
-    const { size: fileSize, mtime: fileLastModified } = await fs.promises.stat(source);
+    const isMultifile = upload.serviceFields.multifile || false;
+    let fileSize = 0; // todo this should not initialize to 0
+    if (isMultifile) {
+      // Multifiles require us to recursively find the full size of a directory. // todo comment-smithing
+      fileSize = await getDirectorySize(source);
+    }
+    const statReturn = await fs.promises.stat(source); // todo I hate this on a stylistic level
+    const fileLastModified = statReturn.mtime;
+    if (!isMultifile) {
+      fileSize = statReturn.size;
+    }
     const fileLastModifiedInMs = fileLastModified.getTime();
     // Heuristic which in most cases, prevents attempting to upload a duplicate
     if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
@@ -137,6 +147,7 @@ export default class FileManagementSystem {
       fileType,
       fileSize,
       upload.serviceFields.localNasShortcut ? this.posixPath(source) : undefined,
+      isMultifile,
     );
 
     // Update parent job with upload job created by FSS

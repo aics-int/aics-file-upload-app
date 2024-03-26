@@ -1,29 +1,21 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import {
-  castArray,
-  flatMap,
-  forEach,
-  get,
-  isNil,
-  trim,
-} from "lodash";
-import { isDate, isMoment } from "moment";
-import { createLogic } from "redux-logic";
+import {castArray, flatMap, forEach, get, isNil, trim,} from "lodash";
+import {isDate, isMoment} from "moment";
+import {createLogic} from "redux-logic";
 
-import { RendererProcessEvents } from "../../../shared/constants";
-import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
+import {RendererProcessEvents} from "../../../shared/constants";
+import {AnnotationName, LIST_DELIMITER_SPLIT} from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
-import FileManagementSystem, {
-} from "../../services/file-management-system";
-import { UploadJob } from "../../services/job-status-service/types";
-import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
-import { Template } from "../../services/metadata-management-service/types";
-import { determineFilesFromNestedPaths, extensionToFileTypeMap, FileType, splitTrimAndFilter } from "../../util";
-import { requestFailed } from "../actions";
-import { setErrorAlert } from "../feedback/actions";
-import { setPlateBarcodeToPlates } from "../metadata/actions";
+import FileManagementSystem from "../../services/file-management-system";
+import {UploadJob} from "../../services/job-status-service/types";
+import {AnnotationType, ColumnType} from "../../services/labkey-client/types";
+import {Template} from "../../services/metadata-management-service/types";
+import {determineFilesFromNestedPaths, extensionToFileTypeMap, FileType, splitTrimAndFilter} from "../../util";
+import {requestFailed} from "../actions";
+import {setErrorAlert} from "../feedback/actions";
+import {setPlateBarcodeToPlates} from "../metadata/actions";
 import {
   getAnnotations,
   getAnnotationTypes,
@@ -33,33 +25,26 @@ import {
   getDateTimeAnnotationTypeId,
   getPlateBarcodeToPlates,
 } from "../metadata/selectors";
-import { closeUpload, viewUploads, resetUpload } from "../route/actions";
-import { handleStartingNewUploadJob } from "../route/logics";
-import { updateMassEditRow } from "../selection/actions";
-import {
-  getMassEditRow,
-  getSelectedUploads,
-  getSelectedUser,
-} from "../selection/selectors";
-import { getTemplateId } from "../setting/selectors";
-import {
-  ensureDraftGetsSaved,
-  getApplyTemplateInfo,
-} from "../stateHelpers";
-import { setAppliedTemplate } from "../template/actions";
-import { getAppliedTemplate } from "../template/selectors";
+import {closeUpload, resetUpload, viewUploads} from "../route/actions";
+import {handleStartingNewUploadJob} from "../route/logics";
+import {updateMassEditRow} from "../selection/actions";
+import {getMassEditRow, getSelectedUploads, getSelectedUser,} from "../selection/selectors";
+import {getTemplateId} from "../setting/selectors";
+import {ensureDraftGetsSaved, getApplyTemplateInfo,} from "../stateHelpers";
+import {setAppliedTemplate} from "../template/actions";
+import {getAppliedTemplate} from "../template/selectors";
 import {
   AsyncRequest,
+  FileModel,
+  PlateAtImagingSession,
   ReduxLogicDoneCb,
   ReduxLogicNextCb,
   ReduxLogicProcessDependencies,
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicRejectCb,
   ReduxLogicTransformDependenciesWithAction,
-  FileModel,
-  PlateAtImagingSession,
 } from "../types";
-import { batchActions } from "../util";
+import {batchActions} from "../util";
 
 import {
   addUploadFiles,
@@ -87,12 +72,7 @@ import {
   UPDATE_UPLOAD_ROWS,
   UPLOAD_WITHOUT_METADATA,
 } from "./constants";
-import {
-  getCanSaveUploadDraft,
-  getUpload,
-  getUploadFileNames,
-  getUploadRequests,
-} from "./selectors";
+import {getCanSaveUploadDraft, getUpload, getUploadFileNames, getUploadRequests,} from "./selectors";
 import {
   ApplyTemplateAction,
   CancelUploadAction,
@@ -708,6 +688,23 @@ const submitFileMetadataUpdateLogic = createLogic({
   type: SUBMIT_FILE_METADATA_UPDATE,
 });
 
+/**
+ * Use a given filepath's extension to determine if it is a "multifile".
+ * @param filePath Path to the file
+ */
+function determineIsMultifile(filePath: string): boolean {
+  const multifileExtensions = ['.zarr', '.sldy'];
+  const combinedExtensions = multifileExtensions.join('|');
+
+  // "ends with one of the listed extensions, ignoring casing"
+  // otherwise written like: /.zarr|.sldy$/i
+  const matcher = new RegExp(combinedExtensions + "$", 'i');
+
+  // If the regex matches it will return an array (truthy).
+  // If the regex doesn't match it will return null (falsy).
+  return Boolean(filePath.match(matcher));
+}
+
 const uploadWithoutMetadataLogic = createLogic({
   process: async (
     deps: ReduxLogicProcessDependenciesWithAction<UploadWithoutMetadataAction>,
@@ -720,29 +717,35 @@ const uploadWithoutMetadataLogic = createLogic({
 
     let uploads: UploadJob[];
     try {
-      const filePaths = await determineFilesFromNestedPaths(
-        deps.action.payload
-      );
+      const filePaths = await Promise.all(deps.action.payload.map(async (filePath) => {
+        const isMultifile = determineIsMultifile(filePath);
+        // todo determineFilesFromNestedPaths first arg may not need to be an array?
+        return await determineFilesFromNestedPaths([filePath], isMultifile);
+      }));
       uploads = await Promise.all(
-        filePaths.map((filePath) =>
-          deps.fms.initiateUpload(
-            {
-              file: {
-                disposition: "tape", // prevent czi -> ome.tiff conversions
-                fileType:
-                  extensionToFileTypeMap[
-                    path.extname(filePath).toLowerCase()
-                  ] || FileType.OTHER,
-                originalPath: filePath,
-                shouldBeInArchive: true,
-                shouldBeInLocal: true,
-              },
-              microscopy: {},
-            },
-            user,
-            { groupId }
-          )
-        )
+          filePaths.flat().map((filePath) => {
+            const isMultifile = determineIsMultifile(filePath); // todo: simplify this whole function so this isn't called twice
+            return deps.fms.initiateUpload(
+                {
+                  file: {
+                    disposition: "tape", // prevent czi -> ome.tiff conversions
+                    fileType:
+                        extensionToFileTypeMap[
+                            path.extname(filePath).toLowerCase()
+                            ] || FileType.OTHER,
+                    originalPath: filePath,
+                    shouldBeInArchive: true,
+                    shouldBeInLocal: true,
+                  },
+                  microscopy: {},
+                },
+                user,
+                {
+                  groupId,
+                  multifile: isMultifile
+                }
+            );
+          })
       );
     } catch (error) {
       dispatch(
