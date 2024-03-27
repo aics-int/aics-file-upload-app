@@ -42,11 +42,9 @@ const loadFilesLogic = createLogic({
   ) => {
     dispatch(startLoading());
     try {
-      const filePaths = await Promise.all(deps.action.payload.map(async (filePath) => {
-        const isMultifile = determineIsMultifile(filePath);
-        // todo determineFilesFromNestedPaths first arg may not need to be an array?
-        return await determineFilesFromNestedPaths([filePath], isMultifile);
-      }));
+      const filePaths = await determineFilesFromNestedPaths(
+        deps.action.payload
+      );
       dispatch(stopLoading());
       dispatch(addUploadFiles(filePaths.flat().map((file) => ({ file }))));
       done();

@@ -726,11 +726,9 @@ const uploadWithoutMetadataLogic = createLogic({
 
     let uploads: UploadJob[];
     try {
-      const filePaths = await Promise.all(deps.action.payload.map(async (filePath) => {
-        const isMultifile = determineIsMultifile(filePath);
-        // todo determineFilesFromNestedPaths first arg may not need to be an array?
-        return await determineFilesFromNestedPaths([filePath], isMultifile);
-      }));
+      const filePaths = await determineFilesFromNestedPaths(
+        deps.action.payload
+      );
       uploads = await Promise.all(
           filePaths.flat().map((filePath) => {
             const isMultifile = determineIsMultifile(filePath); // todo: simplify this whole function so this isn't called twice
