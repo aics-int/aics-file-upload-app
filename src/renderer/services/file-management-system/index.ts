@@ -120,16 +120,13 @@ export default class FileManagementSystem {
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
     const isMultifile = upload.serviceFields.multifile || false;
-    const statReturn = await fs.promises.stat(source);
-    const fileLastModified = statReturn.mtime;
 
-    let fileSize: number;
+    let { size: fileSize, mtime: fileLastModified } = await fs.promises.stat(source);
+
     // Multifile uploads require us to get the total size of all relevant sub-files
     // For any other upload, we can just grab the size returned by fs
     if (isMultifile) {
       fileSize = await getDirectorySize(source);
-    } else {
-      fileSize = statReturn.size;
     }
 
     const fileLastModifiedInMs = fileLastModified.getTime();
