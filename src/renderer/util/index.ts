@@ -7,6 +7,15 @@ import { flatten, memoize, uniq } from "lodash";
 
 import { LIST_DELIMITER_SPLIT, MAIN_FONT_WIDTH } from "../constants";
 
+///////////////////////////////////////////////////////////////////
+// TODO - Remove this once multifile support is feature-complete //
+//         Flip the boolean to "true" for testing                //
+///////////////////////////////////////////////////////////////////
+
+const USE_MULTIFILE_ASSUMPTION = false;
+
+///////////////////////////////////////////////////////////////////
+
 /*
  * This file contains pure utility methods with no dependencies on other code
  * in this repo.
@@ -83,7 +92,7 @@ export function determineIsMultifile(filePath: string): boolean {
 
   // If the regex matches it will return an array (truthy).
   // If the regex doesn't match it will return null (falsy).
-  return Boolean(filePath.match(matcher));
+  return Boolean(filePath.match(matcher)) && USE_MULTIFILE_ASSUMPTION;
 }
 
 /**
