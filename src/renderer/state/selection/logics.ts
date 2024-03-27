@@ -46,7 +46,7 @@ const loadFilesLogic = createLogic({
         deps.action.payload
       );
       dispatch(stopLoading());
-      dispatch(addUploadFiles(filePaths.map((file) => ({ file }))));
+      dispatch(addUploadFiles(filePaths.flat().map((file) => ({ file }))));
       done();
     } catch (e) {
       dispatch(

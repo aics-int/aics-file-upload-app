@@ -20,7 +20,13 @@ import FileManagementSystem, {
 import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
-import { determineFilesFromNestedPaths, extensionToFileTypeMap, FileType, splitTrimAndFilter } from "../../util";
+import {
+  determineFilesFromNestedPaths,
+  determineIsMultifile,
+  extensionToFileTypeMap,
+  FileType,
+  splitTrimAndFilter
+} from "../../util";
 import { requestFailed } from "../actions";
 import { setErrorAlert } from "../feedback/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
@@ -50,14 +56,14 @@ import { setAppliedTemplate } from "../template/actions";
 import { getAppliedTemplate } from "../template/selectors";
 import {
   AsyncRequest,
+  FileModel,
+  PlateAtImagingSession,
   ReduxLogicDoneCb,
   ReduxLogicNextCb,
   ReduxLogicProcessDependencies,
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicRejectCb,
   ReduxLogicTransformDependenciesWithAction,
-  FileModel,
-  PlateAtImagingSession,
 } from "../types";
 import { batchActions } from "../util";
 
@@ -724,25 +730,29 @@ const uploadWithoutMetadataLogic = createLogic({
         deps.action.payload
       );
       uploads = await Promise.all(
-        filePaths.map((filePath) =>
-          deps.fms.initiateUpload(
-            {
-              file: {
-                disposition: "tape", // prevent czi -> ome.tiff conversions
-                fileType:
-                  extensionToFileTypeMap[
-                    path.extname(filePath).toLowerCase()
-                  ] || FileType.OTHER,
-                originalPath: filePath,
-                shouldBeInArchive: true,
-                shouldBeInLocal: true,
-              },
-              microscopy: {},
-            },
-            user,
-            { groupId }
-          )
-        )
+          filePaths.flat().map((filePath) => {
+            const isMultifile = determineIsMultifile(filePath); // todo: simplify this whole function so this isn't called twice
+            return deps.fms.initiateUpload(
+                {
+                  file: {
+                    disposition: "tape", // prevent czi -> ome.tiff conversions
+                    fileType:
+                        extensionToFileTypeMap[
+                            path.extname(filePath).toLowerCase()
+                            ] || FileType.OTHER,
+                    originalPath: filePath,
+                    shouldBeInArchive: true,
+                    shouldBeInLocal: true,
+                  },
+                  microscopy: {},
+                },
+                user,
+                {
+                  groupId,
+                  multifile: isMultifile
+                }
+            );
+          })
       );
     } catch (error) {
       dispatch(
