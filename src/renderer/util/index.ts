@@ -34,29 +34,35 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
   }
 };
 
+async function determineFilesFromNestedPath(
+  path: string
+): Promise<string[]> {
+  const isMultifile = determineIsMultifile(path);
+  const stats = await fsPromises.stat(path);
+  if (!stats.isDirectory() || isMultifile) {
+    return [path];
+  }
+  const canRead = await canUserRead(path);
+  if (!canRead) {
+    throw new Error(`User does not have permission to read ${path}`);
+  }
+  const pathsUnderFolder = await fsPromises.readdir(path, {
+    withFileTypes: true,
+  });
+  return pathsUnderFolder
+    .filter((f) => f.isFile())
+    .map((f) => resolve(path, f.name));
+}
+
 // For each file path determines if the path leads to a directory
 // if so it extracts the file paths for the files within said directory
 // otherwise just returns the file path as is.
 export async function determineFilesFromNestedPaths(
-  paths: string[],
-  isMultifile: boolean
+  paths: string[]
 ): Promise<string[]> {
   const filePaths = await Promise.all(
     paths.flatMap(async (fullPath) => {
-      const stats = await fsPromises.stat(fullPath);
-      if (!stats.isDirectory() || isMultifile) {
-        return [fullPath];
-      }
-      const canRead = await canUserRead(fullPath);
-      if (!canRead) {
-        throw new Error(`User does not have permission to read ${fullPath}`);
-      }
-      const pathsUnderFolder = await fsPromises.readdir(fullPath, {
-        withFileTypes: true,
-      });
-      return pathsUnderFolder
-        .filter((f) => f.isFile())
-        .map((f) => resolve(fullPath, f.name));
+      return determineFilesFromNestedPath(fullPath);
     })
   );
 
