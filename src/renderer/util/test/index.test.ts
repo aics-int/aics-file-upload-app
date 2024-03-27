@@ -9,6 +9,7 @@ import { restore } from "sinon";
 import {
   determineFilesFromNestedPaths,
   determineIsMultifile,
+  getDirectorySize,
   getPowerOf1000,
   splitTrimAndFilter,
 } from "../";
@@ -52,6 +53,39 @@ describe("General utilities", () => {
       // Assert
       expect(result).to.deep.equal([MOCK_FILE1, MOCK_FILE2]);
     });
+  });
+
+  describe("getDirectorySize", () => {
+    const MOCK_DIRECTORY = path.resolve(os.tmpdir(), "fuaMockTest");
+
+    after(() => {
+      rimraf.sync(MOCK_DIRECTORY);
+    });
+
+    it("correctly calculates directory size", async () => {
+      // Arrange
+      // create a directory containing one file and a sub-directory that also contains one file
+      await fs.promises.mkdir(MOCK_DIRECTORY);
+
+      const SUB_DIR = path.resolve(MOCK_DIRECTORY, "subDir");
+      await fs.promises.mkdir(SUB_DIR);
+
+      const FILE_1 = path.resolve(MOCK_DIRECTORY, "file1.txt");
+      const FILE_2 = path.resolve(SUB_DIR, "file2.txt");
+
+      // use a 10 byte array to create files that are each 10 bytes
+      const byteArray = new Int8Array(10);
+
+      await fs.promises.writeFile(FILE_1, byteArray);
+      await fs.promises.writeFile(FILE_2, byteArray)
+
+      // Act
+      const result = await getDirectorySize(MOCK_DIRECTORY);
+
+      // Assert
+      // two 10-byte files -> 20 bytes total size
+      expect(result).to.equal(20);
+    })
   });
 
   describe("determineIsMultifile", () => {
