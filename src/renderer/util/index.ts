@@ -7,15 +7,6 @@ import { flatten, memoize, uniq } from "lodash";
 
 import { LIST_DELIMITER_SPLIT, MAIN_FONT_WIDTH } from "../constants";
 
-///////////////////////////////////////////////////////////////////
-// TODO - Remove this once multifile support is feature-complete //
-//         Flip the boolean to "true" for testing                //
-///////////////////////////////////////////////////////////////////
-
-const USE_MULTIFILE_ASSUMPTION = false;
-
-///////////////////////////////////////////////////////////////////
-
 /*
  * This file contains pure utility methods with no dependencies on other code
  * in this repo.
@@ -83,6 +74,15 @@ export async function determineFilesFromNestedPaths(
  * @param filePath Path to the file
  */
 export function determineIsMultifile(filePath: string): boolean {
+  ///////////////////////////////////////////////////////////////////
+  // TODO - Remove this once multifile support is feature-complete //
+  //         Flip the boolean to "true" for testing                //
+  ///////////////////////////////////////////////////////////////////
+  const USE_MULTIFILE_ASSUMPTION = process.env.USE_MULTIFILE_ASSUMPTION !== undefined
+      ? process.env.USE_MULTIFILE_ASSUMPTION === 'true'
+      : false;
+  ///////////////////////////////////////////////////////////////////
+
   const multifileExtensions = ['.zarr', '.sldy'];
   const combinedExtensions = multifileExtensions.join('|');
 
