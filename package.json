@@ -143,5 +143,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": "eslint --cache --fix"
+  },
+  "config": {
+    "networkTimeout": 180000 
   }
 }
