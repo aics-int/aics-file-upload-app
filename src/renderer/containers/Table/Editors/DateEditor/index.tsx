@@ -1,6 +1,6 @@
 import { DeleteOutlined } from "@ant-design/icons";
 import { Button, DatePicker } from "antd";
-import moment, {Moment} from "moment";
+import moment, { Moment } from "moment";
 import React, { useState } from "react";
 import { ColumnInstance } from "react-table";
 
