@@ -113,7 +113,7 @@ export default class FileStorageService extends HttpCacheClient {
       file_size: fileSize,
       local_nas_shortcut: localNasPath !== undefined,
       local_nas_path: localNasPath,
-      multifile :!!isMultifile,
+      multifile: !!isMultifile,
     };
     return this.post<UploadStatusResponse>(
       url,

@@ -34,6 +34,13 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
   }
 };
 
+/**
+ * For a given path, determine whether it constitutes a single FMS Upload item (for File, Multifile uploads) or
+ *   a collection of multiple files each with their own FMS entry (for Directory uploads).
+ * For Directory files, only immediate children of the given directory are returned (i.e. files in sub-directories
+ *   are not included).
+ * @param path Local file path for an upload target
+ */
 async function determineFilesFromNestedPath(
   path: string
 ): Promise<string[]> {
