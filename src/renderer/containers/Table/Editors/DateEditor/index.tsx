@@ -1,6 +1,6 @@
 import { DeleteOutlined } from "@ant-design/icons";
 import { Button, DatePicker } from "antd";
-import moment from "moment";
+import moment, {Moment} from "moment";
 import React, { useState } from "react";
 import { ColumnInstance } from "react-table";
 
@@ -23,12 +23,12 @@ export default function DateEditor({
   column,
   commitChanges,
 }: Props) {
-  const [value, setValue] = useState<Date | undefined>(
-    initialValue.length > 0 ? initialValue[0] : undefined
+  const [value, setValue] = useState<Moment | undefined>(
+    initialValue.length > 0 ? moment(initialValue[0]) : undefined
   );
 
-  function handleCommit() {
-    commitChanges(value ? [value] : []);
+  function handleCommit(moment: Moment | undefined) {
+      commitChanges(moment ? [moment.toDate()] : []);
   }
 
   function handleBlur(e: React.FocusEvent<HTMLDivElement>) {
@@ -41,7 +41,7 @@ export default function DateEditor({
         (e.relatedTarget.tagName !== "LI" ||
           e.relatedTarget.attributes.getNamedItem("role")?.value !== "button"))
     ) {
-      handleCommit();
+        handleCommit(value);
     }
   }
 
@@ -50,12 +50,12 @@ export default function DateEditor({
       <DatePicker
         open
         autoFocus
-        onOk={handleCommit}
+        onOk={(moment) => handleCommit(moment)} // only present for DateTime types
         className={styles.datePicker}
         showTime={column.type === ColumnType.DATETIME}
         placeholder="Add a Date"
-        value={value ? moment(value).utc() : undefined}
-        onChange={(selectedValue) => setValue(selectedValue?.toDate() ?? undefined)}
+        value={value ? value.utc() : undefined}
+        onChange={(selectedValue) => setValue(selectedValue ?? undefined)}
         renderExtraFooter={() => (
           <div className={styles.footer}>
             <Button
