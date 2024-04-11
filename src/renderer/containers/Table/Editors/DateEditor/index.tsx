@@ -28,7 +28,7 @@ export default function DateEditor({
   );
 
   function handleCommit(moment: Moment | undefined) {
-      commitChanges(moment ? [moment.toDate()] : []);
+    commitChanges(moment ? [moment.toDate()] : []);
   }
 
   function handleBlur(e: React.FocusEvent<HTMLDivElement>) {
@@ -41,7 +41,7 @@ export default function DateEditor({
         (e.relatedTarget.tagName !== "LI" ||
           e.relatedTarget.attributes.getNamedItem("role")?.value !== "button"))
     ) {
-        handleCommit(value);
+      handleCommit(value);
     }
   }
 
