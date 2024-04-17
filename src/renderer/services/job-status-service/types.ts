@@ -63,6 +63,9 @@ export interface UploadServiceFields {
 
   // Controls whether the file is send over the network in chunks, or if it is accessible directly via a path on the local NAS.
   localNasShortcut?: boolean;
+
+  // Determines whether an uploaded folder should be interpreted as a "multifile".
+  multifile?: boolean;
 }
 
 export interface JSSJob {

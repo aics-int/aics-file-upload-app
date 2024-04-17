@@ -5,7 +5,7 @@ import { uniq } from "lodash";
 import * as uuid from "uuid";
 
 import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
-import { extensionToFileTypeMap, FileType } from "../../util";
+import { extensionToFileTypeMap, FileType, getDirectorySize } from "../../util";
 import FileStorageService, {
   UploadStatus,
   UploadStatusResponse,
@@ -119,7 +119,18 @@ export default class FileManagementSystem {
     // Grab file details
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
-    const { size: fileSize, mtime: fileLastModified } = await fs.promises.stat(source);
+    const isMultifile = upload.serviceFields.multifile || false;
+
+    const sourceStat = await fs.promises.stat(source);
+    let { size: fileSize } = sourceStat;
+    const { mtime: fileLastModified } = sourceStat
+
+    // Multifile uploads require us to get the total size of all relevant sub-files
+    // For any other upload, we can just grab the size returned by fs
+    if (isMultifile) {
+      fileSize = await getDirectorySize(source);
+    }
+
     const fileLastModifiedInMs = fileLastModified.getTime();
     // Heuristic which in most cases, prevents attempting to upload a duplicate
     if (await this.fss.fileExistsByNameAndSize(fileName, fileSize)) {
@@ -137,6 +148,7 @@ export default class FileManagementSystem {
       fileType,
       fileSize,
       upload.serviceFields.localNasShortcut ? this.posixPath(source) : undefined,
+      isMultifile,
     );
 
     // Update parent job with upload job created by FSS

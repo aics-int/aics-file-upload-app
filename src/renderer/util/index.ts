@@ -1,5 +1,6 @@
 import { constants, promises as fsPromises } from "fs";
-import { resolve } from "path";
+import { readdir, stat } from 'fs/promises';
+import { join, resolve } from "path";
 
 import { trim } from "lodash";
 import { flatten, memoize, uniq } from "lodash";
@@ -33,6 +34,33 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
   }
 };
 
+/**
+ * For a given path, determine whether it constitutes a single FMS Upload item (for File, Multifile uploads) or
+ *   a collection of multiple files each with their own FMS entry (for Directory uploads).
+ * For Directory files, only immediate children of the given directory are returned (i.e. files in sub-directories
+ *   are not included).
+ * @param path Local file path for an upload target
+ */
+async function determineFilesFromNestedPath(
+  path: string
+): Promise<string[]> {
+  const isMultifile = determineIsMultifile(path);
+  const stats = await fsPromises.stat(path);
+  if (!stats.isDirectory() || isMultifile) {
+    return [path];
+  }
+  const canRead = await canUserRead(path);
+  if (!canRead) {
+    throw new Error(`User does not have permission to read ${path}`);
+  }
+  const pathsUnderFolder = await fsPromises.readdir(path, {
+    withFileTypes: true,
+  });
+  return pathsUnderFolder
+    .filter((f) => f.isFile())
+    .map((f) => resolve(path, f.name));
+}
+
 // For each file path determines if the path leads to a directory
 // if so it extracts the file paths for the files within said directory
 // otherwise just returns the file path as is.
@@ -41,24 +69,64 @@ export async function determineFilesFromNestedPaths(
 ): Promise<string[]> {
   const filePaths = await Promise.all(
     paths.flatMap(async (fullPath) => {
-      const stats = await fsPromises.stat(fullPath);
-      if (!stats.isDirectory()) {
-        return [fullPath];
-      }
-      const canRead = await canUserRead(fullPath);
-      if (!canRead) {
-        throw new Error(`User does not have permission to read ${fullPath}`);
-      }
-      const pathsUnderFolder = await fsPromises.readdir(fullPath, {
-        withFileTypes: true,
-      });
-      return pathsUnderFolder
-        .filter((f) => f.isFile())
-        .map((f) => resolve(fullPath, f.name));
+      return determineFilesFromNestedPath(fullPath);
     })
   );
 
   return uniq(flatten(filePaths));
+}
+
+/**
+ * Use a given filepath's extension to determine if it is a "multifile".
+ * @param filePath Path to the file
+ */
+export function determineIsMultifile(filePath: string): boolean {
+  ///////////////////////////////////////////////////////////////////
+  // TODO - Remove this once multifile support is feature-complete //
+  //         Flip the boolean to "true" for testing                //
+  ///////////////////////////////////////////////////////////////////
+  const USE_MULTIFILE_ASSUMPTION = process.env.USE_MULTIFILE_ASSUMPTION !== undefined
+      ? process.env.USE_MULTIFILE_ASSUMPTION === 'true'
+      : false;
+  ///////////////////////////////////////////////////////////////////
+
+  const multifileExtensions = ['.zarr', '.sldy'];
+  const combinedExtensions = multifileExtensions.join('|');
+
+  // "ends with one of the listed extensions, ignoring casing"
+  // otherwise written like: /.zarr|.sldy$/i
+  const matcher = new RegExp(combinedExtensions + "$", 'i');
+
+  // If the regex matches it will return an array (truthy).
+  // If the regex doesn't match it will return null (falsy).
+  return Boolean(filePath.match(matcher)) && USE_MULTIFILE_ASSUMPTION;
+}
+
+/**
+ * Returns the total size of a given directory's children, sub-children, etc.
+ * If the given path points to a file rather than a directory, returns the size of the file.
+ * @param dir Local path to a directory.
+ *
+ * Borrowed from StackOverflow: https://stackoverflow.com/a/69418940
+ */
+export async function getDirectorySize(dir: string): Promise<number> {
+  const files = await readdir(dir, { withFileTypes: true });
+
+  const paths = files.map(async file => {
+    const path = join(dir, file.name);
+
+    if (file.isDirectory()) {
+      return await getDirectorySize(path);
+    }
+
+    if (file.isFile()) {
+      const { size } = await stat(path);
+      return size;
+    }
+    return 0;
+  } );
+
+  return (await Promise.all(paths)).flat(Infinity).reduce((i, size) => i + size, 0);
 }
 
 /**
