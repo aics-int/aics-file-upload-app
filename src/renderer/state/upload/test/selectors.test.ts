@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { orderBy } from "lodash";
 
+
 import { AnnotationName } from "../../../constants";
 import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
 import { UploadRequest } from "../../../services/types";
@@ -150,7 +151,15 @@ describe("Upload selectors", () => {
       const actual = getUploadRequests(state);
       expect(actual).to.deep.equal(expectedPayload);
     });
-    it("Converts DateTime annotation values into properly-formatted ISO strings", () => {
+    it("Converts DateTime annotation values into properly-formatted ISO strings with timezone offsets", () => {
+      // This is pretty much the same thing that happens in the selector function that's being tested.
+      // But a) because of daylight savings, the timezone offset changes depending on the time of year, so we can't just
+      //   hardcode an "expected" value in the test,
+      // and b) the important thing to test is that datetime annotations are detected and their values are
+      //   transformed at all.
+      const dateTimeValue = '2024-01-01 12:30:00';
+      const dateTimeValueInUTCWithTimeZoneOffset = moment(dateTimeValue).format(); // UTC w/ tz offset
+
       const state: State = {
         ...nonEmptyStateForInitiatingUpload,
         template: {
@@ -163,7 +172,7 @@ describe("Upload selectors", () => {
         upload: getMockStateWithHistory({
           "/path/to.dot/image.tiff": {
             file: "/path/to.dot/image.tiff",
-            ['Seeded On']: ['2024-01-01 12:30:00'], // mockDateTimeAnnotation name
+            ['Seeded On']: [dateTimeValue], // mockDateTimeAnnotation name
           },
         }),
       };
@@ -173,7 +182,7 @@ describe("Upload selectors", () => {
             annotations: [
               {
                 annotationId: mockDateTimeAnnotation.annotationId,
-                values: ['2024-01-01T20:30:00.000Z'],
+                values: [dateTimeValueInUTCWithTimeZoneOffset],
               },
             ],
             templateId: mockMMSTemplate.templateId,
