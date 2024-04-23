@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { orderBy } from "lodash";
-
+import * as moment from "moment";
 
 import { AnnotationName } from "../../../constants";
 import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
