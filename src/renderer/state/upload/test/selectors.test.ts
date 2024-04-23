@@ -150,6 +150,47 @@ describe("Upload selectors", () => {
       const actual = getUploadRequests(state);
       expect(actual).to.deep.equal(expectedPayload);
     });
+    it("Converts DateTime annotation values into properly-formatted ISO strings", () => {
+      const state: State = {
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...nonEmptyStateForInitiatingUpload.template,
+          appliedTemplate: {
+            ...mockMMSTemplate,
+            annotations: [mockDateTimeAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          "/path/to.dot/image.tiff": {
+            file: "/path/to.dot/image.tiff",
+            ['Seeded On']: ['2024-01-01 12:30:00'], // mockDateTimeAnnotation name
+          },
+        }),
+      };
+      const expectedPayload = [
+        {
+          customMetadata: {
+            annotations: [
+              {
+                annotationId: mockDateTimeAnnotation.annotationId,
+                values: ['2024-01-01T20:30:00.000Z'],
+              },
+            ],
+            templateId: mockMMSTemplate.templateId,
+          },
+          file: {
+            disposition: "tape",
+            fileType: FileType.IMAGE,
+            originalPath: "/path/to.dot/image.tiff",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
+          microscopy: {},
+        },
+      ];
+      const actual = getUploadRequests(state);
+      expect(actual).to.deep.equal(expectedPayload);
+    });
     it("Interprets combined 'File Name (File ID)' FMS.File Lookup values into just File IDs", () => {
       const state: State = {
         ...nonEmptyStateForInitiatingUpload,

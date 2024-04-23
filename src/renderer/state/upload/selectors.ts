@@ -405,7 +405,7 @@ const getAnnotations = (
             annotationId: annotation.annotationId,
             values: castArray(value).map((v) => {
               if (annotation.type === ColumnType.DATETIME) {
-                return moment(v).format("YYYY-MM-DD HH:mm:ss");
+                return moment(v).toISOString();
               }
               if (annotation.type === ColumnType.DATE) {
                 return moment(v).format("YYYY-MM-DD");
