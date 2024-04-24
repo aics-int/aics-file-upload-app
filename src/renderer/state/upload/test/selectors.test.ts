@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { orderBy } from "lodash";
+import * as moment from "moment";
 
 import { AnnotationName } from "../../../constants";
 import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
@@ -133,6 +134,55 @@ describe("Upload selectors", () => {
               {
                 annotationId: mockBooleanAnnotation.annotationId,
                 values: ["false"],
+              },
+            ],
+            templateId: mockMMSTemplate.templateId,
+          },
+          file: {
+            disposition: "tape",
+            fileType: FileType.IMAGE,
+            originalPath: "/path/to.dot/image.tiff",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
+          microscopy: {},
+        },
+      ];
+      const actual = getUploadRequests(state);
+      expect(actual).to.deep.equal(expectedPayload);
+    });
+    it("Converts DateTime annotation values into properly-formatted ISO strings with timezone offsets", () => {
+      // This is pretty much the same thing that happens in the selector function that's being tested.
+      // But a) because of daylight savings, the timezone offset changes depending on the time of year, so we can't just
+      //   hardcode an "expected" value in the test,
+      // and b) the important thing to test is that datetime annotations are detected and their values are
+      //   transformed at all.
+      const dateTimeValue = '2024-01-01 12:30:00';
+      const dateTimeValueInUTCWithTimeZoneOffset = moment(dateTimeValue).format(); // UTC w/ tz offset
+
+      const state: State = {
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...nonEmptyStateForInitiatingUpload.template,
+          appliedTemplate: {
+            ...mockMMSTemplate,
+            annotations: [mockDateTimeAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          "/path/to.dot/image.tiff": {
+            file: "/path/to.dot/image.tiff",
+            ['Seeded On']: [dateTimeValue], // mockDateTimeAnnotation name
+          },
+        }),
+      };
+      const expectedPayload = [
+        {
+          customMetadata: {
+            annotations: [
+              {
+                annotationId: mockDateTimeAnnotation.annotationId,
+                values: [dateTimeValueInUTCWithTimeZoneOffset],
               },
             ],
             templateId: mockMMSTemplate.templateId,
