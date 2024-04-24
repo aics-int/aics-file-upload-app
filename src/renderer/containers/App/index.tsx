@@ -69,16 +69,35 @@ export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>){
         //   * fileId has been published
         //   * progress has been published on a pre-upload md5, file upload, or post-upload md5
         //   * requires this clients intervention to retry
-        const fssJob = job as FSSUpload;
-        const totalBytes = fssJob.serviceFields.fileSize || 0; // 0 is a safe default, but in practice filesize is initialized immediately after job creation.
-        if (fssJob.serviceFields?.fileId || fssJob.currentStage === UploadStatus.INACTIVE || fssJob.currentStage === UploadStatus.RETRY) {
-          dispatch(receiveFSSJobCompletionUpdate(fssJob));
-        } else if (fssJob.serviceFields?.preUploadMd5 && (fssJob.serviceFields.preUploadMd5 !== fssJob.serviceFields.fileSize)) {
-          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.preUploadMd5, totalBytes, step: Step.ONE }));
-        } else if (fssJob.serviceFields?.currentFileSize && (fssJob.serviceFields.currentFileSize !== fssJob.serviceFields?.fileSize)) {
-          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.currentFileSize, totalBytes, step: Step.TWO }));
-        } else if (fssJob.serviceFields?.postUploadMd5 && (fssJob.serviceFields.postUploadMd5 !== fssJob.serviceFields?.fileSize)) {
-          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.postUploadMd5, totalBytes, step: Step.THREE }));
+        if (job.serviceFields?.subfiles) {
+          const totalBytesUploaded: number = Object.values(job.serviceFields.subfiles).reduce(
+              (accum: number, value: number) => accum + value, 0);
+          dispatch(updateUploadProgressInfo(job.jobId,
+              { bytesUploaded: totalBytesUploaded, totalBytes: job.serviceFields?.fileSize || 0, step: Step.THREE }));
+        } else {
+          const fssJob = job as FSSUpload;
+          const totalBytes = fssJob.serviceFields.fileSize || 0; // 0 is a safe default, but in practice filesize is initialized immediately after job creation.
+          if (fssJob.serviceFields?.fileId || fssJob.currentStage === UploadStatus.INACTIVE || fssJob.currentStage === UploadStatus.RETRY) {
+            dispatch(receiveFSSJobCompletionUpdate(fssJob));
+          } else if (fssJob.serviceFields?.preUploadMd5 && (fssJob.serviceFields.preUploadMd5 !== fssJob.serviceFields.fileSize)) {
+            dispatch(updateUploadProgressInfo(fssJob.jobId, {
+              bytesUploaded: fssJob.serviceFields?.preUploadMd5,
+              totalBytes,
+              step: Step.ONE
+            }));
+          } else if (fssJob.serviceFields?.currentFileSize && (fssJob.serviceFields.currentFileSize !== fssJob.serviceFields?.fileSize)) {
+            dispatch(updateUploadProgressInfo(fssJob.jobId, {
+              bytesUploaded: fssJob.serviceFields?.currentFileSize,
+              totalBytes,
+              step: Step.TWO
+            }));
+          } else if (fssJob.serviceFields?.postUploadMd5 && (fssJob.serviceFields.postUploadMd5 !== fssJob.serviceFields?.fileSize)) {
+            dispatch(updateUploadProgressInfo(fssJob.jobId, {
+              bytesUploaded: fssJob.serviceFields?.postUploadMd5,
+              totalBytes,
+              step: Step.THREE
+            }));
+          }
         }
       } else if (job.serviceFields?.type === "upload") {
         // Otherwise separate user's other jobs from ones created by this app
