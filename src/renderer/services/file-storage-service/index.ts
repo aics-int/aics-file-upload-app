@@ -16,6 +16,7 @@ export interface FSSUpload extends JSSJob {
     fileSize?: number;
     currentFileSize?: number;
     multifile?: boolean;
+    subfiles?: object
   };
 }
 

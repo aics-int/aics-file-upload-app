@@ -5,7 +5,7 @@ import { JSSJobStatus, Service } from "../../../services/job-status-service/type
 import { JSSJob } from "../../../services/job-status-service/types";
 import { updateUploadProgressInfo } from "../../../state/job/actions";
 import { Step } from "../../Table/CustomCells/StatusCell/Step";
-import { handleUploadJobUpdates } from "../index";
+import { handleUploadJobUpdates } from "../handleUploadJobUpdates";
 
 describe("App", () => {
     describe("handleUploadJobUpdates", () => {
