@@ -70,6 +70,9 @@ export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>){
         //   * progress has been published on a pre-upload md5, file upload, or post-upload md5
         //   * requires this clients intervention to retry
         if (job.serviceFields?.subfiles) {
+          if (job.serviceFields?.fileId) {
+            dispatch(receiveFSSJobCompletionUpdate(job as FSSUpload));
+          }
           const totalBytesUploaded: number = Object.values(job.serviceFields.subfiles).reduce(
               (accum: number, value: number) => accum + value, 0);
           dispatch(updateUploadProgressInfo(job.jobId,

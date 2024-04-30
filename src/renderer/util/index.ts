@@ -85,9 +85,7 @@ export function determineIsMultifile(filePath: string): boolean {
   // TODO - Remove this once multifile support is feature-complete //
   //         Flip the boolean to "true" for testing                //
   ///////////////////////////////////////////////////////////////////
-  const USE_MULTIFILE_ASSUMPTION = process.env.USE_MULTIFILE_ASSUMPTION !== undefined
-      ? process.env.USE_MULTIFILE_ASSUMPTION === 'true'
-      : false;
+  const USE_MULTIFILE_ASSUMPTION = true;
   ///////////////////////////////////////////////////////////////////
 
   const multifileExtensions = ['.zarr', '.sldy'];
