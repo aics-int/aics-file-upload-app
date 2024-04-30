@@ -112,9 +112,6 @@ export interface JSSJob {
 
   // Identifier for the user associated with the job.
   user: string;
-
-  // todo
-  multifile?: boolean;
 }
 
 // Useful for tracking which service owns any given JSS Job
