@@ -15,7 +15,7 @@ export interface FSSUpload extends JSSJob {
     postUploadMd5?: number;
     fileSize?: number;
     currentFileSize?: number;
-    subfiles?: object;
+    subfiles?: { [fileId: string]: number }; // mapping of subfile IDs to their respective # of bytes uploaded
   };
 }
 
