@@ -685,7 +685,9 @@ describe("Upload selectors", () => {
         template: mockTemplateStateBranchWithAppliedTemplate,
         upload: getMockStateWithHistory(mockWellUpload),
       });
-      expect(jobName).to.deep.equal(["file1", "file2", "file3"]);
+      expect(jobName).to.deep.equal(
+        ["file1", "file2", "file3", "file4.zarr", "file5.sldy"]
+      );
     });
   });
 
