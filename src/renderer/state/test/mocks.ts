@@ -216,6 +216,20 @@ export const mockWellUpload: UploadStateBranch = {
     key: "/path/to/file3",
     [AnnotationName.WELL]: [1, 2, 3],
   },
+  "/path/to/file4.zarr": { // multifile
+    barcode: "1237",
+    ["Favorite Color"]: ["Red"],
+    file: "/path/to/file4.zarr",
+    key: "/path/to/file4.zarr",
+    [AnnotationName.WELL]: [1, 2, 3],
+  },
+  "/path/to/file5.sldy": { // multifile
+    barcode: "1238",
+    ["Favorite Color"]: ["Red"],
+    file: "/path/to/file5.sldy",
+    key: "/path/to/file5.sldy",
+    [AnnotationName.WELL]: [1, 2, 3],
+  },
 };
 
 export const mockTextAnnotation: TemplateAnnotation = {
