@@ -31,7 +31,7 @@
     "compile-prod": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 NODE_ENV=production yarn compile",
     "build-executable": "yarn compile && yarn electron-builder",
     "dist": "electron-builder -p always",
-    "test": "cross-env TS_NODE_PROJECT=tsconfig.commonjs.json TS_NODE_FILES=true NODE_ENV=production USE_MULTIFILE_ASSUMPTION=true mocha --exit src/**/test/*.{ts,tsx}",
+    "test": "cross-env TS_NODE_PROJECT=tsconfig.commonjs.json TS_NODE_FILES=true NODE_ENV=production mocha --exit src/**/test/*.{ts,tsx}",
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "madge": "madge --warning --circular --ts-config tsconfig.base.json --webpack-config webpack/webpack.render.additions.js --extensions js,jsx,ts,tsx  src/",
