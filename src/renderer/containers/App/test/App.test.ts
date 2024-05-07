@@ -5,7 +5,7 @@ import { JSSJobStatus, Service } from "../../../services/job-status-service/type
 import { JSSJob } from "../../../services/job-status-service/types";
 import { updateUploadProgressInfo } from "../../../state/job/actions";
 import { Step } from "../../Table/CustomCells/StatusCell/Step";
-import { handleUploadJobUpdates } from "../index";
+import { handleUploadJobUpdates } from "../handleUploadJobUpdates";
 
 describe("App", () => {
     describe("handleUploadJobUpdates", () => {
@@ -63,5 +63,36 @@ describe("App", () => {
                 expect(actionPersisted).to.deep.equal(expectedAction);
             });
         });
+    });
+    it("dispatches updateUploadProgressInfo when multifile progress is updated", () => {
+        // Arrange
+        const fssJob: JSSJob = {
+            created: new Date(),
+            jobId: "foo123",
+            jobName: "test_file.txt",
+            modified: new Date(),
+            originationHost: "dev-aics-fup-001",
+            service: Service.FILE_STORAGE_SERVICE,
+            updateParent: false,
+            user: "fakeuser",
+            status: JSSJobStatus.WORKING,
+            serviceFields: {
+                fileSize: 100,
+                subfiles: {
+                    'fileid1': 10,
+                    'fileid2': 10,
+                    'fileid3': 15
+                },
+            },
+        };
+        let actionPersisted = undefined;
+        const dispatch = (action: Action)=>{
+            actionPersisted = action;
+        };
+        const expectedAction = updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: 35, totalBytes: fssJob.serviceFields?.fileSize, step: Step.THREE })
+        // Act
+        handleUploadJobUpdates(fssJob, dispatch);
+        // Assert
+        expect(actionPersisted).to.deep.equal(expectedAction);
     });
 });

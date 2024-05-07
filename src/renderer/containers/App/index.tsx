@@ -3,7 +3,7 @@ import { message } from "antd";
 import { ipcRenderer } from "electron";
 import { camelizeKeys } from "humps";
 import * as React from "react";
-import { Dispatch, useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -11,10 +11,8 @@ import {
   RendererProcessEvents,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
-import { FSSUpload, UploadStatus } from "../../services/file-storage-service";
 import {
   JSSJob,
-  Service,
   UploadJob,
 } from "../../services/job-status-service/types";
 import {
@@ -27,11 +25,8 @@ import {
 } from "../../state/feedback/actions";
 import { getAlert, getRecentEvent } from "../../state/feedback/selectors";
 import {
-  receiveFSSJobCompletionUpdate,
   receiveJobInsert,
   receiveJobs,
-  receiveJobUpdate,
-  updateUploadProgressInfo,
 } from "../../state/job/actions";
 import { getIsSafeToExit } from "../../state/job/selectors";
 import {
@@ -49,11 +44,11 @@ import { openUploadDraft, saveUploadDraft } from "../../state/upload/actions";
 import MyUploadsPage from "../MyUploadsPage";
 import NavigationBar from "../NavigationBar";
 import OpenTemplateModal from "../OpenTemplateModal";
-import { Step } from "../Table/CustomCells/StatusCell/Step";
 import TemplateEditorModal from "../TemplateEditorModal";
 import UploadWithTemplatePage from "../UploadWithTemplatePage";
 
 import AutoReconnectingEventSource from "./AutoReconnectingEventSource";
+import { handleUploadJobUpdates } from "./handleUploadJobUpdates";
 
 const styles = require("./styles.pcss");
 
@@ -62,29 +57,6 @@ const ALERT_DURATION = 2;
 message.config({
   maxCount: 1,
 });
-
-export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>){
-      if (job.service === Service.FILE_STORAGE_SERVICE) {
-        // An FSS job update happens when:
-        //   * fileId has been published
-        //   * progress has been published on a pre-upload md5, file upload, or post-upload md5
-        //   * requires this clients intervention to retry
-        const fssJob = job as FSSUpload;
-        const totalBytes = fssJob.serviceFields.fileSize || 0; // 0 is a safe default, but in practice filesize is initialized immediately after job creation.
-        if (fssJob.serviceFields?.fileId || fssJob.currentStage === UploadStatus.INACTIVE || fssJob.currentStage === UploadStatus.RETRY) {
-          dispatch(receiveFSSJobCompletionUpdate(fssJob));
-        } else if (fssJob.serviceFields?.preUploadMd5 && (fssJob.serviceFields.preUploadMd5 !== fssJob.serviceFields.fileSize)) {
-          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.preUploadMd5, totalBytes, step: Step.ONE }));
-        } else if (fssJob.serviceFields?.currentFileSize && (fssJob.serviceFields.currentFileSize !== fssJob.serviceFields?.fileSize)) {
-          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.currentFileSize, totalBytes, step: Step.TWO }));
-        } else if (fssJob.serviceFields?.postUploadMd5 && (fssJob.serviceFields.postUploadMd5 !== fssJob.serviceFields?.fileSize)) {
-          dispatch(updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields?.postUploadMd5, totalBytes, step: Step.THREE }));
-        }
-      } else if (job.serviceFields?.type === "upload") {
-        // Otherwise separate user's other jobs from ones created by this app
-        dispatch(receiveJobUpdate(job as UploadJob));
-      }
-}
 
 export default function App() {
   const dispatch = useDispatch();
