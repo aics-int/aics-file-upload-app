@@ -225,6 +225,46 @@ describe("Upload logics", () => {
       expect(groupIds).to.not.be.lengthOf(fms.initiateUpload.callCount);
     });
 
+    it("properly marks files with expected multifile extensions as multifiles", async () => {
+      fms.initiateUpload.resolves(initiatedUpload);
+      jssClient.existsById.resolves(true);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+          {
+            ...nonEmptyStateForInitiatingUpload,
+            route: {
+              page: Page.UploadWithTemplate,
+              view: Page.UploadWithTemplate,
+            },
+            setting: {
+              ...nonEmptyStateForInitiatingUpload.setting,
+              username: "foo",
+            },
+          },
+          undefined,
+          uploadLogics
+      );
+      store.dispatch(initiateUpload());
+      await logicMiddleware.whenComplete();
+      expect(
+          actions.includesMatch({
+            autoSave: true,
+            type: INITIATE_UPLOAD,
+          })
+      ).to.be.true;
+      expect(actions.list.find((a) => a.type === INITIATE_UPLOAD_SUCCEEDED)).to
+          .not.be.undefined;
+
+      // Assert that each upload had the expected "multifile" value
+      // Files 1 through 3 are "standard", Files 4 through 5 are multifiles.
+      // So we'll expect 3 "false" values and 2 "true" values.
+      const multifileValues = fms.initiateUpload.getCalls().map(
+          (call) => call.args[2]?.multifile);
+      const multifileFalseValues = multifileValues.filter(val => val === false);
+      const multifileTrueValues = multifileValues.filter(val => val === true);
+      expect(multifileFalseValues).to.have.length(3);
+      expect(multifileTrueValues).to.have.length(2);
+    });
+
     it("sets error alert given validation error", async () => {
       // Arrange
       const { actions, logicMiddleware, store } = createMockReduxStore(

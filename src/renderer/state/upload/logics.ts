@@ -197,9 +197,14 @@ const initiateUploadLogic = createLogic({
     let uploads: UploadJob[];
     try {
       uploads = await Promise.all(
-        requests.map((request) =>
-          fms.initiateUpload(request, user, { groupId })
-        )
+          requests.map((request) => {
+                const serviceFields = {
+                  groupId,
+                  multifile: determineIsMultifile(request.file.originalPath),
+                }
+                return fms.initiateUpload(request, user, serviceFields);
+              }
+          )
       );
     } catch (error) {
       dispatch(
