@@ -98,15 +98,15 @@ export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>) {
       job.currentStage === UploadStatus.RETRY
     ) {
       dispatch(receiveFSSJobCompletionUpdate(fssJob));
-    }
-
-    // Otherwise, report progress
-    // TODO Multifile FSS jobs are currently identifiable by their service_fields.subfiles property,
-    //       but more ideally would just be labeled with something like "multifile: true".
-    if (fssJob.serviceFields?.subfiles) {
-      handleFSSMultifileJobUpdate(fssJob, dispatch);
     } else {
-      handleFSSJobUpdate(fssJob, dispatch);
+        // Otherwise, report progress
+        // TODO Multifile FSS jobs are currently identifiable by their service_fields.subfiles property,
+        //       but more ideally would just be labeled with something like "multifile: true".
+        if (fssJob.serviceFields?.subfiles) {
+            handleFSSMultifileJobUpdate(fssJob, dispatch);
+        } else {
+            handleFSSJobUpdate(fssJob, dispatch);
+        }
     }
   } else if (job.serviceFields?.type === "upload") {
     // Otherwise separate user's other jobs from ones created by this app
