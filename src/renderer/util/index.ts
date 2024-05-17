@@ -81,15 +81,6 @@ export async function determineFilesFromNestedPaths(
  * @param filePath Path to the file
  */
 export function determineIsMultifile(filePath: string): boolean {
-  ///////////////////////////////////////////////////////////////////
-  // TODO - Remove this once multifile support is feature-complete //
-  //         Flip the boolean to "true" for testing                //
-  ///////////////////////////////////////////////////////////////////
-  const USE_MULTIFILE_ASSUMPTION = process.env.USE_MULTIFILE_ASSUMPTION !== undefined
-      ? process.env.USE_MULTIFILE_ASSUMPTION === 'true'
-      : false;
-  ///////////////////////////////////////////////////////////////////
-
   const multifileExtensions = ['.zarr', '.sldy'];
   const combinedExtensions = multifileExtensions.join('|');
 
@@ -99,7 +90,7 @@ export function determineIsMultifile(filePath: string): boolean {
 
   // If the regex matches it will return an array (truthy).
   // If the regex doesn't match it will return null (falsy).
-  return Boolean(filePath.match(matcher)) && USE_MULTIFILE_ASSUMPTION;
+  return Boolean(filePath.match(matcher))
 }
 
 /**
