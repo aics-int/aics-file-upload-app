@@ -1,8 +1,12 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const tsImportPluginFactory = require("ts-import-plugin");
 const webpack = require("webpack");
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const packageJson = require("../package.json");
+
+const { devServer } = require("./constants");
 
 config = {
   context: '/home/tylerf/code/aics-file-upload-app',
@@ -84,10 +88,9 @@ config = {
           {
             test: /\.css$/,
             use:
-              ['css-hot-loader',
-                {
-                  loader: MiniCssExtractPlugin.loader,
-                },
+              [{
+                loader: MiniCssExtractPlugin.loader,
+              },
                 {
                   loader: 'css-loader', options: {modules: 'global'}
                 }]
@@ -95,10 +98,9 @@ config = {
           {
             test: /\.less$/,
             use:
-              ['css-hot-loader',
-                {
-                  loader: MiniCssExtractPlugin.loader,
-                },
+              [{
+                loader: MiniCssExtractPlugin.loader,
+              },
                 {loader: 'css-loader', options: {modules: 'global'}},
                 {
                   loader: 'less-loader',
@@ -122,8 +124,7 @@ config = {
           {
             test: /\.s([ac])ss$/,
             use:
-              ['css-hot-loader',
-                '/home/tylerf/code/aics-file-upload-app/node_modules/mini-css-extract-plugin/dist/loader.js',
+              [{loader: MiniCssExtractPlugin.loader},
                 {loader: 'css-loader', options: {modules: 'global'}},
                 'sass-loader']
           },
@@ -186,8 +187,7 @@ config = {
             test: /\.pcss$/,
             include: ['/home/tylerf/code/aics-file-upload-app/src/renderer'],
             use:
-              ['css-hot-loader',
-                '/home/tylerf/code/aics-file-upload-app/node_modules/mini-css-extract-plugin/dist/loader.js',
+              [{loader: MiniCssExtractPlugin.loader},
                 {
                   loader: 'css-loader',
                   options:
@@ -210,18 +210,23 @@ config = {
     new MiniCssExtractPlugin("style.pcss"),
     new webpack.DefinePlugin({
       "process.env.APPLICATION_VERSION": JSON.stringify(packageJson.version),
+      "process.env.NODE_ENV": JSON.stringify("development"),
+      "process.env.WEBPACK_DEV_SERVER_PORT": JSON.stringify(devServer.port),
+    }),
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, "index.html"),
     }),
   ],
-  devServer:
-    {
-      contentBase:
-        ['/home/tylerf/code/aics-file-upload-app/static',
-          '/home/tylerf/code/aics-file-upload-app/dist/renderer-dll'],
-      host: 'localhost',
-      port: 9080,
-      hot: true,
-      overlay: true
+  devServer: {
+    client: {
+      overlay: {
+        // Disable showing overlay for warnings until
+        // https://github.com/amplitude/Amplitude-Node/issues/122 is addressed
+        warnings: false,
+      },
     },
+    port: devServer.port,
+  },
   optimization:
     {
       nodeEnv: 'development',
@@ -245,9 +250,7 @@ config = {
   mode: 'development',
   entry:
     {
-      renderer:
-        ['css-hot-loader/hotModuleReplacement',
-          '/home/tylerf/code/aics-file-upload-app/src/renderer/index.tsx']
+      app: path.resolve("src", "renderer", "index.tsx"),
     },
   stats:
     {

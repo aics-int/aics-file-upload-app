@@ -34,7 +34,6 @@ config = {
       'webpack',
       'electron-devtools-installer',
       'webpack/hot/log-apply-result',
-      'electron-webpack/out/electron-main-hmr/HmrClient',
       'source-map-support/source-map-support.js'],
   node: {__dirname: true, __filename: true},
   output:
@@ -112,8 +111,7 @@ config = {
   entry:
     {
       main:
-        ['/home/tylerf/code/aics-file-upload-app/node_modules/electron-webpack/out/electron-main-hmr/main-hmr',
-          '/home/tylerf/code/aics-file-upload-app/src/main/index.ts']
+        ['/home/tylerf/code/aics-file-upload-app/src/main/index.ts']
     }
 }
 

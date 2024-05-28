@@ -51,7 +51,7 @@ function createMainWindow() {
           }
 
           mainWindow
-              .loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`)
+              .loadURL(`http://localhost:9082`) // todo pull from constants file
               .then(() => {
                   if (mainWindow) {
                       mainWindow.webContents.openDevTools();

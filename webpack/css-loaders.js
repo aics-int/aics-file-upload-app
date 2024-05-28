@@ -22,5 +22,4 @@ const miniLoaders = [
   },
 ];
 
-module.exports = (isDevelopment) =>
-  isDevelopment ? ["css-hot-loader"].concat(miniLoaders) : miniLoaders;
+module.exports = (isDevelopment) => miniLoaders;
