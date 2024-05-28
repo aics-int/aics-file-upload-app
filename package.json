@@ -46,6 +46,7 @@
     "react",
     "aics"
   ],
+  "main": "dist/main/main.js",
   "author": "Lisa Harrylock",
   "license": "ISC",
   "dependencies": {
