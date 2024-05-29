@@ -24,6 +24,7 @@
     }
   },
   "scripts": {
+    "dev": "node scripts/start-dev.js",
     "compile": "webpack --config webpack/webpack.main.config.js && webpack --config webpack/webpack.renderer.config.js",
     "compile-cache": "cross-env yarn compile",
     "compile-stage": "cross-env yarn compile",
