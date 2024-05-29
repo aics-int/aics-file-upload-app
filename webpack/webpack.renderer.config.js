@@ -207,7 +207,7 @@ config = {
           }]
     },
   plugins: [
-    new MiniCssExtractPlugin("style.pcss"),
+    new MiniCssExtractPlugin({ filename: 'styles.css' }),
     new webpack.DefinePlugin({
       "process.env.APPLICATION_VERSION": JSON.stringify(packageJson.version),
       "process.env.NODE_ENV": JSON.stringify("development"),
@@ -226,8 +226,8 @@ config = {
   optimization:
     {
       nodeEnv: 'development',
-      namedModules: true,
-      noEmitOnErrors: true,
+      moduleIds: 'named',
+      emitOnErrors: false,
       splitChunks:
         {
           cacheGroups:

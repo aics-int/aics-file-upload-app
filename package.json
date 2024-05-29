@@ -1,8 +1,8 @@
 {
   "name": "file-upload-app",
   "engines": {
-    "node": "16.x",
-    "npm": "8.x"
+    "node": "22.x",
+    "npm": "10.x"
   },
   "version": "3.2.1-snapshot.0",
   "build": {
@@ -70,12 +70,12 @@
     "file-loader": "^6.0.0",
     "hash-wasm": "^4.9.0",
     "html-loader": "^1.1.0",
-    "html-webpack-plugin": "4.0.0",
+    "html-webpack-plugin": "5.x",
     "humps": "~2.0.1",
     "jsdom": "~19.0.0",
     "jsdom-global": "~3.0.2",
     "lodash": "~4.17.21",
-    "mini-css-extract-plugin": "^0.9.0",
+    "mini-css-extract-plugin": "2.x",
     "moment": "~2.29.1",
     "node-loader": "^0.6.0",
     "object-hash": "~2.2.0",
@@ -120,7 +120,7 @@
     "classnames": "~2.3.1",
     "clean-webpack-plugin": "4.x",
     "cross-env": "~7.0.3",
-    "css-loader": "~5.2.7",
+    "css-loader": "7.x",
     "electron": "~16.0.6",
     "electron-builder": "~23.0.2",
     "enzyme": "~3.11.0",
@@ -141,7 +141,7 @@
     "mock-css-modules": "~2.0.0",
     "postcss-import": "~14.0.2",
     "postcss-loader": "~4.2.0",
-    "postcss-preset-env": "~7.2.0",
+    "postcss-preset-env": "8.x",
     "prettier": "~2.5.1",
     "react-redux": "~7.2.6",
     "redux": "~4.1.2",
@@ -150,9 +150,9 @@
     "sinon-chai": "~3.7.0",
     "ts-loader": "^6.2.2",
     "typescript": "~4.5.4",
-    "webpack": "~4.46.0",
-    "webpack-cli": "4.x",
-    "webpack-dev-server": "4.x"
+    "webpack": "5.x",
+    "webpack-cli": "5.x",
+    "webpack-dev-server": "5.x"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": "eslint --cache --fix"

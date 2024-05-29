@@ -106,8 +106,8 @@ config = {
   optimization:
     {
       nodeEnv: 'development',
-      namedModules: true,
-      noEmitOnErrors: true
+      moduleIds: 'named',
+      emitOnErrors: false
     },
   mode: 'development',
   entry:
