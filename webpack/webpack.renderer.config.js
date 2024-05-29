@@ -9,7 +9,7 @@ const packageJson = require("../package.json");
 const { devServer } = require("./constants");
 
 config = {
-  context: '/home/tylerf/code/aics-file-upload-app',
+  context: path.resolve(__dirname, '..'),
   devtool: 'eval-source-map',
   externals:
     ['@aics/aics-react-labkey',
@@ -47,7 +47,7 @@ config = {
       filename: '[name].js',
       chunkFilename: '[name].bundle.js',
       libraryTarget: 'commonjs2',
-      path: '/home/tylerf/code/aics-file-upload-app/dist/renderer',
+      path: path.resolve(__dirname, "..", "dist", "renderer"),
       globalObject: 'this'
     },
   target: 'electron-renderer',
@@ -55,8 +55,8 @@ config = {
     {
       alias:
         {
-          '@': '/home/tylerf/code/aics-file-upload-app/src/renderer',
-          common: '/home/tylerf/code/aics-file-upload-app/src/common'
+          '@': './src/renderer',
+          common: './src/common'
         },
       extensions: ['.js', '.ts', '.tsx', '.json', '.node', '.css']
     },
@@ -160,7 +160,7 @@ config = {
                   {
                     transpileOnly: true,
                     appendTsSuffixTo: [/\.vue$/],
-                    configFile: '/home/tylerf/code/aics-file-upload-app/tsconfig.json',
+                    configFile: 'tsconfig.json',
                     compilerOptions: {noEmit: false},
                     getCustomTransformers: () => ({
                       before: [
@@ -185,7 +185,7 @@ config = {
           },
           {
             test: /\.pcss$/,
-            include: ['/home/tylerf/code/aics-file-upload-app/src/renderer'],
+            include: path.resolve("src", "renderer"),
             use:
               [{loader: MiniCssExtractPlugin.loader},
                 {
@@ -240,7 +240,7 @@ config = {
                 {
                   chunks: 'initial',
                   test:
-                    '/home/tylerf/code/aics-file-upload-app/webpack/node_modules',
+                    './webpack/node_modules',
                   name: 'vendor',
                   enforce: true
                 }

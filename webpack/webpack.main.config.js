@@ -1,5 +1,7 @@
+const path = require("path");
+
 config = {
-  context: '/home/tylerf/code/aics-file-upload-app',
+  context: path.resolve(__dirname, '..'),
   devtool: 'eval-source-map',
   externals:
     ['@aics/aics-react-labkey',
@@ -41,15 +43,15 @@ config = {
       filename: '[name].js',
       chunkFilename: '[name].bundle.js',
       libraryTarget: 'commonjs2',
-      path: '/home/tylerf/code/aics-file-upload-app/dist/main'
+      path: path.resolve(__dirname, "..", "dist", "main"),
     },
   target: 'electron-main',
   resolve:
     {
       alias:
         {
-          '@': '/home/tylerf/code/aics-file-upload-app/src/main',
-          common: '/home/tylerf/code/aics-file-upload-app/src/common'
+          '@': './src/main',
+          common: './src/common'
         },
       extensions: ['.js', '.ts', '.tsx', '.json', '.node']
     },
@@ -96,7 +98,7 @@ config = {
                   {
                     transpileOnly: true,
                     appendTsSuffixTo: [/\.vue$/],
-                    configFile: '/home/tylerf/code/aics-file-upload-app/tsconfig.json'
+                    configFile: 'tsconfig.json'
                   }
               }]
           }]
@@ -111,7 +113,7 @@ config = {
   entry:
     {
       main:
-        ['/home/tylerf/code/aics-file-upload-app/src/main/index.ts']
+        ['./src/main/index.ts']
     }
 }
 
