@@ -24,6 +24,7 @@
     }
   },
   "scripts": {
+    "compile": "webpack --config webpack/webpack.main.config.js && webpack --config webpack/webpack.renderer.config.js",
     "compile-cache": "cross-env yarn compile",
     "compile-stage": "cross-env yarn compile",
     "compile-prod": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 NODE_ENV=production yarn compile",
