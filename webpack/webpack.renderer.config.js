@@ -219,11 +219,7 @@ config = {
   ],
   devServer: {
     client: {
-      overlay: {
-        // Disable showing overlay for warnings until
-        // https://github.com/amplitude/Amplitude-Node/issues/122 is addressed
-        warnings: false,
-      },
+      overlay: false
     },
     port: devServer.port,
   },
