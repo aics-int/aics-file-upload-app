@@ -8,8 +8,10 @@
   "build": {
     "appId": "org.aics.alleninstitute.fileupload",
     "files": [
-      "dist/main/*",
-      "dist/renderer/*"
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json",
+      "LICENSE.txt"
     ],
     "linux": {
       "target": "AppImage"
@@ -17,11 +19,16 @@
     "mac": {
       "target": "dmg"
     },
+    "npmRebuild": false,
+    "directories": {
+      "output": "build"
+    },
     "publish": {
       "provider": "s3",
       "bucket": "file-upload-app.allencell.org",
       "region": "us-west-2"
     },
+    "productName": "File Upload App",
     "win": {
       "target": "portable"
     }
@@ -50,7 +57,7 @@
     "aics"
   ],
   "main": "dist/main/main.js",
-  "author": "Lisa Harrylock",
+  "author": "Allen Institue for Cell Science",
   "license": "ISC",
   "dependencies": {
     "@aics/aics-react-labkey": "~4.6.3",

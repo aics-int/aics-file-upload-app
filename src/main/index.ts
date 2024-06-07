@@ -66,13 +66,9 @@ function createMainWindow() {
       )
       .finally(() => window.webContents.openDevTools());
   } else {
-    window.loadURL(
-      formatUrl({
-        pathname: path.join(__dirname, "index.html"),
-        protocol: "file",
-        slashes: true,
-      })
-    );
+    mainWindow.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
+      console.error("Failed to load from file", error);
+    });
   }
 
   window.on("close", (e: Event) => {
