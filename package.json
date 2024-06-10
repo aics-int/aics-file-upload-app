@@ -55,7 +55,7 @@
     "aics"
   ],
   "main": "dist/main/main.js",
-  "author": "Allen Institue for Cell Science",
+  "author": "Allen Institute for Cell Science",
   "license": "ISC",
   "dependencies": {
     "@aics/aics-react-labkey": "~4.6.3",
