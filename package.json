@@ -37,7 +37,7 @@
     "dev": "node scripts/start-dev.js",
     "compile": "webpack --config webpack/webpack.main.config.js && webpack --config webpack/webpack.renderer.config.js",
     "compile-prod": "webpack --config webpack/webpack.main.config.js --env production && webpack --config webpack/webpack.renderer.config.js --env production",
-    "build-executable": "yarn compile && yarn electron-builder",
+    "build-executable": "npm run compile && npx electron-builder",
     "dist": "electron-builder -p always",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.commonjs.json TS_NODE_FILES=true NODE_ENV=production mocha --exit src/**/test/*.{ts,tsx}",
     "postinstall": "electron-builder install-app-deps",
