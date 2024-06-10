@@ -66,7 +66,7 @@ function createMainWindow() {
       )
       .finally(() => window.webContents.openDevTools());
   } else {
-    mainWindow.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
+    window.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
       console.error("Failed to load from file", error);
     });
   }
