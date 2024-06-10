@@ -40,7 +40,6 @@
     "build-executable": "npm run compile && npx electron-builder",
     "dist": "electron-builder -p always",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.commonjs.json TS_NODE_FILES=true NODE_ENV=production mocha --exit src/**/test/*.{ts,tsx}",
-    "postinstall": "electron-builder install-app-deps",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "madge": "madge --warning --circular --ts-config tsconfig.base.json --webpack-config webpack/webpack.render.additions.js --extensions js,jsx,ts,tsx  src/",
     "prepare": "husky install"
