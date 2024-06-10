@@ -1,5 +1,4 @@
 import * as path from "path";
-import { format as formatUrl } from "url";
 
 import { app, BrowserWindow, dialog, Event, ipcMain } from "electron";
 import installExtension, { REACT_DEVELOPER_TOOLS } from "electron-devtools-installer";
