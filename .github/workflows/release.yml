@@ -24,7 +24,7 @@ jobs:
 
       - name: Install deps and compile app
         env:
-          ELECTRON_WEBPACK_APP_AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
         run: |
           npm install
           npm run compile-prod

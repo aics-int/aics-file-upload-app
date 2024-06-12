@@ -31,7 +31,7 @@ const frontendInsights = new FrontendInsights(
   },
   [
     new AmplitudeNodePlugin({
-      apiKey: process.env.ELECTRON_WEBPACK_APP_AMPLITUDE_API_KEY,
+      apiKey: process.env.AMPLITUDE_API_KEY,
     }),
   ]
 );
