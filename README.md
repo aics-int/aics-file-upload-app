@@ -12,13 +12,13 @@ cd file-upload-app
 npm i
 ```
 
-### Step 3: Run Dev Server
+### Step 2: Run Dev Server
 
 ```bash
 npm run dev
 ```
 
-### Step 4: Switch to Staging Environment
+### Step 3: Switch to Staging Environment
 
 Switch to the staging environment after the app starts up through the File menu: File > Switch Environments, select the "Staging" button in the dialog.
 You can configure the LIMS Host URL to a custom one by going to: File > Settings. 
