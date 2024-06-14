@@ -17,7 +17,10 @@
       "target": "AppImage"
     },
     "mac": {
-      "target": "dmg"
+      "target": {
+        "target": "dmg",
+        "arch": "universal"
+      }
     },
     "npmRebuild": false,
     "directories": {
