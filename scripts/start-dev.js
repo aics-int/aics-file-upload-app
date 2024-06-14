@@ -1,4 +1,10 @@
 /**
+ * Copied and pasted from the File Explorer App:
+ * https://github.com/AllenInstitute/aics-fms-file-explorer-app/blob/main/packages/desktop/scripts/start-dev.js
+ * 
+ * If issues arise in either, check to see if the files should be in sync.
+ */
+/**
  * The purpose of this script is to coordinate the start up of all of the processes necessary for development
  * in the context of Electron. This includes:
  *   - webpack-dev-server, which watches, recompiles, and serves code run in Electron's renderer process
