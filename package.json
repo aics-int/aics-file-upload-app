@@ -7,7 +7,7 @@
   "version": "3.2.2-snapshot.0",
   "build": {
     "appId": "org.aics.alleninstitute.fileupload",
-    "artifactName": "${productName}-${version}.${ext}",
+    "artifactName": "file-upload-app-${version}.${ext}",
     "files": [
       "dist/**/*",
       "node_modules/**/*",
