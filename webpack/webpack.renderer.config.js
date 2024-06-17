@@ -13,7 +13,7 @@ module.exports = ({ production })  => {
 
   return {
     context: path.resolve(__dirname, '..'),
-    devtool: 'eval-source-map',
+    devtool: production ? false : 'eval-source-map',
     externals:
       ['@aics/aics-react-labkey',
         '@aics/frontend-insights',

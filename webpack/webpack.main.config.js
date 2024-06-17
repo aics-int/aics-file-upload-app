@@ -5,7 +5,7 @@ module.exports = ({ production }) => {
 
   return {
     context: path.resolve(__dirname, ".."),
-    devtool: "eval-source-map",
+    devtool: production ? false : "eval-source-map",
     entry: {
       main: ["./src/main/index.ts"],
     },
