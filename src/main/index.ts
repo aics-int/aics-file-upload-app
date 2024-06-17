@@ -51,7 +51,7 @@ function createMainWindow() {
           }
 
           mainWindow
-              .loadURL(`http://${devServer.host}:${devServer.port}`) // todo pull from constants file
+              .loadURL(`http://${devServer.host}:${devServer.port}`)
               .then(() => {
                   if (mainWindow) {
                       mainWindow.webContents.openDevTools();
