@@ -8,22 +8,23 @@ const packageJson = require("../package.json");
 
 const { devServer } = require("./constants");
 
+const getCommonConfig = require('./webpack.common.config');
+
 module.exports = ({ production }) => {
   const mode = production ? "production" : "development";
+  const config = getCommonConfig(mode);
 
   return {
-    context: path.resolve(__dirname, ".."),
+    ...config,
     devServer: {
       client: {
         overlay: false,
       },
       port: devServer.port,
     },
-    devtool: production ? false : "eval-source-map",
     entry: {
       app: path.resolve("src", "renderer", "index.tsx"),
     },
-    mode,
     module: {
       rules: [
         {
@@ -122,7 +123,6 @@ module.exports = ({ production }) => {
         },
       ],
     },
-    node: { __dirname: true, __filename: true },
     optimization: {
       nodeEnv: mode,
       moduleIds: "named",

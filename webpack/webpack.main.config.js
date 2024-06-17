@@ -1,15 +1,16 @@
 const path = require("path");
 
+const getCommonConfig = require('./webpack.common.config');
+
 module.exports = ({ production }) => {
   const mode = production ? "production" : "development";
+  const config = getCommonConfig(mode);
 
   return {
-    context: path.resolve(__dirname, ".."),
-    devtool: production ? false : "eval-source-map",
+    ...config,
     entry: {
       main: ["./src/main/index.ts"],
     },
-    mode,
     module: {
       rules: [
         {
@@ -27,7 +28,6 @@ module.exports = ({ production }) => {
         },
       ],
     },
-    node: { __dirname: true, __filename: true },
     optimization: {
       nodeEnv: mode,
       moduleIds: "named",
