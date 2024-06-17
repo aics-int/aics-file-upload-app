@@ -23,60 +23,9 @@ module.exports = ({ production }) => {
     entry: {
       app: path.resolve("src", "renderer", "index.tsx"),
     },
-    externals: [
-      "@aics/aics-react-labkey",
-      "@aics/frontend-insights",
-      "@aics/frontend-insights-plugin-amplitude-node",
-      "antd",
-      "axios",
-      "axios-retry",
-      "chai-as-promised",
-      "electron-devtools-installer",
-      "electron-store",
-      "electron-updater",
-      "hash-wasm",
-      "humps",
-      "jsdom",
-      "jsdom-global",
-      "lodash",
-      "moment",
-      "object-hash",
-      "react-virtualized-auto-sizer",
-      "react-window",
-      "redux-undo",
-      "reselect",
-      "rimraf",
-      "source-map-support",
-      "ts-import-plugin",
-      "ts-node",
-      "uuid",
-      "electron",
-      "webpack",
-      "electron-devtools-installer",
-    ],
     mode,
     module: {
       rules: [
-        {
-          test: /\.js$/,
-          exclude: /(node_modules|bower_components)/,
-          use: {
-            loader: "babel-loader",
-            options: {
-              presets: [
-                [
-                  "@babel/preset-env",
-                  {
-                    targets: {
-                      electron: "16.0.0",
-                    },
-                  },
-                ],
-              ],
-            },
-          },
-        },
-        { test: /\.node$/, use: "node-loader" },
         {
           test: /\.css$/,
           use: [
@@ -114,18 +63,9 @@ module.exports = ({ production }) => {
           ],
         },
         {
-          test: /\.s([ac])ss$/,
-          use: [
-            { loader: MiniCssExtractPlugin.loader },
-            { loader: "css-loader", options: { modules: "global" } },
-            "sass-loader",
-          ],
-        },
-        {
           test: /\.ttf/,
           type: "asset/resource",
         },
-        { test: /\.(html)$/, use: { loader: "html-loader" } },
         {
           test: /\.tsx?$/,
           exclude: /node_modules/,
@@ -223,13 +163,6 @@ module.exports = ({ production }) => {
         template: path.resolve(__dirname, "index.html"),
       }),
     ],
-    stats: {
-      children: false,
-      env: true,
-      errors: true,
-      errorDetails: true,
-      version: true,
-    },
     target: "electron-renderer",
   };
 };
