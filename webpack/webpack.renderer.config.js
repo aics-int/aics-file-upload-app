@@ -145,12 +145,8 @@ module.exports = ({ production })  => {
               options: {limit: 10240, name: 'media/[name]--[folder].[ext]'}
             },
             {
-              test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-              use:
-                {
-                  loader: 'url-loader',
-                  options: {limit: 10240, name: 'fonts/[name]--[folder].[ext]'}
-                }
+              test: /\.ttf/,
+              type: 'asset/resource'
             },
             {test: /\.(html)$/, use: {loader: 'html-loader'}},
             {
