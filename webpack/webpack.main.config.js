@@ -36,7 +36,6 @@ module.exports = ({ production }) => {
     output: {
       filename: "[name].js",
       chunkFilename: "[name].bundle.js",
-      libraryTarget: "commonjs2",
       path: path.resolve(__dirname, "..", "dist", "main"),
     },
     resolve: {
