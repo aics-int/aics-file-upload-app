@@ -87,7 +87,6 @@ module.exports = ({ production }) => {
       filename: "[name].js",
       chunkFilename: "[name].bundle.js",
       path: path.resolve(__dirname, "..", "dist", "renderer"),
-      globalObject: "this",
     },
     resolve: {
       alias: {
