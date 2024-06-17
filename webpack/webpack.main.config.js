@@ -84,14 +84,6 @@ module.exports = ({ production }) => {
           },
             {test: /\.node$/, use: 'node-loader'},
             {
-              test: /\.(png|jpg|gif)$/,
-              use:
-                [{
-                  loader: 'url-loader',
-                  options: {limit: 10485760, name: 'imgs/[name]--[folder].[ext]'}
-                }]
-            },
-            {
               test: /\.tsx?$/,
               exclude: /node_modules/,
               use:
