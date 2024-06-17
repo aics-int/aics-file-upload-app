@@ -6,40 +6,6 @@ module.exports = ({ production }) => {
   return {
     context: path.resolve(__dirname, '..'),
     devtool: 'eval-source-map',
-    externals:
-      ['@aics/aics-react-labkey',
-        '@aics/frontend-insights',
-        '@aics/frontend-insights-plugin-amplitude-node',
-        'antd',
-        'axios',
-        'axios-retry',
-        'chai-as-promised',
-        'electron-devtools-installer',
-        'electron-store',
-        'electron-updater',
-        'hash-wasm',
-        'humps',
-        'jsdom',
-        'jsdom-global',
-        'lodash',
-        'moment',
-        'object-hash',
-        'react',
-        'react-dom',
-        'react-virtualized-auto-sizer',
-        'react-window',
-        'redux-undo',
-        'reselect',
-        'rimraf',
-        'source-map-support',
-        'ts-import-plugin',
-        'ts-node',
-        'uuid',
-        'electron',
-        'webpack',
-        'electron-devtools-installer',
-        'webpack/hot/log-apply-result',
-        'source-map-support/source-map-support.js'],
     node: {__dirname: true, __filename: true},
     output:
       {
@@ -62,28 +28,6 @@ module.exports = ({ production }) => {
       {
         rules:
           [{
-            test: /\.js$/,
-            exclude: /(node_modules|bower_components)/,
-            use:
-              {
-                loader: 'babel-loader',
-                options:
-                  {
-                    presets: [
-                      [
-                        "@babel/preset-env",
-                        {
-                          targets: {
-                            node: "current",
-                          },
-                        },
-                      ],
-                    ],
-                  }
-              }
-          },
-            {test: /\.node$/, use: 'node-loader'},
-            {
               test: /\.tsx?$/,
               exclude: /node_modules/,
               use:
@@ -92,7 +36,6 @@ module.exports = ({ production }) => {
                   options:
                     {
                       transpileOnly: true,
-                      appendTsSuffixTo: [/\.vue$/],
                       configFile: 'tsconfig.json'
                     }
                 }]
