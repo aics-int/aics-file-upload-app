@@ -6,13 +6,12 @@ import ElectronStore from "electron-store";
 import { autoUpdater } from "electron-updater";
 import 'source-map-support/register'
 
+import { devServer } from "../../webpack/constants";
 import {
   LIMS_PROTOCOL,
   MainProcessEvents,
   RendererProcessEvents,
 } from "../shared/constants";
-
-import { devServer } from "../../webpack/constants";
 
 import { setMenu } from "./menu";
 
