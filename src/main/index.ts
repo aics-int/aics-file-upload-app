@@ -12,6 +12,8 @@ import {
   RendererProcessEvents,
 } from "../shared/constants";
 
+import { devServer } from "../../webpack/constants";
+
 import { setMenu } from "./menu";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -50,7 +52,7 @@ function createMainWindow() {
           }
 
           mainWindow
-              .loadURL(`http://localhost:8080`) // todo pull from constants file
+              .loadURL(`http://${devServer.host}:${devServer.port}`) // todo pull from constants file
               .then(() => {
                   if (mainWindow) {
                       mainWindow.webContents.openDevTools();
