@@ -43,7 +43,7 @@ module.exports = ({ production }) => {
         "@": "./src/main",
         common: "./src/common",
       },
-      extensions: [".js", ".ts", ".tsx", ".json", ".node"],
+      extensions: [".js", ".ts", ".tsx", ".json"],
     },
     target: "electron-main",
   };

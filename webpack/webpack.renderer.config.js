@@ -150,7 +150,7 @@ module.exports = ({ production }) => {
         "@": "./src/renderer",
         common: "./src/common",
       },
-      extensions: [".js", ".ts", ".tsx", ".json", ".node", ".css"],
+      extensions: [".js", ".ts", ".tsx", ".json", ".css"],
     },
     plugins: [
       new MiniCssExtractPlugin({ filename: "styles.css" }),
