@@ -1,5 +1,4 @@
 import * as path from "path";
-import { format as formatUrl } from "url";
 
 import { app, BrowserWindow, dialog, Event, ipcMain } from "electron";
 import installExtension, { REACT_DEVELOPER_TOOLS } from "electron-devtools-installer";
@@ -7,6 +6,7 @@ import ElectronStore from "electron-store";
 import { autoUpdater } from "electron-updater";
 import 'source-map-support/register'
 
+import { devServer } from "../../webpack/constants";
 import {
   LIMS_PROTOCOL,
   MainProcessEvents,
@@ -51,7 +51,7 @@ function createMainWindow() {
           }
 
           mainWindow
-              .loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`)
+              .loadURL(`http://${devServer.host}:${devServer.port}`) // todo pull from constants file
               .then(() => {
                   if (mainWindow) {
                       mainWindow.webContents.openDevTools();
@@ -66,13 +66,9 @@ function createMainWindow() {
       )
       .finally(() => window.webContents.openDevTools());
   } else {
-    window.loadURL(
-      formatUrl({
-        pathname: path.join(__dirname, "index.html"),
-        protocol: "file",
-        slashes: true,
-      })
-    );
+    window.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
+      console.error("Failed to load from file", error);
+    });
   }
 
   window.on("close", (e: Event) => {

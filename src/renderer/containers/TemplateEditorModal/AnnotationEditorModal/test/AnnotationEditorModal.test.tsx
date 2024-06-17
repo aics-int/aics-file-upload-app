@@ -18,6 +18,19 @@ import {
   mockState,
 } from "../../../../state/test/mocks";
 
+/**
+ * This is one of those fun instances where a dependency's dependency has its own bugs.
+ *  Check out this page for an explanation as to why we have to add `global.SVGElement = Element`:
+ *  https://mlaursen.github.io/react-md-v1-docs/#/discover-more/testing
+ * 
+ * In short, the issue lies somewhere within rc-resize-observer, which is pulled
+ *  in by other dependencies.
+ *  - TF 2024-06-14
+ */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+global.SVGElement = Element;
+
 describe("<AnnotationEditorModal />", () => {
   const sandbox = createSandbox();
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;

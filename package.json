@@ -1,40 +1,52 @@
 {
   "name": "file-upload-app",
   "engines": {
-    "node": "16.x",
-    "npm": "8.x"
+    "node": "22.x",
+    "npm": "10.x"
   },
-  "version": "3.2.0",
+  "version": "3.2.2-snapshot.1",
   "build": {
     "appId": "org.aics.alleninstitute.fileupload",
+    "artifactName": "file-upload-app-${version}.${ext}",
     "files": [
-      "dist/main/*",
-      "dist/renderer/*"
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json",
+      "LICENSE.txt"
     ],
     "linux": {
       "target": "AppImage"
+    },
+    "mac": {
+      "target": {
+        "target": "dmg",
+        "arch": "universal"
+      }
+    },
+    "npmRebuild": false,
+    "directories": {
+      "output": "build"
     },
     "publish": {
       "provider": "s3",
       "bucket": "file-upload-app.allencell.org",
       "region": "us-west-2"
     },
+    "productName": "File Upload App",
     "win": {
       "target": "portable"
     }
   },
   "scripts": {
-    "dev": "electron-webpack dev",
-    "compile": "electron-webpack",
-    "compile-cache": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"stg-aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 ELECTRON_WEBPACK_USE_CACHE=true yarn compile",
-    "compile-stage": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"stg-aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 yarn compile",
-    "compile-prod": "cross-env ELECTRON_WEBPACK_APP_LIMS_HOST=\"aics.corp.alleninstitute.org\" ELECTRON_WEBPACK_APP_LIMS_PORT=80 NODE_ENV=production yarn compile",
-    "build-executable": "yarn compile && yarn electron-builder",
+    "dev": "node scripts/start-dev.js",
+    "compile": "webpack --config webpack/webpack.main.config.js && webpack --config webpack/webpack.renderer.config.js",
+    "compile-prod": "webpack --config webpack/webpack.main.config.js --env production && webpack --config webpack/webpack.renderer.config.js --env production",
+    "build-executable": "npm run compile-prod && npx electron-builder",
     "dist": "electron-builder -p always",
     "test": "cross-env TS_NODE_PROJECT=tsconfig.commonjs.json TS_NODE_FILES=true NODE_ENV=production mocha --exit src/**/test/*.{ts,tsx}",
-    "postinstall": "electron-builder install-app-deps",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "madge": "madge --warning --circular --ts-config tsconfig.base.json --webpack-config webpack/webpack.render.additions.js --extensions js,jsx,ts,tsx  src/",
+    "postinstall": "npm run compile",
     "prepare": "husky install"
   },
   "repository": {
@@ -46,7 +58,8 @@
     "react",
     "aics"
   ],
-  "author": "Lisa Harrylock",
+  "main": "dist/main/main.js",
+  "author": "Allen Institute for Cell Science",
   "license": "ISC",
   "dependencies": {
     "@aics/aics-react-labkey": "~4.6.3",
@@ -56,25 +69,30 @@
     "@types/react-beautiful-dnd": "~13.1.2",
     "@types/react-virtualized-auto-sizer": "~1.0.0",
     "@types/react-window": "~1.8.3",
-    "antd": "~4.18.3",
+    "antd": "4.18.3",
     "axios": "~0.24.0",
     "axios-retry": "~3.2.4",
     "chai-as-promised": "~7.1.1",
     "electron-devtools-installer": "~3.2.0",
     "electron-store": "~8.0.1",
     "electron-updater": "~4.6.1",
-    "hash-wasm": "^4.9.0",
+    "file-loader": "^6.0.0",
+    "hash-wasm": "4.9.0",
+    "html-loader": "^1.1.0",
+    "html-webpack-plugin": "5.x",
     "humps": "~2.0.1",
-    "jsdom": "~19.0.0",
-    "jsdom-global": "~3.0.2",
+    "jsdom": "19.0.0",
+    "jsdom-global": "3.0.2",
     "lodash": "~4.17.21",
+    "mini-css-extract-plugin": "2.x",
     "moment": "~2.29.1",
+    "node-loader": "^0.6.0",
     "object-hash": "~2.2.0",
-    "react": "~17.0.2",
+    "react": "17.0.2",
     "react-beautiful-dnd": "~13.1.0",
-    "react-dom": "~17.0.2",
+    "react-dom": "17.0.2",
     "react-table": "~7.7.0",
-    "react-virtualized-auto-sizer": "~1.0.5",
+    "react-virtualized-auto-sizer": "1.0.6",
     "react-window": "~1.8.6",
     "redux-undo": "~1.0.1",
     "reselect": "~4.1.5",
@@ -82,9 +100,11 @@
     "source-map-support": "~0.5.21",
     "ts-import-plugin": "~2.0.0",
     "ts-node": "~10.4.0",
+    "url-loader": "^4.0.0",
     "uuid": "~8.3.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.16.8",
     "@types/chai": "~4.3.0",
     "@types/chai-as-promised": "~7.1.4",
     "@types/enzyme": "~3.10.11",
@@ -105,15 +125,15 @@
     "@types/uuid": "~8.3.0",
     "@typescript-eslint/eslint-plugin": "~5.9.0",
     "@typescript-eslint/parser": "~5.9.0",
-    "@wojtekmaj/enzyme-adapter-react-17": "~0.6.6",
+    "@wojtekmaj/enzyme-adapter-react-17": "0.8.0",
+    "babel-loader": "^8.2.3",
     "chai": "~4.3.4",
     "classnames": "~2.3.1",
+    "clean-webpack-plugin": "4.x",
     "cross-env": "~7.0.3",
-    "css-loader": "~5.2.7",
+    "css-loader": "7.x",
     "electron": "~16.0.6",
     "electron-builder": "~23.0.2",
-    "electron-webpack": "~2.8.2",
-    "electron-webpack-ts": "~4.0.1",
     "enzyme": "~3.11.0",
     "eslint": "~8.6.0",
     "eslint-config-prettier": "~8.3.0",
@@ -122,6 +142,7 @@
     "eslint-plugin-prettier": "~4.0.0",
     "eslint-plugin-react": "~7.28.0",
     "eslint-plugin-react-hooks": "~4.3.0",
+    "fork-ts-checker-webpack-plugin": "6.x",
     "husky": "~7.0.4",
     "less": "~4.1.2",
     "less-loader": "~7.3.0",
@@ -131,15 +152,18 @@
     "mock-css-modules": "~2.0.0",
     "postcss-import": "~14.0.2",
     "postcss-loader": "~4.2.0",
-    "postcss-preset-env": "~7.2.0",
+    "postcss-preset-env": "8.x",
     "prettier": "~2.5.1",
     "react-redux": "~7.2.6",
     "redux": "~4.1.2",
     "redux-logic": "~3.0.3",
     "sinon": "~12.0.1",
     "sinon-chai": "~3.7.0",
+    "ts-loader": "^6.2.2",
     "typescript": "~4.5.4",
-    "webpack": "~4.46.0"
+    "webpack": "5.x",
+    "webpack-cli": "5.x",
+    "webpack-dev-server": "5.x"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": "eslint --cache --fix"

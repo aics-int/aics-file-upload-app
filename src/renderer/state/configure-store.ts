@@ -89,7 +89,7 @@ axiosRetry(axios, {
     ).length > 0,
 });
 const httpClient = axios;
-const useCache = Boolean(process.env.ELECTRON_WEBPACK_USE_CACHE) || false;
+const useCache = Boolean(process.env.USE_CACHE) || false;
 const jssClient = new JobStatusService(httpClient, storage, useCache);
 const mmsClient = new MetadataManagementService(httpClient, storage, useCache);
 const labkeyClient = new LabkeyClient(httpClient, storage, useCache);

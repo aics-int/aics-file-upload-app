@@ -6,7 +6,6 @@ npm-debug.log
 *.iml
 .project
 .settings/
-yarn-error.log
 build/
 .eslintcache
 .env

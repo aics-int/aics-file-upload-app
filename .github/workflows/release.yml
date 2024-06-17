@@ -17,35 +17,35 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@main
 
-      - name: Install Node.js, NPM, and Yarn
+      - name: Install Node.js, NPM
         uses: actions/setup-node@main
         with:
-          node-version: 16
+          node-version: 22
 
       - name: Install deps and compile app
         env:
-          ELECTRON_WEBPACK_APP_AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
         run: |
-          yarn --link-duplicates --production=false
-          yarn compile-prod
+          npm install
+          npm run compile-prod
 
       - name: Build artifact and release Mac
         if: matrix.os == 'macos-latest'
-        run: yarn run electron-builder --mac --publish always
+        run: npx --no-install electron-builder --mac --publish always
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Build artifact and release Linux
         if: matrix.os == 'ubuntu-latest'
-        run: yarn run electron-builder --linux --publish always
+        run: npx --no-install electron-builder --linux --publish always
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Build artifact and release Windows
         if: matrix.os == 'windows-latest'
-        run: yarn run electron-builder --windows --publish always
+        run: npx --no-install electron-builder --windows --publish always
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

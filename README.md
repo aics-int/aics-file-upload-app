@@ -4,31 +4,21 @@ A desktop client for uploading file and file metadata to the Allen Institute for
 
 ## Development
 
-### Step 1: Setup Yarn
-
-If you don't have `yarn` already, set it up by following these instructions:
-
-Linux: https://classic.yarnpkg.com/en/docs/install#debian-stable
-
-macOS: https://classic.yarnpkg.com/en/docs/install#mac-stable
-
-Windows: https://classic.yarnpkg.com/en/docs/install#windows-stable
-
-### Step 2: Clone Repo, Install Dependencies
+### Step 1: Clone Repo, Install Dependencies
 
 ```bash
 git clone git@github.com:aics-int/aics-file-upload-app.git
 cd file-upload-app
-yarn
+npm i
 ```
 
-### Step 3: Run Dev Server
+### Step 2: Run Dev Server
 
 ```bash
-yarn dev
+npm run dev
 ```
 
-### Step 4: Switch to Staging Environment
+### Step 3: Switch to Staging Environment
 
 Switch to the staging environment after the app starts up through the File menu: File > Switch Environments, select the "Staging" button in the dialog.
 You can configure the LIMS Host URL to a custom one by going to: File > Settings. 
@@ -42,13 +32,13 @@ You can configure the LIMS Host URL to a custom one by going to: File > Settings
 ## Run Tests
 
 ```bash
-yarn test
+npm run test
 ```
 
 ## Run Linter
 
 ```bash
-yarn lint
+npm run lint
 ```
 
 ## Prettier
@@ -73,7 +63,7 @@ Before releasing an official version of the app, create a snapshot build to test
 ```bash
 git checkout master
 git pull
-yarn version --prerelease --preid=snapshot
+npm version prerelease --preid=snapshot
 ```
 
 The last command will create a git tag, update the version in package.json, and a commit with the snapshot version in the message.
@@ -105,10 +95,10 @@ git checkout main
 git pull
 ```
 
-Create the release using the `yarn version` command. It will ask you to enter the new version.
+Create the release using the `npm version` command. It will ask you to enter the new version.
 
 ```bash
-yarn version
+npm version <major|minor|patch>
 ```
 
 Update the VERSION_NOTES.md file with what is new in this release. I typically look through
@@ -131,5 +121,5 @@ Be sure to notify the team of your updates via the #file-upload-app Slack channe
 ### Packaging the app locally
 
 To create an executable that will allow you to test a production build of the
-app, you can run `yarn build-executable`. The executable will be built to the
+app, you can run `npm run build-executable`. The executable will be built to the
 `dist` directory.

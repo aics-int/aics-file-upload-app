@@ -1,9 +1,27 @@
 {
-  "extends": "./node_modules/electron-webpack/tsconfig-base.json",
   "compilerOptions": {
     "jsx": "react",
     "typeRoots": ["./node_modules/@types", "./src/renderer/@types"],
     "useUnknownInCatchVariables": false,
+    "target": "es2017",
+    "module": "esnext",
+    "moduleResolution": "node",
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+
+    "inlineSources": true,
+    "sourceMap": true,
+
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+
+    "newLine": "lf",
+
+    "noEmitOnError": true
   },
   "types": ["node"],
 }
