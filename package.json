@@ -47,7 +47,7 @@
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "madge": "madge --warning --circular --ts-config tsconfig.base.json --webpack-config webpack/webpack.render.additions.js --extensions js,jsx,ts,tsx  src/",
     "postinstall": "npm run compile",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -143,7 +143,7 @@
     "eslint-plugin-react": "~7.28.0",
     "eslint-plugin-react-hooks": "~4.3.0",
     "fork-ts-checker-webpack-plugin": "6.x",
-    "husky": "~7.0.4",
+    "husky": "^9.0.11",
     "less": "~4.1.2",
     "less-loader": "~7.3.0",
     "lint-staged": "~12.1.7",
