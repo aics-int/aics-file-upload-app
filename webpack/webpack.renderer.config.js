@@ -132,25 +132,8 @@ module.exports = ({ production })  => {
                   'sass-loader']
             },
             {
-              test: /\.(png|jpe?g|gif)(\?.*)?$/,
-              use:
-                {
-                  loader: 'url-loader',
-                  options: {limit: 10240, name: 'imgs/[name]--[folder].[ext]'}
-                }
-            },
-            {
-              test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
-              loader: 'url-loader',
-              options: {limit: 10240, name: 'media/[name]--[folder].[ext]'}
-            },
-            {
-              test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-              use:
-                {
-                  loader: 'url-loader',
-                  options: {limit: 10240, name: 'fonts/[name]--[folder].[ext]'}
-                }
+              test: /\.ttf/,
+              type: 'asset/resource'
             },
             {test: /\.(html)$/, use: {loader: 'html-loader'}},
             {
