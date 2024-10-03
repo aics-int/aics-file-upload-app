@@ -6,11 +6,11 @@ import { LIMS_HOST, LIMS_PORT, LIMS_PROTOCOL } from "../../../shared/constants";
 import { SAVE_TEMPLATE_SUCCEEDED } from "../template/constants";
 import { SaveTemplateSucceededAction } from "../template/types";
 import { AlertType, SettingStateBranch, TypeToDescriptionMap } from "../types";
-import { APPLY_TEMPLATE } from "../upload/constants";
+import { APPLY_TEMPLATE, SET_SHOULD_STORE_LOCALLY } from "../upload/constants";
 import { ApplyTemplateAction } from "../upload/types";
 import { makeReducer } from "../util";
 
-import { GATHER_SETTINGS, UPDATE_SETTINGS } from "./constants";
+import { GATHER_SETTINGS, UPDATE_SETTINGS,} from "./constants";
 import { GatherSettingsAction, UpdateSettingsAction } from "./types";
 
 export const initialState: SettingStateBranch = {
@@ -28,6 +28,7 @@ export const initialState: SettingStateBranch = {
     [AlertType.INFO]: true,
     [AlertType.DRAFT_SAVED]: false,
   },
+  shouldStoreLocally: true,
 };
 
 const actionToConfigMap: TypeToDescriptionMap<SettingStateBranch> = {
@@ -64,6 +65,14 @@ const actionToConfigMap: TypeToDescriptionMap<SettingStateBranch> = {
     ) => ({
       ...state,
       templateId: action.payload,
+    }),
+  },
+  [SET_SHOULD_STORE_LOCALLY]: {
+    accepts: (action: AnyAction): action is AnyAction =>
+      action.type === SET_SHOULD_STORE_LOCALLY,
+    perform: (state: SettingStateBranch, action: AnyAction) => ({
+      ...state,
+      shouldStoreLocally: action.payload,
     }),
   },
 };

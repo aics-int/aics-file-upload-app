@@ -293,6 +293,7 @@ export interface SettingStateBranch extends LimsUrl {
   templateId?: number;
   username: string;
   enabledNotifications: EnabledNotifications;
+  shouldStoreLocally: boolean;
 }
 
 export interface State {

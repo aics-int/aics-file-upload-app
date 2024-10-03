@@ -1,5 +1,6 @@
 import { LoadingOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import { Button, Checkbox } from "antd";
+import { CheckboxChangeEvent } from "antd/es/checkbox";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -8,8 +9,12 @@ import { getSelectedUploads } from "../../../state/selection/selectors";
 import {
   initiateUpload,
   submitFileMetadataUpdate,
+  setShouldStoreLocally,
 } from "../../../state/upload/actions";
-import { getUploadValidationErrors } from "../../../state/upload/selectors";
+import {
+  getUploadValidationErrors,
+} from "../../../state/upload/selectors";
+import { getShouldStoreLocally } from "../../../state/setting/selectors";
 import { getCanSubmitUpload, getIsUploadInProgress } from "../selectors";
 
 const styles = require("./styles.pcss");
@@ -29,6 +34,7 @@ export default function PageFooter(props: Props) {
   const selectedUploads = useSelector(getSelectedUploads);
   const isUploadInProgress = useSelector(getIsUploadInProgress);
   const validationErrors = useSelector(getUploadValidationErrors);
+  const shouldStoreLocally = useSelector(getShouldStoreLocally);
 
   function onSubmit() {
     props.onSubmit();
@@ -41,6 +47,11 @@ export default function PageFooter(props: Props) {
       }
     }
   }
+
+  // Handler to update shouldStoreLocally state when the checkbox is toggled
+  const onCheckboxChange = (e: CheckboxChangeEvent) => {
+    dispatch(setShouldStoreLocally(e.target.checked));
+  };
 
   return (
     <div className={styles.pageFooter}>
@@ -68,6 +79,13 @@ export default function PageFooter(props: Props) {
           "Upload"
         )}
       </Button>
+      <Checkbox
+        checked={shouldStoreLocally}
+        onChange={onCheckboxChange} // Update Redux state on change
+        style={{ marginLeft: 16 }}
+      >
+        Store Locally
+      </Checkbox>
     </div>
   );
 }
