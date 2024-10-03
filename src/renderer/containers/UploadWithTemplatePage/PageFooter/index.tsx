@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { closeUpload } from "../../../state/route/actions";
 import { getSelectedUploads } from "../../../state/selection/selectors";
+import { getShouldStoreLocally } from "../../../state/setting/selectors";
 import {
   initiateUpload,
   submitFileMetadataUpdate,
@@ -14,7 +15,6 @@ import {
 import {
   getUploadValidationErrors,
 } from "../../../state/upload/selectors";
-import { getShouldStoreLocally } from "../../../state/setting/selectors";
 import { getCanSubmitUpload, getIsUploadInProgress } from "../selectors";
 
 const styles = require("./styles.pcss");
