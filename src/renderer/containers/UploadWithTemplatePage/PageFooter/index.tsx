@@ -5,8 +5,7 @@ import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { closeUpload } from "../../../state/route/actions";
-import { getSelectedUploads } from "../../../state/selection/selectors";
-import { getShouldStoreLocally } from "../../../state/setting/selectors";
+import { getSelectedUploads, getShouldStoreLocally } from "../../../state/selection/selectors";
 import {
   initiateUpload,
   submitFileMetadataUpdate,
@@ -79,13 +78,14 @@ export default function PageFooter(props: Props) {
           "Upload"
         )}
       </Button>
-      <Checkbox
-        checked={shouldStoreLocally}
-        onChange={onCheckboxChange} // Update Redux state on change
-        style={{ marginLeft: 16 }}
-      >
-        Store Locally
-      </Checkbox>
+      <div className={styles.checkboxContainer}>
+        <Checkbox
+          checked={shouldStoreLocally}
+          onChange={onCheckboxChange}
+        >
+          Store Locally
+        </Checkbox>
+      </div>
     </div>
   );
 }

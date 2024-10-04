@@ -226,6 +226,7 @@ export interface RouteStateBranch {
 
 export interface SelectionStateBranch extends UploadTabSelections {
   user: string;
+  shouldStoreLocally: boolean;
 }
 
 export interface UploadKeyValue {
@@ -293,7 +294,6 @@ export interface SettingStateBranch extends LimsUrl {
   templateId?: number;
   username: string;
   enabledNotifications: EnabledNotifications;
-  shouldStoreLocally: boolean;
 }
 
 export interface State {

@@ -40,7 +40,7 @@ import {
   getPlateBarcodeToPlates,
   getTextAnnotationTypeId,
 } from "../metadata/selectors";
-import { getShouldStoreLocally } from "../setting/selectors";
+import { getShouldStoreLocally } from "../selection/selectors";
 import { getCompleteAppliedTemplate } from "../template/selectors";
 import {
   TemplateAnnotationWithTypeName,
@@ -462,7 +462,7 @@ export const getUploadRequests = createSelector(
           FileType.OTHER,
         originalPath: filePath,
         shouldBeInArchive: true,
-        shouldBeInLocal: shouldStoreLocally ?? true,
+        shouldBeInLocal: shouldStoreLocally,
       },
       // To support the current way of storing metadata in bob the blob, we continue to include
       // wellIds in the microscopy block.
