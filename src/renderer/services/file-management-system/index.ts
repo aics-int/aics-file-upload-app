@@ -225,7 +225,7 @@ export default class FileManagementSystem {
       };
       await this.mms.createFileMetadata(fileId, metadataWithUploadId);
   
-      const { localPath, cloudPath } = await this.fss.getFileAttributes(fileId);
+      const { localPath, cloudPath, name } = await this.fss.getFileAttributes(fileId);
       const readPath = localPath ?? cloudPath;
       await this.jss.updateJob(
         upload.jobId,
@@ -235,7 +235,7 @@ export default class FileManagementSystem {
             result: [
               {
                 fileId,
-                fileName: path.basename(metadata.file.originalPath), 
+                fileName: name, 
                 readPath: readPath,
               },
             ],
