@@ -49,7 +49,8 @@ describe("FileStorageService", () => {
         file_size: fileSize,
         local_nas_path: undefined,
         local_nas_shortcut: false,
-        multifile: false
+        multifile: false,
+        should_be_in_local: undefined
       };
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
@@ -85,7 +86,8 @@ describe("FileStorageService", () => {
         file_size: fileSize,
         local_nas_path: localNasPath,
         local_nas_shortcut: true,
-        multifile: false
+        multifile: false,
+        should_be_in_local: undefined
       };
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);
 
