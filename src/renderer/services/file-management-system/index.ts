@@ -236,7 +236,7 @@ export default class FileManagementSystem {
               {
                 fileId,
                 fileName: name, 
-                readPath: readPath,
+                readPath,
               },
             ],
           },
