@@ -5,11 +5,11 @@ import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { closeUpload } from "../../../state/route/actions";
-import { getSelectedUploads, getShouldStoreLocally } from "../../../state/selection/selectors";
+import { getSelectedUploads, getShouldBeInLocal } from "../../../state/selection/selectors";
 import {
   initiateUpload,
   submitFileMetadataUpdate,
-  setShouldStoreLocally,
+  setShouldBeInLocal,
 } from "../../../state/upload/actions";
 import {
   getUploadValidationErrors,
@@ -33,7 +33,7 @@ export default function PageFooter(props: Props) {
   const selectedUploads = useSelector(getSelectedUploads);
   const isUploadInProgress = useSelector(getIsUploadInProgress);
   const validationErrors = useSelector(getUploadValidationErrors);
-  const shouldStoreLocally = useSelector(getShouldStoreLocally);
+  const ShouldBeInLocal = useSelector(getShouldBeInLocal);
 
   function onSubmit() {
     props.onSubmit();
@@ -47,9 +47,9 @@ export default function PageFooter(props: Props) {
     }
   }
 
-  // Handler to update shouldStoreLocally state when the checkbox is toggled
+  // Handler to update ShouldBeInLocal state when the checkbox is toggled
   const onCheckboxChange = (e: CheckboxChangeEvent) => {
-    dispatch(setShouldStoreLocally(e.target.checked));
+    dispatch(setShouldBeInLocal(e.target.checked));
   };
 
   return (
@@ -80,7 +80,7 @@ export default function PageFooter(props: Props) {
       </Button>
       <div className={styles.checkboxContainer}>
         <Checkbox
-          checked={shouldStoreLocally}
+          checked={ShouldBeInLocal}
           onChange={onCheckboxChange}
         >
           Store Locally

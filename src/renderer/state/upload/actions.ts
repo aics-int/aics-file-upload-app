@@ -309,10 +309,10 @@ export function saveUploadDraftSuccess(
   };
 }
 
-export function setShouldStoreLocally(shouldStoreLocally: boolean) {
+export function setShouldBeInLocal(ShouldBeInLocal: boolean) {
   return {
     type: SET_SHOULD_STORE_LOCALLY,
-    payload: shouldStoreLocally,
+    payload: ShouldBeInLocal,
   };
 }
 

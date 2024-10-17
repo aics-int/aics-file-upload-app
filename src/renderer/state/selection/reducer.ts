@@ -44,7 +44,7 @@ const uploadTabSelectionInitialState: UploadTabSelections = {
 export const initialState: SelectionStateBranch = {
   ...uploadTabSelectionInitialState,
   user: userInfo().username,
-  shouldStoreLocally: true,
+  ShouldBeInLocal: true,
 };
 
 const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
@@ -162,7 +162,7 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
       action.type === SET_SHOULD_STORE_LOCALLY,
     perform: (state: SelectionStateBranch, action: AnyAction) => ({
       ...state,
-      shouldStoreLocally: action.payload,
+      ShouldBeInLocal: action.payload,
     }),
   },
 };

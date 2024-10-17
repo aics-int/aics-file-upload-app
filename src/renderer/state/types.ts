@@ -226,7 +226,7 @@ export interface RouteStateBranch {
 
 export interface SelectionStateBranch extends UploadTabSelections {
   user: string;
-  shouldStoreLocally: boolean;
+  ShouldBeInLocal: boolean;
 }
 
 export interface UploadKeyValue {
