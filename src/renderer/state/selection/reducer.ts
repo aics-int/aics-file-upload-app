@@ -9,7 +9,7 @@ import {
   TypeToDescriptionMap,
   UploadTabSelections,
 } from "../types";
-import { REPLACE_UPLOAD } from "../upload/constants";
+import { REPLACE_UPLOAD, SET_SHOULD_BE_IN_LOCAL } from "../upload/constants";
 import { ReplaceUploadAction } from "../upload/types";
 import { makeReducer } from "../util";
 
@@ -44,6 +44,7 @@ const uploadTabSelectionInitialState: UploadTabSelections = {
 export const initialState: SelectionStateBranch = {
   ...uploadTabSelectionInitialState,
   user: userInfo().username,
+  ShouldBeInLocal: true,
 };
 
 const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
@@ -154,6 +155,14 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
         ...state.massEditRow,
         ...action.payload,
       },
+    }),
+  },
+  [SET_SHOULD_BE_IN_LOCAL]: {
+    accepts: (action: AnyAction): action is AnyAction =>
+      action.type === SET_SHOULD_BE_IN_LOCAL,
+    perform: (state: SelectionStateBranch, action: AnyAction) => ({
+      ...state,
+      ShouldBeInLocal: action.payload,
     }),
   },
 };

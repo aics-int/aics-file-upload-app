@@ -121,6 +121,7 @@ export default class FileManagementSystem {
     const fileName = path.basename(source);
     const isMultifile = determineIsMultifile(upload.jobName);
 
+    const shouldBeInLocal = upload.serviceFields.files[0]?.file.shouldBeInLocal;
     const sourceStat = await fs.promises.stat(source);
     let { size: fileSize } = sourceStat;
     const { mtime: fileLastModified } = sourceStat
@@ -149,6 +150,7 @@ export default class FileManagementSystem {
       fileSize,
       upload.serviceFields.localNasShortcut ? this.posixPath(source) : undefined,
       isMultifile,
+      shouldBeInLocal,
     );
 
     // Update parent job with upload job created by FSS
@@ -222,9 +224,9 @@ export default class FileManagementSystem {
         },
       };
       await this.mms.createFileMetadata(fileId, metadataWithUploadId);
-
-      // Complete tracker job and add the local file path to it for ease of viewing
-      const { localPath } = await this.fss.getFileAttributes(fileId);
+  
+      const { localPath, cloudPath, name } = await this.fss.getFileAttributes(fileId);
+      const readPath = localPath ?? cloudPath;
       await this.jss.updateJob(
         upload.jobId,
         {
@@ -233,8 +235,8 @@ export default class FileManagementSystem {
             result: [
               {
                 fileId,
-                fileName: path.basename(localPath),
-                readPath: localPath,
+                fileName: name, 
+                readPath,
               },
             ],
           },

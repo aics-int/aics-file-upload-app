@@ -13,6 +13,7 @@ export const getSelectedUser = (state: State) => state.selection.user;
 export const getRowsSelectedForMassEdit = (state: State) =>
   state.selection.rowsSelectedForMassEdit;
 export const getSelectedUploads = (state: State) => state.selection.uploads;
+export const getShouldBeInLocal = (state: State) => state.selection.ShouldBeInLocal;
 export const getMassEditRow = (state: State) => state.selection.massEditRow;
 
 // COMPOSED SELECTORS

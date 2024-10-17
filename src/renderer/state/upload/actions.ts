@@ -24,6 +24,7 @@ import {
   RETRY_UPLOADS,
   SAVE_UPLOAD_DRAFT,
   SAVE_UPLOAD_DRAFT_SUCCESS,
+  SET_SHOULD_BE_IN_LOCAL,
   SUBMIT_FILE_METADATA_UPDATE,
   UPDATE_UPLOAD,
   UPDATE_UPLOAD_ROWS,
@@ -305,6 +306,13 @@ export function saveUploadDraftSuccess(
       [TEMP_UPLOAD_STORAGE_KEY]: undefined,
     },
     writeToStore: true,
+  };
+}
+
+export function setShouldBeInLocal(ShouldBeInLocal: boolean) {
+  return {
+    type: SET_SHOULD_BE_IN_LOCAL,
+    payload: ShouldBeInLocal,
   };
 }
 

@@ -40,6 +40,7 @@ import {
   getPlateBarcodeToPlates,
   getTextAnnotationTypeId,
 } from "../metadata/selectors";
+import { getShouldBeInLocal } from "../selection/selectors";
 import { getCompleteAppliedTemplate } from "../template/selectors";
 import {
   TemplateAnnotationWithTypeName,
@@ -438,10 +439,11 @@ const getAnnotations = (
 };
 
 export const getUploadRequests = createSelector(
-  [getUpload, getCompleteAppliedTemplate],
+  [getUpload, getCompleteAppliedTemplate, getShouldBeInLocal],
   (
     uploads: UploadStateBranch,
-    template?: TemplateWithTypeNames
+    template?: TemplateWithTypeNames,
+    ShouldBeInLocal?: boolean,
   ): UploadRequest[] => {
     if (!template) {
       throw new Error("Template has not been applied");
@@ -460,7 +462,7 @@ export const getUploadRequests = createSelector(
           FileType.OTHER,
         originalPath: filePath,
         shouldBeInArchive: true,
-        shouldBeInLocal: true,
+        shouldBeInLocal: ShouldBeInLocal,
       },
       // To support the current way of storing metadata in bob the blob, we continue to include
       // wellIds in the microscopy block.
