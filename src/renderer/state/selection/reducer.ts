@@ -9,7 +9,7 @@ import {
   TypeToDescriptionMap,
   UploadTabSelections,
 } from "../types";
-import { REPLACE_UPLOAD, SET_SHOULD_STORE_LOCALLY } from "../upload/constants";
+import { REPLACE_UPLOAD, SET_SHOULD_BE_IN_LOCAL } from "../upload/constants";
 import { ReplaceUploadAction } from "../upload/types";
 import { makeReducer } from "../util";
 
@@ -157,9 +157,9 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
       },
     }),
   },
-  [SET_SHOULD_STORE_LOCALLY]: {
+  [SET_SHOULD_BE_IN_LOCAL]: {
     accepts: (action: AnyAction): action is AnyAction =>
-      action.type === SET_SHOULD_STORE_LOCALLY,
+      action.type === SET_SHOULD_BE_IN_LOCAL,
     perform: (state: SelectionStateBranch, action: AnyAction) => ({
       ...state,
       ShouldBeInLocal: action.payload,

@@ -51,9 +51,9 @@ export const SAVE_UPLOAD_DRAFT_SUCCESS = makeConstant(
   BRANCH_NAME,
   "save-upload-draft-success"
 );
-export const SET_SHOULD_STORE_LOCALLY = makeConstant(
+export const SET_SHOULD_BE_IN_LOCAL = makeConstant(
   BRANCH_NAME,
-  "set-should-store-locally"
+  "set-should-be-in-local"
 );
 export const SUBMIT_FILE_METADATA_UPDATE = makeConstant(
   BRANCH_NAME,
