@@ -1,4 +1,4 @@
-import { CheckCircleFilled, CloseCircleFilled, QuestionCircleFilled } from "@ant-design/icons";
+import { CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
 import { Progress, Tooltip } from "antd";
 import { expect } from "chai";
 import { mount } from "enzyme";
@@ -61,7 +61,7 @@ describe("<StatusCell />", () => {
     );
 
     // Assert
-    expect(wrapper.exists(QuestionCircleFilled)).to.be.true;
+    expect(wrapper.exists(CheckCircleFilled)).to.be.true;
   });
 
   it("shows step 1 when in first step of upload", () => {
