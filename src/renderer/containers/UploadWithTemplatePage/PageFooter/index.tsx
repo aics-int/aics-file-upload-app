@@ -1,6 +1,5 @@
-import { LoadingOutlined } from "@ant-design/icons";
-import { Button, Checkbox } from "antd";
-import { CheckboxChangeEvent } from "antd/es/checkbox";
+import { LoadingOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { Button, Switch, Tooltip } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -47,9 +46,9 @@ export default function PageFooter(props: Props) {
     }
   }
 
-  // Handler to update ShouldBeInLocal state when the checkbox is toggled
-  const onCheckboxChange = (e: CheckboxChangeEvent) => {
-    dispatch(setShouldBeInLocal(e.target.checked));
+  // Handler to update ShouldBeInLocal state when the switch is toggled
+  const onSwitchChange = (checked: boolean) => {
+    dispatch(setShouldBeInLocal(checked));
   };
 
   return (
@@ -79,12 +78,16 @@ export default function PageFooter(props: Props) {
         )}
       </Button>
       <div className={styles.checkboxContainer}>
-        <Checkbox
+        <Switch
           checked={ShouldBeInLocal}
-          onChange={onCheckboxChange}
-        >
-          Store Locally
-        </Checkbox>
+          onChange={onSwitchChange}
+          checkedChildren="On"
+          unCheckedChildren="Off"
+        />
+        <span style={{ marginLeft: 8 }}>Only store on cloud</span>
+        <Tooltip title="By default, files are stored both locally on the VAST and in the cloud. Storing only in the cloud preserves on prem storage space.">
+          <InfoCircleOutlined className={styles.iconBrandPrimary} style={{ marginLeft: 4 }} />
+        </Tooltip>
       </div>
     </div>
   );
