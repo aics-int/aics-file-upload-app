@@ -1,4 +1,4 @@
-import { CheckCircleFilled, CloseCircleFilled, QuestionCircleFilled } from "@ant-design/icons";
+import { CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
 import { Progress, Tooltip } from "antd";
 import * as React from "react";
 import { CellProps } from "react-table";
@@ -48,42 +48,31 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
   let content: React.ReactNode;
   if (JSSJobStatus.SUCCEEDED === props.value) {
+    
     // Though an upload has a successful status there may be post upload
     // processes that have yet to complete which would make this upload
     // effectively incomplete
-    const etlProcess =
+    const etlProcess = 
       props.row.original.serviceFields?.postUploadProcessing?.etl;
-    if (etlProcess?.status === JSSJobStatus.SUCCEEDED) {
-      content = (
-        <CheckCircleFilled className={styles.success} />
-      );
-    } else {
-      if (
-        etlProcess?.status ===
-        JSSJobStatus.FAILED
-      ) {
-        tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the File Upload App. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess?.status_detail}`;
-      } else {
-        tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the File Upload App if it isn't already`;
-      }
 
-      content = (
-        <QuestionCircleFilled
-          className={styles.success}
-        />
-      );
+    if (etlProcess?.status === JSSJobStatus.FAILED) {
+      tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the File Upload App. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess?.status_detail}`;
+    } else if (etlProcess?.status !== JSSJobStatus.SUCCEEDED) {
+      tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the File Upload App if it isn't already`;
     }
+
+    const iconColor =
+      etlProcess?.status === JSSJobStatus.FAILED ||
+      etlProcess?.status !== JSSJobStatus.SUCCEEDED
+        ? "#CEE9DF"
+        : undefined;
+
+    content = <CheckCircleFilled style={{ color: iconColor }} className={styles.success} />;
   } else if (JSSJobStatus.FAILED === props.value) {
-    content = (
-      <CloseCircleFilled className={styles.failed} />
-    );
+    content = <CloseCircleFilled className={styles.failed} />;
   } else if (JSSJobStatus.UNRECOVERABLE === props.value) {
-    content = (
-      <CloseCircleFilled
-        className={styles.unrecoverable}
-      />
-    ); 
-    // TODO SWE-875 update progress for pre and post upload 
+    content = <CloseCircleFilled className={styles.unrecoverable} />;
+    // TODO SWE-875 update progress for pre and post upload
     // based on props.row.original.progress.status=[PRE | UPLOAD | POST]
   } else {
     const {
@@ -96,7 +85,6 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     const totalForStep = getBytesDisplay(totalBytes);
     let progressForStep = 0;
     if (bytesUploaded && totalBytes) {
-      // Uploading bytes, and progress has been made.
       progressForStep = Math.floor((bytesUploaded / totalBytes) * 100);
     }
 
@@ -129,3 +117,4 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     </Tooltip>
   );
 }
+
