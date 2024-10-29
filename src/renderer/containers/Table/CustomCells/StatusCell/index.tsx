@@ -48,11 +48,10 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
   let content: React.ReactNode;
   if (JSSJobStatus.SUCCEEDED === props.value) {
-    
     // Though an upload has a successful status there may be post upload
     // processes that have yet to complete which would make this upload
     // effectively incomplete
-    const etlProcess = 
+    const etlProcess =
       props.row.original.serviceFields?.postUploadProcessing?.etl;
 
     if (etlProcess?.status === JSSJobStatus.FAILED) {
@@ -85,6 +84,7 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     const totalForStep = getBytesDisplay(totalBytes);
     let progressForStep = 0;
     if (bytesUploaded && totalBytes) {
+      // Uploading bytes, and progress has been made.
       progressForStep = Math.floor((bytesUploaded / totalBytes) * 100);
     }
 
@@ -117,4 +117,3 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     </Tooltip>
   );
 }
-
