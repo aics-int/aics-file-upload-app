@@ -48,25 +48,14 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
   let content: React.ReactNode;
   if (JSSJobStatus.SUCCEEDED === props.value) {
-    // Though an upload has a successful status there may be post upload
-    // processes that have yet to complete which would make this upload
-    // effectively incomplete
-    const etlProcess =
-      props.row.original.serviceFields?.postUploadProcessing?.etl;
+    const etlProcess = props.row.original.serviceFields?.postUploadProcessing?.etl;
 
-    if (etlProcess?.status === JSSJobStatus.FAILED) {
-      tooltip = `${tooltip} - File has been successfully uploaded to FMS, but may not be viewable in the File Upload App. Attempt to make it visible in the FMS Explorer resulted in the following error: ${etlProcess?.status_detail}`;
-    } else if (etlProcess?.status !== JSSJobStatus.SUCCEEDED) {
-      tooltip = `${tooltip} - File has been successfully uploaded; working on making it visible in the File Upload App if it isn't already`;
-    }
+    const isConditionalSuccess = etlProcess?.status !== JSSJobStatus.SUCCEEDED;
+    tooltip = isConditionalSuccess
+        ? `${tooltip} - File successfully uploaded to FMS. It will be searchable once all metadata has been appended, which is happening now in the background.`
+        : tooltip;
 
-    const iconColor =
-      etlProcess?.status === JSSJobStatus.FAILED ||
-      etlProcess?.status !== JSSJobStatus.SUCCEEDED
-        ? "#CEE9DF"
-        : undefined;
-
-    content = <CheckCircleFilled style={{ color: iconColor }} className={styles.success} />;
+    content = <CheckCircleFilled className={`${styles.success} ${isConditionalSuccess ? styles['success-conditional'] : ''}`} />;
   } else if (JSSJobStatus.FAILED === props.value) {
     content = <CloseCircleFilled className={styles.failed} />;
   } else if (JSSJobStatus.UNRECOVERABLE === props.value) {
