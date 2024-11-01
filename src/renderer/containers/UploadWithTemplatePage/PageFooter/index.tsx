@@ -48,7 +48,7 @@ export default function PageFooter(props: Props) {
 
   // Handler to update ShouldBeInLocal state when the switch is toggled
   const onSwitchChange = (checked: boolean) => {
-    dispatch(setShouldBeInLocal(checked));
+    dispatch(setShouldBeInLocal(!checked));
   };
 
   return (
@@ -79,7 +79,7 @@ export default function PageFooter(props: Props) {
       </Button>
       <div className={styles.checkboxContainer}>
         <Switch
-          checked={ShouldBeInLocal}
+          checked={!ShouldBeInLocal}
           onChange={onSwitchChange}
           checkedChildren="On"
           unCheckedChildren="Off"
