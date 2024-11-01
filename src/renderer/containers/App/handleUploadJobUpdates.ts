@@ -73,6 +73,7 @@ function handleFSSMultifileJobUpdate(job: FSSUpload, dispatch: Dispatch<any>) {
       })
     );
   }
+  // TODO?: Maybe raise error here if there is no subfiles?
 }
 
 /**
@@ -100,9 +101,7 @@ export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>) {
       dispatch(receiveFSSJobCompletionUpdate(fssJob));
     } else {
         // Otherwise, report progress
-        // TODO Multifile FSS jobs are currently identifiable by their service_fields.subfiles property,
-        //       but more ideally would just be labeled with something like "multifile: true".
-        if (fssJob.serviceFields?.subfiles) {
+        if (fssJob.serviceFields?.multifile) {
             handleFSSMultifileJobUpdate(fssJob, dispatch);
         } else {
             handleFSSJobUpdate(fssJob, dispatch);

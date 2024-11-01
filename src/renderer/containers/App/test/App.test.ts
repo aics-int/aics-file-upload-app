@@ -77,6 +77,7 @@ describe("App", () => {
             user: "fakeuser",
             status: JSSJobStatus.WORKING,
             serviceFields: {
+                multifile: true,
                 fileSize: 100,
                 subfiles: {
                     'fileid1': 10,
