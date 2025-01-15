@@ -4,6 +4,7 @@ import classNames from "classnames";
 import { OpenDialogOptions, ipcRenderer } from "electron";
 import { isEmpty } from "lodash";
 import * as React from "react";
+import { webUtils } from "electron";
 
 import { RendererProcessEvents } from "../../../shared/constants";
 
@@ -79,7 +80,7 @@ export default function DragAndDrop(props: DragAndDropProps) {
       // Prevent drag and drop events from stacking (like notes over upload job page)
       e.stopPropagation();
       setDragEnterCount(0);
-      props.onDrop(Array.from(e.dataTransfer.files, (f) => f.path));
+      props.onDrop(Array.from(e.dataTransfer.files, (f) => webUtils.getPathForFile(f)));
     }
   };
 
