@@ -1,12 +1,11 @@
-import { FileSearchOutlined, PlusOutlined, RedoOutlined, StopOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Menu, Spin, Tooltip } from "antd";
+import { FileSearchOutlined, RedoOutlined, StopOutlined } from "@ant-design/icons";
+import { Button, Menu, Spin, Tooltip } from "antd";
 import { isEmpty, uniqBy } from "lodash";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Row } from "react-table";
 
 import DragAndDrop from "../../components/DragAndDrop";
-import NewUploadMenu from "../../components/NewUploadMenu";
 import { TOOLTIP_ENTER_DELAY, TOOLTIP_LEAVE_DELAY } from "../../constants";
 import {
   IN_PROGRESS_STATUSES,
@@ -14,7 +13,7 @@ import {
 } from "../../services/job-status-service/types";
 import { getRequestsInProgress } from "../../state/feedback/selectors";
 import { getUploadsByTemplateUsage } from "../../state/job/selectors";
-import { startNewUpload, viewUploads } from "../../state/route/actions";
+import { viewUploads } from "../../state/route/actions";
 import { AsyncRequest, UploadSummaryTableRow } from "../../state/types";
 import {
   cancelUploads,
@@ -113,13 +112,6 @@ export default function MyUploadsPage() {
     }
   }
 
-  const dropdownMenu = (
-    <NewUploadMenu
-      onUploadWithTemplate={() => dispatch(startNewUpload())}
-      onUploadWithoutTemplate={onUploadWithoutTemplate}
-    />
-  );
-
   return (
     <DragAndDrop
       className={styles.dragAndDropBox}
@@ -178,13 +170,6 @@ export default function MyUploadsPage() {
                 </Button>
               </Tooltip>
             </div>
-            <Dropdown
-              className={styles.newUploadButton}
-              overlay={dropdownMenu}
-              trigger={["click", "hover"]}
-            >
-              <Button icon={<PlusOutlined />}>Upload</Button>
-            </Dropdown>
           </div>
         </div>
         <div className={styles.tableContainer}>
