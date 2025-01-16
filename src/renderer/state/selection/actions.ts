@@ -8,6 +8,7 @@ import {
   LOAD_FILES,
   OPEN_TEMPLATE_EDITOR,
   REMOVE_ROW_FROM_DRAG_EVENT,
+  SELECT_UPLOAD_TYPE,
   START_CELL_DRAG,
   START_MASS_EDIT,
   STOP_CELL_DRAG,
@@ -19,10 +20,12 @@ import {
   CancelMassEditAction,
   LoadFilesAction,
   RemoveRowFromDragEventAction,
+  SelectUploadTypeAction,
   StartCellDragAction,
   StartMassEditAction,
   StopCellDragAction,
   UpdateMassEditRowAction,
+  UploadType,
 } from "./types";
 
 export function loadFiles(files: string[]): LoadFilesAction {
@@ -69,6 +72,15 @@ export function removeRowsFromDragEvent(
     payload: rowIds,
     type: REMOVE_ROW_FROM_DRAG_EVENT,
   };
+}
+
+export function selectUploadType(
+  type: UploadType
+): SelectUploadTypeAction {
+  return {
+    payload: type,
+    type: SELECT_UPLOAD_TYPE
+  }
 }
 
 export function startCellDrag(

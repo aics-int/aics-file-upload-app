@@ -18,6 +18,7 @@ import {
   APPLY_MASS_EDIT,
   CANCEL_MASS_EDIT,
   REMOVE_ROW_FROM_DRAG_EVENT,
+  SELECT_UPLOAD_TYPE,
   START_CELL_DRAG,
   START_MASS_EDIT,
   STOP_CELL_DRAG,
@@ -28,6 +29,7 @@ import {
   ApplyMassEditAction,
   CancelMassEditAction,
   RemoveRowFromDragEventAction,
+  SelectUploadTypeAction,
   StartCellDragAction,
   StartMassEditAction,
   StopCellDragAction,
@@ -44,6 +46,7 @@ const uploadTabSelectionInitialState: UploadTabSelections = {
 export const initialState: SelectionStateBranch = {
   ...uploadTabSelectionInitialState,
   user: userInfo().username,
+  uploadType: null,
   ShouldBeInLocal: true,
 };
 
@@ -116,6 +119,17 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
       rowsSelectedForDragEvent: state.rowsSelectedForDragEvent?.filter(
         (row) => !action.payload.includes(row.id)
       ),
+    }),
+  },
+  [SELECT_UPLOAD_TYPE]: {
+    accepts: (action: AnyAction): action is SelectUploadTypeAction =>
+      action.type === SELECT_UPLOAD_TYPE,
+    perform: (
+      state: SelectionStateBranch,
+      action: SelectUploadTypeAction
+    ) => ({
+      ...state,
+      uploadType: action.payload
     }),
   },
   [START_CELL_DRAG]: {

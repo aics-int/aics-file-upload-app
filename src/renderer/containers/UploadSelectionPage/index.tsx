@@ -1,4 +1,4 @@
-import { Alert, Spin } from "antd";
+import { Alert, Spin, Radio } from "antd";
 import { ipcRenderer, OpenDialogOptions } from "electron";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,6 +18,7 @@ import { loadFiles } from "../../state/selection/actions";
 import {
   getAreSelectedUploadsInFlight,
   getSelectedUploads,
+  getUploadType,
 } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
 import { AsyncRequest } from "../../state/types";
@@ -29,6 +30,7 @@ import {
 import CustomDataTable from "../CustomDataTable";
 
 import PageFooter from "./PageFooter";
+import UploadTypeSelector from "./UploadTypeSelector";
 
 const styles = require("./styles.pcss");
 
@@ -52,6 +54,8 @@ export default function UploadSelectionPage() {
   const uploadError = useSelector(getUploadError);
   const uploads = useSelector(getUploadAsTableRows);
   const validationErrors = useSelector(getUploadValidationErrors);
+
+  const uploadType = useSelector(getUploadType);
 
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = React.useState(false);
 
@@ -87,72 +91,81 @@ export default function UploadSelectionPage() {
   }, [dispatch, imagingSessions]);
 
   return (
-    <DragAndDrop
-      className={styles.dragAndDropBox}
-      disabled={!!selectedUploads.length}
-      overlayChildren={!Object.keys(uploads).length && !isPageLoading}
-      onDrop={(f) => dispatch(loadFiles(f))}
-      openDialogOptions={openDialogOptions}
-    >
-      <div className={styles.contentContainer}>
-        {!isSelectedJobLoading && (
-          <>
-            {hasAttemptedSubmit && !appliedTemplate && (
-              <Alert
-                className={styles.alert}
-                message="Please select a template."
-                type="error"
-                showIcon={true}
-                key="template-not-selected"
-              />
-            )}
-            <LabeledInput
-              className={styles.selector}
-              label={`Select Metadata ${SCHEMA_SYNONYM}`}
-            >
-              <TemplateSearch
-                allowCreate={true}
-                disabled={isTemplateLoading || isReadOnly}
-                error={hasAttemptedSubmit && !appliedTemplate}
-                value={appliedTemplate?.templateId}
-                onSelect={(t) => dispatch(applyTemplate(t))}
-              />
-            </LabeledInput>
-          </>
-        )}
-        {isTemplateLoading || isSelectedJobLoading ? (
-          <div className={styles.spinContainer}>
-            <div>Loading...</div>
-            <Spin />
-          </div>
-        ) : (
-          <>
-            {hasAttemptedSubmit && !!validationErrors.length && (
-              <Alert
-                className={styles.alert}
-                message={validationErrors.map((e) => (
-                  <div key={e}>{e}</div>
-                ))}
-                showIcon={true}
-                type="error"
-                key="validation-errors"
-              />
-            )}
-            <CustomDataTable hasSubmitBeenAttempted={hasAttemptedSubmit} />
-            {uploadError && (
-              <Alert
-                className={styles.alert}
-                message="Upload Failed"
-                description={uploadError}
-                type="error"
-                showIcon={true}
-                key="upload-failed"
-              />
-            )}
-          </>
-        )}
-      </div>
-      <PageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
-    </DragAndDrop>
+    // <DragAndDrop
+    //   className={styles.dragAndDropBox}
+    //   disabled={!!selectedUploads.length}
+    //   overlayChildren={!Object.keys(uploads).length && !isPageLoading}
+    //   onDrop={(f) => dispatch(loadFiles(f))}
+    //   openDialogOptions={openDialogOptions}
+    // >
+    //   <div className={styles.contentContainer}>
+    //     {!isSelectedJobLoading && (
+    //       <>
+    //         {hasAttemptedSubmit && !appliedTemplate && (
+    //           <Alert
+    //             className={styles.alert}
+    //             message="Please select a template."
+    //             type="error"
+    //             showIcon={true}
+    //             key="template-not-selected"
+    //           />
+    //         )}
+    //         <LabeledInput
+    //           className={styles.selector}
+    //           label={`Select Metadata ${SCHEMA_SYNONYM}`}
+    //         >
+    //           <TemplateSearch
+    //             allowCreate={true}
+    //             disabled={isTemplateLoading || isReadOnly}
+    //             error={hasAttemptedSubmit && !appliedTemplate}
+    //             value={appliedTemplate?.templateId}
+    //             onSelect={(t) => dispatch(applyTemplate(t))}
+    //           />
+    //         </LabeledInput>
+    //       </>
+    //     )}
+    //     {isSelectedJobLoading ? (
+    //       <div className={styles.spinContainer}>
+    //         <div>Loading...</div>
+    //         <Spin />
+    //       </div>
+    //     ) : (
+    //       <>
+    //         {hasAttemptedSubmit && !!validationErrors.length && (
+    //           <Alert
+    //             className={styles.alert}
+    //             message={validationErrors.map((e) => (
+    //               <div key={e}>{e}</div>
+    //             ))}
+    //             showIcon={true}
+    //             type="error"
+    //             key="validation-errors"
+    //           />
+    //         )}
+    //         <CustomDataTable hasSubmitBeenAttempted={hasAttemptedSubmit} />
+    //         {uploadError && (
+    //           <Alert
+    //             className={styles.alert}
+    //             message="Upload Failed"
+    //             description={uploadError}
+    //             type="error"
+    //             showIcon={true}
+    //             key="upload-failed"
+    //           />
+    //         )}
+    //       </>
+    //     )}
+    //   </div>
+    //   <PageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
+    // </DragAndDrop>
+
+    <div className={styles.newContentContainer}>
+      <UploadTypeSelector />
+      {uploadType !== null && 
+        <div>
+            and now we can upload stuff
+        </div>
+      }
+    </div>
   );
 }
