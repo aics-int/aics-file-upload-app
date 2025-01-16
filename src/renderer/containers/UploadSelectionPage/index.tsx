@@ -41,7 +41,7 @@ const openDialogOptions: OpenDialogOptions = {
  * Component responsible for rendering a page the user can use to
  * input user-defined metadata and submit the files for upload.
  */
-export default function UploadWithTemplatePage() {
+export default function UploadSelectionPage() {
   const dispatch = useDispatch();
   const appliedTemplate = useSelector(getAppliedTemplate);
   const imagingSessions = useSelector(getImagingSessions);

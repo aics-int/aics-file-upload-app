@@ -45,7 +45,7 @@ import MyUploadsPage from "../MyUploadsPage";
 import NavigationBar from "../NavigationBar";
 import OpenTemplateModal from "../OpenTemplateModal";
 import TemplateEditorModal from "../TemplateEditorModal";
-import UploadWithTemplatePage from "../UploadWithTemplatePage";
+import UploadSelectionPage from "../UploadSelectionPage";
 
 import AutoReconnectingEventSource from "./AutoReconnectingEventSource";
 import { handleUploadJobUpdates } from "./handleUploadJobUpdates";
@@ -214,7 +214,7 @@ export default function App() {
       <div className={styles.mainContent}>
         <NavigationBar />
         {page === Page.MyUploads && <MyUploadsPage />}
-        {page === Page.UploadWithTemplate && <UploadWithTemplatePage />}
+        {page === Page.UploadWithTemplate && <UploadSelectionPage />}
       </div>
       <StatusBar
         className={styles.statusBar}

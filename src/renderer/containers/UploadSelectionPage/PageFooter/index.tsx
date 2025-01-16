@@ -23,7 +23,7 @@ interface Props {
 
 /**
  * Component responsible for rendering the button footer of the
- * UploadWithTemplatePage.
+ * UploadSelectionPage.
  */
 export default function PageFooter(props: Props) {
   const dispatch = useDispatch();
