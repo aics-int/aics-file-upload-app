@@ -15,6 +15,7 @@ export const getRowsSelectedForMassEdit = (state: State) =>
 export const getSelectedUploads = (state: State) => state.selection.uploads;
 export const getShouldBeInLocal = (state: State) => state.selection.ShouldBeInLocal;
 export const getMassEditRow = (state: State) => state.selection.massEditRow;
+export const getUploadType = (state: State) => state.selection.uploadType;
 
 // COMPOSED SELECTORS
 export const getIsExistingUpload = createSelector(

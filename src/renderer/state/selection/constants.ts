@@ -17,6 +17,7 @@ export const REMOVE_ROW_FROM_DRAG_EVENT = makeConstant(
   BRANCH_NAME,
   "remove-row-from-drag-event"
 );
+export const SELECT_UPLOAD_TYPE = makeConstant(BRANCH_NAME, "select-upload-type");
 export const START_CELL_DRAG = makeConstant(BRANCH_NAME, "start-cell-drag");
 export const START_MASS_EDIT = makeConstant(BRANCH_NAME, "start-mass-edit");
 export const STOP_CELL_DRAG = makeConstant(BRANCH_NAME, "stop-cell-drag");

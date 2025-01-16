@@ -36,6 +36,7 @@ import { LocalStorage } from "../types";
 import Process = CreateLogic.Config.Process;
 import DepObj = CreateLogic.Config.DepObj;
 import SaveDialogOptions = Electron.SaveDialogOptions;
+import { UploadType } from "./selection/types";
 
 // T should be the type of a state branch
 export interface ActionDescription<T> {
@@ -226,6 +227,7 @@ export interface RouteStateBranch {
 
 export interface SelectionStateBranch extends UploadTabSelections {
   user: string;
+  uploadType: UploadType | null;
   ShouldBeInLocal: boolean;
 }
 
