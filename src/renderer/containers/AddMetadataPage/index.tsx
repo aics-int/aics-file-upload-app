@@ -26,7 +26,7 @@ import {
 } from "../../state/upload/selectors";
 
 import CustomDataTable from '../CustomDataTable';
-import PageFooter from './PageFooter';
+import AddMetadataPageFooter from './AddMetadataPageFooter';
 
 const styles = require("./styles.pcss");
 
@@ -133,8 +133,7 @@ export default function AddMetadataPage() {
                 )}
             </>
             )}
-        <PageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
-
+        <AddMetadataPageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
         </div>
         </>
     )

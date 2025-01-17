@@ -1,6 +1,7 @@
 import { OpenDialogOptions } from "electron";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Button } from 'antd';
 
 import DragAndDrop from "../../components/DragAndDrop";
 import { loadFiles } from "../../state/selection/actions";
@@ -14,7 +15,9 @@ import {
 import UploadTypeSelector from "./UploadTypeSelector";
 import DragAndDropPrompt from "./DragAndDropPrompt";
 import SelectedFilesList from "./SelectedFilesList";
-import NewPageFooter from "./NewPageFooter";
+import { closeUpload, selectPage } from "../../state/route/actions";
+import { Page } from "../../state/types";
+import PageFooter from "../../components/PageFooter";
 
 const styles = require("./styles.pcss");
 
@@ -34,6 +37,15 @@ export default function UploadSelectionPage() {
 
   const uploadType = useSelector(getUploadType);
   const uploadList = useSelector(getUploadAsTableRows);
+
+  const onCancel = () => {
+      dispatch(closeUpload());
+  }
+
+  const onContinue = () => {
+      // TODO: error checking?
+      dispatch(selectPage(Page.AddMetadata));
+  }
 
   return (
     <div className={styles.newContentContainer}>
@@ -55,7 +67,22 @@ export default function UploadSelectionPage() {
           <SelectedFilesList uploadList={uploadList} />
         )
       }
-      <NewPageFooter uploadList={uploadList} />
+      <PageFooter>
+        <Button
+            className={styles.footerButton}
+            onClick={onContinue}
+            disabled={uploadList.length === 0}
+            type="primary"
+        >
+            Continue to Metadata
+        </Button>
+        <Button
+            className={styles.footerButton}
+            onClick={onCancel}
+        >
+            Cancel Upload
+        </Button>
+      </PageFooter>
     </div>
   );
 }
