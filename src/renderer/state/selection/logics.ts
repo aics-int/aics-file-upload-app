@@ -1,7 +1,7 @@
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
-import { determineFilesFromNestedPaths } from "../../util";
+import { handleFileSelection } from "../../util";
 import { setAlert, startLoading, stopLoading } from "../feedback/actions";
 import { getBooleanAnnotationTypeId } from "../metadata/selectors";
 import { getAppliedTemplate } from "../template/selectors";
@@ -31,19 +31,22 @@ import {
   getMassEditRow,
   getRowsSelectedForDragEvent,
   getRowsSelectedForMassEdit,
+  getUploadType,
 } from "./selectors";
-import { LoadFilesAction } from "./types";
+import { LoadFilesAction, UploadType } from "./types";
 
 const loadFilesLogic = createLogic({
   process: async (
-    deps: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
+    { action, getState }: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
     dispatch(startLoading());
     try {
-      const filePaths = await determineFilesFromNestedPaths(
-        deps.action.payload
+      const uploadType: UploadType | null = getUploadType(getState());
+      const filePaths = await handleFileSelection(
+        action.payload,
+        uploadType
       );
       dispatch(stopLoading());
       dispatch(addUploadFiles(filePaths.flat().map((file) => ({ file }))));
