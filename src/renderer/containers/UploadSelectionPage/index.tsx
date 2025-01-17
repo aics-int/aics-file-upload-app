@@ -33,6 +33,7 @@ import PageFooter from "./PageFooter";
 import UploadTypeSelector from "./UploadTypeSelector";
 import DragAndDropPrompt from "./DragAndDropPrompt";
 import SelectedFilesList from "./SelectedFilesList";
+import NewPageFooter from "./NewPageFooter";
 
 const styles = require("./styles.pcss");
 
@@ -183,6 +184,7 @@ export default function UploadSelectionPage() {
           <SelectedFilesList uploadList={uploadList} />
         )
       }
+      <NewPageFooter uploadList={uploadList} />
     </div>
   );
 }
