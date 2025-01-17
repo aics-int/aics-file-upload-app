@@ -6,6 +6,7 @@ import { trim } from "lodash";
 import { flatten, memoize, uniq } from "lodash";
 
 import { LIST_DELIMITER_SPLIT, MAIN_FONT_WIDTH } from "../constants";
+import { UploadType } from "../state/selection/types";
 
 /*
  * This file contains pure utility methods with no dependencies on other code
@@ -33,6 +34,48 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
     return false;
   }
 };
+
+// TODO: Comments, positioning in file
+export async function handleFileSelection(
+  paths: string[],
+  uploadType: UploadType | null
+): Promise<string[]> {
+  /*
+  We want to map the given file paths according to the
+  selected uploadType.
+  If the uploadType is "folder", we'll grab all the files
+  from each given path's top level (assuming they're actually folders).
+  If the uploadType is "file" or "multifile", just return
+  the file type
+  */
+  const filepaths = await Promise.all(
+    paths.map(async (fullPath) => {
+      const canRead = await canUserRead(fullPath);
+      if (!canRead) {
+        throw new Error(`User does not have permission to read ${fullPath}`);
+      }
+
+      const stats = await fsPromises.stat(fullPath);
+      let parsedPaths: string[];
+      if (uploadType === UploadType.File) {
+        if (stats.isDirectory()) {
+          throw new Error(`Selected upload type is "${UploadType.File}". Cannot upload folder "${fullPath}".`);
+        }
+        parsedPaths = [fullPath];
+      } else if (uploadType === UploadType.Multifile) {
+        if (!stats.isDirectory()) {
+          throw new Error(`Selected upload type is "${UploadType.Multifile}". Selected files are expected to be folders. Cannot upload file "${fullPath}".`);
+        }
+        parsedPaths = [fullPath];
+      } else {
+        throw new Error(`Selected upload type "${uploadType}" not recognized.`);
+      }
+      return parsedPaths;
+    })
+  );
+
+  return filepaths.flat();
+}
 
 /**
  * For a given path, determine whether it constitutes a single FMS Upload item (for File, Multifile uploads) or
