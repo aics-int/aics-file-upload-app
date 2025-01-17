@@ -32,6 +32,7 @@ import CustomDataTable from "../CustomDataTable";
 import PageFooter from "./PageFooter";
 import UploadTypeSelector from "./UploadTypeSelector";
 import DragAndDropPrompt from "./DragAndDropPrompt";
+import SelectedFilesList from "./SelectedFilesList";
 
 const styles = require("./styles.pcss");
 
@@ -59,6 +60,7 @@ export default function UploadSelectionPage() {
   const validationErrors = useSelector(getUploadValidationErrors);
 
   const uploadType = useSelector(getUploadType);
+  const uploadList = useSelector(getUploadAsTableRows);
 
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = React.useState(false);
 
@@ -174,7 +176,12 @@ export default function UploadSelectionPage() {
             onDrop={(f) => {dispatch(loadFiles(f))}}
             uploadType={uploadType}
           />
-      </DragAndDrop>
+        </DragAndDrop>
+      }
+      {
+        (uploadType !== null && uploadList.length > 0) && (
+          <SelectedFilesList uploadList={uploadList} />
+        )
       }
     </div>
   );
