@@ -49,6 +49,7 @@ import UploadSelectionPage from "../UploadSelectionPage";
 
 import AutoReconnectingEventSource from "./AutoReconnectingEventSource";
 import { handleUploadJobUpdates } from "./handleUploadJobUpdates";
+import AddMetadataPage from "../AddMetadataPage";
 
 const styles = require("./styles.pcss");
 
@@ -215,6 +216,7 @@ export default function App() {
         <NavigationBar />
         {page === Page.MyUploads && <MyUploadsPage />}
         {page === Page.UploadWithTemplate && <UploadSelectionPage />}
+        {page === Page.AddMetadata && <AddMetadataPage />}
       </div>
       <StatusBar
         className={styles.statusBar}

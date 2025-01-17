@@ -13,7 +13,7 @@ import {
 import {
   getUploadValidationErrors,
 } from "../../../state/upload/selectors";
-import { getCanSubmitUpload, getIsUploadInProgress } from "../selectors";
+import { getCanSubmitUpload, getIsUploadInProgress } from "../../UploadSelectionPage/selectors";
 
 const styles = require("./styles.pcss");
 

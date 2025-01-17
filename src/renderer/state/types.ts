@@ -219,6 +219,7 @@ export enum Page {
   Notifications = "Notifications",
   Settings = "Settings",
   MyUploads = "MyUploads",
+  AddMetadata = "AddMetadata",
 }
 
 export interface RouteStateBranch {
