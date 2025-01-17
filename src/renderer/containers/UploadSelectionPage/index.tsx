@@ -31,9 +31,12 @@ import CustomDataTable from "../CustomDataTable";
 
 import PageFooter from "./PageFooter";
 import UploadTypeSelector from "./UploadTypeSelector";
+import DragAndDropPrompt from "./DragAndDropPrompt";
 
 const styles = require("./styles.pcss");
 
+// TODO: These should be conditional based on "UploadType"
+// TODO: This should probably just be in the <DragAndDropPrompt /> component?
 const openDialogOptions: OpenDialogOptions = {
   properties: ["openFile", "multiSelections"],
   title: "Browse for files, or drag and drop files/folders onto app",
@@ -162,9 +165,16 @@ export default function UploadSelectionPage() {
     <div className={styles.newContentContainer}>
       <UploadTypeSelector />
       {uploadType !== null && 
-        <div>
-            and now we can upload stuff
-        </div>
+        <DragAndDrop
+          onDrop={(f) => {dispatch(loadFiles(f))}}
+          uploadType={uploadType}
+        >
+          <DragAndDropPrompt
+            openDialogOptions={openDialogOptions}
+            onDrop={(f) => {dispatch(loadFiles(f))}}
+            uploadType={uploadType}
+          />
+      </DragAndDrop>
       }
     </div>
   );

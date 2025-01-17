@@ -1,21 +1,17 @@
-import { UploadOutlined } from "@ant-design/icons";
-import { Button } from "antd";
 import classNames from "classnames";
-import { OpenDialogOptions, ipcRenderer } from "electron";
-import { isEmpty } from "lodash";
+
 import * as React from "react";
 import { webUtils } from "electron";
 
-import { RendererProcessEvents } from "../../../shared/constants";
+import { UploadType } from "../../state/selection/types";
 
 const styles = require("./styles.pcss");
 
 interface DragAndDropProps {
-  children?: React.ReactNode | React.ReactNodeArray;
+  children?: React.ReactNode;
   disabled?: boolean;
-  openDialogOptions?: OpenDialogOptions;
   className?: string;
-  overlayChildren?: boolean;
+  uploadType?: UploadType;
   onDrop: (files: string[]) => void;
 }
 
@@ -37,19 +33,6 @@ export default function DragAndDrop(props: DragAndDropProps) {
   const [dragEnterCount, setDragEnterCount] = React.useState(0);
 
   const isHovered = dragEnterCount > 0;
-
-  // Opens native file explorer
-  const onBrowse = async () => {
-    const filePaths = await ipcRenderer.invoke(
-      RendererProcessEvents.SHOW_DIALOG,
-      props.openDialogOptions
-    );
-
-    // If cancel is clicked, this callback gets called and filePaths is undefined
-    if (filePaths && !isEmpty(filePaths)) {
-      props.onDrop(filePaths);
-    }
-  };
 
   const onDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     // Ignore non-file drag events
@@ -92,56 +75,16 @@ export default function DragAndDrop(props: DragAndDropProps) {
     );
   }
 
-  const renderContent = (): React.ReactNode | React.ReactNodeArray => {
-    if (!props.overlayChildren && props.children) {
-      return props.children;
-    }
-
-    const dragAndDropPrompt = (
-      <div className={styles.content}>
-        <>
-          <UploadOutlined className={styles.uploadIcon} />
-          <div>Drag&nbsp;and&nbsp;Drop</div>
-          <div>- or -</div>
-          <Button disabled={!props.openDialogOptions} onClick={onBrowse}>
-            Browse
-          </Button>
-        </>
-      </div>
-    );
-
-    if (!props.children) {
-      return dragAndDropPrompt;
-    }
-
-    if (props.children && props.overlayChildren) {
-      return (
-        <>
-          <div className={classNames(styles.overlay, props.className)}>
-            {props.children}
-          </div>
-          <div className={styles.overlayPrompt}>{dragAndDropPrompt}</div>
-        </>
-      );
-    }
-
-    return dragAndDropPrompt;
-  };
-
   return (
     <div
-      className={classNames(styles.container, {
-        [styles.childContainer]: !props.overlayChildren && props.children,
-        [props.className || ""]:
-          props.className && !props.overlayChildren && props.children,
-      })}
+      className={classNames(styles.container)}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
       onDragEnd={onDragLeave}
       onDrop={onDrop}
       onDragOver={onDragOver}
     >
-      {renderContent()}
+      {props.children}
       <div className={isHovered ? styles.highlight : undefined} />
     </div>
   );
