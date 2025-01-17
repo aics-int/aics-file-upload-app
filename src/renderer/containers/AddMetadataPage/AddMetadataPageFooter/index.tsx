@@ -3,7 +3,7 @@ import { Button, Switch, Tooltip } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { closeUpload } from "../../../state/route/actions";
+import { closeUpload, selectPage } from "../../../state/route/actions";
 import { getSelectedUploads, getShouldBeInLocal } from "../../../state/selection/selectors";
 import {
   initiateUpload,
@@ -14,6 +14,8 @@ import {
   getUploadValidationErrors,
 } from "../../../state/upload/selectors";
 import { getCanSubmitUpload, getIsUploadInProgress } from "../../UploadSelectionPage/selectors";
+import PageFooter from "../../../components/PageFooter";
+import { Page } from "../../../state/types";
 
 const styles = require("./styles.pcss");
 
@@ -25,7 +27,7 @@ interface Props {
  * Component responsible for rendering the button footer of the
  * UploadSelectionPage.
  */
-export default function PageFooter(props: Props) {
+export default function AddMetadataPageFooter(props: Props) {
   const dispatch = useDispatch();
 
   const canSubmit = useSelector(getCanSubmitUpload);
@@ -52,13 +54,13 @@ export default function PageFooter(props: Props) {
   };
 
   return (
-    <div className={styles.pageFooter}>
+    <PageFooter>
       <Button
         className={styles.cancelButton}
         size="large"
-        onClick={() => dispatch(closeUpload())}
+        onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
       >
-        Cancel
+        Add More Files
       </Button>
       <Button
         type="primary"
@@ -89,6 +91,6 @@ export default function PageFooter(props: Props) {
           <InfoCircleOutlined className={styles.iconBrandPrimary} style={{ marginLeft: 4 }} />
         </Tooltip>
       </div>
-    </div>
+    </PageFooter>
   );
 }
