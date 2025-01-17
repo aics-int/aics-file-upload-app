@@ -1,0 +1,32 @@
+.alert {
+  margin-bottom: 1em;
+  max-height: 10em;
+  overflow-y: auto;
+}
+
+.content-container {
+  /* Flex-parent of data table */
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: calc(100% - var(--navigation-bar-width));
+  padding: 1em;
+  user-select: auto;
+  width: 100vw;
+}
+
+.selector {
+  width: 100%;
+}
+
+.spin-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}

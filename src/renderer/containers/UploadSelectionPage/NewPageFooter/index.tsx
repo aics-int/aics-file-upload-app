@@ -1,7 +1,8 @@
 import React from 'react';
 import { useDispatch } from "react-redux";
 import { Button } from 'antd';
-import { FileModel } from '../../../state/types';
+import { FileModel, Page } from '../../../state/types';
+import { closeUpload, selectPage } from '../../../state/route/actions';
 
 const styles = require("./styles.pcss");
 
@@ -13,10 +14,31 @@ interface NewPageFooterProps {
 export default function NewPageFooter(props: NewPageFooterProps) {
     const dispatch = useDispatch();
 
+    const onCancel = () => {
+        dispatch(closeUpload());
+    }
+
+    const onContinue = () => {
+        // TODO: error checking?
+        dispatch(selectPage(Page.AddMetadata));
+    }
+    
     return (
         <div className={styles.footer}>
-            <Button disabled={props.uploadList.length === 0} type="primary" className={styles.footerButton}>Continue to Metadata</Button>
-            <Button className={styles.footerButton}>Cancel Upload</Button>
+            <Button
+                className={styles.footerButton}
+                onClick={onContinue}
+                disabled={props.uploadList.length === 0}
+                type="primary"
+            >
+                Continue to Metadata
+            </Button>
+            <Button
+                className={styles.footerButton}
+                onClick={onCancel}
+            >
+                Cancel Upload
+            </Button>
         </div>
     )
 }

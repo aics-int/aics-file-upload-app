@@ -39,7 +39,7 @@ export function resetUpload(): ResetUploadAction {
 }
 
 export function selectPage(
-  page: Page.UploadWithTemplate | Page.MyUploads
+  page: Page.UploadWithTemplate | Page.MyUploads | Page.AddMetadata
 ): SelectPageAction {
   return {
     payload: page,
