@@ -70,17 +70,17 @@ export default function UploadSelectionPage() {
       <PageFooter>
         <Button
             className={styles.footerButton}
+            onClick={onCancel}
+        >
+            Cancel Upload
+        </Button>
+        <Button
+            className={styles.footerButton}
             onClick={onContinue}
             disabled={uploadList.length === 0}
             type="primary"
         >
             Continue to Metadata
-        </Button>
-        <Button
-            className={styles.footerButton}
-            onClick={onCancel}
-        >
-            Cancel Upload
         </Button>
       </PageFooter>
     </div>

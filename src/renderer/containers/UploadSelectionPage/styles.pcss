@@ -14,11 +14,10 @@
 }
 
 .content-container {
-  /* Flex-parent of data table */
   display: flex;
   flex-direction: column;
 
-  height: 100%;
+  height: calc(100% - var(--page-footer-height));
   overflow-y: auto;
   overflow-x: hidden;
   max-width: calc(100% - var(--navigation-bar-width));
@@ -62,6 +61,7 @@
 
 .new-content-container {
   display: block;
+  margin-bottom: 100px;
   max-width: calc(100% - var(--navigation-bar-width));
   overflow: scroll;
   position: relative;
