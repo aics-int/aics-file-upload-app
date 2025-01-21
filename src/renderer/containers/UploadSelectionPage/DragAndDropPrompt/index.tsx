@@ -38,7 +38,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
 
     return (
         <div className={styles.content}>
-          <h2 className={styles.header}>Select file(s) to upload</h2>
+          <h1 className={styles.header}>Select file(s) to upload</h1>
           <div className={styles.dropZone} onClick={onBrowse}>
             <UploadOutlined className={styles.uploadIcon} />
             <div>Drag&nbsp;and&nbsp;Drop</div>
