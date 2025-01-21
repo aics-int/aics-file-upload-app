@@ -68,8 +68,8 @@ export interface StartMassEditAction {
 }
 
 export enum UploadType {
-  File = 'file',
-  Multifile = 'multifile'
+  File = 'File',
+  Multifile = 'Multifile'
 }
 
 export interface ApplyMassEditAction {
