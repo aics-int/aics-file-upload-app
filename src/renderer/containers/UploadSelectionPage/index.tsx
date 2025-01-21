@@ -18,15 +18,9 @@ import SelectedFilesList from "./SelectedFilesList";
 import { closeUpload, selectPage } from "../../state/route/actions";
 import { Page } from "../../state/types";
 import PageFooter from "../../components/PageFooter";
+import { UploadType } from "../../state/selection/types";
 
 const styles = require("./styles.pcss");
-
-// TODO: These should be conditional based on "UploadType"
-// TODO: This should probably just be in the <DragAndDropPrompt /> component?
-const openDialogOptions: OpenDialogOptions = {
-  properties: ["openFile", "multiSelections"],
-  title: "Browse for files, or drag and drop files/folders onto app",
-};
 
 /**
  * Component responsible for rendering a page the user can use to
@@ -38,12 +32,23 @@ export default function UploadSelectionPage() {
   const uploadType = useSelector(getUploadType);
   const uploadList = useSelector(getUploadAsTableRows);
 
+  // Default to "File" option
+  let openDialogOptions: OpenDialogOptions = {
+    properties: ["openFile", "multiSelections"],
+    title: "Browse for files",
+  }
+  if (uploadType === UploadType.Multifile) {
+    openDialogOptions = {
+      properties: ["openDirectory", "multiSelections"],
+      title: "Browse for multifiles",
+    }
+  }
+
   const onCancel = () => {
       dispatch(closeUpload());
   }
 
   const onContinue = () => {
-      // TODO: error checking?
       dispatch(selectPage(Page.AddMetadata));
   }
 
