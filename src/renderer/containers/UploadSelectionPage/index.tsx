@@ -48,41 +48,43 @@ export default function UploadSelectionPage() {
   }
 
   return (
-    <div className={styles.newContentContainer}>
-      <UploadTypeSelector />
-      {uploadType !== null && 
-        <DragAndDrop
-          onDrop={(f) => {dispatch(loadFiles(f))}}
-          uploadType={uploadType}
-        >
-          <DragAndDropPrompt
-            openDialogOptions={openDialogOptions}
+    <div className={styles.page}>
+      <div className={styles.content}>
+        <UploadTypeSelector />
+        {uploadType !== null && 
+          <DragAndDrop
             onDrop={(f) => {dispatch(loadFiles(f))}}
             uploadType={uploadType}
-          />
-        </DragAndDrop>
-      }
-      {
-        (uploadType !== null && uploadList.length > 0) && (
-          <SelectedFilesList uploadList={uploadList} />
-        )
-      }
-      <PageFooter>
-        <Button
-            className={styles.footerButton}
-            onClick={onCancel}
-        >
-            Cancel Upload
-        </Button>
-        <Button
-            className={styles.footerButton}
-            onClick={onContinue}
-            disabled={uploadList.length === 0}
-            type="primary"
-        >
-            Continue to Metadata
-        </Button>
-      </PageFooter>
+          >
+            <DragAndDropPrompt
+              openDialogOptions={openDialogOptions}
+              onDrop={(f) => {dispatch(loadFiles(f))}}
+              uploadType={uploadType}
+            />
+          </DragAndDrop>
+        }
+        {
+          (uploadType !== null && uploadList.length > 0) && (
+            <SelectedFilesList uploadList={uploadList} />
+          )
+        }
+        <PageFooter>
+          <Button
+              className={styles.footerButton}
+              onClick={onCancel}
+          >
+              Cancel Upload
+          </Button>
+          <Button
+              className={styles.footerButton}
+              onClick={onContinue}
+              disabled={uploadList.length === 0}
+              type="primary"
+          >
+              Continue to Metadata
+          </Button>
+        </PageFooter>
+      </div>
     </div>
   );
 }

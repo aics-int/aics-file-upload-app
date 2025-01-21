@@ -20,9 +20,9 @@ export default function UploadTypeSelector() {
 
     return (
         <div>
-            <h2>
+            <h1>
                 Select an upload type
-            </h2>
+            </h1>
             <Radio.Group
                 buttonStyle='solid'
                 className={styles.radioGroup}
