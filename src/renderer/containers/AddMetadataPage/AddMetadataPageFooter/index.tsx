@@ -3,7 +3,7 @@ import { Button, Switch, Tooltip } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { closeUpload, selectPage } from "../../../state/route/actions";
+import { selectPage } from "../../../state/route/actions";
 import { getSelectedUploads, getShouldBeInLocal } from "../../../state/selection/selectors";
 import {
   initiateUpload,
@@ -57,16 +57,15 @@ export default function AddMetadataPageFooter(props: Props) {
     <PageFooter>
       <Button
         className={styles.cancelButton}
-        size="large"
         onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
       >
         Add More Files
       </Button>
       <Button
         type="primary"
-        size="large"
         onClick={onSubmit}
         disabled={!canSubmit}
+        className={styles.uploadButton}
       >
         {isUploadInProgress ? (
           <>
