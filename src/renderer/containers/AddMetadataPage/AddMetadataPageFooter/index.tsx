@@ -3,7 +3,7 @@ import { Button, Switch, Tooltip } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { selectPage } from "../../../state/route/actions";
+import { closeUpload, selectPage } from "../../../state/route/actions";
 import { getSelectedUploads, getShouldBeInLocal } from "../../../state/selection/selectors";
 import {
   initiateUpload,
@@ -36,6 +36,10 @@ export default function AddMetadataPageFooter(props: Props) {
   const validationErrors = useSelector(getUploadValidationErrors);
   const ShouldBeInLocal = useSelector(getShouldBeInLocal);
 
+  const onCancel = () => {
+    dispatch(closeUpload());
+  }
+
   function onSubmit() {
     props.onSubmit();
 
@@ -55,6 +59,12 @@ export default function AddMetadataPageFooter(props: Props) {
 
   return (
     <PageFooter>
+      <Button
+              className={styles.cancelButton}
+              onClick={onCancel}
+          >
+              Cancel Upload
+          </Button>
       <Button
         className={styles.cancelButton}
         onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
