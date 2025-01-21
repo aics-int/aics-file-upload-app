@@ -115,7 +115,6 @@ export default function MyUploadsPage() {
   return (
     <DragAndDrop
       className={styles.dragAndDropBox}
-      overlayChildren={false}
       onDrop={onUploadWithoutTemplate}
     >
       <div className={styles.container}>
