@@ -192,6 +192,7 @@ export const mockJob: UploadJob = {
 export const mockSelection: SelectionStateBranch = {
   user: "fake_user",
   uploads: [],
+  uploadType: null,
   ShouldBeInLocal: true,
 };
 
