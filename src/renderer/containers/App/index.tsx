@@ -41,6 +41,7 @@ import {
 import { getLimsUrl, getLoggedInUser } from "../../state/setting/selectors";
 import { AlertType, AsyncRequest, Page } from "../../state/types";
 import { openUploadDraft, saveUploadDraft } from "../../state/upload/actions";
+import AddMetadataPage from "../AddMetadataPage";
 import MyUploadsPage from "../MyUploadsPage";
 import NavigationBar from "../NavigationBar";
 import OpenTemplateModal from "../OpenTemplateModal";
@@ -49,7 +50,6 @@ import UploadSelectionPage from "../UploadSelectionPage";
 
 import AutoReconnectingEventSource from "./AutoReconnectingEventSource";
 import { handleUploadJobUpdates } from "./handleUploadJobUpdates";
-import AddMetadataPage from "../AddMetadataPage";
 
 const styles = require("./styles.pcss");
 

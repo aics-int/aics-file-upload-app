@@ -6,6 +6,7 @@ import { AnnotationName } from "../../../constants";
 import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
 import { UploadRequest } from "../../../services/types";
 import { Duration } from "../../../types";
+import { UploadType } from "../../selection/types";
 import {
   getMockStateWithHistory,
   mockAnnotationTypes,
@@ -42,7 +43,6 @@ import {
 } from "../selectors";
 import { getUploadAsTableRows, getUploadValidationErrors } from "../selectors";
 import { FileType } from "../types";
-import { UploadType } from "../../selection/types";
 
 // utility function to allow us to deeply compare expected and actual output without worrying about order
 const standardizeUploads = (uploadRequests: UploadRequest[]): UploadRequest[] =>

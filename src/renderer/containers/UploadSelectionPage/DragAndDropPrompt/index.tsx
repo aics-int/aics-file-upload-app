@@ -1,8 +1,8 @@
-import React from 'react';
-import { Button } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
 import { OpenDialogOptions, ipcRenderer } from "electron";
 import { isEmpty } from "lodash";
+import React from 'react';
 
 import { RendererProcessEvents } from '../../../../shared/constants';
 import { UploadType } from '../../../state/selection/types';
