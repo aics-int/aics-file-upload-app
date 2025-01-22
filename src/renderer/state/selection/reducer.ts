@@ -91,6 +91,7 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
     perform: (state: SelectionStateBranch) => ({
       ...state,
       ...uploadTabSelectionInitialState,
+      uploadType: null,
     }),
   },
   [ADD_ROW_TO_DRAG_EVENT]: {
