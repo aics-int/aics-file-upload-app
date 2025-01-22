@@ -146,7 +146,7 @@ function NotesCell(props: Props) {
         okText={props.column.isReadOnly ? "Done" : "Save"}
       >
         {isEditing ? (
-          <DragAndDrop onDrop={onDrop} openDialogOptions={openDialogOptions}>
+          <DragAndDrop onDrop={onDrop}>
             <TextArea
               className={styles.useFullWidth}
               onChange={(e) => setNotes([e.target.value])}
@@ -159,7 +159,6 @@ function NotesCell(props: Props) {
             </p>
             <DragAndDrop
               onDrop={onDrop}
-              openDialogOptions={openDialogOptions}
             />
           </DragAndDrop>
         ) : (
