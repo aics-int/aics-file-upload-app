@@ -20,6 +20,7 @@ import FileManagementSystem, {
 import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
+import { UploadType } from "../../types";
 import {
   determineFilesFromNestedPaths,
   determineIsMultifile,
@@ -47,7 +48,6 @@ import {
   getSelectedUploads,
   getSelectedUser,
 } from "../selection/selectors";
-import { UploadType } from "../selection/types";
 import { getTemplateId } from "../setting/selectors";
 import {
   ensureDraftGetsSaved,

@@ -1,6 +1,7 @@
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
+import type { UploadType } from "../../types";
 import { handleFileSelection } from "../../util";
 import { setAlert, startLoading, stopLoading } from "../feedback/actions";
 import { getBooleanAnnotationTypeId } from "../metadata/selectors";
@@ -33,7 +34,7 @@ import {
   getRowsSelectedForMassEdit,
   getUploadType,
 } from "./selectors";
-import { LoadFilesAction, UploadType } from "./types";
+import type { LoadFilesAction } from "./types";
 
 const loadFilesLogic = createLogic({
   process: async (

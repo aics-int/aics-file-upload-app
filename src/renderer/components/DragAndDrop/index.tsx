@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import * as React from "react";
 
-import { UploadType } from "../../state/selection/types";
+import type { UploadType } from "../../types";
 
 const styles = require("./styles.pcss");
 

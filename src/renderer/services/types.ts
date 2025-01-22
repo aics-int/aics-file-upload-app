@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 
-import { UploadType } from "../state/selection/types";
+import type { UploadType } from "../types";
 
 export interface AicsSuccessResponse<T> {
   data: T[];

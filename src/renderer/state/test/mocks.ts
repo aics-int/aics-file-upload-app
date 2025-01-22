@@ -25,6 +25,7 @@ import {
   Template,
   TemplateAnnotation,
 } from "../../services/metadata-management-service/types";
+import {UploadType} from "../../types";
 import {
   feedback,
   job,
@@ -35,7 +36,7 @@ import {
   template,
   upload,
 } from "../index";
-import { UploadType, Well } from "../selection/types";
+import { Well } from "../selection/types";
 import {
   AnnotationDraft,
   JobStateBranch,

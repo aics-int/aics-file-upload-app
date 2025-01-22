@@ -6,7 +6,7 @@ import { trim } from "lodash";
 import { flatten, memoize, uniq } from "lodash";
 
 import { LIST_DELIMITER_SPLIT, MAIN_FONT_WIDTH } from "../constants";
-import { UploadType } from "../state/selection/types";
+import { UploadType } from "../types";
 
 /*
  * This file contains pure utility methods with no dependencies on other code

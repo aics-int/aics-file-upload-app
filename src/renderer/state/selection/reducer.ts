@@ -2,6 +2,7 @@ import { userInfo } from "os";
 
 import { AnyAction } from "redux";
 
+import {SelectUploadTypeAction} from "../../types";
 import { VIEW_UPLOADS, RESET_UPLOAD } from "../route/constants";
 import { ViewUploadsAction, ResetUploadAction } from "../route/types";
 import {
@@ -29,7 +30,6 @@ import {
   ApplyMassEditAction,
   CancelMassEditAction,
   RemoveRowFromDragEventAction,
-  SelectUploadTypeAction,
   StartCellDragAction,
   StartMassEditAction,
   StopCellDragAction,

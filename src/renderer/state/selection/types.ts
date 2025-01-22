@@ -43,11 +43,6 @@ export interface RemoveRowFromDragEventAction {
   type: string;
 }
 
-export interface SelectUploadTypeAction {
-  payload: UploadType,
-  type: string
-}
-
 export interface StartCellDragAction {
   payload: UploadKeyValue;
   type: string;
@@ -67,10 +62,6 @@ export interface StartMassEditAction {
   type: string;
 }
 
-export enum UploadType {
-  File = 'File',
-  Multifile = 'Multifile'
-}
 
 export interface ApplyMassEditAction {
   type: string;

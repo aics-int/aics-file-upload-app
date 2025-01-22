@@ -5,7 +5,7 @@ import { isEmpty } from "lodash";
 import React from 'react';
 
 import { RendererProcessEvents } from '../../../../shared/constants';
-import { UploadType } from '../../../state/selection/types';
+import { UploadType } from '../../../types';
 
 const styles = require("./styles.pcss");
 

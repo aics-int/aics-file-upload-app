@@ -1,3 +1,4 @@
+import {SelectUploadTypeAction, UploadType} from "../../types";
 import { OpenTemplateEditorAction } from "../feedback/types";
 import { MassEditRow } from "../types";
 
@@ -20,12 +21,10 @@ import {
   CancelMassEditAction,
   LoadFilesAction,
   RemoveRowFromDragEventAction,
-  SelectUploadTypeAction,
   StartCellDragAction,
   StartMassEditAction,
   StopCellDragAction,
   UpdateMassEditRowAction,
-  UploadType,
 } from "./types";
 
 export function loadFiles(files: string[]): LoadFilesAction {
