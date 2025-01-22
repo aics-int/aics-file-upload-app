@@ -23,6 +23,7 @@ import { updateUploadRows } from "../../upload/actions";
 import { getUpload } from "../../upload/selectors";
 import { applyMassEdit, startMassEdit, stopCellDrag } from "../actions";
 import { getMassEditRow, getRowsSelectedForMassEdit } from "../selectors";
+import { UploadType } from "../types";
 
 describe("Selection logics", () => {
   const sandbox = createSandbox();
@@ -77,6 +78,7 @@ describe("Selection logics", () => {
       expect(getUpload(store.getState())).to.be.empty;
 
       // apply
+      store.dispatch(selections.actions.selectUploadType(UploadType.File));
       store.dispatch(selections.actions.loadFiles([FILE_FULL_PATH]));
 
       // after

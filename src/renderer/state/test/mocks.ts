@@ -35,7 +35,7 @@ import {
   template,
   upload,
 } from "../index";
-import { Well } from "../selection/types";
+import { UploadType, Well } from "../selection/types";
 import {
   AnnotationDraft,
   JobStateBranch,
@@ -222,6 +222,7 @@ export const mockWellUpload: UploadStateBranch = {
     barcode: "1237",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file4.zarr",
+    uploadType: UploadType.Multifile,
     key: "/path/to/file4.zarr",
     [AnnotationName.WELL]: [1, 2, 3],
   },
@@ -229,6 +230,7 @@ export const mockWellUpload: UploadStateBranch = {
     barcode: "1238",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file5.sldy",
+    uploadType: UploadType.Multifile,
     key: "/path/to/file5.sldy",
     [AnnotationName.WELL]: [1, 2, 3],
   },

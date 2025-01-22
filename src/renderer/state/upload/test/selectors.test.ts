@@ -42,6 +42,7 @@ import {
 } from "../selectors";
 import { getUploadAsTableRows, getUploadValidationErrors } from "../selectors";
 import { FileType } from "../types";
+import { UploadType } from "../../selection/types";
 
 // utility function to allow us to deeply compare expected and actual output without worrying about order
 const standardizeUploads = (uploadRequests: UploadRequest[]): UploadRequest[] =>
@@ -109,6 +110,10 @@ describe("Upload selectors", () => {
     it("Interprets no values for a boolean annotation as false", () => {
       const state: State = {
         ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...nonEmptyStateForInitiatingUpload.selection,
+          uploadType: UploadType.File,
+        },
         template: {
           ...nonEmptyStateForInitiatingUpload.template,
           appliedTemplate: {
@@ -121,6 +126,7 @@ describe("Upload selectors", () => {
             Qc: [],
             barcode: "452",
             file: "/path/to.dot/image.tiff",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 4,
             [AnnotationName.WELL]: [],
@@ -144,6 +150,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to.dot/image.tiff",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {},
         },
@@ -162,6 +169,10 @@ describe("Upload selectors", () => {
 
       const state: State = {
         ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...nonEmptyStateForInitiatingUpload.selection,
+          uploadType: UploadType.File,
+        },
         template: {
           ...nonEmptyStateForInitiatingUpload.template,
           appliedTemplate: {
@@ -172,6 +183,7 @@ describe("Upload selectors", () => {
         upload: getMockStateWithHistory({
           "/path/to.dot/image.tiff": {
             file: "/path/to.dot/image.tiff",
+            uploadType: UploadType.File,
             ['Seeded On']: [dateTimeValue], // mockDateTimeAnnotation name
           },
         }),
@@ -193,6 +205,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to.dot/image.tiff",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {},
         },
@@ -225,6 +238,7 @@ describe("Upload selectors", () => {
             ],
             barcode: "452",
             file: "/path/to.dot/image.tiff",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 4,
             [AnnotationName.WELL]: [],
@@ -254,6 +268,7 @@ describe("Upload selectors", () => {
           file: {
             disposition: "tape",
             fileType: FileType.IMAGE,
+            uploadType: UploadType.File,
             originalPath: "/path/to.dot/image.tiff",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
@@ -267,10 +282,15 @@ describe("Upload selectors", () => {
     it("Converts upload state branch into correct payload for FSS", () => {
       const state: State = {
         ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...nonEmptyStateForInitiatingUpload.selection,
+          uploadType: UploadType.File,
+        },
         upload: getMockStateWithHistory({
           "/path/to.dot/image.tiff": {
             barcode: "452",
             file: "/path/to.dot/image.tiff",
+            uploadType: UploadType.File,
             ["Favorite Color"]: ["yellow"],
             [AnnotationName.NOTES]: ["Seeing some interesting things here!"],
             plateId: 4,
@@ -280,6 +300,7 @@ describe("Upload selectors", () => {
             barcode: "567",
             ["Favorite Color"]: ["red"],
             file: "/path/to/image.czi",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 4,
             [AnnotationName.WELL]: [1],
@@ -288,6 +309,7 @@ describe("Upload selectors", () => {
             barcode: "123",
             ["Favorite Color"]: ["green"],
             file: "/path/to/image.ome.tiff",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 2,
             [AnnotationName.WELL]: [2],
@@ -296,6 +318,7 @@ describe("Upload selectors", () => {
             barcode: "345",
             ["Favorite Color"]: ["purple"],
             file: "/path/to/image.png",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 5,
             [AnnotationName.WELL]: [3],
@@ -304,6 +327,7 @@ describe("Upload selectors", () => {
             barcode: "234",
             ["Favorite Color"]: ["orange"],
             file: "/path/to/image.tiff",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 3,
             [AnnotationName.WELL]: [4],
@@ -312,6 +336,7 @@ describe("Upload selectors", () => {
             barcode: "456",
             ["Favorite Color"]: ["pink"],
             file: "/path/to/multi-well.txt",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 7,
             [AnnotationName.WELL]: [5, 6, 7],
@@ -320,6 +345,7 @@ describe("Upload selectors", () => {
             barcode: "888",
             ["Favorite Color"]: ["gold"],
             file: "/path/to/no-extension",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 7,
             [AnnotationName.WELL]: [7],
@@ -328,6 +354,7 @@ describe("Upload selectors", () => {
             barcode: "578",
             ["Favorite Color"]: ["grey"],
             file: "/path/to/not-image.csv",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 7,
             [AnnotationName.WELL]: [8],
@@ -336,6 +363,7 @@ describe("Upload selectors", () => {
             barcode: "456",
             ["Favorite Color"]: ["black"],
             file: "/path/to/not-image.txt",
+            uploadType: UploadType.File,
             [AnnotationName.NOTES]: [],
             plateId: 7,
             [AnnotationName.WELL]: [5],
@@ -367,6 +395,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to.dot/image.tiff",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [6],
@@ -392,6 +421,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/image.czi",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [1],
@@ -417,6 +447,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/image.ome.tiff",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [2],
@@ -442,6 +473,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/image.png",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [3],
@@ -467,6 +499,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/image.tiff",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [4],
@@ -492,6 +525,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/multi-well.txt",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [5, 6, 7],
@@ -517,6 +551,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/no-extension",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [7],
@@ -542,6 +577,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/not-image.csv",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [8],
@@ -567,6 +603,7 @@ describe("Upload selectors", () => {
             originalPath: "/path/to/not-image.txt",
             shouldBeInArchive: true,
             shouldBeInLocal: true,
+            uploadType: UploadType.File,
           },
           microscopy: {
             wellIds: [5],
