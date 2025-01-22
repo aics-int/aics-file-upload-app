@@ -23,3 +23,17 @@ export interface Duration {
   minutes: number;
   seconds: number;
 }
+
+// "UploadType" types declarations would ideally live under `/state/types.ts` (if not `/state/selection/types.ts`)
+//  But, unfortunately, putting them down there causes some nasty circular dependency issues.
+//  TODO: Reconsider where these go!
+//   -TF 2025-01-22
+export interface SelectUploadTypeAction {
+  payload: UploadType,
+  type: string
+}
+
+export enum UploadType {
+  File = 'File',
+  Multifile = 'Multifile'
+}

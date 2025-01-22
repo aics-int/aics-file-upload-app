@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { selectUploadType } from '../../../state/selection/actions';
 import { getUploadType } from '../../../state/selection/selectors';
-import { UploadType } from '../../../state/selection/types';
+import { UploadType } from '../../../types';
 
 const styles = require("./styles.pcss");
 

@@ -7,6 +7,7 @@ import selections from "../";
 import { feedback } from "../../";
 import { AnnotationName } from "../../../constants";
 import MetadataManagementService from "../../../services/metadata-management-service";
+import { UploadType } from "../../../types";
 import { getPage } from "../../route/selectors";
 import {
   createMockReduxStore,
@@ -23,7 +24,6 @@ import { updateUploadRows } from "../../upload/actions";
 import { getUpload } from "../../upload/selectors";
 import { applyMassEdit, startMassEdit, stopCellDrag } from "../actions";
 import { getMassEditRow, getRowsSelectedForMassEdit } from "../selectors";
-import { UploadType } from "../types";
 
 describe("Selection logics", () => {
   const sandbox = createSandbox();

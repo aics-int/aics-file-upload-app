@@ -10,11 +10,11 @@ import { loadFiles } from "../../state/selection/actions";
 import {
   getUploadType,
 } from "../../state/selection/selectors";
-import { UploadType } from "../../state/selection/types";
 import { Page } from "../../state/types";
 import {
   getUploadAsTableRows
 } from "../../state/upload/selectors";
+import { UploadType } from "../../types";
 
 import DragAndDropPrompt from "./DragAndDropPrompt";
 import SelectedFilesList from "./SelectedFilesList";
