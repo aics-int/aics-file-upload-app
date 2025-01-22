@@ -37,7 +37,7 @@ export default function NavigationBar() {
       <NotificationViewer isSelected={view === Page.Notifications} />
       <NavigationButton
         icon={(props) => <UploadOutlined {...props} />}
-        isSelected={[Page.UploadWithTemplate, Page.NewUploadButton].includes(
+        isSelected={[Page.UploadWithTemplate, Page.NewUploadButton, Page.AddMetadata].includes(
           view
         )}
         onSelect={() => dispatch(selectPage(Page.UploadWithTemplate))}
