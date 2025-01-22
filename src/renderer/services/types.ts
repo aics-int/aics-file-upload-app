@@ -1,4 +1,5 @@
 import { AxiosRequestConfig } from "axios";
+import { UploadType } from "../state/selection/types";
 
 export interface AicsSuccessResponse<T> {
   data: T[];
@@ -43,6 +44,7 @@ interface FileMetadataBlock {
   fileName?: string;
   fileType: string;
   jobId?: string;
+  uploadType?: UploadType;
   [id: string]: any;
 }
 

@@ -111,6 +111,7 @@ import {
   UpdateUploadRowsAction,
   UploadWithoutMetadataAction,
 } from "./types";
+import { UploadType } from "../selection/types";
 
 const applyTemplateLogic = createLogic({
   process: async (
@@ -200,7 +201,7 @@ const initiateUploadLogic = createLogic({
           requests.map((request) => {
                 const serviceFields = {
                   groupId,
-                  multifile: determineIsMultifile(request.file.originalPath),
+                  multifile: request.file?.uploadType === UploadType.Multifile,
                 }
                 return fms.initiateUpload(request, user, serviceFields);
               }

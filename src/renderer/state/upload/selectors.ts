@@ -463,6 +463,7 @@ export const getUploadRequests = createSelector(
         originalPath: filePath,
         shouldBeInArchive: true,
         shouldBeInLocal: ShouldBeInLocal,
+        uploadType: fileMetadata.uploadType
       },
       // To support the current way of storing metadata in bob the blob, we continue to include
       // wellIds in the microscopy block.
