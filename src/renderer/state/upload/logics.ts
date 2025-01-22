@@ -47,6 +47,7 @@ import {
   getSelectedUploads,
   getSelectedUser,
 } from "../selection/selectors";
+import { UploadType } from "../selection/types";
 import { getTemplateId } from "../setting/selectors";
 import {
   ensureDraftGetsSaved,
@@ -111,7 +112,6 @@ import {
   UpdateUploadRowsAction,
   UploadWithoutMetadataAction,
 } from "./types";
-import { UploadType } from "../selection/types";
 
 const applyTemplateLogic = createLogic({
   process: async (

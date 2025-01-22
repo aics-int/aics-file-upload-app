@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { FileModel } from '../../../state/types';
 
 const styles = require("./styles.pcss");
@@ -11,7 +12,7 @@ interface SelectedFilesListProps {
 
 export default function SelectedFilesList(props: SelectedFilesListProps) {
     const rows = props.uploadList.map(file => (
-            <tr>
+            <tr key={file.file}>
                 <td className={styles.tableCell}>{file.file}</td>
                 <td className={styles.tableCell}>{file.uploadType}</td>
             </tr>

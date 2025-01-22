@@ -1,10 +1,11 @@
+import { CopyOutlined, FileOutlined } from '@ant-design/icons';
+import { Radio, RadioChangeEvent } from 'antd';
 import React from 'react';
 import { useDispatch, useSelector } from "react-redux";
-import { Radio, RadioChangeEvent } from 'antd';
-import { CopyOutlined, FileOutlined } from '@ant-design/icons';
+
 import { selectUploadType } from '../../../state/selection/actions';
-import { UploadType } from '../../../state/selection/types';
 import { getUploadType } from '../../../state/selection/selectors';
+import { UploadType } from '../../../state/selection/types';
 
 const styles = require("./styles.pcss");
 

@@ -1,6 +1,6 @@
-import React from 'react';
 import { Alert, Spin } from "antd";
 import { ipcRenderer } from "electron";
+import React from 'react';
 import { useDispatch, useSelector } from "react-redux";
 
 import { MainProcessEvents, SCHEMA_SYNONYM } from "../../../shared/constants";
@@ -8,24 +8,21 @@ import LabeledInput from "../../components/LabeledInput";
 import TemplateSearch from "../../components/TemplateSearch";
 import { AnnotationName } from "../../constants";
 import {
-  getIsLoading,
   getRequestsInProgress,
   getUploadError,
 } from "../../state/feedback/selectors";
 import { getImagingSessions } from "../../state/metadata/selectors";
 import {
   getAreSelectedUploadsInFlight,
-  getSelectedUploads,
 } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
 import { AsyncRequest } from "../../state/types";
 import { applyTemplate, updateUpload } from "../../state/upload/actions";
 import {
-  getUploadAsTableRows,
   getUploadValidationErrors,
 } from "../../state/upload/selectors";
-
 import CustomDataTable from '../CustomDataTable';
+
 import AddMetadataPageFooter from './AddMetadataPageFooter';
 
 const styles = require("./styles.pcss");

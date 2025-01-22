@@ -33,10 +33,11 @@ import {
 } from "../services/metadata-management-service/types";
 import { LocalStorage } from "../types";
 
+import { UploadType } from "./selection/types";
+
 import Process = CreateLogic.Config.Process;
 import DepObj = CreateLogic.Config.DepObj;
 import SaveDialogOptions = Electron.SaveDialogOptions;
-import { UploadType } from "./selection/types";
 
 // T should be the type of a state branch
 export interface ActionDescription<T> {

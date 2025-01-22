@@ -1,5 +1,4 @@
 import classNames from "classnames";
-
 import * as React from "react";
 
 import { UploadType } from "../../state/selection/types";

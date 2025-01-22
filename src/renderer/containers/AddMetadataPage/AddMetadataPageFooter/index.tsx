@@ -3,8 +3,10 @@ import { Button, Switch, Tooltip } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import PageFooter from "../../../components/PageFooter";
 import { closeUpload, selectPage } from "../../../state/route/actions";
 import { getSelectedUploads, getShouldBeInLocal } from "../../../state/selection/selectors";
+import { Page } from "../../../state/types";
 import {
   initiateUpload,
   submitFileMetadataUpdate,
@@ -14,8 +16,6 @@ import {
   getUploadValidationErrors,
 } from "../../../state/upload/selectors";
 import { getCanSubmitUpload, getIsUploadInProgress } from "../../UploadSelectionPage/selectors";
-import PageFooter from "../../../components/PageFooter";
-import { Page } from "../../../state/types";
 
 const styles = require("./styles.pcss");
 

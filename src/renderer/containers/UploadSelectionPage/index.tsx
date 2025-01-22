@@ -1,24 +1,24 @@
+import { Button } from 'antd';
 import { OpenDialogOptions } from "electron";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button } from 'antd';
 
 import DragAndDrop from "../../components/DragAndDrop";
+import PageFooter from "../../components/PageFooter";
+import { closeUpload, selectPage } from "../../state/route/actions";
 import { loadFiles } from "../../state/selection/actions";
 import {
   getUploadType,
 } from "../../state/selection/selectors";
+import { UploadType } from "../../state/selection/types";
+import { Page } from "../../state/types";
 import {
   getUploadAsTableRows
 } from "../../state/upload/selectors";
 
-import UploadTypeSelector from "./UploadTypeSelector";
 import DragAndDropPrompt from "./DragAndDropPrompt";
 import SelectedFilesList from "./SelectedFilesList";
-import { closeUpload, selectPage } from "../../state/route/actions";
-import { Page } from "../../state/types";
-import PageFooter from "../../components/PageFooter";
-import { UploadType } from "../../state/selection/types";
+import UploadTypeSelector from "./UploadTypeSelector";
 
 const styles = require("./styles.pcss");
 
