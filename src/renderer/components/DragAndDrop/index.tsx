@@ -1,7 +1,6 @@
 import classNames from "classnames";
 
 import * as React from "react";
-import { webUtils } from "electron";
 
 import { UploadType } from "../../state/selection/types";
 
@@ -63,7 +62,7 @@ export default function DragAndDrop(props: DragAndDropProps) {
       // Prevent drag and drop events from stacking (like notes over upload job page)
       e.stopPropagation();
       setDragEnterCount(0);
-      props.onDrop(Array.from(e.dataTransfer.files, (f) => webUtils.getPathForFile(f)));
+      props.onDrop(Array.from(e.dataTransfer.files, (f) => f.path));
     }
   };
 
