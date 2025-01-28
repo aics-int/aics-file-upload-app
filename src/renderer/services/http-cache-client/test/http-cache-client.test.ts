@@ -120,7 +120,7 @@ describe("HttpCacheClient", () => {
     await httpCacheClient.get(url);
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(httpClient.get).to.have.been.calledOnceWith(
-      "http://localhost:8080/foo"
+      "http://aics.corp.alleninstitute.org:80/foo"
     );
   });
 });
