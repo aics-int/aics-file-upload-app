@@ -46,14 +46,14 @@ const loadFilesLogic = createLogic({
     try {
       const uploadType: UploadType | null = getUploadType(getState());
       if (!uploadType) {
-        throw new Error('Cannot parse selected files. Upload Type not defined');
+        throw new Error('Cannot parse selected files. Upload Type not defined.');
       }
       const filePaths = await handleFileSelection(
         action.payload,
         uploadType
       );
       dispatch(stopLoading());
-      dispatch(addUploadFiles(filePaths.flat().map((file) => ({ file, uploadType }))));
+      dispatch(addUploadFiles(filePaths.map((file) => ({ file, uploadType }))));
       done();
     } catch (e) {
       dispatch(
