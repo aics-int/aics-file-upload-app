@@ -35,19 +35,14 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
   }
 };
 
-// TODO: Comments, positioning in file
+/**
+ * Takes a list of file paths and checks to see if they can be read and if they match
+ *  the given UploadType.
+ */
 export async function handleFileSelection(
   paths: string[],
-  uploadType: UploadType | null
+  uploadType: UploadType
 ): Promise<string[]> {
-  /*
-  We want to map the given file paths according to the
-  selected uploadType.
-  If the uploadType is "folder", we'll grab all the files
-  from each given path's top level (assuming they're actually folders).
-  If the uploadType is "file" or "multifile", just return
-  the file type
-  */
   const filepaths = await Promise.all(
     paths.map(async (fullPath) => {
       const canRead = await canUserRead(fullPath);
@@ -56,25 +51,22 @@ export async function handleFileSelection(
       }
 
       const stats = await fsPromises.stat(fullPath);
-      let parsedPaths: string[];
       if (uploadType === UploadType.File) {
         if (stats.isDirectory()) {
           throw new Error(`Selected upload type is "${UploadType.File}". Cannot upload folder "${fullPath}".`);
         }
-        parsedPaths = [fullPath];
       } else if (uploadType === UploadType.Multifile) {
         if (!stats.isDirectory()) {
           throw new Error(`Selected upload type is "${UploadType.Multifile}". Selected files are expected to be folders. Cannot upload file "${fullPath}".`);
         }
-        parsedPaths = [fullPath];
       } else {
         throw new Error(`Selected upload type "${uploadType}" not recognized.`);
       }
-      return parsedPaths;
+      return fullPath;
     })
   );
 
-  return filepaths.flat();
+  return filepaths;
 }
 
 /**
