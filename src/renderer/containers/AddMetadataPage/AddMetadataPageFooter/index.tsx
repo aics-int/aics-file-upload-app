@@ -65,12 +65,14 @@ export default function AddMetadataPageFooter(props: Props) {
           >
               Cancel Upload
           </Button>
-      <Button
-        className={styles.cancelButton}
-        onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
-      >
-        Add More Files
-      </Button>
+      {!selectedUploads.length && // If we're adding new files, not editing ones that have been uploaded.
+        <Button
+          className={styles.cancelButton}
+          onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
+        >
+          Add More Files
+        </Button>
+      }
       <Button
         type="primary"
         onClick={onSubmit}
