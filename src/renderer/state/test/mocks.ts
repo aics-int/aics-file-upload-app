@@ -25,7 +25,7 @@ import {
   Template,
   TemplateAnnotation,
 } from "../../services/metadata-management-service/types";
-import {UploadType} from "../../types";
+import { UploadType } from "../../types";
 import {
   feedback,
   job,
