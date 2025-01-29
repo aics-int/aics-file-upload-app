@@ -39,7 +39,7 @@ export default function UploadTypeSelector() {
                         <div className={styles.radioButtonText}>
                             <span className={styles.radioButtonTitle}>File</span>
                             <br />
-                            <span className={styles.radioButtonHelpText}>A single file such as a .csv, .jpeg, etc.</span>
+                            <span className={styles.radioButtonHelpText}>A single file such as a .czi, .ome.tiff, .csv, etc.</span>
                         </div>
                     </div>
                 </Radio.Button>

@@ -32,7 +32,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
     let helpText: string | null = null;
     if (props.uploadType) {
       helpText = props.uploadType === UploadType.File
-        ? "Accepted file formats include: .csv, .jpeg, ..."
+        ? "Accepted file formats include: .czi, .tiff, .ome.tiff, .csv, ..."
         : "Accepted file formats include: .zarr, .sldy, ..."
     }
 
