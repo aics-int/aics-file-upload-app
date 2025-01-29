@@ -1,4 +1,4 @@
-import {SelectUploadTypeAction, UploadType} from "../../types";
+import { SelectUploadTypeAction, UploadType } from "../../types";
 import { OpenTemplateEditorAction } from "../feedback/types";
 import { MassEditRow } from "../types";
 
