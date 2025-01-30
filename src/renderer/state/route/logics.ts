@@ -298,7 +298,7 @@ const viewUploadsLogic = createLogic({
         ...labkeyFileMetadata,
         customMetadata,
         file: {
-          originalPath: labkeyFileMetadata.localFilePath as string,
+          originalPath: labkeyFileMetadata.publicFilePath as string,
           fileType: labkeyFileMetadata.fileType,
         },
       }));
