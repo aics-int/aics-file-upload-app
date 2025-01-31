@@ -61,7 +61,7 @@ We create tags for snapshots and releases, so the triggering tags will generally
 Before releasing an official version of the app, create a snapshot build to test the app on all platforms:
 
 ```bash
-git checkout master
+git checkout main
 git pull
 npm version prerelease --preid=snapshot
 ```
@@ -88,7 +88,7 @@ Ideally, you should try out the app in all platforms before each big release: Wi
 
 ### Step 3: Create Release
 A release is an official version of the app. You can create a release from the command line.
-Ensure you are on the master branch and have the latest:
+Ensure you are on the main branch and have the latest:
 
 ```bash
 git checkout main
