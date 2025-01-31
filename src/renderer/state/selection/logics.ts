@@ -1,7 +1,8 @@
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
-import { determineFilesFromNestedPaths } from "../../util";
+import type { UploadType } from "../../types";
+import { handleFileSelection } from "../../util";
 import { setAlert, startLoading, stopLoading } from "../feedback/actions";
 import { getBooleanAnnotationTypeId } from "../metadata/selectors";
 import { getAppliedTemplate } from "../template/selectors";
@@ -31,22 +32,28 @@ import {
   getMassEditRow,
   getRowsSelectedForDragEvent,
   getRowsSelectedForMassEdit,
+  getUploadType,
 } from "./selectors";
-import { LoadFilesAction } from "./types";
+import type { LoadFilesAction } from "./types";
 
 const loadFilesLogic = createLogic({
   process: async (
-    deps: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
+    { action, getState }: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
     dispatch(startLoading());
     try {
-      const filePaths = await determineFilesFromNestedPaths(
-        deps.action.payload
+      const uploadType: UploadType | null = getUploadType(getState());
+      if (!uploadType) {
+        throw new Error('Cannot parse selected files. Upload Type not defined.');
+      }
+      const filePaths = await handleFileSelection(
+        action.payload,
+        uploadType
       );
       dispatch(stopLoading());
-      dispatch(addUploadFiles(filePaths.flat().map((file) => ({ file }))));
+      dispatch(addUploadFiles(filePaths.map((file) => ({ file, uploadType }))));
       done();
     } catch (e) {
       dispatch(

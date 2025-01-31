@@ -1,18 +1,21 @@
 import * as fs from "fs";
+import { promises as fsPromises } from "fs";
 import * as os from "os";
 import * as path from "path";
 
 import { expect } from "chai";
 import * as rimraf from "rimraf";
-import { restore } from "sinon";
+import { restore, SinonStub, stub } from "sinon";
 
 import {
   determineFilesFromNestedPaths,
   determineIsMultifile,
   getDirectorySize,
   getPowerOf1000,
+  handleFileSelection,
   splitTrimAndFilter,
 } from "../";
+import { UploadType } from "../../types";
 
 describe("General utilities", () => {
   afterEach(() => {
@@ -137,4 +140,86 @@ describe("General utilities", () => {
       expect(getPowerOf1000(999999)).to.equal(1);
     });
   });
+
+  describe("handleFileSelection", () => {
+    // fs.access is used by "canUserRead()" internally
+    let fsAccessStub: SinonStub;
+    let fsStatStub: SinonStub;
+
+    beforeEach(() => {
+      fsAccessStub = stub(fsPromises, 'access');
+      fsStatStub = stub(fsPromises, 'stat');
+    });
+
+    afterEach(() => {
+      fsAccessStub.restore();
+      fsStatStub.restore();
+    });
+
+    it("returns given file path if uploadType is 'File' and selected path is a file", async () => {
+      const filePaths = ['file.txt'];
+      const uploadType = UploadType.File;
+
+      fsAccessStub.resolves();
+      fsStatStub.resolves({ isDirectory: () => false });
+
+      const actual = await handleFileSelection(filePaths, uploadType);
+      expect(actual).to.have.members(filePaths);
+    });
+
+    it("returns given file path if uploadType is 'Multifile' and selected path is a folder", async () => {
+      const filePaths = ['file.txt'];
+      const uploadType = UploadType.Multifile;
+
+      fsAccessStub.resolves();
+      fsStatStub.resolves({ isDirectory: () => true });
+
+      const actual = await handleFileSelection(filePaths, uploadType);
+      expect(actual).to.have.members(filePaths);
+    });
+
+    it("throws an error if user does not have file read acccess", async () => {
+      const filePaths = ['file.txt'];
+      const uploadType = UploadType.File;
+
+      fsAccessStub.rejects();
+      fsStatStub.resolves({ isDirectory: () => false });
+
+      await expect(handleFileSelection(filePaths, uploadType)).to.be
+          .rejectedWith('User does not have permission to read file.txt');
+    });
+
+    it("throws an error if upload type is 'File' and uploaded path is a folder", async () => {
+      const filePaths = ['/path/to/folder'];
+      const uploadType = UploadType.File;
+
+      fsAccessStub.resolves();
+      fsStatStub.resolves({ isDirectory: () => true });
+
+      await expect(handleFileSelection(filePaths, uploadType as any)).to.be
+          .rejectedWith(`Selected upload type is "${uploadType}". Cannot upload folder "${filePaths[0]}".`);
+    });
+
+    it("throws an error if upload type is 'Multifile' and uploaded path is a file", async () => {
+      const filePaths = ['file.txt'];
+      const uploadType = UploadType.Multifile;
+
+      fsAccessStub.resolves();
+      fsStatStub.resolves({ isDirectory: () => false });
+
+      await expect(handleFileSelection(filePaths, uploadType as any)).to.be
+          .rejectedWith(`Selected upload type is "${uploadType}". Selected files are expected to be folders. Cannot upload file "${filePaths[0]}".`);
+    });
+
+    it("throws an error if uploadType is not recognized", async () => {
+      const filePaths = ['file.txt'];
+      const uploadType = "InvalidUploadType";
+
+      fsAccessStub.resolves();
+      fsStatStub.resolves({ isDirectory: () => false });
+
+      await expect(handleFileSelection(filePaths, uploadType as any)).to.be
+          .rejectedWith('Selected upload type "InvalidUploadType" not recognized.');
+    });
+  })
 });

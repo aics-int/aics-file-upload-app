@@ -6,6 +6,7 @@ import { trim } from "lodash";
 import { flatten, memoize, uniq } from "lodash";
 
 import { LIST_DELIMITER_SPLIT, MAIN_FONT_WIDTH } from "../constants";
+import { UploadType } from "../types";
 
 /*
  * This file contains pure utility methods with no dependencies on other code
@@ -33,6 +34,40 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Takes a list of file paths and checks to see if they can be read and if they match
+ *  the given UploadType.
+ */
+export async function handleFileSelection(
+  paths: string[],
+  uploadType: UploadType
+): Promise<string[]> {
+  const filepaths = await Promise.all(
+    paths.map(async (fullPath) => {
+      const canRead = await canUserRead(fullPath);
+      if (!canRead) {
+        throw new Error(`User does not have permission to read ${fullPath}`);
+      }
+
+      const stats = await fsPromises.stat(fullPath);
+      if (uploadType === UploadType.File) {
+        if (stats.isDirectory()) {
+          throw new Error(`Selected upload type is "${UploadType.File}". Cannot upload folder "${fullPath}".`);
+        }
+      } else if (uploadType === UploadType.Multifile) {
+        if (!stats.isDirectory()) {
+          throw new Error(`Selected upload type is "${UploadType.Multifile}". Selected files are expected to be folders. Cannot upload file "${fullPath}".`);
+        }
+      } else {
+        throw new Error(`Selected upload type "${uploadType}" not recognized.`);
+      }
+      return fullPath;
+    })
+  );
+
+  return filepaths;
+}
 
 /**
  * For a given path, determine whether it constitutes a single FMS Upload item (for File, Multifile uploads) or

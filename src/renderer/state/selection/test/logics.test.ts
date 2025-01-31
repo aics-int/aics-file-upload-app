@@ -7,6 +7,7 @@ import selections from "../";
 import { feedback } from "../../";
 import { AnnotationName } from "../../../constants";
 import MetadataManagementService from "../../../services/metadata-management-service";
+import { UploadType } from "../../../types";
 import { getPage } from "../../route/selectors";
 import {
   createMockReduxStore,
@@ -77,6 +78,7 @@ describe("Selection logics", () => {
       expect(getUpload(store.getState())).to.be.empty;
 
       // apply
+      store.dispatch(selections.actions.selectUploadType(UploadType.File));
       store.dispatch(selections.actions.loadFiles([FILE_FULL_PATH]));
 
       // after

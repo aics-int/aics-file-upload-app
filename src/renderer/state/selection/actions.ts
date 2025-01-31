@@ -1,3 +1,4 @@
+import { SelectUploadTypeAction, UploadType } from "../../types";
 import { OpenTemplateEditorAction } from "../feedback/types";
 import { MassEditRow } from "../types";
 
@@ -8,6 +9,7 @@ import {
   LOAD_FILES,
   OPEN_TEMPLATE_EDITOR,
   REMOVE_ROW_FROM_DRAG_EVENT,
+  SELECT_UPLOAD_TYPE,
   START_CELL_DRAG,
   START_MASS_EDIT,
   STOP_CELL_DRAG,
@@ -69,6 +71,15 @@ export function removeRowsFromDragEvent(
     payload: rowIds,
     type: REMOVE_ROW_FROM_DRAG_EVENT,
   };
+}
+
+export function selectUploadType(
+  type: UploadType
+): SelectUploadTypeAction {
+  return {
+    payload: type,
+    type: SELECT_UPLOAD_TYPE
+  }
 }
 
 export function startCellDrag(

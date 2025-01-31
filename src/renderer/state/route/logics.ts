@@ -80,7 +80,7 @@ export const resetHistoryActions = stateBranchHistory.flatMap((history) => [
 // Some of these actions cannot be done in the reducer because they are handled by a higher-order reducer
 // from redux-undo.
 export const handleStartingNewUploadJob = (): AnyAction[] => [
-  selectPage(Page.UploadWithTemplate),
+  selectPage(Page.AddMetadata),
   clearUploadDraft(),
   clearUploadHistory(),
 ];

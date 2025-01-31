@@ -32,6 +32,7 @@ import {
   WellResponse,
 } from "../services/metadata-management-service/types";
 import { LocalStorage } from "../types";
+import type { UploadType } from "../types";
 
 import Process = CreateLogic.Config.Process;
 import DepObj = CreateLogic.Config.DepObj;
@@ -172,6 +173,7 @@ export interface UploadStateBranch {
 // Metadata associated with a file
 export interface FileModel {
   file: string; // fullpath
+  uploadType?: UploadType;
   // Known custom annotations
   [AnnotationName.NOTES]?: string[];
   [AnnotationName.PLATE_BARCODE]?: string[];
@@ -217,6 +219,7 @@ export enum Page {
   Notifications = "Notifications",
   Settings = "Settings",
   MyUploads = "MyUploads",
+  AddMetadata = "AddMetadata",
 }
 
 export interface RouteStateBranch {
@@ -226,6 +229,7 @@ export interface RouteStateBranch {
 
 export interface SelectionStateBranch extends UploadTabSelections {
   user: string;
+  uploadType: UploadType | null;
   ShouldBeInLocal: boolean;
 }
 

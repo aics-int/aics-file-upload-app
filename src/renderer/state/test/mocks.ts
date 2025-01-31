@@ -25,6 +25,7 @@ import {
   Template,
   TemplateAnnotation,
 } from "../../services/metadata-management-service/types";
+import { UploadType } from "../../types";
 import {
   feedback,
   job,
@@ -192,6 +193,7 @@ export const mockJob: UploadJob = {
 export const mockSelection: SelectionStateBranch = {
   user: "fake_user",
   uploads: [],
+  uploadType: null,
   ShouldBeInLocal: true,
 };
 
@@ -221,6 +223,7 @@ export const mockWellUpload: UploadStateBranch = {
     barcode: "1237",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file4.zarr",
+    uploadType: UploadType.Multifile,
     key: "/path/to/file4.zarr",
     [AnnotationName.WELL]: [1, 2, 3],
   },
@@ -228,6 +231,7 @@ export const mockWellUpload: UploadStateBranch = {
     barcode: "1238",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file5.sldy",
+    uploadType: UploadType.Multifile,
     key: "/path/to/file5.sldy",
     [AnnotationName.WELL]: [1, 2, 3],
   },
