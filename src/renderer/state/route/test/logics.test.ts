@@ -152,7 +152,8 @@ describe("Route logics", () => {
       filename: "name",
       fileSize: 1,
       fileType: "image",
-      localFilePath: "/localFilePath",
+      localFilePath: "",
+      publicFilePath: "s3path/name",
       modified: "",
       modifiedBy: "foo",
     };
@@ -376,8 +377,8 @@ describe("Route logics", () => {
       expect(getPage(state)).to.equal(Page.UploadWithTemplate);
       expect(getView(state)).to.equal(Page.UploadWithTemplate);
       expect(getUpload(state)).to.deep.equal({
-        [fileMetadata.localFilePath || ""]: {
-          file: fileMetadata.localFilePath,
+        [fileMetadata.publicFilePath || ""]: {
+          file: fileMetadata.publicFilePath,
           fileId: fileMetadata.fileId,
           "Favorite Color": ["Blue", "Green"],
           [AnnotationName.WELL]: ["A1", "B6"],
