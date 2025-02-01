@@ -1,5 +1,8 @@
 # Version Notes
 
+## 3.3.4 (1/31/25)
+- Bugfix: App crashes when editing metadata of cloud-only upload
+
 ## 3.1.0 (5/17/23)
 - Feature: LocalNasShortcut uploads (files on /allen are copied by server, not sent in chunks by client).
 
