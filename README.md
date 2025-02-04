@@ -94,7 +94,7 @@ Ensure you are on the main branch and have the latest:
 ```bash
 git checkout main
 git pull
-git checkout -b v3.3.4  # your version numebr
+git checkout -b v3.3.4  # your version number
 ```
 
 Create the release using the `npm version` command. It will ask you to enter the new version.
