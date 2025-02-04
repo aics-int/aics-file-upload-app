@@ -28,7 +28,6 @@ import {
   getCanShowWellColumn,
   getColumnsForTable,
 } from "./selectors";
-import TableFooter from "./TableFooter";
 import TableToolHeader from "./TableToolHeader";
 import { CustomColumn } from "./types";
 
@@ -139,7 +138,6 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
       {isMassEditing && <MassEditTable columnToWidthMap={columnToWidthMap} />}
       <TableToolHeader selectedRows={tableInstance.selectedFlatRows || []} />
       <Table tableInstance={tableInstance} />
-      <TableFooter />
     </>
   );
 }

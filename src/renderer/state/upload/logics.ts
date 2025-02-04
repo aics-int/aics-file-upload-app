@@ -20,6 +20,7 @@ import FileManagementSystem, {
 import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
+import { UploadType } from "../../types";
 import {
   determineFilesFromNestedPaths,
   determineIsMultifile,
@@ -200,7 +201,7 @@ const initiateUploadLogic = createLogic({
           requests.map((request) => {
                 const serviceFields = {
                   groupId,
-                  multifile: determineIsMultifile(request.file.originalPath),
+                  multifile: request.file?.uploadType === UploadType.Multifile,
                 }
                 return fms.initiateUpload(request, user, serviceFields);
               }

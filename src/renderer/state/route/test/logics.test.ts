@@ -374,8 +374,8 @@ describe("Route logics", () => {
 
       // Assert
       state = store.getState();
-      expect(getPage(state)).to.equal(Page.UploadWithTemplate);
-      expect(getView(state)).to.equal(Page.UploadWithTemplate);
+      expect(getPage(state)).to.equal(Page.AddMetadata);
+      expect(getView(state)).to.equal(Page.AddMetadata);
       expect(getUpload(state)).to.deep.equal({
         [fileMetadata.publicFilePath || ""]: {
           file: fileMetadata.publicFilePath,

@@ -2,6 +2,7 @@ import { userInfo } from "os";
 
 import { AnyAction } from "redux";
 
+import { SelectUploadTypeAction } from "../../types";
 import { VIEW_UPLOADS, RESET_UPLOAD } from "../route/constants";
 import { ViewUploadsAction, ResetUploadAction } from "../route/types";
 import {
@@ -18,6 +19,7 @@ import {
   APPLY_MASS_EDIT,
   CANCEL_MASS_EDIT,
   REMOVE_ROW_FROM_DRAG_EVENT,
+  SELECT_UPLOAD_TYPE,
   START_CELL_DRAG,
   START_MASS_EDIT,
   STOP_CELL_DRAG,
@@ -44,6 +46,7 @@ const uploadTabSelectionInitialState: UploadTabSelections = {
 export const initialState: SelectionStateBranch = {
   ...uploadTabSelectionInitialState,
   user: userInfo().username,
+  uploadType: null,
   ShouldBeInLocal: true,
 };
 
@@ -88,6 +91,7 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
     perform: (state: SelectionStateBranch) => ({
       ...state,
       ...uploadTabSelectionInitialState,
+      uploadType: null,
     }),
   },
   [ADD_ROW_TO_DRAG_EVENT]: {
@@ -116,6 +120,17 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
       rowsSelectedForDragEvent: state.rowsSelectedForDragEvent?.filter(
         (row) => !action.payload.includes(row.id)
       ),
+    }),
+  },
+  [SELECT_UPLOAD_TYPE]: {
+    accepts: (action: AnyAction): action is SelectUploadTypeAction =>
+      action.type === SELECT_UPLOAD_TYPE,
+    perform: (
+      state: SelectionStateBranch,
+      action: SelectUploadTypeAction
+    ) => ({
+      ...state,
+      uploadType: action.payload
     }),
   },
   [START_CELL_DRAG]: {

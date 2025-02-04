@@ -1,0 +1,47 @@
+.content {
+  align-items: center;
+  color: black;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  margin-top: 25px;
+  padding-top: 20px;
+  width: 100%;
+}
+
+.drop-zone {
+  border: 2px dashed black;
+  border-color: var(--grey);
+  border-radius: 25px;
+
+  font-size: 18px;
+
+  padding-bottom: 80px;
+  padding-top: 80px;
+
+  text-align: center;
+  width: 100%;
+
+  /* copied from antd button */
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.drop-zone:hover {
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+    cursor: pointer;
+}
+
+.drop-zone-browse-button {
+  margin-top: 5px;
+  width: 100%;
+}
+
+.drop-zone-help-text {
+  font-size: 0.6em;
+}
+
+.upload-icon {
+  font-size: 4em;
+  color: inherit;
+}

@@ -41,11 +41,12 @@ import {
 import { getLimsUrl, getLoggedInUser } from "../../state/setting/selectors";
 import { AlertType, AsyncRequest, Page } from "../../state/types";
 import { openUploadDraft, saveUploadDraft } from "../../state/upload/actions";
+import AddMetadataPage from "../AddMetadataPage";
 import MyUploadsPage from "../MyUploadsPage";
 import NavigationBar from "../NavigationBar";
 import OpenTemplateModal from "../OpenTemplateModal";
 import TemplateEditorModal from "../TemplateEditorModal";
-import UploadWithTemplatePage from "../UploadWithTemplatePage";
+import UploadSelectionPage from "../UploadSelectionPage";
 
 import AutoReconnectingEventSource from "./AutoReconnectingEventSource";
 import { handleUploadJobUpdates } from "./handleUploadJobUpdates";
@@ -214,7 +215,8 @@ export default function App() {
       <div className={styles.mainContent}>
         <NavigationBar />
         {page === Page.MyUploads && <MyUploadsPage />}
-        {page === Page.UploadWithTemplate && <UploadWithTemplatePage />}
+        {page === Page.UploadWithTemplate && <UploadSelectionPage />}
+        {page === Page.AddMetadata && <AddMetadataPage />}
       </div>
       <StatusBar
         className={styles.statusBar}

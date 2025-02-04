@@ -2,7 +2,6 @@ import * as fs from "fs";
 
 import { FileTextOutlined, FormOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { Dropdown, Input, Menu, Modal, Tooltip } from "antd";
-import { OpenDialogOptions } from "electron";
 import { castArray } from "lodash";
 import React from "react";
 import { useDispatch } from "react-redux";
@@ -23,13 +22,6 @@ const styles = require("./styles.pcss");
 const { TextArea } = Input;
 
 type Props = CellProps<FileModel, string>;
-
-// Only want user to be able to select 1 file & it must be of type .txt
-const openDialogOptions: OpenDialogOptions = {
-  filters: [{ name: "Text", extensions: ["txt"] }],
-  properties: ["openFile"],
-  title: "Open Text file",
-};
 
 function getContextMenuItems(dispatch: Dispatch, props: Props, notes?: string) {
   return (
@@ -146,7 +138,7 @@ function NotesCell(props: Props) {
         okText={props.column.isReadOnly ? "Done" : "Save"}
       >
         {isEditing ? (
-          <DragAndDrop onDrop={onDrop} openDialogOptions={openDialogOptions}>
+          <DragAndDrop onDrop={onDrop}>
             <TextArea
               className={styles.useFullWidth}
               onChange={(e) => setNotes([e.target.value])}
@@ -159,7 +151,6 @@ function NotesCell(props: Props) {
             </p>
             <DragAndDrop
               onDrop={onDrop}
-              openDialogOptions={openDialogOptions}
             />
           </DragAndDrop>
         ) : (
