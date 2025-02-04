@@ -63,6 +63,7 @@ Before releasing an official version of the app, create a snapshot build to test
 ```bash
 git checkout main
 git pull
+git checkout -b v3.3.4-snapshot.0
 npm version prerelease --preid=snapshot
 ```
 
@@ -72,7 +73,7 @@ If the package.json version was 1.0.55, running this command will change it to 1
 In order to trigger a build in GitHub Actions to create the packaged app, push your changes to the remote:
 
 ```bash
-git push --tags && git push
+git push -u origin $(git rev-parse --abbrev-ref HEAD) --follow-tags
 ```
 
 You can view the GitHub Actions build in progress here: https://github.com/aicsgithub/aics-file-upload-app/actions
@@ -93,6 +94,7 @@ Ensure you are on the main branch and have the latest:
 ```bash
 git checkout main
 git pull
+git checkout -b v3.3.4  # your version number
 ```
 
 Create the release using the `npm version` command. It will ask you to enter the new version.
@@ -104,15 +106,17 @@ npm version <major|minor|patch>
 Update the VERSION_NOTES.md file with what is new in this release. I typically look through
 the commits for merged PR's.
 
-After updating the notes, add and commit them and push everything to the server.
+After updating the notes, add and commit them and push everything to the git remote.
 
 ```bash
 git add .
 git commit -m "update version notes"
-git push --tags && git push
+git push -u origin $(git rev-parse --abbrev-ref HEAD) --follow-tags
 ```
 
 You can look at the GitHub Actions build by going to https://github.com/aicsgithub/aics-file-upload-app/actions.
+
+Open and merge a Pull Request for the version bump before merging any other PRs.
 
 ### Step 4: Check Download Page
 The download page, [located here](https://aics-int.github.io/aics-file-upload-app/), will automatically update with the new build, if successful. 
