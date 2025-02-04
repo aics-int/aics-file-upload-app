@@ -33,7 +33,7 @@ import {
 } from "../selectors";
 
 describe("Setting logics", () => {
-  const localhost = "localhost";
+  const productionHost = "aics.corp.alleninstitute.org";
   const stagingHost = "staging";
   let labkeyClient: SinonStubbedInstance<LabkeyClient>;
   let storage: SinonStubbedInstance<EnvironmentAwareStorage>;
@@ -67,7 +67,7 @@ describe("Setting logics", () => {
 
     it("updates settings if data persisted correctly", () => {
       // before
-      expect(getLimsHost(store.getState())).to.equal(localhost);
+      expect(getLimsHost(store.getState())).to.equal(productionHost);
 
       // apply
       store.dispatch(updateSettings({ limsHost: stagingHost }));
@@ -122,7 +122,7 @@ describe("Setting logics", () => {
       ]);
 
       // before
-      expect(getLimsHost(store.getState())).to.equal(localhost);
+      expect(getLimsHost(store.getState())).to.equal(productionHost);
 
       // apply
       store.dispatch(updateSettings({ limsHost: stagingHost }));
@@ -234,7 +234,7 @@ describe("Setting logics", () => {
       const { logicMiddleware, store } = createMockReduxStore(mockState);
 
       // before
-      expect(getLimsHost(store.getState())).to.equal(localhost);
+      expect(getLimsHost(store.getState())).to.equal(productionHost);
       expect(getTemplateId(store.getState())).to.be.undefined;
 
       // apply
@@ -256,7 +256,7 @@ describe("Setting logics", () => {
       await logicMiddleware.whenComplete();
 
       // after
-      expect(getLimsHost(store.getState())).to.equal(localhost);
+      expect(getLimsHost(store.getState())).to.equal(productionHost);
       expect(getAlert(store.getState())).to.not.be.undefined;
     });
   });

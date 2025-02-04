@@ -7,7 +7,7 @@ describe("Settings selectors", () => {
   describe("getLimsUrl", () => {
     it("constructs lims url from settings", () => {
       const url = getLimsUrl(mockState);
-      expect(url).to.equal("http://localhost:8080");
+      expect(url).to.equal("http://aics.corp.alleninstitute.org:80");
     });
   });
 });
