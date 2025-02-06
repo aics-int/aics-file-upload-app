@@ -19,6 +19,12 @@ export default function UploadTypeSelector() {
         dispatch(selectUploadType(e.target.value));
     }
 
+    // Help text below the radio group. Defaults to the text for UploadType.File
+    let additionalHelpText = `Select one or more standalone files. Attempting to select ${UploadType.Multifile}s or folders will result in an error.`
+    if (uploadType === UploadType.Multifile) {
+        additionalHelpText = `Select one or more ${UploadType.Multifile} folders. Each folder in your selection will be uploaded as a single FMS record.`
+    }
+
     return (
         <div>
             <h1>
@@ -58,6 +64,11 @@ export default function UploadTypeSelector() {
                     </div>
                 </Radio.Button>
             </Radio.Group>
+            {uploadType !== null &&
+                <div className={styles.additionalHelpText}>
+                    {additionalHelpText}
+                </div>
+            }
         </div>
     )
 }
