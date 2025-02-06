@@ -2,11 +2,11 @@ import { UploadOutlined } from '@ant-design/icons';
 import { OpenDialogOptions, ipcRenderer } from "electron";
 import { isEmpty } from "lodash";
 import React from 'react';
+import { useSelector } from 'react-redux';
 
 import { RendererProcessEvents } from '../../../../shared/constants';
-import { UploadType } from '../../../types';
-import { useSelector } from 'react-redux';
 import { getUploadType } from '../../../state/selection/selectors';
+import { UploadType } from '../../../types';
 
 const styles = require("./styles.pcss");
 
