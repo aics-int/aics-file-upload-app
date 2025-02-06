@@ -40,7 +40,7 @@ export default function UploadSelectionPage() {
   if (uploadType === UploadType.Multifile) {
     openDialogOptions = {
       properties: ["openDirectory", "multiSelections"],
-      title: "Browse for multifiles",
+      title: "Browse for chunked files",
     }
   }
 
