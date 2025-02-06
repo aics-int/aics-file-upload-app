@@ -1,11 +1,12 @@
 import { UploadOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
 import { OpenDialogOptions, ipcRenderer } from "electron";
 import { isEmpty } from "lodash";
 import React from 'react';
 
 import { RendererProcessEvents } from '../../../../shared/constants';
 import { UploadType } from '../../../types';
+import { useSelector } from 'react-redux';
+import { getUploadType } from '../../../state/selection/selectors';
 
 const styles = require("./styles.pcss");
 
@@ -16,6 +17,7 @@ interface DragAndDropPromptProps {
 }
 
 export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
+    const uploadType = useSelector(getUploadType);
 
     const onBrowse = async () => {
         const filePaths = await ipcRenderer.invoke(
@@ -29,24 +31,14 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
         }
     };
 
-    let helpText: string | null = null;
-    if (props.uploadType) {
-      helpText = props.uploadType === UploadType.File
-        ? "Accepted file formats include: .czi, .tiff, .ome.tiff, .csv, ..."
-        : "Accepted file formats include: .zarr, .sldy, ..."
-    }
-
     return (
         <div className={styles.content}>
-          <h1 className={styles.header}>Select file(s) to upload</h1>
+          <h1 className={styles.header}>Select {uploadType}(s) to upload</h1>
           <div className={styles.dropZone} onClick={onBrowse}>
             <UploadOutlined className={styles.uploadIcon} />
             <div>Drag&nbsp;and&nbsp;Drop</div>
-            <div className={styles.dropZoneHelpText}>{helpText}</div>
+            <div className={styles.dropZoneHelpText}>or click to browse file paths</div>
           </div>
-          <Button className={styles.dropZoneBrowseButton} disabled={!props.openDialogOptions} onClick={onBrowse}>
-            Browse Files
-          </Button>
         </div>
     );
 }
