@@ -37,7 +37,7 @@ export default function UploadTypeSelector() {
                     <div className={styles.radioButtonContent}>
                         <FileOutlined className={styles.radioButtonIcon} />
                         <div className={styles.radioButtonText}>
-                            <span className={styles.radioButtonTitle}>File</span>
+                            <span className={styles.radioButtonTitle}>{UploadType.File}</span>
                             <br />
                             <span className={styles.radioButtonHelpText}>A single file such as a .czi, .ome.tiff, .csv, etc.</span>
                         </div>
@@ -51,9 +51,9 @@ export default function UploadTypeSelector() {
                     <div className={styles.radioButtonContent}>
                         <CopyOutlined className={styles.radioButtonIcon} />
                         <div className={styles.radioButtonText}>
-                            <span className={styles.radioButtonTitle}>Multifile</span>
+                            <span className={styles.radioButtonTitle}>{UploadType.Multifile}</span>
                             <br />
-                            <span className={styles.radioButtonHelpText}>Advanced file types such as .zarr, .sldy, etc.</span>
+                            <span className={styles.radioButtonHelpText}>Distributed file formats such as .zarr, .sldy, etc.</span>
                         </div>
                     </div>
                 </Radio.Button>
