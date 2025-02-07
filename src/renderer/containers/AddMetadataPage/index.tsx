@@ -1,3 +1,4 @@
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Alert, Button, Spin } from "antd";
 import { ipcRenderer } from "electron";
 import React from 'react';
@@ -12,6 +13,7 @@ import {
   getUploadError,
 } from "../../state/feedback/selectors";
 import { getImagingSessions } from "../../state/metadata/selectors";
+import { selectPage } from "../../state/route/actions";
 import {
   getAreSelectedUploadsInFlight,
   getSelectedUploads,
@@ -25,8 +27,6 @@ import {
 import CustomDataTable from '../CustomDataTable';
 
 import AddMetadataPageFooter from './AddMetadataPageFooter';
-import { selectPage } from "../../state/route/actions";
-import { ArrowLeftOutlined } from "@ant-design/icons";
 
 const styles = require("./styles.pcss");
 
