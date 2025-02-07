@@ -76,7 +76,7 @@ export default function AddMetadataPage() {
     }, [dispatch, imagingSessions]);
 
     return (
-        <>
+        <div>
             <div>
             {!selectedUploads.length && // If we're adding new files, not editing ones that have been uploaded.
               <Button
@@ -84,69 +84,69 @@ export default function AddMetadataPage() {
                 onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
                 type="ghost"
               >
-                <ArrowLeftOutlined /> Add More Files to Template
+                <span className={styles.returnButtonIcon}><ArrowLeftOutlined /></span> Add More Files to Template
               </Button>
             }
             </div>
-            <div className={styles.contentContainer}>
-            {!isSelectedJobLoading && (
-            <>
-                {hasAttemptedSubmit && !appliedTemplate && (
-                <Alert
-                    className={styles.alert}
-                    message="Please select a template."
-                    type="error"
-                    showIcon={true}
-                    key="template-not-selected"
-                />
-                )}
-                <LabeledInput
-                className={styles.selector}
-                label={`Select Metadata ${SCHEMA_SYNONYM}`}
-                >
-                <TemplateSearch
-                    allowCreate={true}
-                    disabled={isTemplateLoading || isReadOnly}
-                    error={hasAttemptedSubmit && !appliedTemplate}
-                    value={appliedTemplate?.templateId}
-                    onSelect={(t) => dispatch(applyTemplate(t))}
-                />
-                </LabeledInput>
-            </>
-            )}
-            {isSelectedJobLoading ? (
-            <div className={styles.spinContainer}>
-                <div>Loading...</div>
-                <Spin />
+            <div className={styles.tableContainer}>
+              {!isSelectedJobLoading && (
+              <>
+                  {hasAttemptedSubmit && !appliedTemplate && (
+                  <Alert
+                      className={styles.alert}
+                      message="Please select a template."
+                      type="error"
+                      showIcon={true}
+                      key="template-not-selected"
+                  />
+                  )}
+                  <LabeledInput
+                  className={styles.selector}
+                  label={`Select Metadata ${SCHEMA_SYNONYM}`}
+                  >
+                  <TemplateSearch
+                      allowCreate={true}
+                      disabled={isTemplateLoading || isReadOnly}
+                      error={hasAttemptedSubmit && !appliedTemplate}
+                      value={appliedTemplate?.templateId}
+                      onSelect={(t) => dispatch(applyTemplate(t))}
+                  />
+                  </LabeledInput>
+              </>
+              )}
+              {isSelectedJobLoading ? (
+              <div className={styles.spinContainer}>
+                  <div>Loading...</div>
+                  <Spin />
+              </div>
+              ) : (
+              <>
+                  {hasAttemptedSubmit && !!validationErrors.length && (
+                  <Alert
+                      className={styles.alert}
+                      message={validationErrors.map((e) => (
+                      <div key={e}>{e}</div>
+                      ))}
+                      showIcon={true}
+                      type="error"
+                      key="validation-errors"
+                  />
+                  )}
+                  <CustomDataTable hasSubmitBeenAttempted={hasAttemptedSubmit} />
+                  {uploadError && (
+                  <Alert
+                      className={styles.alert}
+                      message="Upload Failed"
+                      description={uploadError}
+                      type="error"
+                      showIcon={true}
+                      key="upload-failed"
+                  />
+                  )}
+              </>
+              )}
+              <AddMetadataPageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
             </div>
-            ) : (
-            <>
-                {hasAttemptedSubmit && !!validationErrors.length && (
-                <Alert
-                    className={styles.alert}
-                    message={validationErrors.map((e) => (
-                    <div key={e}>{e}</div>
-                    ))}
-                    showIcon={true}
-                    type="error"
-                    key="validation-errors"
-                />
-                )}
-                <CustomDataTable hasSubmitBeenAttempted={hasAttemptedSubmit} />
-                {uploadError && (
-                <Alert
-                    className={styles.alert}
-                    message="Upload Failed"
-                    description={uploadError}
-                    type="error"
-                    showIcon={true}
-                    key="upload-failed"
-                />
-                )}
-            </>
-            )}
-        <AddMetadataPageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
         </div>
-        </>
     )
 }
