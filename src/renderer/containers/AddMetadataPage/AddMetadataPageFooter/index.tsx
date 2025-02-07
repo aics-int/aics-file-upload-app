@@ -4,9 +4,8 @@ import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import PageFooter from "../../../components/PageFooter";
-import { closeUpload, selectPage } from "../../../state/route/actions";
+import { closeUpload } from "../../../state/route/actions";
 import { getSelectedUploads, getShouldBeInLocal } from "../../../state/selection/selectors";
-import { Page } from "../../../state/types";
 import {
   initiateUpload,
   submitFileMetadataUpdate,
@@ -64,15 +63,7 @@ export default function AddMetadataPageFooter(props: Props) {
               onClick={onCancel}
           >
               Cancel Upload
-          </Button>
-      {!selectedUploads.length && // If we're adding new files, not editing ones that have been uploaded.
-        <Button
-          className={styles.cancelButton}
-          onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
-        >
-          Add More Files
-        </Button>
-      }
+      </Button>
       <Button
         type="primary"
         onClick={onSubmit}
