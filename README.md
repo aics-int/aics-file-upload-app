@@ -27,7 +27,7 @@ You can configure the LIMS Host URL to a custom one by going to: File > Settings
 
 * You will need to be on the Allen Institute's VPN when developing against staging (if working from home).
 * You will need write access to the Allen Institute's file system in order to use the app.
-* If you are working on a Mac, follow these instructions for setting up your Mac for uploads: http://confluence.corp.alleninstitute.org/display/SF/Mac+Setup
+* If you are working on a Mac, follow these instructions for setting up your Mac for uploads: https://alleninstitute.atlassian.net/wiki/spaces/SF/pages/16754219/Mac+Setup
 
 ## Run Tests
 
@@ -49,7 +49,7 @@ before committing, you can find instructions
 
 ## Packaging and Publishing
 
-For an overview of our build pipeline, see [Confluence](http://confluence.corp.alleninstitute.org/display/SF/File+Upload+App+CI+Pipeline)
+For an overview of our build pipeline, see [Confluence](https://alleninstitute.atlassian.net/wiki/spaces/SF/pages/16754555/File+Upload+App+CI+Pipeline)
 
 GitHub Actions will package and publish a new version of the app for all tagged commits that start with "v".
 We create tags for snapshots and releases, so the triggering tags will generally look like
@@ -80,7 +80,7 @@ You can view the GitHub Actions build in progress here: https://github.com/aicsg
 
 ### Step 2: Test the Snapshot
 The snapshot will be stored in the [file-upload-app.allencell.org S3 bucket](https://s3.console.aws.amazon.com/s3/buckets/file-upload-app.allencell.org/?region=us-west-2&tab=objects). 
-You can find the download link for the snapshot by navigating to that bucket and clicking on the snapshot. Alternatively, if you do not have s3 access, you can access download links in [Confluence](http://confluence.corp.alleninstitute.org/display/SF/File+Upload+Application#FileUploadApplication-DownloadLinks)
+You can find the download link for the snapshot by navigating to that bucket and clicking on the snapshot.
 
 Run a set of smoke tests for each packaged version of the app. At minimum upload a file and view the upload,
 ensuring that the metadata looks correct
