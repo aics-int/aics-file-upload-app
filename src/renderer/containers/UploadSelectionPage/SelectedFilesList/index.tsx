@@ -21,18 +21,14 @@ export default function SelectedFilesList(props: SelectedFilesListProps) {
 
     return (
         <div className={styles.container}>
-            <div>{props.uploadList.length} selected file(s)</div>
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th className={styles.tableCell}>File Name</th>
-                        <th className={styles.tableCell}>Upload Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows}
-                </tbody>
-            </table>
+            <div className={styles.tableHeader}><strong>{props.uploadList.length}</strong> items will be uploaded</div>
+            <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                    <tbody>
+                        {rows}
+                    </tbody>
+                </table>
+            </div>
         </div>
     )
 }
