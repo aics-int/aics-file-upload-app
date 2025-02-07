@@ -1,4 +1,4 @@
-import { Alert, Spin } from "antd";
+import { Alert, Button, Spin } from "antd";
 import { ipcRenderer } from "electron";
 import React from 'react';
 import { useDispatch, useSelector } from "react-redux";
@@ -14,9 +14,10 @@ import {
 import { getImagingSessions } from "../../state/metadata/selectors";
 import {
   getAreSelectedUploadsInFlight,
+  getSelectedUploads,
 } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
-import { AsyncRequest } from "../../state/types";
+import { AsyncRequest, Page } from "../../state/types";
 import { applyTemplate, updateUpload } from "../../state/upload/actions";
 import {
   getUploadValidationErrors,
@@ -24,6 +25,8 @@ import {
 import CustomDataTable from '../CustomDataTable';
 
 import AddMetadataPageFooter from './AddMetadataPageFooter';
+import { selectPage } from "../../state/route/actions";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 
 const styles = require("./styles.pcss");
 
@@ -37,6 +40,7 @@ export default function AddMetadataPage() {
     const requestsInProgress = useSelector(getRequestsInProgress);
     const uploadError = useSelector(getUploadError);
     const validationErrors = useSelector(getUploadValidationErrors);
+    const selectedUploads = useSelector(getSelectedUploads);
 
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = React.useState(false);
 
@@ -73,6 +77,17 @@ export default function AddMetadataPage() {
 
     return (
         <>
+            <div>
+            {!selectedUploads.length && // If we're adding new files, not editing ones that have been uploaded.
+              <Button
+                className={styles.returnButton}
+                onClick={() => dispatch(selectPage(Page.UploadWithTemplate))}
+                type="ghost"
+              >
+                <ArrowLeftOutlined /> Add More Files to Template
+              </Button>
+            }
+            </div>
             <div className={styles.contentContainer}>
             {!isSelectedJobLoading && (
             <>
