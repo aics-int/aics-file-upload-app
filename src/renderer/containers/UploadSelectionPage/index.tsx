@@ -35,12 +35,12 @@ export default function UploadSelectionPage() {
   // Default to "File" option
   let openDialogOptions: OpenDialogOptions = {
     properties: ["openFile", "multiSelections"],
-    title: "Browse for files",
+    title: `Browse for ${UploadType.File}s`,
   }
   if (uploadType === UploadType.Multifile) {
     openDialogOptions = {
       properties: ["openDirectory", "multiSelections"],
-      title: "Browse for multifiles",
+      title: `Browse for ${UploadType.Multifile}s`,
     }
   }
 

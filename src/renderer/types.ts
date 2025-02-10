@@ -34,5 +34,6 @@ export interface SelectUploadTypeAction {
 
 export enum UploadType {
   File = 'File',
-  Multifile = 'Multifile'
+  // We use the term "Chunked File" in the UI, "Multifile" in FSS.
+  Multifile = 'Chunked File',
 }
