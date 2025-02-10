@@ -37,7 +37,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
           <div className={styles.dropZone} onClick={onBrowse}>
             <UploadOutlined className={styles.uploadIcon} />
             <div>Drag&nbsp;and&nbsp;Drop</div>
-            <div className={styles.dropZoneHelpText}>or click to browse file paths</div>
+            <div className={styles.dropZoneHelpText}>or click to browse files</div>
           </div>
         </div>
     );
