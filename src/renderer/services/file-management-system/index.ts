@@ -5,7 +5,7 @@ import { uniq } from "lodash";
 import * as uuid from "uuid";
 
 import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
-import { determineIsMultifile, extensionToFileTypeMap, FileType, getDirectorySize} from "../../util";
+import { extensionToFileTypeMap, FileType, getDirectorySize} from "../../util";
 import FileStorageService, {
   UploadStatus,
   UploadStatusResponse,
@@ -119,7 +119,7 @@ export default class FileManagementSystem {
     // Grab file details
     const source = upload.serviceFields.files[0]?.file.originalPath;
     const fileName = path.basename(source);
-    const isMultifile = determineIsMultifile(upload.jobName);
+    const isMultifile = upload.serviceFields?.multifile;
 
     const shouldBeInLocal = upload.serviceFields.files[0]?.file.shouldBeInLocal;
     const sourceStat = await fs.promises.stat(source);
