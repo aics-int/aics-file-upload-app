@@ -4,7 +4,7 @@
   overflow-y: auto;
 }
 
-.content-container {
+.table-container {
   /* Flex-parent of data table */
   display: flex;
   flex-direction: column;
@@ -31,4 +31,32 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+}
+
+.return-button {
+  border: 1px solid white; /* should blend in with background */
+  box-shadow: none;
+  color: var(--brand-primary);
+
+  display: flex;
+  align-items: center;
+
+  margin-left: 20px;
+  margin-top: 20px;
+  padding-bottom: 5px;
+  padding-top: 5px;
+
+  /* copied from antd button */
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.return-button:hover {
+  border: 1px solid #3db389;
+  color: #3db389;
+}
+
+.return-button-icon {
+  font-size: 1.2em;
+  margin-right: 8px;
+  padding-top: 4px;
 }
