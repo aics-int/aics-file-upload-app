@@ -20,7 +20,7 @@ export default function UploadTypeSelector() {
     }
 
     // Help text below the radio group. Defaults to the text for UploadType.File
-    let additionalHelpText = `Select one or more standalone files. Attempting to select ${UploadType.Multifile}s or folders will result in an error.`
+    let additionalHelpText = `Select one or more standalone files. Selecting ${UploadType.Multifile}s or folders will result in an error.`
     if (uploadType === UploadType.Multifile) {
         additionalHelpText = `Select one or more ${UploadType.Multifile} folders. Each folder in your selection will be uploaded as a single FMS record.`
     }
