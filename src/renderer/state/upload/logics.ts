@@ -737,7 +737,7 @@ const uploadWithoutMetadataLogic = createLogic({
       for (let i = 0; i < deps.action.payload.length; i += 1) {
         const stats = await fs.promises.stat(deps.action.payload[i]);
         if (stats.isDirectory()) {
-          throw Error(`Uploading folders without metadata is not allowed. Cannot upload "${deps.action.payload[i]}".`);
+          throw Error(`Uploading folders or ${UploadType.Multifile}s without metadata is not allowed. Cannot upload "${deps.action.payload[i]}".`);
         }
       }
 
