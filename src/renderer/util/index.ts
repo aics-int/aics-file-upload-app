@@ -1,9 +1,9 @@
 import { constants, promises as fsPromises } from "fs";
 import { readdir, stat } from 'fs/promises';
-import { join, resolve } from "path";
+import { join } from "path";
 
 import { trim } from "lodash";
-import { flatten, memoize, uniq } from "lodash";
+import { memoize } from "lodash";
 
 import { LIST_DELIMITER_SPLIT, MAIN_FONT_WIDTH } from "../constants";
 import { UploadType } from "../types";
@@ -67,65 +67,6 @@ export async function handleFileSelection(
   );
 
   return filepaths;
-}
-
-/**
- * For a given path, determine whether it constitutes a single FMS Upload item (for File, Multifile uploads) or
- *   a collection of multiple files each with their own FMS entry (for Directory uploads).
- * For Directory files, only immediate children of the given directory are returned (i.e. files in sub-directories
- *   are not included).
- * @param path Local file path for an upload target
- */
-async function determineFilesFromNestedPath(
-  path: string
-): Promise<string[]> {
-  const isMultifile = determineIsMultifile(path);
-  const stats = await fsPromises.stat(path);
-  if (!stats.isDirectory() || isMultifile) {
-    return [path];
-  }
-  const canRead = await canUserRead(path);
-  if (!canRead) {
-    throw new Error(`User does not have permission to read ${path}`);
-  }
-  const pathsUnderFolder = await fsPromises.readdir(path, {
-    withFileTypes: true,
-  });
-  return pathsUnderFolder
-    .filter((f) => f.isFile())
-    .map((f) => resolve(path, f.name));
-}
-
-// For each file path determines if the path leads to a directory
-// if so it extracts the file paths for the files within said directory
-// otherwise just returns the file path as is.
-export async function determineFilesFromNestedPaths(
-  paths: string[]
-): Promise<string[]> {
-  const filePaths = await Promise.all(
-    paths.flatMap(async (fullPath) => {
-      return determineFilesFromNestedPath(fullPath);
-    })
-  );
-
-  return uniq(flatten(filePaths));
-}
-
-/**
- * Use a given filepath's extension to determine if it is a "multifile".
- * @param filePath Path to the file
- */
-export function determineIsMultifile(filePath: string): boolean {
-  const multifileExtensions = ['.zarr', '.sldy'];
-  const combinedExtensions = multifileExtensions.join('|');
-
-  // "ends with one of the listed extensions, ignoring casing"
-  // otherwise written like: /.zarr|.sldy$/i
-  const matcher = new RegExp(combinedExtensions + "$", 'i');
-
-  // If the regex matches it will return an array (truthy).
-  // If the regex doesn't match it will return null (falsy).
-  return Boolean(filePath.match(matcher))
 }
 
 /**

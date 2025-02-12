@@ -22,8 +22,6 @@ import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
 import { UploadType } from "../../types";
 import {
-  determineFilesFromNestedPaths,
-  determineIsMultifile,
   extensionToFileTypeMap,
   FileType,
   splitTrimAndFilter
@@ -732,12 +730,19 @@ const uploadWithoutMetadataLogic = createLogic({
 
     let uploads: UploadJob[];
     try {
-      const filePaths = await determineFilesFromNestedPaths(
-        deps.action.payload
-      );
+      // Don't let users upload folders / multifiles without metadata.
+      // This is mainly because there's no graceful way to handle different upload types with no "Upload Type" input,
+      //  but also because we want to discourage uploads without metadata in general (and this would allow them to
+      //  upload a lot of files w/o metadata all at once).
+      for (let i = 0; i < deps.action.payload.length; i += 1) {
+        const stats = await fs.promises.stat(deps.action.payload[i]);
+        if (stats.isDirectory()) {
+          throw Error(`Uploading folders or ${UploadType.Multifile}s without metadata is not allowed. Cannot upload "${deps.action.payload[i]}".`);
+        }
+      }
+
       uploads = await Promise.all(
-          filePaths.flat().map((filePath) => {
-            const isMultifile = determineIsMultifile(filePath); // todo: simplify this whole function so this isn't called twice
+          deps.action.payload.map((filePath) => {
             return deps.fms.initiateUpload(
                 {
                   file: {
@@ -755,7 +760,7 @@ const uploadWithoutMetadataLogic = createLogic({
                 user,
                 {
                   groupId,
-                  multifile: isMultifile
+                  multifile: false // because we disallow uploading multifiles without metadata at all
                 }
             );
           })
