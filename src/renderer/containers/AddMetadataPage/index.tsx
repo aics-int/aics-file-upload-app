@@ -5,7 +5,6 @@ import React from 'react';
 import { useDispatch, useSelector } from "react-redux";
 
 import { MainProcessEvents, SCHEMA_SYNONYM } from "../../../shared/constants";
-import LabeledInput from "../../components/LabeledInput";
 import TemplateSearch from "../../components/TemplateSearch";
 import { AnnotationName } from "../../constants";
 import {
@@ -100,10 +99,7 @@ export default function AddMetadataPage() {
                       key="template-not-selected"
                   />
                   )}
-                  <LabeledInput
-                  className={styles.selector}
-                  label={`Select Metadata ${SCHEMA_SYNONYM}`}
-                  >
+                  <h1>Metadata {SCHEMA_SYNONYM}</h1>
                   <TemplateSearch
                       allowCreate={true}
                       disabled={isTemplateLoading || isReadOnly}
@@ -111,7 +107,6 @@ export default function AddMetadataPage() {
                       value={appliedTemplate?.templateId}
                       onSelect={(t) => dispatch(applyTemplate(t))}
                   />
-                  </LabeledInput>
               </>
               )}
               {isSelectedJobLoading ? (
