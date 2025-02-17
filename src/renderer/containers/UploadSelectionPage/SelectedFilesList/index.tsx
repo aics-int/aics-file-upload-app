@@ -1,3 +1,5 @@
+import { basename } from 'path';
+
 import React from 'react';
 
 import { FileModel } from '../../../state/types';
@@ -13,7 +15,7 @@ interface SelectedFilesListProps {
 export default function SelectedFilesList(props: SelectedFilesListProps) {
     const rows = props.uploadList.map(file => (
             <tr key={file.file}>
-                <td className={styles.tableCell}>{file.file}</td>
+                <td className={styles.tableCell}>{basename(file.file)}</td>
                 <td className={styles.tableCell}>{file.uploadType}</td>
             </tr>
         )
@@ -21,18 +23,14 @@ export default function SelectedFilesList(props: SelectedFilesListProps) {
 
     return (
         <div className={styles.container}>
-            <div>{props.uploadList.length} selected file(s)</div>
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th className={styles.tableCell}>File Name</th>
-                        <th className={styles.tableCell}>Upload Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows}
-                </tbody>
-            </table>
+            <div className={styles.tableHeader}><strong>{props.uploadList.length}</strong> item(s) will be uploaded</div>
+            <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                    <tbody>
+                        {rows}
+                    </tbody>
+                </table>
+            </div>
         </div>
     )
 }
