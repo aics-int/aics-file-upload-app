@@ -23,7 +23,7 @@ export default function SelectedFilesList(props: SelectedFilesListProps) {
 
     return (
         <div className={styles.container}>
-            <div className={styles.tableHeader}><strong>{props.uploadList.length}</strong> items will be uploaded</div>
+            <div className={styles.tableHeader}><strong>{props.uploadList.length}</strong> item(s) will be uploaded</div>
             <div className={styles.tableContainer}>
                 <table className={styles.table}>
                     <tbody>
