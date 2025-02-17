@@ -75,7 +75,7 @@ export default function AddMetadataPage() {
     }, [dispatch, imagingSessions]);
 
     return (
-        <div>
+        <div className={styles.page}>
             <div>
             {!selectedUploads.length && // If we're adding new files, not editing ones that have been uploaded.
               <Button
@@ -99,14 +99,16 @@ export default function AddMetadataPage() {
                       key="template-not-selected"
                   />
                   )}
-                  <h1>Metadata {SCHEMA_SYNONYM}</h1>
-                  <TemplateSearch
-                      allowCreate={true}
-                      disabled={isTemplateLoading || isReadOnly}
-                      error={hasAttemptedSubmit && !appliedTemplate}
-                      value={appliedTemplate?.templateId}
-                      onSelect={(t) => dispatch(applyTemplate(t))}
-                  />
+                  <div className={styles.dropdown}>
+                    <h1>Metadata {SCHEMA_SYNONYM}</h1>
+                    <TemplateSearch
+                        allowCreate={true}
+                        disabled={isTemplateLoading || isReadOnly}
+                        error={hasAttemptedSubmit && !appliedTemplate}
+                        value={appliedTemplate?.templateId}
+                        onSelect={(t) => dispatch(applyTemplate(t))}
+                    />
+                  </div>
               </>
               )}
               {isSelectedJobLoading ? (
@@ -140,8 +142,8 @@ export default function AddMetadataPage() {
                   )}
               </>
               )}
-              <AddMetadataPageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
             </div>
+            <AddMetadataPageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
         </div>
     )
 }
