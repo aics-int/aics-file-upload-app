@@ -1,5 +1,8 @@
 # Version Notes
 
+## 3.4.1 (2/18/25)
+- Feature: Minor styling updates to "AddMetadataPage".
+
 ## 3.4.0 (2/17/25)
 - Feature: Reworked upload flow to streamline UX and better support uploading "multifiles", AKA "chunked files".
 
