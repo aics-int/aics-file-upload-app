@@ -1,4 +1,4 @@
-import electron, { dialog, Menu, shell } from "electron";
+import electron, { dialog, Menu } from "electron";
 
 import { MainProcessEvents, SCHEMA_SYNONYM } from "../shared/constants";
 
@@ -152,14 +152,6 @@ export const setMenu = (webContents: WebContents) => {
     {
       role: "help",
       submenu: [
-        {
-          click: () => {
-            shell.openExternal(
-              "http://confluence.corp.alleninstitute.org/display/SF/Information+for+Alpha+Users"
-            );
-          },
-          label: "Learn More",
-        },
         {
           click: () => {
             dialog.showMessageBox({
