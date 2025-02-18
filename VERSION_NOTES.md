@@ -1,5 +1,8 @@
 # Version Notes
 
+## 3.4.0 (2/17/25)
+- Feature: Reworked upload flow to streamline UX and better support uploading "multifiles", AKA "chunked files".
+
 ## 3.3.4 (1/31/25)
 - Bugfix: App crashes when editing metadata of cloud-only upload
 
