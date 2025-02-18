@@ -1,4 +1,4 @@
-import electron, { dialog, Menu, shell } from "electron";
+import electron, { dialog, Menu } from "electron";
 
 import { MainProcessEvents, SCHEMA_SYNONYM } from "../shared/constants";
 
