@@ -5,7 +5,6 @@ import React from 'react';
 import { useDispatch, useSelector } from "react-redux";
 
 import { MainProcessEvents, SCHEMA_SYNONYM } from "../../../shared/constants";
-import LabeledInput from "../../components/LabeledInput";
 import TemplateSearch from "../../components/TemplateSearch";
 import { AnnotationName } from "../../constants";
 import {
@@ -76,7 +75,7 @@ export default function AddMetadataPage() {
     }, [dispatch, imagingSessions]);
 
     return (
-        <div>
+        <div className={styles.page}>
             <div>
             {!selectedUploads.length && // If we're adding new files, not editing ones that have been uploaded.
               <Button
@@ -100,18 +99,16 @@ export default function AddMetadataPage() {
                       key="template-not-selected"
                   />
                   )}
-                  <LabeledInput
-                  className={styles.selector}
-                  label={`Select Metadata ${SCHEMA_SYNONYM}`}
-                  >
-                  <TemplateSearch
-                      allowCreate={true}
-                      disabled={isTemplateLoading || isReadOnly}
-                      error={hasAttemptedSubmit && !appliedTemplate}
-                      value={appliedTemplate?.templateId}
-                      onSelect={(t) => dispatch(applyTemplate(t))}
-                  />
-                  </LabeledInput>
+                  <div className={styles.dropdown}>
+                    <h1>Metadata {SCHEMA_SYNONYM}</h1>
+                    <TemplateSearch
+                        allowCreate={true}
+                        disabled={isTemplateLoading || isReadOnly}
+                        error={hasAttemptedSubmit && !appliedTemplate}
+                        value={appliedTemplate?.templateId}
+                        onSelect={(t) => dispatch(applyTemplate(t))}
+                    />
+                  </div>
               </>
               )}
               {isSelectedJobLoading ? (
@@ -145,8 +142,8 @@ export default function AddMetadataPage() {
                   )}
               </>
               )}
-              <AddMetadataPageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
             </div>
+            <AddMetadataPageFooter onSubmit={() => setHasAttemptedSubmit(true)} />
         </div>
     )
 }

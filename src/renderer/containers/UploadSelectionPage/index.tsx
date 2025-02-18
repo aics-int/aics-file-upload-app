@@ -76,6 +76,7 @@ export default function UploadSelectionPage() {
         <PageFooter>
           <Button
               className={styles.footerButton}
+              danger
               onClick={onCancel}
           >
               Cancel Upload

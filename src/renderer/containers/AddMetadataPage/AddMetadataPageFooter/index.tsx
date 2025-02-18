@@ -60,6 +60,7 @@ export default function AddMetadataPageFooter(props: Props) {
     <PageFooter>
       <Button
               className={styles.cancelButton}
+              danger
               onClick={onCancel}
           >
               Cancel Upload
