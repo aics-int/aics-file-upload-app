@@ -225,6 +225,11 @@ const initiateUploadLogic = createLogic({
       try {
         await fms.upload(upload);
       } catch (error) {
+        if (error?.response?.status === 503) {
+          window.alert("The upload service is undergoing scheduled maintenance (503). Please try again later.");
+          upload.error = `503: Service unavailable. Details: ${error?.message}`;
+          return;
+        }
         dispatch(
           uploadFailed(
             `Something went wrong while uploading your files. Details: ${error?.message}`,
