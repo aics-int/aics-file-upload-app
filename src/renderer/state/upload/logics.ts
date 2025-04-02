@@ -226,7 +226,7 @@ const initiateUploadLogic = createLogic({
         await fms.upload(upload);
       } catch (error) {
         if (error?.response?.status === 503) {
-          window.alert("The upload service is undergoing scheduled maintenance (503). Please try again later.");
+          window.alert("The upload service is undergoing scheduled maintenance. Please try again later.");
           return;
         }
         dispatch(
