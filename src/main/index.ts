@@ -61,8 +61,12 @@ function createMainWindow() {
                   console.error("Failed to load from webpack-dev-server", error);
               });
       })
-      .catch((err: Error) =>
-          console.error("An error occurred loading React Dev Tools: ", err)
+      .catch((err: Error) => {
+          console.log(`Failed to load React devtools \n ${err}`);
+          window.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
+            console.error("Failed to load from file", error);
+          });
+        }
       )
       .finally(() => window.webContents.openDevTools());
   } else {
