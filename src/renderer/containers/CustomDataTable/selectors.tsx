@@ -16,6 +16,7 @@ import FilenameCell from "../Table/CustomCells/FilenameCell";
 import ImagingSessionCell from "../Table/CustomCells/ImagingSessionCell";
 import NotesCell from "../Table/CustomCells/NotesCell";
 import PlateBarcodeCell from "../Table/CustomCells/PlateBarcodeCell";
+import ProgramCell from "../Table/CustomCells/ProgramCell";
 import SelectionCell from "../Table/CustomCells/SelectionCell";
 import WellCell from "../Table/CustomCells/WellCell";
 import ReadOnlyCell from "../Table/DefaultCells/ReadOnlyCell";
@@ -88,6 +89,15 @@ const DEFAULT_COLUMNS: CustomColumn[] = [
 
 export const PLATE_RELATED_COLUMNS: CustomColumn[] = [
   {
+    accessor: AnnotationName.PROGRAM,
+    Cell: ProgramCell,
+    description: "Scientific program for the plate.", // change this with official labkey description
+    width: getColumnWidthForType(
+      AnnotationName.PROGRAM,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
     accessor: AnnotationName.PLATE_BARCODE,
     Cell: PlateBarcodeCell,
     // This description was pulled from LK 07/16/21
@@ -154,9 +164,13 @@ export const getTemplateColumnsForTable = createSelector(
       ...template.annotations
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .map((annotation) => {
+          const isProgram = annotation.name === AnnotationName.PROGRAM;
+          const isRequired = annotation.required || isProgram;
+
           const type = annotationTypes.find(
             (type) => type.annotationTypeId === annotation.annotationTypeId
           )?.name;
+
           const lookupTypeAttributes =
             type === ColumnType.LOOKUP
               ? {
@@ -169,7 +183,7 @@ export const getTemplateColumnsForTable = createSelector(
             accessor: annotation.name,
             description: annotation.description,
             dropdownValues: annotation.annotationOptions,
-            isRequired: annotation.required,
+            isRequired: annotation.required || annotation.name === AnnotationName.PROGRAM,
             width: getColumnWidthForType(annotation.name, type),
             ...lookupTypeAttributes,
           };
