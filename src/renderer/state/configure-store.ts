@@ -84,6 +84,7 @@ axiosRetry(axios, {
   retryCondition: (error) =>
     !!error.response?.status &&
     error.response.status >= 500 &&
+    error.response.status !== 503 && // do not retry when 503 -> downtime
     resourcesValidForRetryPaths.filter((resourcePath) =>
       error.request.responseURL.includes(resourcePath)
     ).length > 0,
