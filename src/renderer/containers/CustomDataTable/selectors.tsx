@@ -91,7 +91,8 @@ export const PLATE_RELATED_COLUMNS: CustomColumn[] = [
   {
     accessor: AnnotationName.PROGRAM,
     Cell: ProgramCell,
-    description: "Scientific program for the plate.", // change this with official labkey description
+    // This description was pulled from LK 04/17/25
+    description: "Name of project or program a dataset can be used for.",
     width: getColumnWidthForType(
       AnnotationName.PROGRAM,
       ColumnType.LOOKUP
@@ -164,9 +165,6 @@ export const getTemplateColumnsForTable = createSelector(
       ...template.annotations
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .map((annotation) => {
-          const isProgram = annotation.name === AnnotationName.PROGRAM;
-          const isRequired = annotation.required || isProgram;
-
           const type = annotationTypes.find(
             (type) => type.annotationTypeId === annotation.annotationTypeId
           )?.name;
@@ -183,7 +181,7 @@ export const getTemplateColumnsForTable = createSelector(
             accessor: annotation.name,
             description: annotation.description,
             dropdownValues: annotation.annotationOptions,
-            isRequired: annotation.required || annotation.name === AnnotationName.PROGRAM,
+            isRequired: annotation.required,
             width: getColumnWidthForType(annotation.name, type),
             ...lookupTypeAttributes,
           };

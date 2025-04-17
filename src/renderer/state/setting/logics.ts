@@ -131,7 +131,7 @@ const openEnvironmentDialogLogic = createLogic({
     if (buttonIndex > 0) {
       const urlMap: { [index: number]: LimsUrl } = {
         1: {
-          limsHost: "localhost",
+          limsHost: "ip-10-141-0-181",
           limsPort: "8080",
           limsProtocol: "http",
         },
