@@ -47,7 +47,7 @@ export const initialState: SelectionStateBranch = {
   ...uploadTabSelectionInitialState,
   user: userInfo().username,
   uploadType: null,
-  ShouldBeInLocal: true,
+  ShouldBeInLocal: false,
 };
 
 const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
