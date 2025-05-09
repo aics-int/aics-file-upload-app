@@ -1,34 +1,35 @@
 import { Select } from "antd";
 import { castArray } from "lodash";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CellProps } from "react-table";
 
-import { AnnotationName } from "../../../../constants";
-import { getAnnotations, getAnnotationOptions } from "../../../../state/metadata/selectors";
+import { getProgramOptions } from "../../../../state/metadata/selectors";
+import { requestProgramOptions } from "../../../../state/metadata/actions";
 import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
 import DisplayCell from "../../DefaultCells/DisplayCell";
+import { AnnotationOption } from "../../../../services/labkey-client/types";
+
 
 const { Option } = Select;
 
 export default function ProgramCell(props: CellProps<FileModel, string[]>) {
   const dispatch = useDispatch();
 
-  const annotations = useSelector(getAnnotations);
-  const options = useSelector(getAnnotationOptions);
+  const programOptions = useSelector(getProgramOptions);
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState<string | undefined>(props.value?.[0]);
 
-  // Get options for program annotation
-  const programAnnotation = annotations.find(a => a.name === AnnotationName.PROGRAM);
-  const programOptions = programAnnotation
-    ? options.filter(opt => opt.annotationId === programAnnotation.annotationId)
-    : [];
+  // Load program options once
+  useEffect(() => {
+    if (!programOptions.length) {
+      dispatch(requestProgramOptions());
+    }
+  }, [dispatch, programOptions.length]);
 
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [value, setValue] = React.useState<string | undefined>(props.value?.[0]);
-
-  // Derive state from changes outside of direct editing
-  React.useEffect(() => {
+  // Sync local value with prop changes
+  useEffect(() => {
     setValue(props.value?.[0]);
   }, [props.value]);
 
@@ -50,12 +51,12 @@ export default function ProgramCell(props: CellProps<FileModel, string[]>) {
         setValue(val);
         onCommit(val);
       }}
-      onBlur={() => onCommit()} // commit if user clicks outside dropdown (keeps selection)
+      onBlur={() => onCommit()}
       placeholder="Select program"
       style={{ width: "100%" }}
     >
-      {programOptions.map((opt) => (
-        <Option key={opt.value} value={opt.value}>
+      {programOptions.map((opt: AnnotationOption) => (
+        <Option key={opt.annotationOptionId} value={opt.value}>
           {opt.value}
         </Option>
       ))}

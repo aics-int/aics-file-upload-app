@@ -307,6 +307,25 @@ export default class LabkeyClient extends HttpCacheClient {
   }
 
   /**
+   * Get all options for program from labkey
+   */
+  public async getProgramOptions(): Promise<AnnotationOption[]> {
+    const filters = ["query.AnnotationId~eq=153"];
+    const query = LabkeyClient.getSelectRowsURL(
+      "filemetadata",
+      "AnnotationOption",
+      filters
+    );
+  
+    const response = await this.get(query);
+  
+    return response.rows.map((row: any) => ({
+      annotationOptionId: row.AnnotationOptionId,
+      value: row.Value,
+    }));
+  }
+
+  /**
    * Retrieves all units
    */
   public async getUnits(): Promise<Unit[]> {
