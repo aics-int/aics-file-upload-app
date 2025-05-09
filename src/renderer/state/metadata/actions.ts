@@ -1,10 +1,9 @@
-import { BarcodePrefix } from "../../services/labkey-client/types";
+import { BarcodePrefix, AnnotationOption } from "../../services/labkey-client/types";
 import {
   AsyncRequest,
   MetadataStateBranch,
   PlateBarcodeToPlates,
 } from "../types";
-
 import {
   CLEAR_OPTIONS_FOR_LOOKUP,
   CREATE_BARCODE,
@@ -34,8 +33,6 @@ import {
   ResetHistoryAction,
   SetPlateBarcodeToPlatesAction,
 } from "./types";
-
-import { AnnotationOption } from "../../services/labkey-client/types";
 
 export function requestAnnotationUsage(
   annotationId: number

@@ -1,13 +1,11 @@
 import { BarcodePrefix,
   AnnotationOption,
 } from "../../services/labkey-client/types";
-
 import {
   AsyncRequest,
   MetadataStateBranch,
   PlateBarcodeToPlates,
 } from "../types";
-
 import { RECEIVE_PROGRAM_OPTIONS } from "./constants";
 
 export interface GetOptionsForLookupAction {

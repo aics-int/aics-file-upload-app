@@ -3,13 +3,12 @@ import { castArray } from "lodash";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CellProps } from "react-table";
-
-import { getProgramOptions } from "../../../../state/metadata/selectors";
+import { AnnotationOption } from "../../../../services/labkey-client/types";
 import { requestProgramOptions } from "../../../../state/metadata/actions";
+import { getProgramOptions } from "../../../../state/metadata/selectors";
 import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
 import DisplayCell from "../../DefaultCells/DisplayCell";
-import { AnnotationOption } from "../../../../services/labkey-client/types";
 
 
 const { Option } = Select;
