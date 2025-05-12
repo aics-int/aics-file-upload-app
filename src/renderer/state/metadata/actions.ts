@@ -1,10 +1,13 @@
-import { BarcodePrefix, AnnotationOption } from "../../services/labkey-client/types";
-
+import { 
+  BarcodePrefix, 
+  AnnotationOption 
+} from "../../services/labkey-client/types";
 import {
   AsyncRequest,
   MetadataStateBranch,
   PlateBarcodeToPlates,
 } from "../types";
+
 import {
   CLEAR_OPTIONS_FOR_LOOKUP,
   CREATE_BARCODE,
