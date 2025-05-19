@@ -38,6 +38,7 @@ const IN_SEPARATOR = "%3B";
 const FMS_FILE_TABLE_NAME = "file";
 const FMS_FILE_FILE_NAME = "Filename";
 const FMS_FILE_FILE_ID = "FileId";
+const PROGRAM_ANNOTATION_ID = 153;
 
 export default class LabkeyClient extends HttpCacheClient {
   public static createFilter(
@@ -310,7 +311,7 @@ export default class LabkeyClient extends HttpCacheClient {
    * Get all options for program from labkey
    */
   public async getProgramOptions(): Promise<AnnotationOption[]> {
-    const filters = ["query.AnnotationId~eq=153"];
+    const filters = [`query.AnnotationId~eq=${PROGRAM_ANNOTATION_ID}`];
     const query = LabkeyClient.getSelectRowsURL(
       "filemetadata",
       "AnnotationOption",
