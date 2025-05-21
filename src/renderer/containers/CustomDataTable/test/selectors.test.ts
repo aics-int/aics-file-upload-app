@@ -208,7 +208,7 @@ describe("CustomDataTable selectors", () => {
       });
 
       // Assert
-      expect(actual).to.be.lengthOf(6);
+      expect(actual).to.be.lengthOf(7);
       expect(actual).deep.equal([
         ...PLATE_RELATED_COLUMNS,
         ...annotations.map((a, index) => {
@@ -251,8 +251,8 @@ describe("CustomDataTable selectors", () => {
       const actual = getTemplateColumnsForTable(state);
 
       // Assert
-      expect(actual).to.be.lengthOf(6);
-      actual.slice(3).forEach((column, index) => {
+      expect(actual).to.be.lengthOf(7);
+      actual.slice(4).forEach((column, index) => { // 4 default "plate related" columns
         const match = annotations.find((a) => a.orderIndex === index);
         expect(column.accessor).to.deep.equal(match?.name);
       });
@@ -275,8 +275,8 @@ describe("CustomDataTable selectors", () => {
       });
 
       // Assert
-      expect(actual.length).to.equal(9);
-      expect(actual.filter((c) => !c.isReadOnly)).to.be.lengthOf(9);
+      expect(actual.length).to.equal(10);
+      expect(actual.filter((c) => !c.isReadOnly)).to.be.lengthOf(10);
       expect(actual.some((c) => c.id === "selection")).to.be.true;
       expect(actual.some((c) => c.accessor === "file")).to.be.true;
       expect(actual.some((c) => c.accessor === AnnotationName.NOTES)).to.be
@@ -286,6 +286,7 @@ describe("CustomDataTable selectors", () => {
       expect(actual.some((c) => c.accessor === AnnotationName.WELL)).to.be.true;
       expect(actual.some((c) => c.accessor === AnnotationName.IMAGING_SESSION))
         .to.be.true;
+      expect(actual.some((c) => c.accessor === AnnotationName.PROGRAM)).to.be.true;
     });
 
     it("sets columns to read only", () => {
@@ -307,7 +308,7 @@ describe("CustomDataTable selectors", () => {
       });
 
       // Assert
-      expect(actual.length).to.equal(8);
+      expect(actual.length).to.equal(9);
       // Assert: ensure the only non-readonly columns are the defaults
       expect(actual.every((c) => c.isReadOnly)).to.be.true;
       expect(actual.some((c) => c.id === "selection")).to.be.false;
@@ -319,6 +320,7 @@ describe("CustomDataTable selectors", () => {
       expect(actual.some((c) => c.accessor === AnnotationName.WELL)).to.be.true;
       expect(actual.some((c) => c.accessor === AnnotationName.IMAGING_SESSION))
         .to.be.true;
+      expect(actual.some((c) => c.accessor === AnnotationName.PROGRAM)).to.be.true;
     });
   });
 });

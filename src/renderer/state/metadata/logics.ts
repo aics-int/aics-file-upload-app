@@ -22,7 +22,7 @@ import {
   ReduxLogicTransformDependencies,
 } from "../types";
 
-import { receiveAnnotationUsage, receiveMetadata } from "./actions";
+import { receiveAnnotationUsage, receiveMetadata, receiveProgramOptions } from "./actions";
 import {
   CREATE_BARCODE,
   GET_BARCODE_SEARCH_RESULTS,
@@ -30,6 +30,7 @@ import {
   GET_TEMPLATES,
   REQUEST_ANNOTATION_USAGE,
   REQUEST_METADATA,
+  GET_PROGRAM_OPTIONS,
 } from "./constants";
 import { getAnnotationLookups, getAnnotations, getLookups } from "./selectors";
 import {
@@ -317,6 +318,28 @@ const requestTemplatesLogicLogic = createLogic({
   type: GET_TEMPLATES,
 });
 
+const getProgramOptionsLogic = createLogic({
+  latest: true,
+  process: async (
+    { labkeyClient }: ReduxLogicProcessDependencies,
+  dispatch: ReduxLogicNextCb,
+  done: ReduxLogicDoneCb
+) => {
+    const request = () => labkeyClient.getProgramOptions();
+
+    try {
+      const programOptions = await getWithRetry(request, dispatch);
+      dispatch(receiveProgramOptions(programOptions));
+    } catch (e) {
+      const error = `Could not retrieve program options: ${e.message}`;
+      console.error(error);
+      dispatch(requestFailed(error, AsyncRequest.GET_PROGRAM_OPTIONS));
+    }
+    done();
+  },
+  type: GET_PROGRAM_OPTIONS,
+});
+
 export default [
   createBarcodeLogic,
   getBarcodeSearchResultsLogic,
@@ -324,4 +347,5 @@ export default [
   requestMetadataLogic,
   requestOptionsForLookupLogic,
   requestTemplatesLogicLogic,
+  getProgramOptionsLogic,
 ];

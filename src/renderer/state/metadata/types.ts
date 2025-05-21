@@ -1,9 +1,13 @@
-import { BarcodePrefix } from "../../services/labkey-client/types";
+import { BarcodePrefix,
+  AnnotationOption,
+} from "../../services/labkey-client/types";
 import {
   AsyncRequest,
   MetadataStateBranch,
   PlateBarcodeToPlates,
 } from "../types";
+
+import { RECEIVE_PROGRAM_OPTIONS } from "./constants";
 
 export interface GetOptionsForLookupAction {
   payload: {
@@ -64,4 +68,9 @@ export interface ResetHistoryAction {
 export interface SetPlateBarcodeToPlatesAction {
   payload: PlateBarcodeToPlates;
   type: string;
+}
+
+export interface ReceiveProgramOptionsAction {
+  type: typeof RECEIVE_PROGRAM_OPTIONS;
+  payload: AnnotationOption[];
 }

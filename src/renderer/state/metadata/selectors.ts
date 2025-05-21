@@ -137,3 +137,5 @@ export const getUserIdToDisplayName = createSelector(
       {}
     )
 );
+
+export const getProgramOptions = (state: State) => state.metadata.programOptions;

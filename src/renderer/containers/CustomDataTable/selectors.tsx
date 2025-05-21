@@ -16,6 +16,7 @@ import FilenameCell from "../Table/CustomCells/FilenameCell";
 import ImagingSessionCell from "../Table/CustomCells/ImagingSessionCell";
 import NotesCell from "../Table/CustomCells/NotesCell";
 import PlateBarcodeCell from "../Table/CustomCells/PlateBarcodeCell";
+import ProgramCell from "../Table/CustomCells/ProgramCell";
 import SelectionCell from "../Table/CustomCells/SelectionCell";
 import WellCell from "../Table/CustomCells/WellCell";
 import ReadOnlyCell from "../Table/DefaultCells/ReadOnlyCell";
@@ -88,6 +89,16 @@ const DEFAULT_COLUMNS: CustomColumn[] = [
 
 export const PLATE_RELATED_COLUMNS: CustomColumn[] = [
   {
+    accessor: AnnotationName.PROGRAM,
+    Cell: ProgramCell,
+    // This description was pulled from LK 04/17/25
+    description: "Name of project or program a dataset can be used for.",
+    width: getColumnWidthForType(
+      AnnotationName.PROGRAM,
+      ColumnType.LOOKUP
+    ),
+  },
+  {
     accessor: AnnotationName.PLATE_BARCODE,
     Cell: PlateBarcodeCell,
     // This description was pulled from LK 07/16/21
@@ -157,6 +168,7 @@ export const getTemplateColumnsForTable = createSelector(
           const type = annotationTypes.find(
             (type) => type.annotationTypeId === annotation.annotationTypeId
           )?.name;
+
           const lookupTypeAttributes =
             type === ColumnType.LOOKUP
               ? {

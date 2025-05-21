@@ -15,6 +15,7 @@ import {
   LabkeyPlateResponse,
   LabkeyTemplate,
   ScalarType,
+  AnnotationOption,
 } from "../../../services/labkey-client/types";
 import MetadataManagementService from "../../../services/metadata-management-service";
 import { requestFailed } from "../../actions";
@@ -49,6 +50,8 @@ import {
   requestMetadata,
   requestTemplates,
   retrieveOptionsForLookup,
+  requestProgramOptions, 
+  receiveProgramOptions,
 } from "../actions";
 import { getBarcodeSearchResults } from "../selectors";
 
@@ -306,6 +309,31 @@ describe("Metadata logics", () => {
       // after
       expect(getBarcodeSearchResults(store.getState())).to.be.empty;
       expect(labkeyClient.getPlatesByBarcode.called).to.be.false;
+    });
+  });
+  describe("requestProgramOptions", () => {
+    it("dispatches receiveProgramOptions given OK response", async () => {
+      const fakeOptions: AnnotationOption[] = [
+        { annotationOptionId: 1, annotationId: 153, value: "Variance" },
+        { annotationOptionId: 2, annotationId: 153, value: "EMT" },
+      ];
+  
+      labkeyClient.getProgramOptions.resolves(fakeOptions);
+  
+      await runRequestSucceededTest(
+        requestProgramOptions(),
+        receiveProgramOptions(fakeOptions)
+      );
+    });
+  
+    it("dispatches requestFailed given error", async () => {
+      labkeyClient.getProgramOptions.rejects(new Error("backend boom"));
+  
+      await runRequestFailedTest(
+        requestProgramOptions(),
+        "Could not retrieve program options: backend boom",
+        AsyncRequest.GET_PROGRAM_OPTIONS
+      );
     });
   });
 });

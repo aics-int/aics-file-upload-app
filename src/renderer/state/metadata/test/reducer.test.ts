@@ -1,5 +1,6 @@
 import { expect } from "chai";
 
+import { AnnotationOption } from "../../../services/labkey-client/types";
 import {
   viewUploads,
   resetUpload,
@@ -15,6 +16,7 @@ import {
   clearOptionsForLookup,
   receiveMetadata,
   resetHistory,
+  receiveProgramOptions,
 } from "../actions";
 import reducer from "../reducer";
 import { initialState } from "../reducer";
@@ -99,4 +101,20 @@ describe("metadata reducer", () => {
       expect(result.currentUploadFilePath).to.not.be.undefined;
     });
   });
+  describe("receiveProgramOptions", () => {
+    it("sets programOptions in state", () => {
+      // Got these from labkey
+      const fakeOptions: AnnotationOption[] = [
+        { annotationOptionId: 150, annotationId: 153, value: "Variance" },
+        { annotationOptionId: 151, annotationId: 153, value: "EMT" },
+        { annotationOptionId: 152, annotationId: 153, value: "Diff_states" },
+        { annotationOptionId: 153, annotationId: 153, value: "NucMorph" },
+        { annotationOptionId: 154, annotationId: 153, value: "IntegratedNucleus" },
+      ];
+  
+      const result = reducer(initialState, receiveProgramOptions(fakeOptions));
+      expect(result.programOptions).to.deep.equal(fakeOptions);
+    });
+  });
 });
+

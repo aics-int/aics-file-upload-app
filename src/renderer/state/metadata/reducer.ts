@@ -24,6 +24,7 @@ import {
   RECEIVE_METADATA,
   RESET_HISTORY,
   SET_PLATE_BARCODE_TO_PLATES,
+  RECEIVE_PROGRAM_OPTIONS,
 } from "./constants";
 import {
   ClearOptionsForLookupAction,
@@ -31,6 +32,7 @@ import {
   ReceiveMetadataAction,
   ResetHistoryAction,
   SetPlateBarcodeToPlatesAction,
+  ReceiveProgramOptionsAction,
 } from "./types";
 
 export const initialState: MetadataStateBranch = {
@@ -50,6 +52,7 @@ export const initialState: MetadataStateBranch = {
   templates: [],
   units: [],
   users: [],
+  programOptions: [],
 };
 
 const actionToConfigMap: TypeToDescriptionMap<MetadataStateBranch> = {
@@ -153,6 +156,17 @@ const actionToConfigMap: TypeToDescriptionMap<MetadataStateBranch> = {
     ) => ({
       ...state,
       currentUploadFilePath: action.payload,
+    }),
+  },
+  [RECEIVE_PROGRAM_OPTIONS]: {
+    accepts: (action: AnyAction): action is ReceiveProgramOptionsAction =>
+      action.type === RECEIVE_PROGRAM_OPTIONS,
+    perform: (
+      state: MetadataStateBranch,
+      action: ReceiveProgramOptionsAction
+    ) => ({
+      ...state,
+      programOptions: action.payload,
     }),
   },
 };

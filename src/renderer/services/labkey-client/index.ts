@@ -38,6 +38,7 @@ const IN_SEPARATOR = "%3B";
 const FMS_FILE_TABLE_NAME = "file";
 const FMS_FILE_FILE_NAME = "Filename";
 const FMS_FILE_FILE_ID = "FileId";
+const PROGRAM_ANNOTATION_ID = 153;
 
 export default class LabkeyClient extends HttpCacheClient {
   public static createFilter(
@@ -304,6 +305,25 @@ export default class LabkeyClient extends HttpCacheClient {
     const query = LabkeyClient.getSelectRowsURL(LK_SCHEMA.UPLOADER, "Template");
     const response = await this.get(query);
     return response.rows;
+  }
+
+  /**
+   * Get all options for program from labkey
+   */
+  public async getProgramOptions(): Promise<AnnotationOption[]> {
+    const filters = [`query.AnnotationId~eq=${PROGRAM_ANNOTATION_ID}`];
+    const query = LabkeyClient.getSelectRowsURL(
+      "filemetadata",
+      "AnnotationOption",
+      filters
+    );
+  
+    const response = await this.get(query);
+  
+    return response.rows.map((row: any) => ({
+      annotationOptionId: row.AnnotationOptionId,
+      value: row.Value,
+    }));
   }
 
   /**
