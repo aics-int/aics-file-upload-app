@@ -1,4 +1,7 @@
-import { BarcodePrefix } from "../../services/labkey-client/types";
+import { 
+  BarcodePrefix, 
+  AnnotationOption 
+} from "../../services/labkey-client/types";
 import {
   AsyncRequest,
   MetadataStateBranch,
@@ -17,6 +20,8 @@ import {
   REQUEST_METADATA,
   RESET_HISTORY,
   SET_PLATE_BARCODE_TO_PLATES,
+  GET_PROGRAM_OPTIONS,
+  RECEIVE_PROGRAM_OPTIONS,
 } from "./constants";
 import { initialState } from "./reducer";
 import {
@@ -133,5 +138,18 @@ export function createBarcode(
 export function resetHistory(): ResetHistoryAction {
   return {
     type: RESET_HISTORY,
+  };
+}
+
+export function requestProgramOptions() {
+  return {
+    type: GET_PROGRAM_OPTIONS,
+  };
+}
+
+export function receiveProgramOptions(options: AnnotationOption[]) {
+  return {
+    type: RECEIVE_PROGRAM_OPTIONS,
+    payload: options,
   };
 }

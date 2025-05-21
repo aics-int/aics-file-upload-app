@@ -35,3 +35,13 @@ export const SET_PLATE_BARCODE_TO_PLATES = makeConstant(
   BRANCH_NAME,
   "set-plate-barcode-to-plates"
 );
+
+export const GET_PROGRAM_OPTIONS = makeConstant(
+  BRANCH_NAME,
+  "get-program-options"
+);
+
+export const RECEIVE_PROGRAM_OPTIONS = makeConstant(
+  BRANCH_NAME,
+  "receive-program-options"
+);
