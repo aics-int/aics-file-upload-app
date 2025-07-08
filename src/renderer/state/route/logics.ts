@@ -174,6 +174,10 @@ function convertUploadRequestsToUploadStateBranch(
           }
 
           if (!annotationDefinition) {
+            // Let Program skip this check
+            if (annotation.annotationId === 153) {
+              return keyToMetadataSoFar;
+            }
             throw new Error(
                 `Unable to find matching Annotation for Annotation ID: ${annotation.annotationId}`
             );

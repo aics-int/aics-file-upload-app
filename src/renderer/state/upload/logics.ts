@@ -378,8 +378,10 @@ function formatUpload(
         }
       }
     }
-
     formattedUpload[key] = value;
+    if (key === AnnotationName.PROGRAM && value?.length) {
+      formattedUpload[key] = value;
+    }
   });
 
   return formattedUpload;

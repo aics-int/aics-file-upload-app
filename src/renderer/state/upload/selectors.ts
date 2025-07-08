@@ -88,6 +88,7 @@ export const getUploadAsTableRows = createSelector(
       [AnnotationName.PLATE_BARCODE]:
         fileMetadata[AnnotationName.PLATE_BARCODE] || [],
       [AnnotationName.WELL]: fileMetadata[AnnotationName.WELL] || [],
+      [AnnotationName.PROGRAM]: fileMetadata[AnnotationName.PROGRAM] || [],
     }))
 );
 

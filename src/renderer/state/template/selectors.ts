@@ -58,7 +58,12 @@ export const getSaveTemplateRequest = createSelector(
 
 // includes annotation info for required fields - well
 // and fills out annotation type name
-const DEFAULT_ANNOTATION_NAMES = [AnnotationName.NOTES, AnnotationName.WELL];
+const DEFAULT_ANNOTATION_NAMES = [
+  AnnotationName.NOTES,
+  AnnotationName.WELL,
+  AnnotationName.PROGRAM,
+];
+
 export const getCompleteAppliedTemplate = createSelector(
   [getAnnotations, getAnnotationTypes, getAppliedTemplate],
   (
@@ -66,45 +71,54 @@ export const getCompleteAppliedTemplate = createSelector(
     annotationTypes: AnnotationType[],
     appliedTemplate?: Template
   ): TemplateWithTypeNames | undefined => {
-    if (!appliedTemplate) {
-      return undefined;
-    }
+    if (!appliedTemplate) return undefined;
 
     if (!annotationTypes) {
       throw new Error("Missing Annotation Types");
     }
 
+    const extraAnnotations: any = [];
+
+    DEFAULT_ANNOTATION_NAMES.forEach((name, index) => {
+      const annotation = annotations.find((a) => a.name === name);
+
+      if (!annotation) {
+        if (name === AnnotationName.PROGRAM) {
+          return; // Skip Program if it's not defined
+        }
+        throw new Error("Could not get necessary annotation information");
+      }
+
+      extraAnnotations.push({
+        ...annotation,
+        orderIndex: index,
+        required: false,
+        type: annotation["annotationTypeId/Name"],
+      });
+    });
+
+    const completedAnnotations = [
+      ...extraAnnotations,
+      ...appliedTemplate.annotations.map((a) => {
+        const type = annotationTypes.find(
+          (at) => at.annotationTypeId === a.annotationTypeId
+        );
+        if (!type) {
+          throw new Error(
+            `Could not find annotation type matching annotationTypeId=${a.annotationTypeId}`
+          );
+        }
+        return {
+          ...a,
+          orderIndex: a.orderIndex + extraAnnotations.length,
+          type: type.name,
+        };
+      }),
+    ];
+
     return {
       ...appliedTemplate,
-      annotations: [
-        ...DEFAULT_ANNOTATION_NAMES.map((name, index) => {
-          const annotation = annotations.find((a) => a.name === name);
-          if (!annotation) {
-            throw new Error("Could not get necessary annotation information");
-          }
-          return {
-            ...annotation,
-            orderIndex: index,
-            required: false,
-            type: annotation["annotationTypeId/Name"],
-          };
-        }),
-        ...appliedTemplate.annotations.map((a) => {
-          const type = annotationTypes.find(
-            (at) => at.annotationTypeId === a.annotationTypeId
-          );
-          if (!type) {
-            throw new Error(
-              `Could not find annotation type matching annotationTypeId=${a.annotationTypeId}`
-            );
-          }
-          return {
-            ...a,
-            orderIndex: a.orderIndex + DEFAULT_ANNOTATION_NAMES.length,
-            type: type.name,
-          };
-        }),
-      ],
+      annotations: completedAnnotations,
     };
   }
 );

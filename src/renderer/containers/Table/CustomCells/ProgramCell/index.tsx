@@ -37,7 +37,7 @@ export default function ProgramCell(props: CellProps<FileModel, string[]>) {
     setIsEditing(false);
     dispatch(
       updateUpload(props.row.id, {
-        [props.column.id]: castArray(program),
+        [props.column.id]: program ? castArray(program) : undefined,
       })
     );
   }
