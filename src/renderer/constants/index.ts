@@ -24,3 +24,6 @@ export const DAY_AS_MS = 24 * HOUR_AS_MS;
 // Delay before mouseover tooltips appear / disappear in seconds
 export const TOOLTIP_ENTER_DELAY = 0.5;
 export const TOOLTIP_LEAVE_DELAY = 0;
+
+// Program annotation ID
+export const PROGRAM_ANNOTATION_ID = 153;
