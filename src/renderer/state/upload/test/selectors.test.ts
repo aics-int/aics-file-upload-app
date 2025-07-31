@@ -43,7 +43,7 @@ import {
   getUploadRequests,
 } from "../selectors";
 import { getUploadAsTableRows, getUploadValidationErrors, getAnnotations } from "../selectors";
-import { FileType, MMSAnnotationValueRequest } from "../types";
+import { FileType } from "../types";
 
 
 // utility function to allow us to deeply compare expected and actual output without worrying about order
