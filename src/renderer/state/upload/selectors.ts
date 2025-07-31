@@ -356,7 +356,7 @@ export const getUploadValidationErrors = createSelector(
 );
 
 // the userData relates to the same file
-const getAnnotations = (
+export const getAnnotations = (
   fileMetadata: FileModel,
   appliedTemplate: TemplateWithTypeNames
 ): MMSAnnotationValueRequest[] => {
