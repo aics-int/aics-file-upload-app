@@ -2,7 +2,8 @@ import { expect } from "chai";
 import { orderBy } from "lodash";
 import * as moment from "moment";
 
-import { AnnotationName } from "../../../constants";
+import { AnnotationName, PROGRAM_ANNOTATION_ID } from "../../../constants";
+import { ColumnType } from "../../../services/labkey-client/types";
 import { TemplateAnnotation } from "../../../services/metadata-management-service/types";
 import { UploadRequest } from "../../../services/types";
 import { Duration } from "../../../types";
@@ -41,8 +42,9 @@ import {
   getUploadKeyToAnnotationErrorMap,
   getUploadRequests,
 } from "../selectors";
-import { getUploadAsTableRows, getUploadValidationErrors } from "../selectors";
+import { getUploadAsTableRows, getUploadValidationErrors, getAnnotations } from "../selectors";
 import { FileType } from "../types";
+
 
 // utility function to allow us to deeply compare expected and actual output without worrying about order
 const standardizeUploads = (uploadRequests: UploadRequest[]): UploadRequest[] =>
@@ -1090,6 +1092,49 @@ describe("Upload selectors", () => {
               "Unexpected format for annotation type. Hover red x icons for more information."
           )
       ).to.be.true;
+    });
+  });
+
+  describe("getAnnotations", () => {
+    const baseAnnotation = {
+      annotationId: 1000,
+      type: ColumnType.TEXT,
+    };
+
+    const appliedTemplate = {
+      annotations: [
+        { name: "Test Annotation", ...baseAnnotation },
+        {
+          name: AnnotationName.PROGRAM,
+          annotationId: PROGRAM_ANNOTATION_ID,
+          type: ColumnType.LOOKUP,
+        },
+      ],
+    };
+
+    it("should include program annotation if provided and not already in customData", () => {
+      const fileMetadataValid = {
+        [AnnotationName.PROGRAM]: ["Variance"],
+      } as any;
+
+      const result = getAnnotations(fileMetadataValid, appliedTemplate as any);
+
+      expect(result).to.deep.equal([
+        {
+          annotationId: PROGRAM_ANNOTATION_ID,
+          values: ["Variance"],
+        },
+      ]);
+    });
+
+    it("should not include program annotation if blank", () => {
+      const fileMetadataBlank = {
+        [AnnotationName.PROGRAM]: [],
+      } as any;
+
+      const result = getAnnotations(fileMetadataBlank, appliedTemplate as any);
+
+      expect(result).to.be.an("array").that.is.empty;
     });
   });
 });

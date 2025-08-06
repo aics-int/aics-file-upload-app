@@ -23,6 +23,7 @@ import {
   HOUR_AS_MS,
   LIST_DELIMITER_SPLIT,
   MINUTE_AS_MS,
+  PROGRAM_ANNOTATION_ID,
 } from "../../constants";
 import { ColumnType } from "../../services/labkey-client/types";
 import { UploadRequest } from "../../services/types";
@@ -355,7 +356,7 @@ export const getUploadValidationErrors = createSelector(
 );
 
 // the userData relates to the same file
-const getAnnotations = (
+export const getAnnotations = (
   fileMetadata: FileModel,
   appliedTemplate: TemplateWithTypeNames
 ): MMSAnnotationValueRequest[] => {
@@ -370,7 +371,7 @@ const getAnnotations = (
   );
 
   const customData = removeExcludedFields(fileMetadata);
-  return Object.entries(customData).reduce(
+  const annotations = Object.entries(customData).reduce(
     (annotationsAccum, [annotationName, value]) => {
       const annotation = annotationNameToAnnotationMap[annotationName];
       if (annotation) {
@@ -436,6 +437,24 @@ const getAnnotations = (
     },
     [] as MMSAnnotationValueRequest[]
   );
+  const programValue = fileMetadata[AnnotationName.PROGRAM];
+  const programPresent = Array.isArray(programValue)
+    ? !isEmpty(programValue)
+    : !isNil(programValue);
+
+  if (programPresent) {
+    const alreadyIncluded = annotations.some(
+      (ann) => ann.annotationId === PROGRAM_ANNOTATION_ID
+    );
+    if (!alreadyIncluded) {
+      annotations.push({
+        annotationId: PROGRAM_ANNOTATION_ID,
+        values: castArray(programValue),
+      });
+    }
+  }
+
+  return annotations;
 };
 
 export const getUploadRequests = createSelector(
