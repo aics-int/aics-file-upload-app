@@ -8,7 +8,7 @@ jobs:
       - name: Initialize
         uses: actions/setup-node@v1
         with:
-          node-version: 22
+          node-version: 22.17
       - name: Install Dependencies
         run: npm install
       - name: Lint
