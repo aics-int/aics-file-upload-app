@@ -69,7 +69,7 @@ interface FileRecord {
  * This acts as an interface for interacting with the File Storage Service (FSS).
  */
 export default class FileStorageService extends HttpCacheClient {
-  public static readonly ENDPOINT = "fss2/v3.0";
+  public static readonly ENDPOINT = "fss2/v4.0";
   private static readonly BASE_FILE_PATH = `${FileStorageService.ENDPOINT}/file`;
   private static readonly BASE_UPLOAD_PATH = `${FileStorageService.ENDPOINT}/upload`;
   constructor(httpClient: HttpClient, localStorage: LocalStorage) {
@@ -100,24 +100,17 @@ export default class FileStorageService extends HttpCacheClient {
   public registerUpload(
     fileName: string,
     fileType: FileType,
-    fileSize: number,
     localNasPath?: string,
     isMultifile?: boolean,
     shouldBeInLocal?: boolean,
   ): Promise<UploadStatusResponse> {
-    const url = `${FileStorageService.BASE_UPLOAD_PATH}/register`;
+    const url = `${FileStorageService.BASE_UPLOAD_PATH}`;
     const postBody = {
-      // Unfortunately FSS expects snake_case
-      // so the conversion must be manual each request
-      file_name: fileName,
-      file_type: fileType,
-      // Unfortunately FSS expects snake_case
-      // so the conversion must be manual each request
-      file_size: fileSize,
-      local_nas_shortcut: localNasPath !== undefined,
-      local_nas_path: localNasPath,
+      fileName: fileName,
+      fileType: fileType,
+      localNasPath: localNasPath,
       multifile: !!isMultifile,
-      should_be_in_local: shouldBeInLocal,
+      shouldBeInLocal: shouldBeInLocal,
     };
     return this.post<UploadStatusResponse>(
       url,

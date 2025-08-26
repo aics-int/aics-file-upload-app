@@ -147,7 +147,6 @@ export default class FileManagementSystem {
     const registration = await this.fss.registerUpload(
       fileName,
       fileType,
-      fileSize,
       upload.serviceFields.localNasShortcut ? this.posixPath(source) : undefined,
       isMultifile,
       shouldBeInLocal,
