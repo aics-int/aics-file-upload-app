@@ -23,7 +23,6 @@ import {
 } from "../services";
 import { FileManagementSystem, FileStorageService } from "../services";
 import ApplicationInfoService from "../services/application-info-service";
-import ChunkedFileReader from "../services/file-management-system/ChunkedFileReader";
 
 import EnvironmentAwareStorage from "./EnvironmentAwareStorage";
 import { addEvent } from "./feedback/actions";
@@ -77,7 +76,7 @@ const storage = new EnvironmentAwareStorage(new ElectronStore());
 // issues with Electron and/or Node running on
 // Linux (https://github.com/electron/electron/issues/10570).
 axios.defaults.adapter = require("axios/lib/adapters/xhr");
-const resourcesValidForRetryPaths = [FileStorageService.ENDPOINT];
+const resourcesValidForRetryPaths = [FileStorageService.ENDPOINT_V4];
 axiosRetry(axios, {
   retries: 3,
   retryDelay: () => 10000,
@@ -101,7 +100,6 @@ const applicationInfoService = new ApplicationInfoService(
 export const reduxLogicDependencies: Partial<ReduxLogicExtraDependencies> = {
   applicationInfoService,
   fms: new FileManagementSystem({
-    fileReader: new ChunkedFileReader(),
     fss: new FileStorageService(httpClient, storage),
     jss: jssClient,
     mms: mmsClient,

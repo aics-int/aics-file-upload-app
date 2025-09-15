@@ -18,40 +18,55 @@ import { Step } from "../Table/CustomCells/StatusCell/Step";
  * Reports progress on the pre-upload MD5 step, the upload step, and then the post-upload MD5 step.
  */
 function handleFSSJobUpdate(job: FSSUpload, dispatch: Dispatch<any>) {
-  const totalBytes = job.serviceFields.fileSize || 0; // 0 is a safe default, but in practice filesize is initialized immediately after job creation.
-  if (
-    job.serviceFields?.preUploadMd5 &&
-    job.serviceFields.preUploadMd5 !== job.serviceFields.fileSize
-  ) {
-    dispatch(
-      updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: job.serviceFields?.preUploadMd5,
-        totalBytes,
-        step: Step.ONE,
-      })
-    );
-  } else if (
-    job.serviceFields?.currentFileSize &&
-    job.serviceFields.currentFileSize !== job.serviceFields?.fileSize
-  ) {
-    dispatch(
-      updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: job.serviceFields?.currentFileSize,
-        totalBytes,
+  const totalBytes = job.serviceFields.fileSize ?? 0;
+  const copyProgress = job.serviceFields.copyToFmsCacheProgress; // number | undefined
+  const checksumProgress = job.serviceFields.checksumProgress ?? 0;
+  const s3Progress = job.serviceFields.s3UploadProgress ?? 0;
+
+  const isHybrid = typeof copyProgress === "number";
+
+  // cloud only upload
+  if (!isHybrid) {
+    if (checksumProgress < totalBytes) {
+      // update checksum progress as step 1
+      dispatch(updateUploadProgressInfo(job.jobId, {
+        bytesUploaded: checksumProgress,
+        totalBytes: totalBytes,
+        step: Step.ONE_CHECKSUM,
+      }));
+    } else if (checksumProgress === totalBytes && s3Progress < totalBytes) {
+      // update s3 upload progress as step 2
+      dispatch(updateUploadProgressInfo(job.jobId, {
+        bytesUploaded: s3Progress,
+        totalBytes: totalBytes,
         step: Step.TWO,
-      })
-    );
-  } else if (
-    job.serviceFields?.postUploadMd5 &&
-    job.serviceFields.postUploadMd5 !== job.serviceFields?.fileSize
-  ) {
-    dispatch(
-      updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: job.serviceFields?.postUploadMd5,
-        totalBytes,
-        step: Step.THREE,
-      })
-    );
+      }));
+    }
+
+  // hybrid uploads
+  } else {
+    if (copyProgress < totalBytes) {
+      // copy progress
+      dispatch(updateUploadProgressInfo(job.jobId, {
+        bytesUploaded: copyProgress,
+        totalBytes: totalBytes * 2,  // double totalBytes to account for copy + checksum for step 1
+        step: Step.ONE_COPY, 
+      }));
+    } else if (copyProgress === totalBytes && checksumProgress < totalBytes) {
+      // checksum progress
+      dispatch(updateUploadProgressInfo(job.jobId, {
+        bytesUploaded: totalBytes + checksumProgress,
+        totalBytes: totalBytes * 2, // double totalBytes to account for copy + checksum for step 1
+        step: Step.ONE_CHECKSUM,
+      }));
+    } else if (checksumProgress === totalBytes && s3Progress < totalBytes) {
+      // upload progress
+      dispatch(updateUploadProgressInfo(job.jobId, {
+        bytesUploaded: s3Progress,
+        totalBytes: totalBytes,
+        step: Step.TWO,  // Upload
+      }));
+    }
   }
 }
 
@@ -69,7 +84,7 @@ function handleFSSMultifileJobUpdate(job: FSSUpload, dispatch: Dispatch<any>) {
       updateUploadProgressInfo(job.jobId, {
         bytesUploaded: totalBytesUploaded,
         totalBytes: job.serviceFields?.fileSize || 0,
-        step: Step.THREE,
+        step: Step.TWO,
       })
     );
   }

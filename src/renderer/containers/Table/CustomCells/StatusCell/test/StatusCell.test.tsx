@@ -71,7 +71,7 @@ describe("<StatusCell />", () => {
         progress: {
           bytesUploaded: 4245,
           totalBytes: 82341,
-          step: Step.ONE,
+          step: Step.ONE_CHECKSUM,
         },
       },
     };
@@ -83,7 +83,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 1 of 3: Pre-upload tasks"
+      "WORKING - Step 1 of 2: Pre-upload, calculating MD5 checksum"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(5);
   });
@@ -107,7 +107,7 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 3: Uploading file"
+      "WORKING - Step 2 of 2: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });
@@ -131,31 +131,8 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 3: Uploading file"
+      "WORKING - Step 2 of 2: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(60);
-  });
-
-  it("shows step 3 when in third step of upload", () => {
-    // Arrange
-    const row = {
-      original: {
-        progress: {
-          bytesUploaded: 82341,
-          totalBytes: 82341,
-          step: Step.THREE,
-        },
-      },
-    };
-
-    // Act
-    const wrapper = mount(
-      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
-    );
-
-    // Assert
-    expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 3 of 3: Post-upload tasks"
-    );
   });
 });

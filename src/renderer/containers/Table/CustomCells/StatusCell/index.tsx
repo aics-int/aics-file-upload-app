@@ -24,9 +24,9 @@ const POWER_OF_1000_TO_ABBREV = new Map<number, string>([
 ]);
 
 const STEP_INFO = {
-  [Step.ONE]: "Step 1 of 3: Pre-upload tasks",
-  [Step.TWO]: "Step 2 of 3: Uploading file",
-  [Step.THREE]: "Step 3 of 3: Post-upload tasks",
+  [Step.ONE_COPY]: "Step 1 of 2: Pre-upload, copying to FMS cache",
+  [Step.ONE_CHECKSUM]: "Step 1 of 2: Pre-upload, calculating MD5 checksum",
+  [Step.TWO]: "Step 2 of 2: Uploading file",
 };
 
 function getBytesDisplay(bytes: number): string {
