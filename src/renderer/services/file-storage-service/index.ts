@@ -16,7 +16,6 @@ export interface FSSUpload extends JSSJob {
     checksumProgress?: number;       // cloud + hybrid
     s3UploadProgress?: number;       // final stage
     multifile?: boolean;
-    subfiles?: { [fileId: string]: number };
   };
 }
 
