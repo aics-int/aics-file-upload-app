@@ -34,21 +34,23 @@ function handleFSSJobUpdate(job: FSSUpload, dispatch: Dispatch<any>) {
         totalBytes: totalBytes * 2,  // double totalBytes to account for copy + checksum for step 1
         step: Step.ONE_COPY, 
       }));
-    } else if (copyProgress === totalBytes && checksumProgress < totalBytes) {
-      // checksum progress
-      dispatch(updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: totalBytes + checksumProgress,
-        totalBytes: totalBytes * 2, // double totalBytes to account for copy + checksum for step 1
-        step: Step.ONE_CHECKSUM,
-      }));
-    } else if (checksumProgress === totalBytes && s3Progress < totalBytes) {
-      // upload progress
-      dispatch(updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: s3Progress,
-        totalBytes: totalBytes,
-        step: Step.TWO,  // Upload
-      }));
-    }
+    } else if (copyProgress === totalBytes) {
+      if (checksumProgress < totalBytes) {
+        // checksum progress
+        dispatch(updateUploadProgressInfo(job.jobId, {
+          bytesUploaded: totalBytes + checksumProgress,
+          totalBytes: totalBytes * 2, // double totalBytes to account for copy + checksum for step 1
+          step: Step.ONE_CHECKSUM,
+        }));
+
+      } else if (s3Progress < totalBytes) {
+        // upload progress
+        dispatch(updateUploadProgressInfo(job.jobId, {
+          bytesUploaded: s3Progress,
+          totalBytes: totalBytes,
+          step: Step.TWO,  // Upload
+        })); 
+      }
   // cloud-only uploads
   } else {
     if (checksumProgress < totalBytes) {
