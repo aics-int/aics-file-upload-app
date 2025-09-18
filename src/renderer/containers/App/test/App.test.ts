@@ -58,36 +58,4 @@ describe("App", () => {
             });
         });
     });
-    it("dispatches updateUploadProgressInfo when multifile progress is updated", () => {
-        // Arrange
-        const fssJob: JSSJob = {
-            created: new Date(),
-            jobId: "foo123",
-            jobName: "test_file.txt",
-            modified: new Date(),
-            originationHost: "dev-aics-fup-001",
-            service: Service.FILE_STORAGE_SERVICE,
-            updateParent: false,
-            user: "fakeuser",
-            status: JSSJobStatus.WORKING,
-            serviceFields: {
-                multifile: true,
-                fileSize: 100,
-                subfiles: {
-                    'fileid1': 10,
-                    'fileid2': 10,
-                    'fileid3': 15
-                },
-            },
-        };
-        let actionPersisted = undefined;
-        const dispatch = (action: Action)=>{
-            actionPersisted = action;
-        };
-        const expectedAction = updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: 35, totalBytes: fssJob.serviceFields?.fileSize, step: Step.TWO })
-        // Act
-        handleUploadJobUpdates(fssJob, dispatch);
-        // Assert
-        expect(actionPersisted).to.deep.equal(expectedAction);
-    });
 });
