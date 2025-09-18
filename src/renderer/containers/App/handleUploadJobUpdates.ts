@@ -1,6 +1,6 @@
 import { Dispatch } from "react";
 
-import { FSSUpload, UploadStatus } from "../../services/file-storage-service";
+import { FSSUpload } from "../../services/file-storage-service";
 import {
   JSSJob,
   JSSJobStatus,
