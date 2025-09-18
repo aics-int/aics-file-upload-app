@@ -92,7 +92,7 @@ public upload(
       fileType,
       source,
       path,
-      multifile: !!isMultifile,
+      multifile: isMultifile ?? false,
       shouldBeInLocal,
     };
     return this.post<UploadStatusResponse>(
