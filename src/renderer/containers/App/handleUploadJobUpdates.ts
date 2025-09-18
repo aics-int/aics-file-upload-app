@@ -25,26 +25,8 @@ function handleFSSJobUpdate(job: FSSUpload, dispatch: Dispatch<any>) {
 
   const isHybrid = typeof copyProgress === "number";
 
-  // cloud only upload
-  if (!isHybrid) {
-    if (checksumProgress < totalBytes) {
-      // update checksum progress as step 1
-      dispatch(updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: checksumProgress,
-        totalBytes: totalBytes,
-        step: Step.ONE_CHECKSUM,
-      }));
-    } else if (checksumProgress === totalBytes && s3Progress < totalBytes) {
-      // update s3 upload progress as step 2
-      dispatch(updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: s3Progress,
-        totalBytes: totalBytes,
-        step: Step.TWO,
-      }));
-    }
-
-  // hybrid uploads
-  } else {
+  // hybrid upload
+  if (isHybrid) {
     if (copyProgress < totalBytes) {
       // copy progress
       dispatch(updateUploadProgressInfo(job.jobId, {
@@ -65,6 +47,23 @@ function handleFSSJobUpdate(job: FSSUpload, dispatch: Dispatch<any>) {
         bytesUploaded: s3Progress,
         totalBytes: totalBytes,
         step: Step.TWO,  // Upload
+      }));
+    }
+  // cloud-only uploads
+  } else {
+    if (checksumProgress < totalBytes) {
+      // update checksum progress as step 1
+      dispatch(updateUploadProgressInfo(job.jobId, {
+        bytesUploaded: checksumProgress,
+        totalBytes: totalBytes,
+        step: Step.ONE_CHECKSUM,
+      }));
+    } else if (checksumProgress === totalBytes && s3Progress < totalBytes) {
+      // update s3 upload progress as step 2
+      dispatch(updateUploadProgressInfo(job.jobId, {
+        bytesUploaded: s3Progress,
+        totalBytes: totalBytes,
+        step: Step.TWO,
       }));
     }
   }
