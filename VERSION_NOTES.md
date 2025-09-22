@@ -1,5 +1,8 @@
 # Version Notes
 
+## 3.4.4 (2/18/25)
+- Update to fss v4!
+
 ## 3.4.1 (2/18/25)
 - Feature: Minor styling updates to "AddMetadataPage".
 
