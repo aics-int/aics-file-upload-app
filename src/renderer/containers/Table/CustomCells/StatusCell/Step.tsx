@@ -1,5 +1,5 @@
 export enum Step {
-  ONE,
+  ONE_COPY,
+  ONE_CHECKSUM,
   TWO,
-  THREE
 }

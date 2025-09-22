@@ -12,88 +12,50 @@ describe("App", () => {
         [
             {
                 serviceFields: {
-                    preUploadMd5: 5,
-                    fileSize: 10
-                }, 
-                step: Step.ONE, 
-                progressField: "preUploadMd5"
+                checksumProgress: 5,
+                fileSize: 10
+                },
+                step: Step.ONE_CHECKSUM,
+                progressField: "checksumProgress"
             },
             {
                 serviceFields: {
-                    preUploadMd5: 10,
-                    fileSize: 10,
-                    currentFileSize: 5,
-                }, 
+                checksumProgress: 10,
+                fileSize: 10,
+                s3UploadProgress: 5,
+                },
                 step: Step.TWO,
-                progressField: "currentFileSize"
+                progressField: "s3UploadProgress"
             },
-            {
-                serviceFields: {
-                    preUploadMd5: 10,
-                    currentFileSize: 10,
-                    postUploadMd5: 5,
-                    fileSize: 10,
-                }, 
-                step: Step.THREE,
-                progressField: "postUploadMd5"
-            },
-        ].forEach(({serviceFields, step, progressField}) => {
-            it("dispatches updateUploadProgressInfo when pre-upload-md5 is in progress", () => {
-                // Arrange
+            ].forEach(({ serviceFields, step, progressField }) => {
+            it("dispatches updateUploadProgressInfo when upload is in progress", () => {
                 const fssJob: JSSJob = {
-                    created: new Date(),
-                    jobId: "foo123",
-                    jobName: "test_file.txt",
-                    modified: new Date(),
-                    originationHost: "dev-aics-fup-001",
-                    service: Service.FILE_STORAGE_SERVICE,
-                    updateParent: false,
-                    user: "fakeuser",
-                    status: JSSJobStatus.WORKING,
-                    serviceFields,
+                created: new Date(),
+                jobId: "foo123",
+                jobName: "test_file.txt",
+                modified: new Date(),
+                originationHost: "dev-aics-fup-001",
+                service: Service.FILE_STORAGE_SERVICE,
+                updateParent: false,
+                user: "fakeuser",
+                status: JSSJobStatus.WORKING,
+                serviceFields,
                 };
-                let actionPersisted = undefined;
-                const dispatch = (action: Action)=>{
-                    actionPersisted = action;
-                }; 
-                const expectedAction = updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: fssJob.serviceFields && fssJob.serviceFields[progressField], totalBytes: fssJob.serviceFields?.fileSize, step: step })
-                // Act
+
+                let actionPersisted: any = undefined;
+                const dispatch = (action: Action) => {
+                actionPersisted = action;
+                };
+
+                const expectedAction = updateUploadProgressInfo(fssJob.jobId, {
+                    bytesUploaded: fssJob.serviceFields?.[progressField],
+                    totalBytes: fssJob.serviceFields?.fileSize,
+                    step,
+                });
+
                 handleUploadJobUpdates(fssJob, dispatch);
-                // Assert
                 expect(actionPersisted).to.deep.equal(expectedAction);
             });
         });
-    });
-    it("dispatches updateUploadProgressInfo when multifile progress is updated", () => {
-        // Arrange
-        const fssJob: JSSJob = {
-            created: new Date(),
-            jobId: "foo123",
-            jobName: "test_file.txt",
-            modified: new Date(),
-            originationHost: "dev-aics-fup-001",
-            service: Service.FILE_STORAGE_SERVICE,
-            updateParent: false,
-            user: "fakeuser",
-            status: JSSJobStatus.WORKING,
-            serviceFields: {
-                multifile: true,
-                fileSize: 100,
-                subfiles: {
-                    'fileid1': 10,
-                    'fileid2': 10,
-                    'fileid3': 15
-                },
-            },
-        };
-        let actionPersisted = undefined;
-        const dispatch = (action: Action)=>{
-            actionPersisted = action;
-        };
-        const expectedAction = updateUploadProgressInfo(fssJob.jobId, { bytesUploaded: 35, totalBytes: fssJob.serviceFields?.fileSize, step: Step.THREE })
-        // Act
-        handleUploadJobUpdates(fssJob, dispatch);
-        // Assert
-        expect(actionPersisted).to.deep.equal(expectedAction);
     });
 });

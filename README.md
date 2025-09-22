@@ -14,9 +14,20 @@ npm i
 
 ### Step 2: Run Dev Server
 
+Use the following command to start the dev server (reccommended).
 ```bash
 npm run dev
 ```
+
+Additionally, you can start the react renderer
+```bash
+npm run start:renderer
+```
+or the electron main process separately
+```bash
+npm run start:main
+```
+
 
 ### Step 3: Switch to Staging Environment
 

@@ -15,7 +15,9 @@ import {
 
 import { setMenu } from "./menu";
 
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment = process.env.NODE_ENV === "development";
+
+
 
 ElectronStore.initRenderer();
 
@@ -23,7 +25,7 @@ ElectronStore.initRenderer();
 let mainWindow: BrowserWindow | undefined;
 
 function createMainWindow() {
-  const window = new BrowserWindow({
+    const window = new BrowserWindow({
     height: 750,
     webPreferences: {
       contextIsolation: false,
@@ -41,34 +43,23 @@ function createMainWindow() {
   const { webContents } = window;
   setMenu(webContents);
 
-  if (isDevelopment) {
+ if (isDevelopment) {
     installExtension(REACT_DEVELOPER_TOOLS)
       .then((name: string) => {
-          console.log(`Added extension: ${name}`);
-
-          if (!mainWindow) {
-              throw new Error("mainWindow not defined");
-          }
-
-          mainWindow
-              .loadURL(`http://${devServer.host}:${devServer.port}`) // todo pull from constants file
-              .then(() => {
-                  if (mainWindow) {
-                      mainWindow.webContents.openDevTools();
-                  }
-              })
-              .catch((error: Error) => {
-                  console.error("Failed to load from webpack-dev-server", error);
-              });
+        console.log(`Added extension: ${name}`);
       })
       .catch((err: Error) => {
-          console.log(`Failed to load React devtools \n ${err}`);
-          window.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
-            console.error("Failed to load from file", error);
+        console.log(`Failed to load React devtools \n ${err}`);
+      })
+      .finally(() => {
+        window.loadURL(`http://${devServer.host}:${devServer.port}`)
+          .then(() => {
+            window.webContents.openDevTools();
+          })
+          .catch((error: Error) => {
+            console.error("Failed to load from webpack-dev-server", error);
           });
-        }
-      )
-      .finally(() => window.webContents.openDevTools());
+      });
   } else {
     window.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
       console.error("Failed to load from file", error);
@@ -91,6 +82,7 @@ function createMainWindow() {
     });
   });
 
+  mainWindow = window; 
   return window;
 }
 

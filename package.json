@@ -38,7 +38,9 @@
     }
   },
   "scripts": {
-    "dev": "node scripts/start-dev.js",
+    "start:renderer": "webpack serve --config webpack/webpack.renderer.config.js --hot --port 8080",
+    "start:main": "cross-env NODE_ENV=development electron ./dist/main/main.js",
+    "dev": "concurrently \"cross-env NODE_ENV=development npm run start:renderer\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development npm run start:main\"",
     "compile": "webpack --config webpack/webpack.main.config.js && webpack --config webpack/webpack.renderer.config.js",
     "compile-prod": "webpack --config webpack/webpack.main.config.js --env production && webpack --config webpack/webpack.renderer.config.js --env production",
     "build-executable": "npm run compile-prod && npx electron-builder",
@@ -129,6 +131,7 @@
     "chai": "~4.3.4",
     "classnames": "~2.3.1",
     "clean-webpack-plugin": "4.x",
+    "concurrently": "^9.2.1",
     "cross-env": "~7.0.3",
     "css-loader": "7.x",
     "electron": "~16.0.6",
@@ -160,6 +163,7 @@
     "sinon-chai": "~3.7.0",
     "ts-loader": "^6.2.2",
     "typescript": "~4.5.4",
+    "wait-on": "^8.0.4",
     "webpack": "5.x",
     "webpack-cli": "5.x",
     "webpack-dev-server": "5.x"
