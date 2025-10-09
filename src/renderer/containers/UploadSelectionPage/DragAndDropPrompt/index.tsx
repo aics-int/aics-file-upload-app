@@ -1,7 +1,7 @@
 import { UploadOutlined } from '@ant-design/icons';
 import { OpenDialogOptions, ipcRenderer } from "electron";
 import { isEmpty } from "lodash";
-import React from 'react';
+import React, {useState} from 'react';
 import { useSelector } from 'react-redux';
 
 import { RendererProcessEvents } from '../../../../shared/constants';
@@ -18,6 +18,14 @@ interface DragAndDropPromptProps {
 
 export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
     const uploadType = useSelector(getUploadType);
+
+    const [inputValue, setInputValue] = useState('');
+
+    // Define the onChange handler function
+    const handleChange = (event) => {
+        // Update the state with the new value from the input field
+        setInputValue(event.target.value);
+    };
 
     const onBrowse = async () => {
         const filePaths = await ipcRenderer.invoke(
@@ -39,6 +47,12 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
             <div>Drag&nbsp;and&nbsp;Drop</div>
             <div className={styles.dropZoneHelpText}>or click to browse files</div>
           </div>
+            <label>
+                Dev file path override: <input name="manualFileInput" onChange={handleChange}/>
+            </label>
+            <button onClick={() => props.onDrop([inputValue])}>
+                Submit
+            </button>
         </div>
     );
 }

@@ -2,7 +2,6 @@ import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
 import type { UploadType } from "../../types";
-import { handleFileSelection } from "../../util";
 import { setAlert, startLoading, stopLoading } from "../feedback/actions";
 import { getBooleanAnnotationTypeId } from "../metadata/selectors";
 import { getAppliedTemplate } from "../template/selectors";
@@ -48,12 +47,8 @@ const loadFilesLogic = createLogic({
       if (!uploadType) {
         throw new Error('Cannot parse selected files. Upload Type not defined.');
       }
-      const filePaths = await handleFileSelection(
-        action.payload,
-        uploadType
-      );
       dispatch(stopLoading());
-      dispatch(addUploadFiles(filePaths.map((file) => ({ file, uploadType }))));
+      dispatch(addUploadFiles(action.payload.map((file) => ({ file, uploadType }))));
       done();
     } catch (e) {
       dispatch(
