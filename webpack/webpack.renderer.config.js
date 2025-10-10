@@ -198,6 +198,8 @@ module.exports = ({ production })  => {
         "process.env.APPLICATION_VERSION": JSON.stringify(packageJson.version),
         "process.env.NODE_ENV": JSON.stringify(mode),
         "process.env.WEBPACK_DEV_SERVER_PORT": JSON.stringify(devServer.port),
+        // Feature flags (stringified at build-time). Set ENABLE_MANUAL_FILE_INPUT=true to enable the dev manual file input UI.
+        "process.env.ENABLE_MANUAL_FILE_INPUT": JSON.stringify(process.env.ENABLE_MANUAL_FILE_INPUT),
       }),
       new HtmlWebpackPlugin({
         template: path.resolve(__dirname, "index.html"),
