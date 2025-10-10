@@ -42,7 +42,7 @@
     "start:main": "cross-env NODE_ENV=development electron ./dist/main/main.js",
     "start:main:debug": "cross-env NODE_ENV=development ELECTRON_ENABLE_LOGGING=true electron ./dist/main/main.js --inspect=5858 --remote-debugging-port=9222",
     "dev": "concurrently \"cross-env NODE_ENV=development npm run start:renderer\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development npm run start:main\"",
-    "dev:debug": "concurrently \"cross-env ENABLE_MANUAL_FILE_INPUT=TRUE NODE_ENV=development npm run start:renderer\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development npm run start:main:debug\"",
+    "dev:debug": "concurrently \"cross-env ENABLE_MANUAL_FILE_INPUT=true NODE_ENV=development npm run start:renderer\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development npm run start:main:debug\"",
     "compile": "webpack --config webpack/webpack.main.config.js && webpack --config webpack/webpack.renderer.config.js",
     "compile-prod": "webpack --config webpack/webpack.main.config.js --env production && webpack --config webpack/webpack.renderer.config.js --env production",
     "build-executable": "npm run compile-prod && npx electron-builder",
