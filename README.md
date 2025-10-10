@@ -29,7 +29,7 @@ npm run start:main
 ```
 Advanced dev features are accessed by running
 ```bash
-npm run start:main:debug
+npm run dev:debug
 ```
 This script will:
 * Enable debugging of both Electron processes (main and renderer)
