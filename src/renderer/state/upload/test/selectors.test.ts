@@ -1008,6 +1008,7 @@ describe("Upload selectors", () => {
             [AnnotationName.NOTES]: [],
             [AnnotationName.PLATE_BARCODE]: ["1491201"],
             [AnnotationName.WELL]: [],
+            [AnnotationName.PROGRAM]: ['foo'],
           },
         }),
       });
@@ -1017,6 +1018,32 @@ describe("Upload selectors", () => {
           )
       ).to.be.true;
     });
+
+    it("adds error if a row does not have a program annotation and is meant to", () => {
+      const errors = getUploadValidationErrors({
+          ...nonEmptyStateForInitiatingUpload,
+          selection: {
+              ...nonEmptyStateForInitiatingUpload.selection,
+          },
+          upload: getMockStateWithHistory({
+              foo: {
+                  "Favorite Color": 1,
+                  file: "foo",
+                  key: "foo",
+                  [AnnotationName.NOTES]: [],
+                  [AnnotationName.PLATE_BARCODE]: ["1491201"],
+                  [AnnotationName.WELL]: [1],
+                  [AnnotationName.PROGRAM]: [],
+              },
+          }),
+      });
+      expect(
+          errors.includes(
+              `"foo" is missing the following required annotations: ${AnnotationName.PROGRAM}`
+          )
+      ).to.be.true;
+    });
+
     it("adds error if row is missing an annotation value that is required", () => {
       const errors = getUploadValidationErrors({
         ...nonEmptyStateForInitiatingUpload,
@@ -1028,6 +1055,7 @@ describe("Upload selectors", () => {
             key: "foo",
             [AnnotationName.NOTES]: [],
             [AnnotationName.WELL]: [1],
+            [AnnotationName.PROGRAM]: [2],
           },
         }),
       });
@@ -1063,6 +1091,7 @@ describe("Upload selectors", () => {
             [AnnotationName.IMAGING_SESSION]: [],
             [AnnotationName.PLATE_BARCODE]: [plateBarcode],
             [AnnotationName.WELL]: [1],
+            [AnnotationName.PROGRAM]: 'foo',
           },
         }),
       });
