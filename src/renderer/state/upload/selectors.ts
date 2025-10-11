@@ -335,7 +335,6 @@ export const getUploadValidationErrors = createSelector(
           }
         }
 
-        // Enforce Program selection for all uploads regardless of template
         if (!annotationHasValueMap[AnnotationName.PROGRAM]) {
           requiredAnnotationsThatDontHaveValues.push(AnnotationName.PROGRAM);
         }
