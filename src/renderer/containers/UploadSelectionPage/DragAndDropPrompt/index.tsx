@@ -1,7 +1,7 @@
 import { UploadOutlined } from '@ant-design/icons';
 import { OpenDialogOptions, ipcRenderer } from "electron";
 import { isEmpty } from "lodash";
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { RendererProcessEvents } from '../../../../shared/constants';
