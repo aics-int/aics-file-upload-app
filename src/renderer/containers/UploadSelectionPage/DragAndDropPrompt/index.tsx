@@ -19,22 +19,26 @@ interface DragAndDropPromptProps {
 export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
     const uploadType = useSelector(getUploadType);
 
-    const [inputValue, setInputValue] = useState("");
+    const [filePathInputValue, setFilePathInputValue] = useState("");
+    const [fileNameInputValue, setFileNameInputValue] = useState("");
 
     const isManualInputEnabled = String(process.env.ENABLE_MANUAL_FILE_INPUT).toLowerCase() === "true";
 
-    // Define the onChange handler function
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        // Update the state with the new value from the input field
-        setInputValue(event.target.value);
+    const handleFilePathChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setFilePathInputValue(event.target.value);
+    };
+
+    const handleFileNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setFileNameInputValue(event.target.value);
     };
 
     const handleSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        const trimmed = inputValue.trim();
+        const trimmed = filePathInputValue.trim();
         if (trimmed) {
             props.onDrop([trimmed]);
         }
+        // submit the fileName
     };
 
     const onBrowse = async () => {
@@ -60,21 +64,34 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
           {isManualInputEnabled && (
             <form className={styles.manualInput} onSubmit={handleSubmit}>
               <label className={styles.manualInputLabel} htmlFor="manualFileInput">
-                Dev file path override
+                VAST file path:
               </label>
               <input
                 id="manualFileInput"
                 name="manualFileInput"
                 className={styles.manualInputField}
-                onChange={handleChange}
-                value={inputValue}
+                onChange={handleFilePathChange}
+                value={filePathInputValue}
                 placeholder="Enter a full file path and press Enter"
               />
+                <br/>
+            <label className={styles.manualInputLabel} htmlFor="manualFileInput">
+                File Name:
+            </label>
+            <input
+                id="manualFileInput"
+                name="manualFileInput"
+                className={styles.manualInputField}
+                onChange={handleFileNameChange}
+                value={fileNameInputValue}
+                placeholder="Enter a full file path and press Enter"
+            />
+                <br/>
               <button
                 type="submit"
                 className={styles.manualInputButton}
-                disabled={!inputValue.trim()}
-                title={!inputValue.trim() ? "Enter a valid path to enable" : "Submit path"}
+                disabled={!filePathInputValue.trim() || !fileNameInputValue.trim()}
+                title={(!filePathInputValue.trim() || !fileNameInputValue.trim()) ? "Enter a valid path to enable" : "Submit path"}
               >
                 Submit
               </button>
