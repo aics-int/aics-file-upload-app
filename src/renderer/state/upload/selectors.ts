@@ -335,6 +335,10 @@ export const getUploadValidationErrors = createSelector(
           }
         }
 
+        if (!annotationHasValueMap[AnnotationName.PROGRAM]) {
+          requiredAnnotationsThatDontHaveValues.push(AnnotationName.PROGRAM);
+        }
+
         if (requiredAnnotationsThatDontHaveValues.length) {
           const requiredAnnotationsMissingNames =
             requiredAnnotationsThatDontHaveValues.join(", ");

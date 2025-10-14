@@ -27,6 +27,15 @@ or the electron main process separately
 ```bash
 npm run start:main
 ```
+Advanced dev features are accessed by running
+```bash
+npm run dev:debug
+```
+This script will:
+* Enable debugging of both Electron processes (main and renderer)
+  *  [How to attach the Web Storm debugger to the renderer process](docs/WEBSTORM_DEBUG.md)
+* Enable manual file input functionality
+* Run everything in development mode with appropriate tooling (hot reload, source maps, etc.)
 
 
 ### Step 3: Switch to Staging Environment

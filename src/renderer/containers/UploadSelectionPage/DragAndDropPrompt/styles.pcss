@@ -47,3 +47,51 @@
   font-size: 4em;
   color: inherit;
 }
+
+/* Dev-only manual input styles (hidden via feature flag unless enabled) */
+.manual-input {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+  width: 100%;
+}
+
+.manual-input-label {
+  color: #595959;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.manual-input-field {
+  height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.manual-input-field:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.manual-input-button {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.manual-input-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
