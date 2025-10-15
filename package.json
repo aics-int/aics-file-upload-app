@@ -174,7 +174,7 @@
     "webpack-dev-server": "5.x"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx,js,jsx,css,less,scss,json,md}": [
       "prettier --write",
       "eslint --cache --fix"
     ]
