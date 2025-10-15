@@ -11,10 +11,7 @@ import {
   RendererProcessEvents,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
-import {
-  JSSJob,
-  UploadJob,
-} from "../../services/job-status-service/types";
+import { JSSJob, UploadJob } from "../../services/job-status-service/types";
 import {
   addRequestToInProgress,
   checkForUpdate,
@@ -24,10 +21,7 @@ import {
   setSuccessAlert,
 } from "../../state/feedback/actions";
 import { getAlert, getRecentEvent } from "../../state/feedback/selectors";
-import {
-  receiveJobInsert,
-  receiveJobs,
-} from "../../state/job/actions";
+import { receiveJobInsert, receiveJobs } from "../../state/job/actions";
 import { getIsSafeToExit } from "../../state/job/selectors";
 import {
   requestMetadata,

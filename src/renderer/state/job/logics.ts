@@ -41,10 +41,7 @@ import {
 
 export const handleAbandonedJobsLogic = createLogic({
   process: async (
-    {
-      action,
-      fms,
-    }: ReduxLogicProcessDependenciesWithAction<ReceiveJobsAction>,
+    { action, fms }: ReduxLogicProcessDependenciesWithAction<ReceiveJobsAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
@@ -133,7 +130,7 @@ const receiveJobUpdateLogics = createLogic({
   type: RECEIVE_JOB_UPDATE,
 });
 
-const receiveFSSJobProgressUpdateLogics = createLogic({ 
+const receiveFSSJobProgressUpdateLogics = createLogic({
   transform: (
     { action, getState }: ReduxLogicTransformDependencies,
     next: ReduxLogicNextCb
@@ -143,7 +140,12 @@ const receiveFSSJobProgressUpdateLogics = createLogic({
     const matchingUploadJob = uploads.find(
       (upload) => upload.serviceFields?.fssUploadId === fssUpload.jobId
     );
-    next(updateUploadProgressInfo(matchingUploadJob?.jobId as string, fssUpload.progress));
+    next(
+      updateUploadProgressInfo(
+        matchingUploadJob?.jobId as string,
+        fssUpload.progress
+      )
+    );
   },
   type: UPDATE_UPLOAD_PROGRESS_INFO,
 });
@@ -167,8 +169,11 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
 
     // Ensure this isn't completing the upload more than once
     if (matchingUploadJob) {
-      const jobShouldFailAccordingToFSSJobStage = fssUpload.currentStage === UploadStatus.INACTIVE || fssUpload.currentStage === UploadStatus.RETRY;
-      const jobHasNotFailedAlready = matchingUploadJob.status !== JSSJobStatus.FAILED;
+      const jobShouldFailAccordingToFSSJobStage =
+        fssUpload.currentStage === UploadStatus.INACTIVE ||
+        fssUpload.currentStage === UploadStatus.RETRY;
+      const jobHasNotFailedAlready =
+        matchingUploadJob.status !== JSSJobStatus.FAILED;
       if (
         fssUpload.status === JSSJobStatus.SUCCEEDED &&
         matchingUploadJob.status !== JSSJobStatus.SUCCEEDED
@@ -209,10 +214,7 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
       fssUpload.serviceFields?.fileId;
     const isFailed = fssUpload.currentStage === UploadStatus.INACTIVE;
     const requiresRetry = fssUpload.currentStage === UploadStatus.RETRY;
-    if (
-      !isDuplicateUpdate &&
-      (isFailed || isFileIdInLabkey || requiresRetry)
-    ) {
+    if (!isDuplicateUpdate && (isFailed || isFileIdInLabkey || requiresRetry)) {
       next(action);
     } else {
       reject({ type: "ignore" });

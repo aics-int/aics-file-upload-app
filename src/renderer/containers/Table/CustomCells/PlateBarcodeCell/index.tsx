@@ -63,7 +63,9 @@ export default function PlateBarcodeCell(
     setIsEditing(false);
     dispatch(
       updateUpload(props.row.id, {
-        [props.column.id]: castArray(barcode).filter(barcode => !isNil(barcode)),
+        [props.column.id]: castArray(barcode).filter(
+          (barcode) => !isNil(barcode)
+        ),
       })
     );
   }

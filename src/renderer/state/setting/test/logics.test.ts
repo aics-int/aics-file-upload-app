@@ -142,13 +142,13 @@ describe("Setting logics", () => {
         on: stub(),
         send: stub(),
         invoke: stub(),
-      }
+      };
       ipcRenderer.invoke.resolves(1);
       const mockDeps = {
         ...mockReduxLogicDeps,
         ipcRenderer,
         storage: storageMock,
-      }
+      };
       const { actions, logicMiddleware, store } = createMockReduxStore(
         undefined,
         mockDeps
@@ -181,7 +181,7 @@ describe("Setting logics", () => {
         ...mockReduxLogicDeps,
         dialog: dialogMock,
         storage: storageMock,
-      }
+      };
 
       mockDeps.ipcRenderer.invoke.resolves(1);
 

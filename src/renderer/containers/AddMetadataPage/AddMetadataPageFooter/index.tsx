@@ -5,16 +5,20 @@ import { useDispatch, useSelector } from "react-redux";
 
 import PageFooter from "../../../components/PageFooter";
 import { closeUpload } from "../../../state/route/actions";
-import { getSelectedUploads, getShouldBeInLocal } from "../../../state/selection/selectors";
+import {
+  getSelectedUploads,
+  getShouldBeInLocal,
+} from "../../../state/selection/selectors";
 import {
   initiateUpload,
   submitFileMetadataUpdate,
   setShouldBeInLocal,
 } from "../../../state/upload/actions";
+import { getUploadValidationErrors } from "../../../state/upload/selectors";
 import {
-  getUploadValidationErrors,
-} from "../../../state/upload/selectors";
-import { getCanSubmitUpload, getIsUploadInProgress } from "../../UploadSelectionPage/selectors";
+  getCanSubmitUpload,
+  getIsUploadInProgress,
+} from "../../UploadSelectionPage/selectors";
 
 const styles = require("./styles.pcss");
 
@@ -37,7 +41,7 @@ export default function AddMetadataPageFooter(props: Props) {
 
   const onCancel = () => {
     dispatch(closeUpload());
-  }
+  };
 
   function onSubmit() {
     props.onSubmit();
@@ -58,12 +62,8 @@ export default function AddMetadataPageFooter(props: Props) {
 
   return (
     <PageFooter>
-      <Button
-              className={styles.cancelButton}
-              danger
-              onClick={onCancel}
-          >
-              Cancel Upload
+      <Button className={styles.cancelButton} danger onClick={onCancel}>
+        Cancel Upload
       </Button>
       <Button
         type="primary"
@@ -91,7 +91,10 @@ export default function AddMetadataPageFooter(props: Props) {
         />
         <span style={{ marginLeft: 8 }}>Only store on cloud</span>
         <Tooltip title="By default, files are stored both locally on the VAST and in the cloud. Storing only in the cloud preserves on prem storage space.">
-          <InfoCircleOutlined className={styles.iconBrandPrimary} style={{ marginLeft: 4 }} />
+          <InfoCircleOutlined
+            className={styles.iconBrandPrimary}
+            style={{ marginLeft: 4 }}
+          />
         </Tooltip>
       </div>
     </PageFooter>

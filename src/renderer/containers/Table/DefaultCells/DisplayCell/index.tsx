@@ -235,9 +235,7 @@ export default function DisplayCell(props: Props) {
               mouseEnterDelay={TOOLTIP_ENTER_DELAY}
               mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
             >
-              <CloseCircleFilled
-                className={styles.errorIcon}
-              />
+              <CloseCircleFilled className={styles.errorIcon} />
             </Tooltip>
           )}
           <div

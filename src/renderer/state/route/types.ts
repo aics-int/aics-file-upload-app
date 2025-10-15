@@ -18,7 +18,7 @@ export interface ResetUploadAction {
 }
 
 export interface SelectPageAction {
-  payload: Page.UploadWithTemplate | Page.MyUploads | Page.AddMetadata
+  payload: Page.UploadWithTemplate | Page.MyUploads | Page.AddMetadata;
   type: string;
 }
 

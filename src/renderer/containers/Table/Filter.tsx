@@ -23,7 +23,9 @@ interface Props {
  * to enable filtering. The component returned is dependent on the type prop given.
  */
 export default function Filter(props: Props) {
-  return function FilterComponent<T extends Record<string, any>>(filterProps: FilterProps<T>) {
+  return function FilterComponent<T extends Record<string, any>>(
+    filterProps: FilterProps<T>
+  ) {
     let content: React.ReactNode;
     if (props.type === FilterType.DATE) {
       content = (
@@ -81,17 +83,17 @@ export default function Filter(props: Props) {
 
     return (
       <Popover content={content}>
-        {filterProps.column.filterValue !== undefined ? 
+        {filterProps.column.filterValue !== undefined ? (
           <FilterFilled
             className={styles.filter}
             title={`Filter by ${filterProps.column.id}`}
           />
-          :
+        ) : (
           <FilterOutlined
             className={styles.filter}
             title={`Filter by ${filterProps.column.id}`}
           />
-        }
+        )}
       </Popover>
     );
   };

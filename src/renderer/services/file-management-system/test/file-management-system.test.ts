@@ -13,10 +13,7 @@ import {
 } from "../..";
 import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
 import { UploadStatus } from "../../file-storage-service";
-import {
-  JSSJobStatus,
-  UploadJob,
-} from "../../job-status-service/types";
+import { JSSJobStatus, UploadJob } from "../../job-status-service/types";
 
 describe("FileManagementSystem", () => {
   const sandbox = createSandbox();
@@ -29,10 +26,7 @@ describe("FileManagementSystem", () => {
 
   before(async () => {
     // Generate file with testFileSize of "random" bytes
-    await fs.promises.writeFile(
-      testFilePath,
-      Buffer.allocUnsafe(testFileSize)
-    );
+    await fs.promises.writeFile(testFilePath, Buffer.allocUnsafe(testFileSize));
   });
 
   beforeEach(() => {
@@ -87,15 +81,16 @@ describe("FileManagementSystem", () => {
       await fms.upload(upload);
 
       expect(fss.upload.calledOnce).to.be.true;
-      expect(jss.updateJob.calledWith(upload.jobId, {
-        serviceFields: { fssUploadId: "mockUploadId" },
-      })).to.be.true;
+      expect(
+        jss.updateJob.calledWith(upload.jobId, {
+          serviceFields: { fssUploadId: "mockUploadId" },
+        })
+      ).to.be.true;
     });
 
     it("calls retryFinalize on a localNasShortcut upload", async () => {
       // Arrange
-      const { mtime: fileLastModified } =
-        await fs.promises.stat(testFilePath);
+      const { mtime: fileLastModified } = await fs.promises.stat(testFilePath);
       const fileLastModifiedInMs = fileLastModified.getTime();
       const fssUploadId = "234124141";
       const fuaUploadJob: UploadJob = {
@@ -116,15 +111,19 @@ describe("FileManagementSystem", () => {
         },
       };
       jss.getJob.onFirstCall().resolves(fuaUploadJob);
-      fss.getStatus.onFirstCall().resolves({
-        uploadId: fssUploadId,
-        fileId: "mockFileId",
-        status: UploadStatus.RETRY,
-      }).onSecondCall().resolves({
-        uploadId: fssUploadId,
-        fileId: "mockFileId",
-        status: UploadStatus.COMPLETE,
-      });
+      fss.getStatus
+        .onFirstCall()
+        .resolves({
+          uploadId: fssUploadId,
+          fileId: "mockFileId",
+          status: UploadStatus.RETRY,
+        })
+        .onSecondCall()
+        .resolves({
+          uploadId: fssUploadId,
+          fileId: "mockFileId",
+          status: UploadStatus.COMPLETE,
+        });
 
       // Act
       await fms.retry(fssUploadId);
@@ -133,7 +132,6 @@ describe("FileManagementSystem", () => {
       expect(jss.createJob.called).to.be.false;
     });
   });
-
 
   describe("complete", () => {
     it("fails upload job on error", async () => {
@@ -230,16 +228,27 @@ describe("FileManagementSystem", () => {
   });
 
   describe("Path normalization, convert to posix.", () => {
-    it("converts Windows path to posix.",async () => {
-      expect(fms.posixPath("//Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
-      expect(fms.posixPath("/Allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
-      expect(fms.posixPath("/ALLEN/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
-      expect(fms.posixPath("/allen/aics/foo/test.czi")).to.equal("/allen/aics/foo/test.czi");
+    it("converts Windows path to posix.", async () => {
+      expect(fms.posixPath("//Allen/aics/foo/test.czi")).to.equal(
+        "/allen/aics/foo/test.czi"
+      );
+      expect(fms.posixPath("/Allen/aics/foo/test.czi")).to.equal(
+        "/allen/aics/foo/test.czi"
+      );
+      expect(fms.posixPath("/ALLEN/aics/foo/test.czi")).to.equal(
+        "/allen/aics/foo/test.czi"
+      );
+      expect(fms.posixPath("/allen/aics/foo/test.czi")).to.equal(
+        "/allen/aics/foo/test.czi"
+      );
     });
 
     it("Evaluates true when asked if Isilon path should be a localNasShortcut upload.", async () => {
-      expect(fms.shouldBeLocalNasUpload("//allen/aics/assay-dev/MicroscopyData/Sara/2023/20230420/ZSD2notes.txt")).to.be.true;
+      expect(
+        fms.shouldBeLocalNasUpload(
+          "//allen/aics/assay-dev/MicroscopyData/Sara/2023/20230420/ZSD2notes.txt"
+        )
+      ).to.be.true;
     });
-
   });
 });

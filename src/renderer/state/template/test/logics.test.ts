@@ -1,11 +1,7 @@
 import { expect } from "chai";
 import { DropResult } from "react-beautiful-dnd";
 import { AnyAction } from "redux";
-import {
-  createSandbox,
-  SinonStubbedInstance,
-  createStubInstance,
-} from "sinon";
+import { createSandbox, SinonStubbedInstance, createStubInstance } from "sinon";
 
 import { LabkeyClient, MetadataManagementService } from "../../../services";
 import { ColumnType } from "../../../services/labkey-client/types";

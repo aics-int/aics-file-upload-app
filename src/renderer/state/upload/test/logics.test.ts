@@ -4,11 +4,7 @@ import * as path from "path";
 
 import { expect } from "chai";
 import * as moment from "moment";
-import {
-  createSandbox,
-  createStubInstance,
-  SinonStubbedInstance,
-} from "sinon";
+import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
 import { AnnotationName } from "../../../constants";
 import {
@@ -77,10 +73,7 @@ import {
   UPLOAD_SUCCEEDED,
 } from "../constants";
 import uploadLogics from "../logics";
-import {
-  getUpload,
-  getUploadFileNames,
-} from "../selectors";
+import { getUpload, getUploadFileNames } from "../selectors";
 
 describe("Upload logics", () => {
   const sandbox = createSandbox();
@@ -92,7 +85,7 @@ describe("Upload logics", () => {
 
   before(async () => {
     await fs.promises.mkdir(testDir);
-  })
+  });
 
   beforeEach(() => {
     fms = createStubInstance(FileManagementSystem);
@@ -111,7 +104,7 @@ describe("Upload logics", () => {
 
   after(async () => {
     await fs.promises.rm(testDir, { recursive: true });
-  })
+  });
 
   describe("applyTemplateLogic", () => {
     it("dispatches requestFailed if booleanAnnotationTypeId not defined", async () => {
@@ -229,38 +222,41 @@ describe("Upload logics", () => {
       fms.initiateUpload.resolves(initiatedUpload);
       jssClient.existsById.resolves(true);
       const { actions, logicMiddleware, store } = createMockReduxStore(
-          {
-            ...nonEmptyStateForInitiatingUpload,
-            route: {
-              page: Page.UploadWithTemplate,
-              view: Page.UploadWithTemplate,
-            },
-            setting: {
-              ...nonEmptyStateForInitiatingUpload.setting,
-              username: "foo",
-            },
+        {
+          ...nonEmptyStateForInitiatingUpload,
+          route: {
+            page: Page.UploadWithTemplate,
+            view: Page.UploadWithTemplate,
           },
-          undefined,
-          uploadLogics
+          setting: {
+            ...nonEmptyStateForInitiatingUpload.setting,
+            username: "foo",
+          },
+        },
+        undefined,
+        uploadLogics
       );
       store.dispatch(initiateUpload());
       await logicMiddleware.whenComplete();
       expect(
-          actions.includesMatch({
-            autoSave: true,
-            type: INITIATE_UPLOAD,
-          })
+        actions.includesMatch({
+          autoSave: true,
+          type: INITIATE_UPLOAD,
+        })
       ).to.be.true;
       expect(actions.list.find((a) => a.type === INITIATE_UPLOAD_SUCCEEDED)).to
-          .not.be.undefined;
+        .not.be.undefined;
 
       // Assert that each upload had the expected "multifile" value
       // Files 1 through 3 are "standard", Files 4 through 5 are multifiles.
       // So we'll expect 3 "false" values and 2 "true" values.
-      const multifileValues = fms.initiateUpload.getCalls().map(
-          (call) => call.args[2]?.multifile);
-      const multifileFalseValues = multifileValues.filter(val => val === false);
-      const multifileTrueValues = multifileValues.filter(val => val === true);
+      const multifileValues = fms.initiateUpload
+        .getCalls()
+        .map((call) => call.args[2]?.multifile);
+      const multifileFalseValues = multifileValues.filter(
+        (val) => val === false
+      );
+      const multifileTrueValues = multifileValues.filter((val) => val === true);
       expect(multifileFalseValues).to.have.length(3);
       expect(multifileTrueValues).to.have.length(2);
     });
@@ -373,12 +369,8 @@ describe("Upload logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      expect(
-        actions.includesMatch(
-          resetUpload()
-        )
-      ).to.be.true;
-    })
+      expect(actions.includesMatch(resetUpload())).to.be.true;
+    });
   });
   describe("retryUploadsLogic", () => {
     it("calls fms.retry if no missing info on job", async () => {
@@ -995,13 +987,16 @@ describe("Upload logics", () => {
         send: sandbox.stub(),
         on: sandbox.stub(),
         invoke: sandbox.stub(),
-      }
+      };
       ipcRenderer.invoke.resolves(undefined);
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
-      const { actions, logicMiddleware, store } = createMockReduxStore(mockState, mockDeps);
+        ipcRenderer,
+      };
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        mockDeps
+      );
 
       // Act
       store.dispatch(saveUploadDraft());
@@ -1019,14 +1014,15 @@ describe("Upload logics", () => {
         send: sandbox.stub(),
         on: sandbox.stub(),
         invoke: sandbox.stub(),
-      }
+      };
       ipcRenderer.invoke.resolves(filePath);
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
+        ipcRenderer,
+      };
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       // Act
@@ -1044,22 +1040,24 @@ describe("Upload logics", () => {
         send: sandbox.stub(),
         on: sandbox.stub(),
         invoke: sandbox.stub(),
-      }
+      };
       ipcRenderer.invoke.resolves(filePath);
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
+        ipcRenderer,
+      };
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       // Act
       store.dispatch(saveUploadDraft(true));
       await logicMiddleware.whenComplete();
-      
+
       // Assert
-      expect(actions.includesMatch(saveUploadDraftSuccess(filePath))).to.be.true;
+      expect(actions.includesMatch(saveUploadDraftSuccess(filePath))).to.be
+        .true;
     });
 
     it("sets error alert if something goes wrong while saving draft", async () => {
@@ -1069,14 +1067,15 @@ describe("Upload logics", () => {
         send: sandbox.stub(),
         on: sandbox.stub(),
         invoke: sandbox.stub(),
-      }
+      };
       ipcRenderer.invoke.resolves(filePath);
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
+        ipcRenderer,
+      };
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       // Act
@@ -1084,10 +1083,9 @@ describe("Upload logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      expect(actions.includesMatch(saveUploadDraftSuccess(filePath))).to.be.false;
-      expect(
-        actions.includesMatch({type: SET_ALERT})
-      ).to.be.true;
+      expect(actions.includesMatch(saveUploadDraftSuccess(filePath))).to.be
+        .false;
+      expect(actions.includesMatch({ type: SET_ALERT })).to.be.true;
     });
   });
 
@@ -1097,16 +1095,17 @@ describe("Upload logics", () => {
         invoke: sandbox.stub(),
         on: sandbox.stub(),
         send: sandbox.stub(),
-      }
+      };
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
-      ipcRenderer.invoke.onCall(0).resolves(0)
-      ipcRenderer.invoke.onCall(1).resolves(testDir)
-      ipcRenderer.invoke.resolves(testDir)
+        ipcRenderer,
+      };
+      ipcRenderer.invoke.onCall(0).resolves(0);
+      ipcRenderer.invoke.onCall(1).resolves(testDir);
+      ipcRenderer.invoke.resolves(testDir);
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       store.dispatch(openUploadDraft());
@@ -1120,23 +1119,22 @@ describe("Upload logics", () => {
         invoke: sandbox.stub(),
         on: sandbox.stub(),
         send: sandbox.stub(),
-      }
+      };
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
-      ipcRenderer.invoke.onCall(0).resolves(2)
-      ipcRenderer.invoke.onCall(1).resolves(testDir)
+        ipcRenderer,
+      };
+      ipcRenderer.invoke.onCall(0).resolves(2);
+      ipcRenderer.invoke.onCall(1).resolves(testDir);
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       store.dispatch(openUploadDraft());
       await logicMiddleware.whenComplete();
 
-      expect(
-        actions.includesMatch({ type: SET_ALERT })
-      ).to.be.true;
+      expect(actions.includesMatch({ type: SET_ALERT })).to.be.true;
     });
 
     it("shows open dialog and replaces upload using data from reading file selected by user", async () => {
@@ -1145,16 +1143,17 @@ describe("Upload logics", () => {
         invoke: sandbox.stub(),
         on: sandbox.stub(),
         send: sandbox.stub(),
-      }
+      };
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
+        ipcRenderer,
+      };
       const testFile = path.resolve(testDir, "replacement");
-      ipcRenderer.invoke.onCall(0).resolves(1)
-      ipcRenderer.invoke.onCall(1).resolves(testFile)
+      ipcRenderer.invoke.onCall(0).resolves(1);
+      ipcRenderer.invoke.onCall(1).resolves(testFile);
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
       await fs.promises.writeFile(testFile, JSON.stringify(mockState));
 
@@ -1185,15 +1184,16 @@ describe("Upload logics", () => {
         invoke: sandbox.stub(),
         on: sandbox.stub(),
         send: sandbox.stub(),
-      }
+      };
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
-      ipcRenderer.invoke.onCall(0).resolves(1)
-      ipcRenderer.invoke.onCall(1).resolves(testFile)
+        ipcRenderer,
+      };
+      ipcRenderer.invoke.onCall(0).resolves(1);
+      ipcRenderer.invoke.onCall(1).resolves(testFile);
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
       await fs.promises.writeFile(testFile, JSON.stringify(draft));
 
@@ -1223,33 +1223,36 @@ describe("Upload logics", () => {
         invoke: sandbox.stub(),
         on: sandbox.stub(),
         send: sandbox.stub(),
-      }
+      };
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
+        ipcRenderer,
+      };
       const testFile = path.resolve(testDir, "draftState");
-      ipcRenderer.invoke.onCall(0).resolves(1)
-      ipcRenderer.invoke.onCall(1).resolves(testFile)
-      const { actions, logicMiddleware, store } = createMockReduxStore({
-        ...nonEmptyStateForInitiatingUpload,
-        metadata: {
-          ...nonEmptyStateForInitiatingUpload.metadata,
-          annotations: [
-            {
-              ...mockDateAnnotation,
-              "annotationTypeId/Name": ColumnType.DATE,
-              exposeToFileUploadApp: true,
-            },
-            {
-              ...mockDateTimeAnnotation,
-              "annotationTypeId/Name": ColumnType.DATETIME,
-              exposeToFileUploadApp: true,
-            },
-          ],
-          annotationTypes: mockAnnotationTypes,
+      ipcRenderer.invoke.onCall(0).resolves(1);
+      ipcRenderer.invoke.onCall(1).resolves(testFile);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        {
+          ...nonEmptyStateForInitiatingUpload,
+          metadata: {
+            ...nonEmptyStateForInitiatingUpload.metadata,
+            annotations: [
+              {
+                ...mockDateAnnotation,
+                "annotationTypeId/Name": ColumnType.DATE,
+                exposeToFileUploadApp: true,
+              },
+              {
+                ...mockDateTimeAnnotation,
+                "annotationTypeId/Name": ColumnType.DATETIME,
+                exposeToFileUploadApp: true,
+              },
+            ],
+            annotationTypes: mockAnnotationTypes,
+          },
         },
-      }, mockDeps);
+        mockDeps
+      );
       await fs.promises.writeFile(testFile, JSON.stringify(state));
 
       // Act

@@ -1,4 +1,5 @@
-import { BarcodePrefix,
+import {
+  BarcodePrefix,
   AnnotationOption,
 } from "../../services/labkey-client/types";
 import {
