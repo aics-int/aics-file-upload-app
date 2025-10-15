@@ -80,7 +80,7 @@ To catch formatting and lint errors before CI, a pre-commit task is configured.
 
 ## CI
 This project runs a CI pipeline as a GitHub action.  
-On every pull request The CI pipeline will run: 
+On every pull request the CI pipeline will run: 
 * Formatting and linting checks are performed
 * Tests 
 * Build
