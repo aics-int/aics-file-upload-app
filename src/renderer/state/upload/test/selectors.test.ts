@@ -42,33 +42,36 @@ import {
   getUploadKeyToAnnotationErrorMap,
   getUploadRequests,
 } from "../selectors";
-import { getUploadAsTableRows, getUploadValidationErrors, getAnnotations } from "../selectors";
+import {
+  getUploadAsTableRows,
+  getUploadValidationErrors,
+  getAnnotations,
+} from "../selectors";
 import { FileType } from "../types";
-
 
 // utility function to allow us to deeply compare expected and actual output without worrying about order
 const standardizeUploads = (uploadRequests: UploadRequest[]): UploadRequest[] =>
-    uploadRequests.map((request) => ({
-      ...request,
-      customMetadata: {
-        ...request.customMetadata,
-        annotations: orderBy(request.customMetadata?.annotations || [], [
-          "annotationId",
-        ]),
-      },
-    }));
+  uploadRequests.map((request) => ({
+    ...request,
+    customMetadata: {
+      ...request.customMetadata,
+      annotations: orderBy(request.customMetadata?.annotations || [], [
+        "annotationId",
+      ]),
+    },
+  }));
 
 describe("Upload selectors", () => {
   describe("getCanUndoUpload", () => {
     it("should return true if the past is not empty", () => {
       expect(
-          getCanUndoUpload({
-            ...mockState,
-            upload: {
-              ...mockState.upload,
-              index: 1,
-            },
-          })
+        getCanUndoUpload({
+          ...mockState,
+          upload: {
+            ...mockState.upload,
+            index: 1,
+          },
+        })
       ).to.be.true;
     });
 
@@ -105,7 +108,7 @@ describe("Upload selectors", () => {
         }),
       });
       const unexpectedAnnotation = payload[0]?.customMetadata?.annotations.find(
-          (a: { values: string[] }) => a.values.includes("Hello World")
+        (a: { values: string[] }) => a.values.includes("Hello World")
       );
       expect(unexpectedAnnotation).to.be.undefined;
     });
@@ -166,8 +169,9 @@ describe("Upload selectors", () => {
       //   hardcode an "expected" value in the test,
       // and b) the important thing to test is that datetime annotations are detected and their values are
       //   transformed at all.
-      const dateTimeValue = '2024-01-01 12:30:00';
-      const dateTimeValueInUTCWithTimeZoneOffset = moment(dateTimeValue).format(); // UTC w/ tz offset
+      const dateTimeValue = "2024-01-01 12:30:00";
+      const dateTimeValueInUTCWithTimeZoneOffset =
+        moment(dateTimeValue).format(); // UTC w/ tz offset
 
       const state: State = {
         ...nonEmptyStateForInitiatingUpload,
@@ -186,7 +190,7 @@ describe("Upload selectors", () => {
           "/path/to.dot/image.tiff": {
             file: "/path/to.dot/image.tiff",
             uploadType: UploadType.File,
-            ['Seeded On']: [dateTimeValue], // mockDateTimeAnnotation name
+            ["Seeded On"]: [dateTimeValue], // mockDateTimeAnnotation name
           },
         }),
       };
@@ -615,7 +619,7 @@ describe("Upload selectors", () => {
 
       const payload = getUploadRequests(state);
       expect(standardizeUploads(payload)).to.have.deep.members(
-          standardizeUploads(expected)
+        standardizeUploads(expected)
       );
     });
 
@@ -646,7 +650,7 @@ describe("Upload selectors", () => {
       const payload = getUploadRequests(state);
 
       expect(payload[0].customMetadata?.annotations[0].values[0]).to.equal(
-          "356521111"
+        "356521111"
       );
     });
 
@@ -677,7 +681,7 @@ describe("Upload selectors", () => {
       const payload = getUploadRequests(state);
 
       expect(payload[0].customMetadata?.annotations[0].values[0]).to.equal(
-          "121111"
+        "121111"
       );
     });
   });
@@ -724,9 +728,13 @@ describe("Upload selectors", () => {
         template: mockTemplateStateBranchWithAppliedTemplate,
         upload: getMockStateWithHistory(mockWellUpload),
       });
-      expect(jobName).to.deep.equal(
-        ["file1", "file2", "file3", "file4.zarr", "file5.sldy"]
-      );
+      expect(jobName).to.deep.equal([
+        "file1",
+        "file2",
+        "file3",
+        "file4.zarr",
+        "file5.sldy",
+      ]);
     });
   });
 
@@ -794,29 +802,29 @@ describe("Upload selectors", () => {
     it("does not throw error for annotations that don't exist on the template", () => {
       const file = "/path/to/file1";
       const getRows = () =>
-          getUploadAsTableRows({
-            ...nonEmptyStateForInitiatingUpload,
-            template: {
-              ...mockState.template,
-              appliedTemplate: {
-                ...mockAuditInfo,
-                annotations: [mockFavoriteColorTemplateAnnotation],
-                name: "foo",
-                templateId: 1,
-                version: 1,
-              },
+        getUploadAsTableRows({
+          ...nonEmptyStateForInitiatingUpload,
+          template: {
+            ...mockState.template,
+            appliedTemplate: {
+              ...mockAuditInfo,
+              annotations: [mockFavoriteColorTemplateAnnotation],
+              name: "foo",
+              templateId: 1,
+              version: 1,
             },
-            upload: getMockStateWithHistory({
-              [file]: {
-                barcode: "1234",
-                favoriteColor: "Red",
-                file,
-                [AnnotationName.NOTES]: [],
-                somethingUnexpected: "Hello World",
-                [AnnotationName.WELL]: [],
-              },
-            }),
-          });
+          },
+          upload: getMockStateWithHistory({
+            [file]: {
+              barcode: "1234",
+              favoriteColor: "Red",
+              file,
+              [AnnotationName.NOTES]: [],
+              somethingUnexpected: "Hello World",
+              [AnnotationName.WELL]: [],
+            },
+          }),
+        });
       expect(getRows).to.not.throw();
     });
   });
@@ -850,8 +858,8 @@ describe("Upload selectors", () => {
     const file = "/path/to/file1";
     let goodUploadRow: FileModel;
     const getValidations = (
-        annotationToTest: TemplateAnnotation,
-        value: any
+      annotationToTest: TemplateAnnotation,
+      value: any
     ) => {
       return getUploadKeyToAnnotationErrorMap({
         ...nonEmptyStateForInitiatingUpload,
@@ -908,7 +916,7 @@ describe("Upload selectors", () => {
       expect(result).to.deep.equal({
         [file]: {
           [mockLookupAnnotation.name]:
-              "BAD did not match any of the expected values: spCas9, Not Recorded",
+            "BAD did not match any of the expected values: spCas9, Not Recorded",
         },
       });
     });
@@ -917,7 +925,7 @@ describe("Upload selectors", () => {
       expect(result).to.deep.equal({
         [file]: {
           [mockDropdownAnnotation.name]:
-              "BAD did not match any of the expected values: A, B, C, D",
+            "BAD did not match any of the expected values: A, B, C, D",
         },
       });
     });
@@ -926,7 +934,7 @@ describe("Upload selectors", () => {
       expect(result).to.deep.equal({
         [file]: {
           [mockBooleanAnnotation.name]:
-              "BAD did not match expected type: YesNo",
+            "BAD did not match expected type: YesNo",
         },
       });
     });
@@ -943,7 +951,7 @@ describe("Upload selectors", () => {
       expect(result).to.deep.equal({
         [file]: {
           [mockNumberAnnotation.name]:
-              "BAD did not match expected type: Number",
+            "BAD did not match expected type: Number",
         },
       });
     });
@@ -952,7 +960,7 @@ describe("Upload selectors", () => {
       expect(result).to.deep.equal({
         [file]: {
           [mockDateAnnotation.name]:
-              "1-20 did not match expected type: Date or DateTime",
+            "1-20 did not match expected type: Date or DateTime",
         },
       });
     });
@@ -961,7 +969,7 @@ describe("Upload selectors", () => {
       expect(result).to.deep.equal({
         [file]: {
           [mockDateTimeAnnotation.name]:
-              "BAD did not match expected type: Date or DateTime",
+            "BAD did not match expected type: Date or DateTime",
         },
       });
     });
@@ -989,9 +997,9 @@ describe("Upload selectors", () => {
         }),
       });
       expect(
-          errors.includes(
-              `Annotations cannot have special characters like in "${value}" for ${annotation}`
-          )
+        errors.includes(
+          `Annotations cannot have special characters like in "${value}" for ${annotation}`
+        )
       );
     });
     it("adds error if a row does not have a well annotation and is meant to", () => {
@@ -1008,39 +1016,39 @@ describe("Upload selectors", () => {
             [AnnotationName.NOTES]: [],
             [AnnotationName.PLATE_BARCODE]: ["1491201"],
             [AnnotationName.WELL]: [],
-            [AnnotationName.PROGRAM]: ['foo'],
+            [AnnotationName.PROGRAM]: ["foo"],
           },
         }),
       });
       expect(
-          errors.includes(
-              `"foo" is missing the following required annotations: ${AnnotationName.WELL}`
-          )
+        errors.includes(
+          `"foo" is missing the following required annotations: ${AnnotationName.WELL}`
+        )
       ).to.be.true;
     });
 
     it("adds error if a row does not have a program annotation and is meant to", () => {
       const errors = getUploadValidationErrors({
-          ...nonEmptyStateForInitiatingUpload,
-          selection: {
-              ...nonEmptyStateForInitiatingUpload.selection,
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...nonEmptyStateForInitiatingUpload.selection,
+        },
+        upload: getMockStateWithHistory({
+          foo: {
+            "Favorite Color": 1,
+            file: "foo",
+            key: "foo",
+            [AnnotationName.NOTES]: [],
+            [AnnotationName.PLATE_BARCODE]: ["1491201"],
+            [AnnotationName.WELL]: [1],
+            [AnnotationName.PROGRAM]: [],
           },
-          upload: getMockStateWithHistory({
-              foo: {
-                  "Favorite Color": 1,
-                  file: "foo",
-                  key: "foo",
-                  [AnnotationName.NOTES]: [],
-                  [AnnotationName.PLATE_BARCODE]: ["1491201"],
-                  [AnnotationName.WELL]: [1],
-                  [AnnotationName.PROGRAM]: [],
-              },
-          }),
+        }),
       });
       expect(
-          errors.includes(
-              `"foo" is missing the following required annotations: ${AnnotationName.PROGRAM}`
-          )
+        errors.includes(
+          `"foo" is missing the following required annotations: ${AnnotationName.PROGRAM}`
+        )
       ).to.be.true;
     });
 
@@ -1060,9 +1068,9 @@ describe("Upload selectors", () => {
         }),
       });
       expect(
-          errors.includes(
-              '"foo" is missing the following required annotations: Favorite Color'
-          )
+        errors.includes(
+          '"foo" is missing the following required annotations: Favorite Color'
+        )
       ).to.be.true;
     });
     it("adds error if imaging sessions available, but not selected", () => {
@@ -1091,14 +1099,14 @@ describe("Upload selectors", () => {
             [AnnotationName.IMAGING_SESSION]: [],
             [AnnotationName.PLATE_BARCODE]: [plateBarcode],
             [AnnotationName.WELL]: [1],
-            [AnnotationName.PROGRAM]: 'foo',
+            [AnnotationName.PROGRAM]: "foo",
           },
         }),
       });
       expect(
-          errors.includes(
-              `"foo" is missing the following required annotations: ${AnnotationName.IMAGING_SESSION}`
-          )
+        errors.includes(
+          `"foo" is missing the following required annotations: ${AnnotationName.IMAGING_SESSION}`
+        )
       ).to.be.true;
     });
     it("adds error if an annotation value is not formatted correctly", () => {
@@ -1117,9 +1125,9 @@ describe("Upload selectors", () => {
         }),
       });
       expect(
-          errors.includes(
-              "Unexpected format for annotation type. Hover red x icons for more information."
-          )
+        errors.includes(
+          "Unexpected format for annotation type. Hover red x icons for more information."
+        )
       ).to.be.true;
     });
   });

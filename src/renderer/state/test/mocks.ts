@@ -219,7 +219,8 @@ export const mockWellUpload: UploadStateBranch = {
     key: "/path/to/file3",
     [AnnotationName.WELL]: [1, 2, 3],
   },
-  "/path/to/file4.zarr": { // multifile
+  "/path/to/file4.zarr": {
+    // multifile
     barcode: "1237",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file4.zarr",
@@ -227,7 +228,8 @@ export const mockWellUpload: UploadStateBranch = {
     key: "/path/to/file4.zarr",
     [AnnotationName.WELL]: [1, 2, 3],
   },
-  "/path/to/file5.sldy": { // multifile
+  "/path/to/file5.sldy": {
+    // multifile
     barcode: "1238",
     ["Favorite Color"]: ["Red"],
     file: "/path/to/file5.sldy",

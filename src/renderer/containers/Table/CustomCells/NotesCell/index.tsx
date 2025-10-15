@@ -1,6 +1,10 @@
 import * as fs from "fs";
 
-import { FileTextOutlined, FormOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import {
+  FileTextOutlined,
+  FormOutlined,
+  PlusCircleOutlined,
+} from "@ant-design/icons";
 import { Dropdown, Input, Menu, Modal, Tooltip } from "antd";
 import { castArray } from "lodash";
 import React from "react";
@@ -26,33 +30,56 @@ type Props = CellProps<FileModel, string>;
 function getContextMenuItems(dispatch: Dispatch, props: Props, notes?: string) {
   return (
     <Menu>
-      <Menu.Item key="1" disabled={!notes} onClick={() => {
-        navigator.clipboard.writeText(notes || "");
-        dispatch(
-          updateUpload(props.row.id, {
-            [props.column.id]: undefined,
-          })
-        );
-      }}>Cut</Menu.Item>
-      <Menu.Item key="2" disabled={!notes} onClick={() => {
-        navigator.clipboard.writeText(notes || "");
-      }}>Copy</Menu.Item>
-      <Menu.Item key="3" onClick={async () => {
-        const pastedText = await navigator.clipboard.readText();
-        const trimmedText = pastedText.trim();
-        dispatch(
-          updateUpload(props.row.id, {
-            [props.column.id]: trimmedText ? [trimmedText] : undefined,
-          })
-        );
-      }}>Paste</Menu.Item>
-      <Menu.Item key="4" disabled={!notes} onClick={() => {
-        dispatch(
-          updateUpload(props.row.id, {
-            [props.column.id]: undefined,
-          })
-        );
-      }}>Delete</Menu.Item>
+      <Menu.Item
+        key="1"
+        disabled={!notes}
+        onClick={() => {
+          navigator.clipboard.writeText(notes || "");
+          dispatch(
+            updateUpload(props.row.id, {
+              [props.column.id]: undefined,
+            })
+          );
+        }}
+      >
+        Cut
+      </Menu.Item>
+      <Menu.Item
+        key="2"
+        disabled={!notes}
+        onClick={() => {
+          navigator.clipboard.writeText(notes || "");
+        }}
+      >
+        Copy
+      </Menu.Item>
+      <Menu.Item
+        key="3"
+        onClick={async () => {
+          const pastedText = await navigator.clipboard.readText();
+          const trimmedText = pastedText.trim();
+          dispatch(
+            updateUpload(props.row.id, {
+              [props.column.id]: trimmedText ? [trimmedText] : undefined,
+            })
+          );
+        }}
+      >
+        Paste
+      </Menu.Item>
+      <Menu.Item
+        key="4"
+        disabled={!notes}
+        onClick={() => {
+          dispatch(
+            updateUpload(props.row.id, {
+              [props.column.id]: undefined,
+            })
+          );
+        }}
+      >
+        Delete
+      </Menu.Item>
     </Menu>
   );
 }
@@ -149,9 +176,7 @@ function NotesCell(props: Props) {
             <p className={styles.dragAndDropNote}>
               <strong>Note:</strong> Notes must be file type .txt
             </p>
-            <DragAndDrop
-              onDrop={onDrop}
-            />
+            <DragAndDrop onDrop={onDrop} />
           </DragAndDrop>
         ) : (
           <>
@@ -175,13 +200,22 @@ function NotesCell(props: Props) {
         mouseEnterDelay={TOOLTIP_ENTER_DELAY}
         mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
       >
-        <Dropdown overlay={getContextMenuItems(dispatch, props, note)} trigger={['contextMenu']}>
-          {(!props.column.isReadOnly || notes) && (
-            note ?
-              <FileTextOutlined className={styles.iconDisplay} onClick={() => setIsModalOpen(true)} />
-              :
-              <PlusCircleOutlined className={styles.iconDisplay} onClick={() => setIsModalOpen(true)} />
-          )}
+        <Dropdown
+          overlay={getContextMenuItems(dispatch, props, note)}
+          trigger={["contextMenu"]}
+        >
+          {(!props.column.isReadOnly || notes) &&
+            (note ? (
+              <FileTextOutlined
+                className={styles.iconDisplay}
+                onClick={() => setIsModalOpen(true)}
+              />
+            ) : (
+              <PlusCircleOutlined
+                className={styles.iconDisplay}
+                onClick={() => setIsModalOpen(true)}
+              />
+            ))}
         </Dropdown>
       </Tooltip>
     </>

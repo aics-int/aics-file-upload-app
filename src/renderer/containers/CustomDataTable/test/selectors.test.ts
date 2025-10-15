@@ -252,7 +252,8 @@ describe("CustomDataTable selectors", () => {
 
       // Assert
       expect(actual).to.be.lengthOf(7);
-      actual.slice(4).forEach((column, index) => { // 4 default "plate related" columns
+      actual.slice(4).forEach((column, index) => {
+        // 4 default "plate related" columns
         const match = annotations.find((a) => a.orderIndex === index);
         expect(column.accessor).to.deep.equal(match?.name);
       });
@@ -286,7 +287,8 @@ describe("CustomDataTable selectors", () => {
       expect(actual.some((c) => c.accessor === AnnotationName.WELL)).to.be.true;
       expect(actual.some((c) => c.accessor === AnnotationName.IMAGING_SESSION))
         .to.be.true;
-      expect(actual.some((c) => c.accessor === AnnotationName.PROGRAM)).to.be.true;
+      expect(actual.some((c) => c.accessor === AnnotationName.PROGRAM)).to.be
+        .true;
     });
 
     it("sets columns to read only", () => {
@@ -320,7 +322,8 @@ describe("CustomDataTable selectors", () => {
       expect(actual.some((c) => c.accessor === AnnotationName.WELL)).to.be.true;
       expect(actual.some((c) => c.accessor === AnnotationName.IMAGING_SESSION))
         .to.be.true;
-      expect(actual.some((c) => c.accessor === AnnotationName.PROGRAM)).to.be.true;
+      expect(actual.some((c) => c.accessor === AnnotationName.PROGRAM)).to.be
+        .true;
     });
   });
 });

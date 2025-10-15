@@ -55,8 +55,7 @@ export enum RendererProcessEvents {
 export const LIMS_HOST =
   process.env.APP_LIMS_HOST || "aics.corp.alleninstitute.org";
 export const LIMS_PORT = process.env.APP_LIMS_PORT || "80";
-export const LIMS_PROTOCOL =
-  process.env.APP_LIMS_PROTOCOL || "http";
+export const LIMS_PROTOCOL = process.env.APP_LIMS_PROTOCOL || "http";
 
 // Default user
 export const DEFAULT_USERNAME = userInfo().username;

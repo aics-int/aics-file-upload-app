@@ -58,7 +58,7 @@ describe("Route logics", () => {
 
   before(async () => {
     await fs.promises.mkdir(testDir);
-  })
+  });
 
   beforeEach(() => {
     mmsClient = createStubInstance(MetadataManagementService);
@@ -77,29 +77,32 @@ describe("Route logics", () => {
 
   after(async () => {
     await fs.promises.rm(testDir, { recursive: true });
-  })
+  });
 
   describe("resetUploadLogic", () => {
     it("goes to MyUploads page given user clicks Save Upload Draft from dialog", async () => {
       // Arrange
       const mockDeps = {
         ...mockReduxLogicDeps,
-      }
-      mockDeps.ipcRenderer.invoke.resolves(1)
-      const { logicMiddleware, store } = createMockReduxStore({
-        ...mockState,
-        route: {
-          page: Page.UploadWithTemplate,
-          view: Page.UploadWithTemplate,
+      };
+      mockDeps.ipcRenderer.invoke.resolves(1);
+      const { logicMiddleware, store } = createMockReduxStore(
+        {
+          ...mockState,
+          route: {
+            page: Page.UploadWithTemplate,
+            view: Page.UploadWithTemplate,
+          },
+          upload: getMockStateWithHistory(mockWellUpload),
         },
-        upload: getMockStateWithHistory(mockWellUpload),
-      }, mockDeps);
-  
+        mockDeps
+      );
+
       // (sanity-check)
       expect(getPage(store.getState())).to.equal(Page.UploadWithTemplate);
       expect(getView(store.getState())).to.equal(Page.UploadWithTemplate);
       expect(mockDeps.ipcRenderer.invoke).to.not.have.been.calledOnce;
-  
+
       // Act
       store.dispatch(closeUpload());
       await logicMiddleware.whenComplete();
@@ -116,26 +119,29 @@ describe("Route logics", () => {
         invoke: stub(),
         on: stub(),
         send: stub(),
-      }
+      };
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
-      mockDeps.ipcRenderer.invoke.resolves(0)
-      const { logicMiddleware, store } = createMockReduxStore({
-        ...mockState,
-        route: {
-          page: Page.UploadWithTemplate,
-          view: Page.UploadWithTemplate,
+        ipcRenderer,
+      };
+      mockDeps.ipcRenderer.invoke.resolves(0);
+      const { logicMiddleware, store } = createMockReduxStore(
+        {
+          ...mockState,
+          route: {
+            page: Page.UploadWithTemplate,
+            view: Page.UploadWithTemplate,
+          },
+          upload: getMockStateWithHistory(mockWellUpload),
         },
-        upload: getMockStateWithHistory(mockWellUpload),
-      }, mockDeps);
-  
+        mockDeps
+      );
+
       // (sanity-check)
       expect(getPage(store.getState())).to.equal(Page.UploadWithTemplate);
       expect(getView(store.getState())).to.equal(Page.UploadWithTemplate);
       expect(mockDeps.ipcRenderer.invoke).to.not.have.been.calledOnce;
-  
+
       // Act
       store.dispatch(closeUpload());
       await logicMiddleware.whenComplete();
@@ -163,13 +169,13 @@ describe("Route logics", () => {
         invoke: stub(),
         on: stub(),
         send: stub(),
-      }
+      };
       const mockDeps = {
         ...mockReduxLogicDeps,
-        ipcRenderer
-      }
-      ipcRenderer.invoke.onCall(0).resolves(messageBoxButtonIndex)
-      ipcRenderer.invoke.onCall(1).resolves(filePath)
+        ipcRenderer,
+      };
+      ipcRenderer.invoke.onCall(0).resolves(messageBoxButtonIndex);
+      ipcRenderer.invoke.onCall(1).resolves(filePath);
       labkeyClient.selectFirst.resolves(fileMetadata);
       mmsClient.getFileMetadata.resolves({
         ...fileMetadata,
@@ -234,7 +240,8 @@ describe("Route logics", () => {
     it("doesn't do anything if user cancels action when asked to save current draft", async () => {
       const mockDeps = stubMethods(0);
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
@@ -249,7 +256,8 @@ describe("Route logics", () => {
     it("shows save dialog if user has another draft open", async () => {
       const mockDeps = stubMethods(2, path.resolve(testDir, "savedDraft"));
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
@@ -260,12 +268,15 @@ describe("Route logics", () => {
 
     it("shows save dialog if user is editing another upload", async () => {
       const mockDeps = stubMethods(2, path.resolve(testDir, "savedEdit"));
-      const { logicMiddleware, store } = createMockReduxStore({
-        ...nonEmptyStateForInitiatingUpload,
-        selection: {
-          ...nonEmptyStateForInitiatingUpload.selection,
+      const { logicMiddleware, store } = createMockReduxStore(
+        {
+          ...nonEmptyStateForInitiatingUpload,
+          selection: {
+            ...nonEmptyStateForInitiatingUpload.selection,
+          },
         },
-      }, mockDeps);
+        mockDeps
+      );
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
@@ -277,7 +288,8 @@ describe("Route logics", () => {
       // Arrange
       const mockDeps = stubMethods(1);
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       // Act
@@ -306,7 +318,8 @@ describe("Route logics", () => {
       const errorMessage = "expected failure";
       mockDeps.ipcRenderer.invoke.onCall(0).rejects(new Error(errorMessage));
       const { logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload, mockDeps
+        nonEmptyStateForInitiatingUpload,
+        mockDeps
       );
 
       // (sanity-check) ensure alert not already present in state
@@ -327,7 +340,8 @@ describe("Route logics", () => {
       // Arrange
       const mockDeps = stubMethods();
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata, mockDeps
+        mockStateWithMetadata,
+        mockDeps
       );
 
       // Act
@@ -358,7 +372,8 @@ describe("Route logics", () => {
       // Arrange
       const mockDeps = stubMethods();
       const { logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata, mockDeps
+        mockStateWithMetadata,
+        mockDeps
       );
 
       // (sanity-check) pre-check values in state
@@ -397,7 +412,7 @@ describe("Route logics", () => {
         ],
       });
     });
-  
+
     it("dispatches requestFailed if boolean annotation type id is not defined", async () => {
       const mockDeps = stubMethods();
       mmsClient.getFileMetadata.resolves({
@@ -405,7 +420,10 @@ describe("Route logics", () => {
         templateId: 1,
         annotations: [],
       });
-      const { actions, logicMiddleware, store } = createMockReduxStore(mockState, mockDeps);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        mockDeps
+      );
 
       store.dispatch(viewUploads([mockSuccessfulUploadJob]));
       await logicMiddleware.whenComplete();
@@ -467,18 +485,20 @@ describe("Route logics", () => {
         ],
       });
       mmsClient.getTemplate.resolves({
-        annotations: [{
-          annotationId: mockWellAnnotation.annotationId,
-          annotationTypeId: 1,
-          name: "",
-          description: "",
-          orderIndex: 1,
-          required: true,
-          created: new Date(),
-          createdBy: 1024,
-          modified: new Date(),
-          modifiedBy: 1024,
-        }],
+        annotations: [
+          {
+            annotationId: mockWellAnnotation.annotationId,
+            annotationTypeId: 1,
+            name: "",
+            description: "",
+            orderIndex: 1,
+            required: true,
+            created: new Date(),
+            createdBy: 1024,
+            modified: new Date(),
+            modifiedBy: 1024,
+          },
+        ],
         name: "testTemplate",
         version: 1,
         templateId: 4,
@@ -486,9 +506,10 @@ describe("Route logics", () => {
         createdBy: 1024,
         modified: new Date(),
         modifiedBy: 1024,
-      })
+      });
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata, mockDeps
+        mockStateWithMetadata,
+        mockDeps
       );
       const expectedAction = requestFailed(
         `Could not open upload editor: ${errorMessage}`,
@@ -507,7 +528,8 @@ describe("Route logics", () => {
       const errorMessage = "foo";
       mmsClient.getTemplate.rejects(new Error(errorMessage));
       const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockStateWithMetadata, mockDeps
+        mockStateWithMetadata,
+        mockDeps
       );
       const expectedAction = requestFailed(
         `Could not open upload editor: ${errorMessage}`,

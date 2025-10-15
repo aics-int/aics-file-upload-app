@@ -73,13 +73,11 @@ export function removeRowsFromDragEvent(
   };
 }
 
-export function selectUploadType(
-  type: UploadType
-): SelectUploadTypeAction {
+export function selectUploadType(type: UploadType): SelectUploadTypeAction {
   return {
     payload: type,
-    type: SELECT_UPLOAD_TYPE
-  }
+    type: SELECT_UPLOAD_TYPE,
+  };
 }
 
 export function startCellDrag(

@@ -13,8 +13,8 @@ export interface FSSUpload extends JSSJob {
     fileId?: string;
     fileSize?: number;
     copyToFmsCacheProgress?: number; // hybrid only
-    checksumProgress?: number;       // cloud + hybrid
-    s3UploadProgress?: number;       // final stage
+    checksumProgress?: number; // cloud + hybrid
+    s3UploadProgress?: number; // final stage
     multifile?: boolean;
   };
 }
@@ -24,10 +24,10 @@ export interface FSSUpload extends JSSJob {
  */
 export enum UploadStatus {
   COMPLETE = "COMPLETE",
-  WORKING = "WORKING",                  // Upload is in progress and accepting chunks.
-  INACTIVE = "INACTIVE",                // Upload was either cancelled, expired, or failed.
-  RETRY = "RETRY",                      // Upload experienced a recoverable error, and can resume when /upload/retry is called.
-  POST_PROCESSING = "POST_PROCESSING"   // Chunks were all recieved, /finalize was called, and post upload processing is happening.  
+  WORKING = "WORKING", // Upload is in progress and accepting chunks.
+  INACTIVE = "INACTIVE", // Upload was either cancelled, expired, or failed.
+  RETRY = "RETRY", // Upload experienced a recoverable error, and can resume when /upload/retry is called.
+  POST_PROCESSING = "POST_PROCESSING", // Chunks were all recieved, /finalize was called, and post upload processing is happening.
 }
 
 export interface UploadStatusResponse {
@@ -62,30 +62,29 @@ export default class FileStorageService extends HttpCacheClient {
     size: number
   ): Promise<boolean> {
     const url = `${FileStorageService.BASE_FILE_PATH}?name=${name}&size=${size}`;
-    try{
+    try {
       await this.get<FileRecord>(url);
       return true;
-    } catch (error){
-      if(error.response.status === 404){
+    } catch (error) {
+      if (error.response.status === 404) {
         return false;
       }
       throw error;
     }
-
   }
 
   /**
- * FSS v4: Create a new upload.
- * This replaces registerUpload and chunked upload logic from v3.
- */
-public upload(
-  fileName: string,
-  fileType: FileType,
-  path: string,
-  source = "VAST", // hardcoded for now
-  isMultifile?: boolean,
-  shouldBeInLocal?: boolean,
-): Promise<UploadStatusResponse> {
+   * FSS v4: Create a new upload.
+   * This replaces registerUpload and chunked upload logic from v3.
+   */
+  public upload(
+    fileName: string,
+    fileType: FileType,
+    path: string,
+    source = "VAST", // hardcoded for now
+    isMultifile?: boolean,
+    shouldBeInLocal?: boolean
+  ): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}`;
     const postBody = {
       fileName,
@@ -107,7 +106,11 @@ public upload(
    */
   public retryUpload(uploadId: string): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/retry`;
-    return this.put<UploadStatusResponse>(url, undefined, FileStorageService.getHttpRequestConfig());
+    return this.put<UploadStatusResponse>(
+      url,
+      undefined,
+      FileStorageService.getHttpRequestConfig()
+    );
   }
 
   /**
@@ -116,7 +119,11 @@ public upload(
    */
   public cancelUpload(uploadId: string): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}/${uploadId}/cancel`;
-    return this.put<UploadStatusResponse>(url, undefined, FileStorageService.getHttpRequestConfig());
+    return this.put<UploadStatusResponse>(
+      url,
+      undefined,
+      FileStorageService.getHttpRequestConfig()
+    );
   }
 
   /**

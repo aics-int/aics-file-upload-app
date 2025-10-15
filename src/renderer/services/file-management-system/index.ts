@@ -3,10 +3,8 @@ import * as path from "path";
 import * as uuid from "uuid";
 
 import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
-import { extensionToFileTypeMap, FileType} from "../../util";
-import FileStorageService, {
-  UploadStatus,
-} from "../file-storage-service";
+import { extensionToFileTypeMap, FileType } from "../../util";
+import FileStorageService, { UploadStatus } from "../file-storage-service";
 import JobStatusService from "../job-status-service";
 import {
   IN_PROGRESS_STATUSES,
@@ -72,29 +70,33 @@ export default class FileManagementSystem {
       serviceFields: {
         files: [metadata],
         type: "upload",
-        localNasShortcut: this.shouldBeLocalNasUpload(metadata.file.originalPath),
+        localNasShortcut: this.shouldBeLocalNasUpload(
+          metadata.file.originalPath
+        ),
         ...serviceFields,
       },
     });
   }
 
-  public shouldBeLocalNasUpload(path: string){
-    return this.posixPath(path).startsWith('/allen');
+  public shouldBeLocalNasUpload(path: string) {
+    return this.posixPath(path).startsWith("/allen");
   }
-    
+
   /**
    * Converts Windows style FMS path to Unix style.
-   * 
+   *
    * @param source
-   * @returns 
+   * @returns
    */
-  public posixPath(source: string){
+  public posixPath(source: string) {
     // Windows is inconsistent here (have seen both 'ALLEN' and Allen' generated in the wild)
-    const mntPointForcedLowerCase = source.replace(/allen/gi, 'allen');
+    const mntPointForcedLowerCase = source.replace(/allen/gi, "allen");
     // convert path separators from Windows to Unix style.
-    const convertedPosix = mntPointForcedLowerCase.split(path.sep).join(path.posix.sep);
+    const convertedPosix = mntPointForcedLowerCase
+      .split(path.sep)
+      .join(path.posix.sep);
     // Remove double slash, from windows format
-    const replaced = convertedPosix.replace('//', '/');                                  
+    const replaced = convertedPosix.replace("//", "/");
     return replaced;
   }
 
@@ -108,20 +110,24 @@ export default class FileManagementSystem {
       const metadata = upload.serviceFields.files[0];
       const metadataWithUploadId = {
         ...metadata,
-        customMetadata: metadata.customMetadata ? {
-          templateId: metadata.customMetadata.templateId,
-          annotations: metadata.customMetadata.annotations.filter(annotation => (
-            annotation.values.length > 0
-          )),
-        } : undefined,
+        customMetadata: metadata.customMetadata
+          ? {
+              templateId: metadata.customMetadata.templateId,
+              annotations: metadata.customMetadata.annotations.filter(
+                (annotation) => annotation.values.length > 0
+              ),
+            }
+          : undefined,
         file: {
           ...metadata.file,
           jobId: upload.jobId,
         },
       };
       await this.mms.createFileMetadata(fileId, metadataWithUploadId);
-  
-      const { localPath, cloudPath, name } = await this.fss.getFileAttributes(fileId);
+
+      const { localPath, cloudPath, name } = await this.fss.getFileAttributes(
+        fileId
+      );
       const readPath = localPath ?? cloudPath;
       await this.jss.updateJob(
         upload.jobId,
@@ -131,7 +137,7 @@ export default class FileManagementSystem {
             result: [
               {
                 fileId,
-                fileName: name, 
+                fileName: name,
                 readPath,
               },
             ],
@@ -155,10 +161,11 @@ export default class FileManagementSystem {
     const fuaUpload = (await this.jss.getJob(uploadId)) as UploadJob;
 
     if (fuaUpload.status === JSSJobStatus.SUCCEEDED) {
-      this.succeedUpload(uploadId,
-        fuaUpload.serviceFields.result?.[0].fileId || '',
-        fuaUpload.serviceFields.result?.[0].fileName || '',
-        fuaUpload.serviceFields.result?.[0].readPath || '',
+      this.succeedUpload(
+        uploadId,
+        fuaUpload.serviceFields.result?.[0].fileId || "",
+        fuaUpload.serviceFields.result?.[0].fileName || "",
+        fuaUpload.serviceFields.result?.[0].readPath || ""
       );
       throw new Error(`Upload cannot be retried if already successful.`);
     }
@@ -176,7 +183,7 @@ export default class FileManagementSystem {
       status: JSSJobStatus.WAITING,
       serviceFields: {
         ...fuaUpload.serviceFields,
-        error: undefined,   // clear previous error
+        error: undefined, // clear previous error
         cancelled: false,
       },
     });
@@ -250,21 +257,21 @@ export default class FileManagementSystem {
     uploadId: string,
     fileId: string,
     fileName: string,
-    readPath: string,
+    readPath: string
   ): Promise<void> {
     await this.jss.updateJob(uploadId, {
-       status: JSSJobStatus.SUCCEEDED,
-          serviceFields: {
-            result: [
-              {
-                fileId,
-                fileName, 
-                readPath,
-              },
-            ],
+      status: JSSJobStatus.SUCCEEDED,
+      serviceFields: {
+        result: [
+          {
+            fileId,
+            fileName,
+            readPath,
           },
-        });
-      }
+        ],
+      },
+    });
+  }
 
   /**
    * Uploads the given file to FSS.
@@ -274,11 +281,12 @@ export default class FileManagementSystem {
       const source = upload.serviceFields.files[0]?.file.originalPath;
       const fileName = path.basename(source);
       const isMultifile = upload.serviceFields?.multifile;
-      const shouldBeInLocal = upload.serviceFields.files[0]?.file.shouldBeInLocal;
+      const shouldBeInLocal =
+        upload.serviceFields.files[0]?.file.shouldBeInLocal;
 
-      const fileType = extensionToFileTypeMap[
-        path.extname(fileName).toLowerCase()
-      ] || FileType.OTHER;
+      const fileType =
+        extensionToFileTypeMap[path.extname(fileName).toLowerCase()] ||
+        FileType.OTHER;
 
       // v4: single upload call
       const fssStatus = await this.fss.upload(
@@ -287,7 +295,7 @@ export default class FileManagementSystem {
         this.posixPath(source),
         "VAST", // hard coded for now since we're not planning on bucket to bucket uploads
         isMultifile,
-        shouldBeInLocal,
+        shouldBeInLocal
       );
 
       // track using this upload.jobID

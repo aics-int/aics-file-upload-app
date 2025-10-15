@@ -109,12 +109,15 @@ describe("metadata reducer", () => {
         { annotationOptionId: 151, annotationId: 153, value: "EMT" },
         { annotationOptionId: 152, annotationId: 153, value: "Diff_states" },
         { annotationOptionId: 153, annotationId: 153, value: "NucMorph" },
-        { annotationOptionId: 154, annotationId: 153, value: "IntegratedNucleus" },
+        {
+          annotationOptionId: 154,
+          annotationId: 153,
+          value: "IntegratedNucleus",
+        },
       ];
-  
+
       const result = reducer(initialState, receiveProgramOptions(fakeOptions));
       expect(result.programOptions).to.deep.equal(fakeOptions);
     });
   });
 });
-

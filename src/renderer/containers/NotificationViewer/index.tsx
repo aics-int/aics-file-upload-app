@@ -61,9 +61,7 @@ export default function NotificationViewer({
   const modalHeader = (
     <div className={styles.modalHeader}>
       Notifications
-      <SettingFilled
-        onClick={() => dispatch(selectView(Page.Settings))}
-      />
+      <SettingFilled onClick={() => dispatch(selectView(Page.Settings))} />
     </div>
   );
   return (

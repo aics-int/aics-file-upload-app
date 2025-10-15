@@ -27,7 +27,10 @@ declare module "@aics/aics-react-labkey" {
     cells: any[][];
   }
 
-  export class AicsGrid extends React.Component<AicsGridProps, Record<string, any>> {
+  export class AicsGrid extends React.Component<
+    AicsGridProps,
+    Record<string, any>
+  > {
     constructor(props: AicsGridProps);
 
     public render(): JSX.Element | null;
