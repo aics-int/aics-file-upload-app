@@ -10,7 +10,10 @@ import { UploadType } from "../../../types";
 
 const styles = require("./styles.pcss");
 
-interface DragAndDropPromptProps {  openDialogOptions: OpenDialogOptions;onDrop: (files: string[]) => void;uploadType: UploadType;
+interface DragAndDropPromptProps {
+  openDialogOptions: OpenDialogOptions;
+  onDrop: (files: string[]) => void;
+  uploadType: UploadType;
 }
 
 export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
