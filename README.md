@@ -68,25 +68,23 @@ npm run format-check
 npm run format-write
 ```
 
-## CI
-This project runs formatting and linting checks in CI.  Developers should format and lint their 
+Developers should format and lint their
 changes either by:
 * Configuring their IDE or editor to run Prettier and ESLint
-  * You can find instructions
-    [here](https://prettier.io/docs/en/editors.html).
+    * You can find instructions
+      [here](https://prettier.io/docs/en/editors.html).
 * Running `npm run format-write` and `npm run lint-fix` locally
-before committing.  
+  before committing.
 
-To ensure that this happens, developers should install git a pre-commit to run these tasks:
+To catch formatting and lint errors before CI, a pre-commit task is configured.
 
-```bash
-rm -rf .husky
-npm run prepare
-npx husky add .husky/pre-commit "npx lint-staged"
-chmod +x .husky/pre-commit
-git config core.hooksPath .husky
-```
-
+## CI
+This project runs a CI pipeline as a Github action.  
+On every pull request The CI pipeline will run: 
+* Formatting and linting checks are performed
+* Tests 
+* Build
+  
 ## Packaging and Publishing
 
 For an overview of our build pipeline, see [Confluence](https://alleninstitute.atlassian.net/wiki/spaces/SF/pages/16754555/File+Upload+App+CI+Pipeline)
