@@ -174,7 +174,10 @@
     "webpack-dev-server": "5.x"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": "eslint --cache --fix"
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write",
+      "eslint --cache --fix"
+    ]
   },
   "config": {
     "networkTimeout": 180000
