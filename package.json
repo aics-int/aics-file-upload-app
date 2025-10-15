@@ -53,7 +53,8 @@
     "madge": "madge --warning --circular --ts-config tsconfig.base.json --webpack-config webpack/webpack.render.additions.js --extensions js,jsx,ts,tsx  src/",
     "postinstall": "npm run compile",
     "prepare": "husky install",
-    "prettier": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,less,scss,json,md}\""
+    "format-write": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,less,scss,json,md}\"",
+    "format-check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,css,less,scss,json,md}\""
   },
   "repository": {
     "type": "git",
