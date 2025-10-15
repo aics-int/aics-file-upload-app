@@ -1,5 +1,5 @@
 import { constants, promises as fsPromises } from "fs";
-import { readdir, stat } from 'fs/promises';
+import { readdir, stat } from "fs/promises";
 import { join } from "path";
 
 import { trim } from "lodash";
@@ -53,11 +53,15 @@ export async function handleFileSelection(
       const stats = await fsPromises.stat(fullPath);
       if (uploadType === UploadType.File) {
         if (stats.isDirectory()) {
-          throw new Error(`Selected upload type is "${UploadType.File}". Cannot upload folder "${fullPath}".`);
+          throw new Error(
+            `Selected upload type is "${UploadType.File}". Cannot upload folder "${fullPath}".`
+          );
         }
       } else if (uploadType === UploadType.Multifile) {
         if (!stats.isDirectory()) {
-          throw new Error(`Selected upload type is "${UploadType.Multifile}". Selected files are expected to be folders. Cannot upload file "${fullPath}".`);
+          throw new Error(
+            `Selected upload type is "${UploadType.Multifile}". Selected files are expected to be folders. Cannot upload file "${fullPath}".`
+          );
         }
       } else {
         throw new Error(`Selected upload type "${uploadType}" not recognized.`);
@@ -79,7 +83,7 @@ export async function handleFileSelection(
 export async function getDirectorySize(dir: string): Promise<number> {
   const files = await readdir(dir, { withFileTypes: true });
 
-  const paths = files.map(async file => {
+  const paths = files.map(async (file) => {
     const path = join(dir, file.name);
 
     if (file.isDirectory()) {
@@ -91,9 +95,11 @@ export async function getDirectorySize(dir: string): Promise<number> {
       return size;
     }
     return 0;
-  } );
+  });
 
-  return (await Promise.all(paths)).flat(Infinity).reduce((i, size) => i + size, 0);
+  return (await Promise.all(paths))
+    .flat(Infinity)
+    .reduce((i, size) => i + size, 0);
 }
 
 /**

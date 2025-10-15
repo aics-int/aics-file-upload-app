@@ -37,7 +37,10 @@ import type { LoadFilesAction } from "./types";
 
 const loadFilesLogic = createLogic({
   process: async (
-    { action, getState }: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
+    {
+      action,
+      getState,
+    }: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
@@ -45,10 +48,14 @@ const loadFilesLogic = createLogic({
     try {
       const uploadType: UploadType | null = getUploadType(getState());
       if (!uploadType) {
-        throw new Error('Cannot parse selected files. Upload Type not defined.');
+        throw new Error(
+          "Cannot parse selected files. Upload Type not defined."
+        );
       }
       dispatch(stopLoading());
-      dispatch(addUploadFiles(action.payload.map((file) => ({ file, uploadType }))));
+      dispatch(
+        addUploadFiles(action.payload.map((file) => ({ file, uploadType })))
+      );
       done();
     } catch (e) {
       dispatch(

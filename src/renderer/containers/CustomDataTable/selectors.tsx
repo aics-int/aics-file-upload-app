@@ -93,10 +93,7 @@ export const PLATE_RELATED_COLUMNS: CustomColumn[] = [
     Cell: ProgramCell,
     // This description was pulled from LK 04/17/25
     description: "Name of project or program a dataset can be used for.",
-    width: getColumnWidthForType(
-      AnnotationName.PROGRAM,
-      ColumnType.LOOKUP
-    ),
+    width: getColumnWidthForType(AnnotationName.PROGRAM, ColumnType.LOOKUP),
   },
   {
     accessor: AnnotationName.PLATE_BARCODE,

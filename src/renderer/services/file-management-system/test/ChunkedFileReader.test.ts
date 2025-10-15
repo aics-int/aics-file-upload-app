@@ -26,7 +26,6 @@ describe("ChunkedFileReader", () => {
   });
 
   describe("read", () => {
-
     it("it calculates md5 correctly starting from a partial (serialized) md5", async () => {
       // Arrange
       let chunkNumber = 0;
@@ -35,7 +34,7 @@ describe("ChunkedFileReader", () => {
       let partiallyCalculatedMd5: string | undefined;
       const onProgress = (_: Uint8Array, partialMd5: string) => {
         chunkNumber += 1;
-        if(chunkNumber === stoppedChunkNum){
+        if (chunkNumber === stoppedChunkNum) {
           partiallyCalculatedMd5 = partialMd5;
         }
         return Promise.resolve();
@@ -47,8 +46,8 @@ describe("ChunkedFileReader", () => {
         source: testFilePath,
         onProgress,
         chunkSize,
-        offset: 0
-    });
+        offset: 0,
+      });
 
       const actualMd5 = await fileReader.read({
         uploadId: mockUploadId,
@@ -56,11 +55,11 @@ describe("ChunkedFileReader", () => {
         onProgress,
         chunkSize,
         offset: stoppedChunkNum * chunkSize,
-        partiallyCalculatedMd5
-    });
+        partiallyCalculatedMd5,
+      });
 
       // Assert
-      expect(actualMd5).to.not.be.empty
+      expect(actualMd5).to.not.be.empty;
       expect(actualMd5).to.equal(expectedMd5);
     });
 
@@ -80,8 +79,8 @@ describe("ChunkedFileReader", () => {
         source: testFilePath,
         onProgress,
         chunkSize: 1024,
-        offset
-    });
+        offset,
+      });
 
       // Assert
       expect(totalBytesRead).to.equal(size - offset);
@@ -98,11 +97,11 @@ describe("ChunkedFileReader", () => {
 
       // Act
       await fileReader.read({
-        uploadId: mockUploadId, 
-        source: testFilePath, 
-        onProgress, 
-        chunkSize: 4000, 
-        offset: 0
+        uploadId: mockUploadId,
+        source: testFilePath,
+        onProgress,
+        chunkSize: 4000,
+        offset: 0,
       });
     });
 
@@ -128,8 +127,8 @@ describe("ChunkedFileReader", () => {
         source: testFilePath,
         onProgress,
         chunkSize,
-        offset: 0
-    });
+        offset: 0,
+      });
 
       // Assert
       expect(totalBytesRead).to.equal(expectedBytes);
@@ -145,11 +144,11 @@ describe("ChunkedFileReader", () => {
 
       // Act
       const md5OfOriginalFile = await fileReader.read({
-        uploadId: mockUploadId, 
-        source: testFilePath, 
-        onProgress, 
-        chunkSize: 1000, 
-        offset: 0
+        uploadId: mockUploadId,
+        source: testFilePath,
+        onProgress,
+        chunkSize: 1000,
+        offset: 0,
       });
 
       // (sanity-check) Ensure we have multiple chunks to combine
@@ -161,10 +160,10 @@ describe("ChunkedFileReader", () => {
       const md5OfRecreatedFile = await fileReader.read({
         uploadId: "103941234",
         source: recreatedFilePath,
-        onProgress: () => Promise.resolve(), 
-        chunkSize: 1000, 
-        offset: 0
-    });
+        onProgress: () => Promise.resolve(),
+        chunkSize: 1000,
+        offset: 0,
+      });
       expect(md5OfRecreatedFile).to.equal(md5OfOriginalFile);
     });
 
@@ -174,7 +173,7 @@ describe("ChunkedFileReader", () => {
       const chunks: Uint8Array[] = [];
       let partialMd5;
       const onProgress = (chunk: Uint8Array, hashThusFar: string) => {
-        if(!chunks.length){
+        if (!chunks.length) {
           partialMd5 = hashThusFar;
         }
         chunks.push(chunk);
@@ -183,11 +182,11 @@ describe("ChunkedFileReader", () => {
 
       // Act
       const md5OfOriginalFile = await fileReader.read({
-        uploadId: mockUploadId, 
-        source: testFilePath, 
-        onProgress, 
-        chunkSize, 
-        offset: 0
+        uploadId: mockUploadId,
+        source: testFilePath,
+        onProgress,
+        chunkSize,
+        offset: 0,
       });
 
       // (sanity-check) Ensure we have multiple chunks to combine
@@ -199,14 +198,13 @@ describe("ChunkedFileReader", () => {
       const md5OfRecreatedFile = await fileReader.read({
         uploadId: "103941234",
         source: recreatedFilePath,
-        onProgress: () => Promise.resolve(), 
-        chunkSize, 
+        onProgress: () => Promise.resolve(),
+        chunkSize,
         offset: chunkSize, //Because this is starting after the first chunk
-        partiallyCalculatedMd5: partialMd5
-    });
+        partiallyCalculatedMd5: partialMd5,
+      });
       expect(md5OfRecreatedFile).to.equal(md5OfOriginalFile);
     });
-
   });
 
   describe("cancel", () => {
@@ -215,20 +213,22 @@ describe("ChunkedFileReader", () => {
       let wasCancelled = false;
       const readFunc = (uploadId: string) =>
         fileReader.read({
-          uploadId, 
-          source: testFilePath, 
+          uploadId,
+          source: testFilePath,
           onProgress: async () => {
-            if(!wasCancelled){
+            if (!wasCancelled) {
               // Act
               wasCancelled = fileReader.cancel(mockUploadId);
             }
           },
           offset: 0,
-          chunkSize: 1000
+          chunkSize: 1000,
         });
 
       // Assert
-      await expect(readFunc(mockUploadId)).to.be.rejectedWith(CancellationError);
+      await expect(readFunc(mockUploadId)).to.be.rejectedWith(
+        CancellationError
+      );
       expect(wasCancelled).to.be.true;
 
       // (sanity-check) Does not reject non-canceled calculations
@@ -243,16 +243,16 @@ describe("ChunkedFileReader", () => {
       let wasCancelled = false;
       const readFunc = (uploadId: string) =>
         fileReader.read({
-          uploadId, 
-          source: testFilePath, 
+          uploadId,
+          source: testFilePath,
           onProgress: async () => {
-            if(!wasCancelled){
+            if (!wasCancelled) {
               // Act
               wasCancelled = fileReader.cancel(mockUploadId, error);
             }
           },
           offset: 0,
-          chunkSize: 1000
+          chunkSize: 1000,
         });
 
       // Assert

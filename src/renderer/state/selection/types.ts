@@ -62,7 +62,6 @@ export interface StartMassEditAction {
   type: string;
 }
 
-
 export interface ApplyMassEditAction {
   type: string;
 }

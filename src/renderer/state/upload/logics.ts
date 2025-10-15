@@ -1,22 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import {
-  castArray,
-  flatMap,
-  forEach,
-  get,
-  isNil,
-  trim,
-} from "lodash";
+import { castArray, flatMap, forEach, get, isNil, trim } from "lodash";
 import { isDate, isMoment } from "moment";
 import { createLogic } from "redux-logic";
 
 import { RendererProcessEvents } from "../../../shared/constants";
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
-import FileManagementSystem, {
-} from "../../services/file-management-system";
+import FileManagementSystem from "../../services/file-management-system";
 import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
@@ -24,7 +16,7 @@ import { UploadType } from "../../types";
 import {
   extensionToFileTypeMap,
   FileType,
-  splitTrimAndFilter
+  splitTrimAndFilter,
 } from "../../util";
 import { requestFailed } from "../actions";
 import { setErrorAlert } from "../feedback/actions";
@@ -47,10 +39,7 @@ import {
   getSelectedUser,
 } from "../selection/selectors";
 import { getTemplateId } from "../setting/selectors";
-import {
-  ensureDraftGetsSaved,
-  getApplyTemplateInfo,
-} from "../stateHelpers";
+import { ensureDraftGetsSaved, getApplyTemplateInfo } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import { getAppliedTemplate } from "../template/selectors";
 import {
@@ -196,14 +185,13 @@ const initiateUploadLogic = createLogic({
     let uploads: UploadJob[];
     try {
       uploads = await Promise.all(
-          requests.map((request) => {
-                const serviceFields = {
-                  groupId,
-                  multifile: request.file?.uploadType === UploadType.Multifile,
-                }
-                return fms.initiateUpload(request, user, serviceFields);
-              }
-          )
+        requests.map((request) => {
+          const serviceFields = {
+            groupId,
+            multifile: request.file?.uploadType === UploadType.Multifile,
+          };
+          return fms.initiateUpload(request, user, serviceFields);
+        })
       );
     } catch (error) {
       dispatch(
@@ -216,10 +204,9 @@ const initiateUploadLogic = createLogic({
       return;
     }
 
-    dispatch(batchActions([
-      initiateUploadSucceeded(action.payload),
-      resetUpload()
-    ]))
+    dispatch(
+      batchActions([initiateUploadSucceeded(action.payload), resetUpload()])
+    );
 
     const uploadTasks = uploads.map((upload) => async () => {
       try {
@@ -289,10 +276,7 @@ export const cancelUploadsLogic = createLogic({
 
 const retryUploadsLogic = createLogic({
   process: async (
-    {
-      action,
-      fms,
-    }: ReduxLogicProcessDependenciesWithAction<RetryUploadAction>,
+    { action, fms }: ReduxLogicProcessDependenciesWithAction<RetryUploadAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
@@ -737,33 +721,35 @@ const uploadWithoutMetadataLogic = createLogic({
       for (let i = 0; i < deps.action.payload.length; i += 1) {
         const stats = await fs.promises.stat(deps.action.payload[i]);
         if (stats.isDirectory()) {
-          throw Error(`Uploading folders or ${UploadType.Multifile}s without metadata is not allowed. Cannot upload "${deps.action.payload[i]}".`);
+          throw Error(
+            `Uploading folders or ${UploadType.Multifile}s without metadata is not allowed. Cannot upload "${deps.action.payload[i]}".`
+          );
         }
       }
 
       uploads = await Promise.all(
-          deps.action.payload.map((filePath) => {
-            return deps.fms.initiateUpload(
-                {
-                  file: {
-                    disposition: "tape", // prevent czi -> ome.tiff conversions
-                    fileType:
-                        extensionToFileTypeMap[
-                            path.extname(filePath).toLowerCase()
-                            ] || FileType.OTHER,
-                    originalPath: filePath,
-                    shouldBeInArchive: true,
-                    shouldBeInLocal: true,
-                  },
-                  microscopy: {},
-                },
-                user,
-                {
-                  groupId,
-                  multifile: false // because we disallow uploading multifiles without metadata at all
-                }
-            );
-          })
+        deps.action.payload.map((filePath) => {
+          return deps.fms.initiateUpload(
+            {
+              file: {
+                disposition: "tape", // prevent czi -> ome.tiff conversions
+                fileType:
+                  extensionToFileTypeMap[
+                    path.extname(filePath).toLowerCase()
+                  ] || FileType.OTHER,
+                originalPath: filePath,
+                shouldBeInArchive: true,
+                shouldBeInLocal: true,
+              },
+              microscopy: {},
+            },
+            user,
+            {
+              groupId,
+              multifile: false, // because we disallow uploading multifiles without metadata at all
+            }
+          );
+        })
       );
     } catch (error) {
       dispatch(

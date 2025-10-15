@@ -1,4 +1,8 @@
-import { ProfileFilled, SettingFilled, UploadOutlined } from "@ant-design/icons";
+import {
+  ProfileFilled,
+  SettingFilled,
+  UploadOutlined,
+} from "@ant-design/icons";
 import { ipcRenderer } from "electron";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,9 +41,11 @@ export default function NavigationBar() {
       <NotificationViewer isSelected={view === Page.Notifications} />
       <NavigationButton
         icon={(props) => <UploadOutlined {...props} />}
-        isSelected={[Page.UploadWithTemplate, Page.NewUploadButton, Page.AddMetadata].includes(
-          view
-        )}
+        isSelected={[
+          Page.UploadWithTemplate,
+          Page.NewUploadButton,
+          Page.AddMetadata,
+        ].includes(view)}
         onSelect={() => dispatch(selectPage(Page.UploadWithTemplate))}
         title={isUploadJobInProgress ? "Current Upload" : "+Upload"}
       />

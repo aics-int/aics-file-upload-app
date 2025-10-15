@@ -1,4 +1,4 @@
-import { Button } from 'antd';
+import { Button } from "antd";
 import { OpenDialogOptions } from "electron";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,13 +7,9 @@ import DragAndDrop from "../../components/DragAndDrop";
 import PageFooter from "../../components/PageFooter";
 import { closeUpload, selectPage } from "../../state/route/actions";
 import { loadFiles } from "../../state/selection/actions";
-import {
-  getUploadType,
-} from "../../state/selection/selectors";
+import { getUploadType } from "../../state/selection/selectors";
 import { Page } from "../../state/types";
-import {
-  getUploadAsTableRows
-} from "../../state/upload/selectors";
+import { getUploadAsTableRows } from "../../state/upload/selectors";
 import { UploadType } from "../../types";
 
 import DragAndDropPrompt from "./DragAndDropPrompt";
@@ -36,58 +32,56 @@ export default function UploadSelectionPage() {
   let openDialogOptions: OpenDialogOptions = {
     properties: ["openFile", "multiSelections"],
     title: `Browse for ${UploadType.File}s`,
-  }
+  };
   if (uploadType === UploadType.Multifile) {
     openDialogOptions = {
       properties: ["openDirectory", "multiSelections"],
       title: `Browse for ${UploadType.Multifile}s`,
-    }
+    };
   }
 
   const onCancel = () => {
-      dispatch(closeUpload());
-  }
+    dispatch(closeUpload());
+  };
 
   const onContinue = () => {
-      dispatch(selectPage(Page.AddMetadata));
-  }
+    dispatch(selectPage(Page.AddMetadata));
+  };
 
   return (
     <div className={styles.page}>
       <div className={styles.content}>
         <UploadTypeSelector />
-        {uploadType !== null && 
+        {uploadType !== null && (
           <DragAndDrop
-            onDrop={(f) => {dispatch(loadFiles(f))}}
+            onDrop={(f) => {
+              dispatch(loadFiles(f));
+            }}
             uploadType={uploadType}
           >
             <DragAndDropPrompt
               openDialogOptions={openDialogOptions}
-              onDrop={(f) => {dispatch(loadFiles(f))}}
+              onDrop={(f) => {
+                dispatch(loadFiles(f));
+              }}
               uploadType={uploadType}
             />
           </DragAndDrop>
-        }
-        {
-          (uploadType !== null && uploadList.length > 0) && (
-            <SelectedFilesList uploadList={uploadList} />
-          )
-        }
+        )}
+        {uploadType !== null && uploadList.length > 0 && (
+          <SelectedFilesList uploadList={uploadList} />
+        )}
         <PageFooter>
-          <Button
-              className={styles.footerButton}
-              danger
-              onClick={onCancel}
-          >
-              Cancel Upload
+          <Button className={styles.footerButton} danger onClick={onCancel}>
+            Cancel Upload
           </Button>
           <Button
-              className={styles.footerButton}
-              onClick={onContinue}
-              disabled={uploadList.length === 0}
-              type="primary"
+            className={styles.footerButton}
+            onClick={onContinue}
+            disabled={uploadList.length === 0}
+            type="primary"
           >
-              Continue to Metadata
+            Continue to Metadata
           </Button>
         </PageFooter>
       </div>

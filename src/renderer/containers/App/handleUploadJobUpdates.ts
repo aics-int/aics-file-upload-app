@@ -30,44 +30,54 @@ function handleFSSJobUpdate(job: FSSUpload, dispatch: Dispatch<any>) {
   if (isHybrid) {
     if (copyProgress < totalBytes) {
       // copy progress
-      dispatch(updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: copyProgress,
-        totalBytes: totalBytes * 2,  // double totalBytes to account for copy + checksum for step 1
-        step: Step.ONE_COPY, 
-      }));
+      dispatch(
+        updateUploadProgressInfo(job.jobId, {
+          bytesUploaded: copyProgress,
+          totalBytes: totalBytes * 2, // double totalBytes to account for copy + checksum for step 1
+          step: Step.ONE_COPY,
+        })
+      );
     } else if (copyProgress === totalBytes) {
       if (checksumProgress < totalBytes) {
         // checksum progress
-        dispatch(updateUploadProgressInfo(job.jobId, {
-          bytesUploaded: totalBytes + checksumProgress,
-          totalBytes: totalBytes * 2, // double totalBytes to account for copy + checksum for step 1
-          step: Step.ONE_CHECKSUM,
-        }));
+        dispatch(
+          updateUploadProgressInfo(job.jobId, {
+            bytesUploaded: totalBytes + checksumProgress,
+            totalBytes: totalBytes * 2, // double totalBytes to account for copy + checksum for step 1
+            step: Step.ONE_CHECKSUM,
+          })
+        );
       } else if (s3Progress < totalBytes) {
         // upload progress
-        dispatch(updateUploadProgressInfo(job.jobId, {
-          bytesUploaded: s3Progress,
-          totalBytes: totalBytes,
-          step: Step.TWO,  // Upload
-        })); 
+        dispatch(
+          updateUploadProgressInfo(job.jobId, {
+            bytesUploaded: s3Progress,
+            totalBytes: totalBytes,
+            step: Step.TWO, // Upload
+          })
+        );
       }
     }
-  // cloud-only uploads
+    // cloud-only uploads
   } else {
     if (checksumProgress < totalBytes) {
       // update checksum progress as step 1
-      dispatch(updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: checksumProgress,
-        totalBytes: totalBytes,
-        step: Step.ONE_CHECKSUM,
-      }));
+      dispatch(
+        updateUploadProgressInfo(job.jobId, {
+          bytesUploaded: checksumProgress,
+          totalBytes: totalBytes,
+          step: Step.ONE_CHECKSUM,
+        })
+      );
     } else if (checksumProgress === totalBytes && s3Progress < totalBytes) {
       // update s3 upload progress as step 2
-      dispatch(updateUploadProgressInfo(job.jobId, {
-        bytesUploaded: s3Progress,
-        totalBytes: totalBytes,
-        step: Step.TWO,
-      }));
+      dispatch(
+        updateUploadProgressInfo(job.jobId, {
+          bytesUploaded: s3Progress,
+          totalBytes: totalBytes,
+          step: Step.TWO,
+        })
+      );
     }
   }
 }
@@ -89,7 +99,10 @@ export function handleUploadJobUpdates(job: JSSJob, dispatch: Dispatch<any>) {
 
     // If a fileId is present, the upload has completed and should be marked as such.
     // If the upload job has become inactive or requires a retry, mark it as "failed".
-    if (job.status === JSSJobStatus.SUCCEEDED || job.status === JSSJobStatus.FAILED) {
+    if (
+      job.status === JSSJobStatus.SUCCEEDED ||
+      job.status === JSSJobStatus.FAILED
+    ) {
       // Job is finished, either successfully or with failure
       dispatch(receiveFSSJobCompletionUpdate(fssJob));
     } else {

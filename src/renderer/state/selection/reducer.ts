@@ -125,12 +125,9 @@ const actionToConfigMap: TypeToDescriptionMap<SelectionStateBranch> = {
   [SELECT_UPLOAD_TYPE]: {
     accepts: (action: AnyAction): action is SelectUploadTypeAction =>
       action.type === SELECT_UPLOAD_TYPE,
-    perform: (
-      state: SelectionStateBranch,
-      action: SelectUploadTypeAction
-    ) => ({
+    perform: (state: SelectionStateBranch, action: SelectUploadTypeAction) => ({
       ...state,
-      uploadType: action.payload
+      uploadType: action.payload,
     }),
   },
   [START_CELL_DRAG]: {

@@ -1,4 +1,10 @@
-import { DeleteOutlined, DragOutlined, EditOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  DragOutlined,
+  EditOutlined,
+  PlusOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import {
   Alert,
   Button,
@@ -55,7 +61,7 @@ const styles = require("./styles.pcss");
 const { Search } = Input;
 
 const ADD_ANNOTATION_DESCRIPTION = `The annotations 'Optical Control ID' (for biological images) and
-'Is Optical Control' (for optical control images) are used to trigger automatic alignment.`
+'Is Optical Control' (for optical control images) are used to trigger automatic alignment.`;
 const COLUMN_TEMPLATE_DESCRIPTION = `A ${SCHEMA_SYNONYM} defines a group of annotations to associate with files.
 When applied to a batch of files to upload, the annotations associated with that template
 will be added as additional columns to fill out for each file. They can be shared and discovered by anyone.`;
@@ -426,7 +432,10 @@ function TemplateEditorModal(props: Props) {
                 }
               />
               <Popover content={annotationOptionList} placement="right">
-                <Button icon={<PlusOutlined />} className={styles.addAnnotationButton} />
+                <Button
+                  icon={<PlusOutlined />}
+                  className={styles.addAnnotationButton}
+                />
               </Popover>
               {showTemplateHint && (
                 <Alert

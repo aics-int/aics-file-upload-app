@@ -62,7 +62,9 @@ export interface Dialog {
   ): Promise<Electron.SaveDialogReturnValue>;
 }
 
-export interface ReduxLogicExtraDependencies<Action extends AnyAction = AnyAction> {
+export interface ReduxLogicExtraDependencies<
+  Action extends AnyAction = AnyAction
+> {
   action: Action;
   applicationInfoService: ApplicationInfoService;
   ctx?: any;
@@ -77,13 +79,13 @@ export interface ReduxLogicExtraDependencies<Action extends AnyAction = AnyActio
 
 export type ReduxLogicProcessDependenciesWithAction<Action extends AnyAction> =
   Process.DepObj<State, Action, ReduxLogicExtraDependencies<Action>>;
-export type ReduxLogicProcessDependencies = ReduxLogicProcessDependenciesWithAction<AnyAction>;
-export type ReduxLogicTransformDependenciesWithAction<Action extends AnyAction> = DepObj<
-  State,
-  Action,
-  ReduxLogicExtraDependencies<Action>
->;
-export type ReduxLogicTransformDependencies = ReduxLogicTransformDependenciesWithAction<AnyAction>;
+export type ReduxLogicProcessDependencies =
+  ReduxLogicProcessDependenciesWithAction<AnyAction>;
+export type ReduxLogicTransformDependenciesWithAction<
+  Action extends AnyAction
+> = DepObj<State, Action, ReduxLogicExtraDependencies<Action>>;
+export type ReduxLogicTransformDependencies =
+  ReduxLogicTransformDependenciesWithAction<AnyAction>;
 
 export type ReduxLogicNextCb = (action: AnyAction) => void;
 export type ReduxLogicRejectCb = (action: AnyAction) => void;
