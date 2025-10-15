@@ -11,6 +11,8 @@ jobs:
           node-version: 22.17
       - name: Install Dependencies
         run: npm install
+      - name: Format
+        run: npm run format-check
       - name: Lint
         run: npm run lint
       - name: Check for Circular Dependencies
