@@ -22,7 +22,7 @@ import {
  * This is one of those fun instances where a dependency's dependency has its own bugs.
  *  Check out this page for an explanation as to why we have to add `global.SVGElement = Element`:
  *  https://mlaursen.github.io/react-md-v1-docs/#/discover-more/testing
- * 
+ *
  * In short, the issue lies somewhere within rc-resize-observer, which is pulled
  *  in by other dependencies.
  *  - TF 2024-06-14
@@ -38,7 +38,7 @@ describe("<AnnotationEditorModal />", () => {
   before(() => {
     // Removes warning from antd component being tested
     global.cancelAnimationFrame = noop;
-  })
+  });
 
   beforeEach(() => {
     labkeyClient = createStubInstance(LabkeyClient);

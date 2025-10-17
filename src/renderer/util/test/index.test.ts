@@ -42,7 +42,7 @@ describe("General utilities", () => {
       const byteArray = new Int8Array(10);
 
       await fs.promises.writeFile(FILE_1, byteArray);
-      await fs.promises.writeFile(FILE_2, byteArray)
+      await fs.promises.writeFile(FILE_2, byteArray);
 
       // Act
       const result = await getDirectorySize(MOCK_DIRECTORY);
@@ -50,7 +50,7 @@ describe("General utilities", () => {
       // Assert
       // two 10-byte files -> 20 bytes total size
       expect(result).to.equal(20);
-    })
+    });
   });
 
   describe("splitTrimAndFilter", () => {
@@ -82,8 +82,8 @@ describe("General utilities", () => {
     let fsStatStub: SinonStub;
 
     beforeEach(() => {
-      fsAccessStub = stub(fsPromises, 'access');
-      fsStatStub = stub(fsPromises, 'stat');
+      fsAccessStub = stub(fsPromises, "access");
+      fsStatStub = stub(fsPromises, "stat");
     });
 
     afterEach(() => {
@@ -92,7 +92,7 @@ describe("General utilities", () => {
     });
 
     it("returns given file path if uploadType is 'File' and selected path is a file", async () => {
-      const filePaths = ['file.txt'];
+      const filePaths = ["file.txt"];
       const uploadType = UploadType.File;
 
       fsAccessStub.resolves();
@@ -103,7 +103,7 @@ describe("General utilities", () => {
     });
 
     it("returns given file path if uploadType is 'Multifile' and selected path is a folder", async () => {
-      const filePaths = ['file.txt'];
+      const filePaths = ["file.txt"];
       const uploadType = UploadType.Multifile;
 
       fsAccessStub.resolves();
@@ -114,47 +114,57 @@ describe("General utilities", () => {
     });
 
     it("throws an error if user does not have file read acccess", async () => {
-      const filePaths = ['file.txt'];
+      const filePaths = ["file.txt"];
       const uploadType = UploadType.File;
 
       fsAccessStub.rejects();
       fsStatStub.resolves({ isDirectory: () => false });
 
-      await expect(handleFileSelection(filePaths, uploadType)).to.be
-          .rejectedWith('User does not have permission to read file.txt');
+      await expect(
+        handleFileSelection(filePaths, uploadType)
+      ).to.be.rejectedWith("User does not have permission to read file.txt");
     });
 
     it("throws an error if upload type is 'File' and uploaded path is a folder", async () => {
-      const filePaths = ['/path/to/folder'];
+      const filePaths = ["/path/to/folder"];
       const uploadType = UploadType.File;
 
       fsAccessStub.resolves();
       fsStatStub.resolves({ isDirectory: () => true });
 
-      await expect(handleFileSelection(filePaths, uploadType as any)).to.be
-          .rejectedWith(`Selected upload type is "${uploadType}". Cannot upload folder "${filePaths[0]}".`);
+      await expect(
+        handleFileSelection(filePaths, uploadType as any)
+      ).to.be.rejectedWith(
+        `Selected upload type is "${uploadType}". Cannot upload folder "${filePaths[0]}".`
+      );
     });
 
     it("throws an error if upload type is 'Multifile' and uploaded path is a file", async () => {
-      const filePaths = ['file.txt'];
+      const filePaths = ["file.txt"];
       const uploadType = UploadType.Multifile;
 
       fsAccessStub.resolves();
       fsStatStub.resolves({ isDirectory: () => false });
 
-      await expect(handleFileSelection(filePaths, uploadType as any)).to.be
-          .rejectedWith(`Selected upload type is "${uploadType}". Selected files are expected to be folders. Cannot upload file "${filePaths[0]}".`);
+      await expect(
+        handleFileSelection(filePaths, uploadType as any)
+      ).to.be.rejectedWith(
+        `Selected upload type is "${uploadType}". Selected files are expected to be folders. Cannot upload file "${filePaths[0]}".`
+      );
     });
 
     it("throws an error if uploadType is not recognized", async () => {
-      const filePaths = ['file.txt'];
+      const filePaths = ["file.txt"];
       const uploadType = "InvalidUploadType";
 
       fsAccessStub.resolves();
       fsStatStub.resolves({ isDirectory: () => false });
 
-      await expect(handleFileSelection(filePaths, uploadType as any)).to.be
-          .rejectedWith('Selected upload type "InvalidUploadType" not recognized.');
+      await expect(
+        handleFileSelection(filePaths, uploadType as any)
+      ).to.be.rejectedWith(
+        'Selected upload type "InvalidUploadType" not recognized.'
+      );
     });
-  })
+  });
 });

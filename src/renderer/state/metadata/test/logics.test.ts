@@ -50,7 +50,7 @@ import {
   requestMetadata,
   requestTemplates,
   retrieveOptionsForLookup,
-  requestProgramOptions, 
+  requestProgramOptions,
   receiveProgramOptions,
 } from "../actions";
 import { getBarcodeSearchResults } from "../selectors";
@@ -317,18 +317,18 @@ describe("Metadata logics", () => {
         { annotationOptionId: 1, annotationId: 153, value: "Variance" },
         { annotationOptionId: 2, annotationId: 153, value: "EMT" },
       ];
-  
+
       labkeyClient.getProgramOptions.resolves(fakeOptions);
-  
+
       await runRequestSucceededTest(
         requestProgramOptions(),
         receiveProgramOptions(fakeOptions)
       );
     });
-  
+
     it("dispatches requestFailed given error", async () => {
       labkeyClient.getProgramOptions.rejects(new Error("backend boom"));
-  
+
       await runRequestFailedTest(
         requestProgramOptions(),
         "Could not retrieve program options: backend boom",

@@ -48,14 +48,21 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
 
   let content: React.ReactNode;
   if (JSSJobStatus.SUCCEEDED === props.value) {
-    const etlProcess = props.row.original.serviceFields?.postUploadProcessing?.etl;
+    const etlProcess =
+      props.row.original.serviceFields?.postUploadProcessing?.etl;
 
     const isConditionalSuccess = etlProcess?.status !== JSSJobStatus.SUCCEEDED;
     tooltip = isConditionalSuccess
-        ? `${tooltip} - File successfully uploaded to FMS. It will be searchable once all metadata has been appended, which is happening now in the background.`
-        : tooltip;
+      ? `${tooltip} - File successfully uploaded to FMS. It will be searchable once all metadata has been appended, which is happening now in the background.`
+      : tooltip;
 
-    content = <CheckCircleFilled className={`${styles.success} ${isConditionalSuccess ? styles['success-conditional'] : ''}`} />;
+    content = (
+      <CheckCircleFilled
+        className={`${styles.success} ${
+          isConditionalSuccess ? styles["success-conditional"] : ""
+        }`}
+      />
+    );
   } else if (JSSJobStatus.FAILED === props.value) {
     content = <CloseCircleFilled className={styles.failed} />;
   } else if (JSSJobStatus.UNRECOVERABLE === props.value) {

@@ -1,10 +1,12 @@
 import * as path from "path";
 
 import { app, BrowserWindow, dialog, Event, ipcMain } from "electron";
-import installExtension, { REACT_DEVELOPER_TOOLS } from "electron-devtools-installer";
+import installExtension, {
+  REACT_DEVELOPER_TOOLS,
+} from "electron-devtools-installer";
 import ElectronStore from "electron-store";
 import { autoUpdater } from "electron-updater";
-import 'source-map-support/register'
+import "source-map-support/register";
 
 import { devServer } from "../../webpack/constants";
 import {
@@ -17,15 +19,13 @@ import { setMenu } from "./menu";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-
-
 ElectronStore.initRenderer();
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let mainWindow: BrowserWindow | undefined;
 
 function createMainWindow() {
-    const window = new BrowserWindow({
+  const window = new BrowserWindow({
     height: 750,
     webPreferences: {
       contextIsolation: false,
@@ -43,7 +43,7 @@ function createMainWindow() {
   const { webContents } = window;
   setMenu(webContents);
 
- if (isDevelopment) {
+  if (isDevelopment) {
     installExtension(REACT_DEVELOPER_TOOLS)
       .then((name: string) => {
         console.log(`Added extension: ${name}`);
@@ -52,7 +52,8 @@ function createMainWindow() {
         console.log(`Failed to load React devtools \n ${err}`);
       })
       .finally(() => {
-        window.loadURL(`http://${devServer.host}:${devServer.port}`)
+        window
+          .loadURL(`http://${devServer.host}:${devServer.port}`)
           .then(() => {
             window.webContents.openDevTools();
           })
@@ -61,9 +62,11 @@ function createMainWindow() {
           });
       });
   } else {
-    window.loadFile(path.join("dist", "renderer", "index.html")).catch((error: Error) => {
-      console.error("Failed to load from file", error);
-    });
+    window
+      .loadFile(path.join("dist", "renderer", "index.html"))
+      .catch((error: Error) => {
+        console.error("Failed to load from file", error);
+      });
   }
 
   window.on("close", (e: Event) => {
@@ -82,7 +85,7 @@ function createMainWindow() {
     });
   });
 
-  mainWindow = window; 
+  mainWindow = window;
   return window;
 }
 

@@ -27,7 +27,9 @@ import {
   UpdateMassEditRowAction,
 } from "./types";
 
-export function loadFiles(files: string[]): LoadFilesAction {
+export function loadFiles(
+  files: Array<string | import("./types").ManualFileInput>
+): LoadFilesAction {
   return {
     autoSave: true,
     payload: files,
@@ -73,13 +75,11 @@ export function removeRowsFromDragEvent(
   };
 }
 
-export function selectUploadType(
-  type: UploadType
-): SelectUploadTypeAction {
+export function selectUploadType(type: UploadType): SelectUploadTypeAction {
   return {
     payload: type,
-    type: SELECT_UPLOAD_TYPE
-  }
+    type: SELECT_UPLOAD_TYPE,
+  };
 }
 
 export function startCellDrag(

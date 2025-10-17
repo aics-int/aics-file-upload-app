@@ -15,7 +15,9 @@ const styles = require("./styles.pcss");
   This component renders a read only text display showcasing the data
   for this particular cell. Features like cell-dragging are N/A.
 */
-export default function ReadOnlyCell<T extends Record<string, any>>(props: CellProps<T>) {
+export default function ReadOnlyCell<T extends Record<string, any>>(
+  props: CellProps<T>
+) {
   const displayValue = useDisplayValue(
     castArray(props.value),
     props.column.type

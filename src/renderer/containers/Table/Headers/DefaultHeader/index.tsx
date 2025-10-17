@@ -26,12 +26,8 @@ export default function DefaultHeader<T extends Record<string, any>>({
     >
       <div className={styles.header}>
         {name || column.id} {column.isRequired && "* "}
-        {column.isSorted && (
-          column.isSortedDesc ? 
-          <CaretDownOutlined />
-          : 
-          <CaretUpOutlined />
-        )}
+        {column.isSorted &&
+          (column.isSortedDesc ? <CaretDownOutlined /> : <CaretUpOutlined />)}
       </div>
     </Tooltip>
   );

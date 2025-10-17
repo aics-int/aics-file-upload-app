@@ -1,10 +1,5 @@
 import { UploadJob } from "../../services/job-status-service/types";
-import {
-  AutoSaveAction,
-  FileModel,
-  State,
-  WriteToStoreAction,
-} from "../types";
+import { AutoSaveAction, FileModel, State, WriteToStoreAction } from "../types";
 
 export interface MMSAnnotationValueRequest {
   annotationId: number;

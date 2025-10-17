@@ -2,7 +2,10 @@ import { expect } from "chai";
 import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
 import { FileManagementSystem, JobStatusService } from "../../../services";
-import { FSSUpload, UploadStatus } from "../../../services/file-storage-service";
+import {
+  FSSUpload,
+  UploadStatus,
+} from "../../../services/file-storage-service";
 import {
   IN_PROGRESS_STATUSES,
   JSSJobStatus,
@@ -355,11 +358,11 @@ describe("Job logics", () => {
           status: JSSJobStatus.UNRECOVERABLE,
           currentStage,
         };
-  
+
         // Act
         store.dispatch(receiveFSSJobCompletionUpdate(fssUpload));
         await logicMiddleware.whenComplete();
-  
+
         // Assert
         expect(fms.failUpload).to.have.been.calledOnce;
         expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be

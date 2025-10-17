@@ -220,11 +220,11 @@ describe("State helpers", () => {
 
     before(async () => {
       await fs.promises.mkdir(testDir);
-    })
+    });
 
     after(async () => {
       await fs.promises.rm(testDir, { recursive: true });
-    })
+    });
 
     const runTest = async (
       skipWarningDialog: boolean,
@@ -234,13 +234,12 @@ describe("State helpers", () => {
     ) => {
       const ipcRenderer = {
         invoke: stub(),
-      }
+      };
       const deps = {
         ...mockReduxLogicDeps,
         ipcRenderer,
         getState: () => ({}),
       };
-
 
       if (!skipWarningDialog) {
         ipcRenderer.invoke.onCall(0).resolves(showMessageBoxResponse);
@@ -259,8 +258,11 @@ describe("State helpers", () => {
     };
 
     it("automatically saves draft if user is working on a draft that has previously been saved", async () => {
-      const { invokeStub } =
-        await runTest(false, undefined, path.resolve(testDir, "testDraft"));
+      const { invokeStub } = await runTest(
+        false,
+        undefined,
+        path.resolve(testDir, "testDraft")
+      );
       expect(invokeStub).to.not.have.been.called;
     });
 
@@ -288,13 +290,12 @@ describe("State helpers", () => {
 
     it("shows saveDialog and returns { cancelled: false, filePath } with filePath chosen by user", async () => {
       const filePath = path.resolve(testDir, "testDraftSaves");
-      const { result, invokeStub } =
-        await runTest(
-          false,
-          2, // save button index
-          undefined,
-          filePath
-        );
+      const { result, invokeStub } = await runTest(
+        false,
+        2, // save button index
+        undefined,
+        filePath
+      );
       expect(invokeStub).to.have.been.calledTwice;
       expect(result).to.deep.equal({
         cancelled: false,
@@ -303,13 +304,12 @@ describe("State helpers", () => {
     });
 
     it("shows saveDialog and returns { cancelled: false, filePath: undefined } if user decides to cancel saving draft", async () => {
-      const { result, invokeStub } =
-        await runTest(
-          false,
-          2, // save button index
-          undefined,
-          undefined
-        );
+      const { result, invokeStub } = await runTest(
+        false,
+        2, // save button index
+        undefined,
+        undefined
+      );
       expect(invokeStub).to.have.been.calledTwice;
       expect(result).to.deep.equal({
         cancelled: false,

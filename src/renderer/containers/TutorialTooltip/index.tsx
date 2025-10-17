@@ -1,4 +1,8 @@
-import { CaretLeftOutlined, CaretRightOutlined, CheckOutlined } from "@ant-design/icons";
+import {
+  CaretLeftOutlined,
+  CaretRightOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 import { Button, Popover } from "antd";
 import { isNil } from "lodash";
 import React from "react";

@@ -1,5 +1,5 @@
-Constants
-==================
+# Constants
+
 Constants are enums, maps, or otherwise shared variables (`const`s) of concern to the whole application.
 Enums and enum-like object maps use PascalCase and are named in the singular. `const` variables use UPPER_SNAKE_CASE.
 

@@ -1,9 +1,9 @@
-import React from 'react';
+import React from "react";
 
 const styles = require("./styles.pcss");
 
 interface NewPageFooterProps {
-    children: React.ReactNode | React.ReactNode[];
+  children: React.ReactNode | React.ReactNode[];
 }
 
 /**
@@ -12,9 +12,5 @@ interface NewPageFooterProps {
  *  parent component.
  */
 export default function PageFooter(props: NewPageFooterProps) {
-    return (
-        <div className={styles.footer}>
-            {props.children}
-        </div>
-    )
+  return <div className={styles.footer}>{props.children}</div>;
 }

@@ -1,3 +1,5 @@
+import { basename } from "path";
+
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
@@ -37,7 +39,10 @@ import type { LoadFilesAction } from "./types";
 
 const loadFilesLogic = createLogic({
   process: async (
-    { action, getState }: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
+    {
+      action,
+      getState,
+    }: ReduxLogicProcessDependenciesWithAction<LoadFilesAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
@@ -45,10 +50,22 @@ const loadFilesLogic = createLogic({
     try {
       const uploadType: UploadType | null = getUploadType(getState());
       if (!uploadType) {
-        throw new Error('Cannot parse selected files. Upload Type not defined.');
+        throw new Error(
+          "Cannot parse selected files. Upload Type not defined."
+        );
       }
       dispatch(stopLoading());
-      dispatch(addUploadFiles(action.payload.map((file) => ({ file, uploadType }))));
+      dispatch(
+        addUploadFiles(
+          action.payload.map((item: any) => {
+            if (typeof item === "string") {
+              return { file: item, uploadType, customFileName: basename(item) };
+            } else {
+              return { file: item.path, uploadType, customFileName: item.name };
+            }
+          })
+        )
+      );
       done();
     } catch (e) {
       dispatch(
