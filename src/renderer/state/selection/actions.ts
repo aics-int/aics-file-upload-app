@@ -27,7 +27,9 @@ import {
   UpdateMassEditRowAction,
 } from "./types";
 
-export function loadFiles(files: string[]): LoadFilesAction {
+export function loadFiles(
+  files: Array<string | import("./types").ManualFileInput>
+): LoadFilesAction {
   return {
     autoSave: true,
     payload: files,

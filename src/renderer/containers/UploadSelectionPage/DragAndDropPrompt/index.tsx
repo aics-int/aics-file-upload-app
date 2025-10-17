@@ -12,7 +12,7 @@ const styles = require("./styles.pcss");
 
 interface DragAndDropPromptProps {
   openDialogOptions: OpenDialogOptions;
-  onDrop: (files: string[]) => void;
+  onDrop: (files: Array<string | { path: string; name: string }>) => void;
   uploadType: UploadType;
 }
 
@@ -36,9 +36,9 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const trimmedPath = filePath.trim();
-    // const trimmedName = fileName.trim(); // same action or independent?
+    const trimmedName = fileName.trim();
     if (trimmedPath) {
-      props.onDrop([trimmedPath]);
+      props.onDrop([{ path: trimmedPath, name: trimmedName }]);
     }
   };
 

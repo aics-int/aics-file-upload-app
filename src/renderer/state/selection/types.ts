@@ -25,8 +25,10 @@ export interface Well {
   solutions: Solution[];
 }
 
+export type ManualFileInput = { path: string; name: string };
+
 export interface LoadFilesAction extends AutoSaveAction {
-  payload: string[];
+  payload: Array<string | ManualFileInput>;
   type: string;
 }
 
