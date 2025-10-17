@@ -177,6 +177,7 @@ export interface UploadStateBranch {
 export interface FileModel {
   file: string; // fullpath
   uploadType?: UploadType;
+  customFileName?: string; // optional custom display/upload name
   // Known custom annotations
   [AnnotationName.NOTES]?: string[];
   [AnnotationName.PLATE_BARCODE]?: string[];

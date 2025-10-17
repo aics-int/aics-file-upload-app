@@ -1,3 +1,5 @@
+import { basename } from "path";
+
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
@@ -54,7 +56,15 @@ const loadFilesLogic = createLogic({
       }
       dispatch(stopLoading());
       dispatch(
-        addUploadFiles(action.payload.map((file) => ({ file, uploadType })))
+        addUploadFiles(
+          action.payload.map((item: any) => {
+            if (typeof item === "string") {
+              return { file: item, uploadType, customFileName: basename(item) };
+            } else {
+              return { file: item.path, uploadType, customFileName: item.name };
+            }
+          })
+        )
       );
       done();
     } catch (e) {

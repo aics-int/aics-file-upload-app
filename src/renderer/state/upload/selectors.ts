@@ -484,6 +484,9 @@ export const getUploadRequests = createSelector(
           extensionToFileTypeMap[extname(filePath).toLowerCase()] ||
           FileType.OTHER,
         originalPath: filePath,
+        ...(fileMetadata.customFileName && {
+          fileName: fileMetadata.customFileName,
+        }),
         shouldBeInArchive: true,
         shouldBeInLocal: ShouldBeInLocal,
         uploadType: fileMetadata.uploadType,

@@ -62,8 +62,10 @@ export default class FileManagementSystem {
     user: string,
     serviceFields: Partial<UploadServiceFields> = {}
   ): Promise<UploadJob> {
+    const jobName =
+      metadata.file.fileName || path.basename(metadata.file.originalPath);
     return this.jss.createJob({
-      jobName: path.basename(metadata.file.originalPath),
+      jobName,
       service: Service.FILE_UPLOAD_APP,
       status: JSSJobStatus.WAITING,
       user,
@@ -279,7 +281,8 @@ export default class FileManagementSystem {
   public async upload(upload: UploadJob): Promise<void> {
     try {
       const source = upload.serviceFields.files[0]?.file.originalPath;
-      const fileName = path.basename(source);
+      const providedName = upload.serviceFields.files[0]?.file.fileName;
+      const fileName = providedName || path.basename(source);
       const isMultifile = upload.serviceFields?.multifile;
       const shouldBeInLocal =
         upload.serviceFields.files[0]?.file.shouldBeInLocal;
