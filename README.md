@@ -55,18 +55,36 @@ You can configure the LIMS Host URL to a custom one by going to: File > Settings
 npm run test
 ```
 
-## Run Linter
+## Linting
 
 ```bash
 npm run lint
+npm run lint-fix
 ```
 
-## Prettier
-We configured this repository to automatically format code with Prettier upon
-committing it. If you would like configure you IDE or editor to run Prettier
-before committing, you can find instructions
-[here](https://prettier.io/docs/en/editors.html).
+## Formatting
+```bash
+npm run format-check
+npm run format-write
+```
 
+Developers should format and lint their
+changes either by:
+* Configuring their IDE or editor to run Prettier and ESLint
+    * You can find instructions
+      [here](https://prettier.io/docs/en/editors.html).
+* Running `npm run format-write` and `npm run lint-fix` locally
+  before committing.
+
+To catch formatting and lint errors before CI, a pre-commit task is configured.
+
+## CI
+This project runs a CI pipeline as a GitHub action.  
+On every pull request the CI pipeline will run: 
+* Formatting and linting checks are performed
+* Tests 
+* Build
+  
 ## Packaging and Publishing
 
 For an overview of our build pipeline, see [Confluence](https://alleninstitute.atlassian.net/wiki/spaces/SF/pages/16754555/File+Upload+App+CI+Pipeline)
