@@ -15,10 +15,7 @@ describe("FileStorageService", () => {
   beforeEach(() => {
     httpClient = sandbox.createStubInstance(HttpCacheClient);
     storage = sandbox.createStubInstance(EnvironmentAwareStorage);
-    fss = new FileStorageService(
-      httpClient,
-      storage
-    );
+    fss = new FileStorageService(httpClient, storage);
 
     // Stub `get` specifically, since it is a class property and not on the prototype
     storage.get = sandbox.stub() as any;
@@ -30,7 +27,11 @@ describe("FileStorageService", () => {
 
   describe("upload", () => {
     it("check to see if we send correctly formatted post body", async () => {
-      const expectedResponse = { uploadId: "12930132", status: UploadStatus.WORKING, fileId: "abc123" };
+      const expectedResponse = {
+        uploadId: "12930132",
+        status: UploadStatus.WORKING,
+        fileId: "abc123",
+      };
       const response = { status: 200, data: expectedResponse };
       const postStub = sandbox.stub().resolves(response);
       sandbox.replace(httpClient, "post", postStub as SinonStub<any>);

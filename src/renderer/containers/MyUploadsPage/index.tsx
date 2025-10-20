@@ -1,4 +1,8 @@
-import { FileSearchOutlined, RedoOutlined, StopOutlined } from "@ant-design/icons";
+import {
+  FileSearchOutlined,
+  RedoOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
 import { Button, Menu, Spin, Tooltip } from "antd";
 import { isEmpty, uniqBy } from "lodash";
 import * as React from "react";
@@ -88,21 +92,31 @@ export default function MyUploadsPage() {
   function getContextMenuItems(row: Row<UploadSummaryTableRow>) {
     const onRowView = () => {
       dispatch(viewUploads([row.original]));
-    }
+    };
     const onRowRetry = () => {
-      dispatch(retryUploads([row.original]))
-    }
+      dispatch(retryUploads([row.original]));
+    };
     const onRowCancel = () => {
-      dispatch(cancelUploads([row.original]))
-    }
-  
+      dispatch(cancelUploads([row.original]));
+    };
+
     return (
       <Menu>
         <Menu.Item onClick={onRowView}>View</Menu.Item>
-        <Menu.Item disabled={row.original.status !== JSSJobStatus.FAILED} onClick={onRowRetry}>Retry</Menu.Item>
-        <Menu.Item disabled={!IN_PROGRESS_STATUSES.includes(row.original.status)} onClick={onRowCancel}>Cancel</Menu.Item>
+        <Menu.Item
+          disabled={row.original.status !== JSSJobStatus.FAILED}
+          onClick={onRowRetry}
+        >
+          Retry
+        </Menu.Item>
+        <Menu.Item
+          disabled={!IN_PROGRESS_STATUSES.includes(row.original.status)}
+          onClick={onRowCancel}
+        >
+          Cancel
+        </Menu.Item>
       </Menu>
-    )
+    );
   }
 
   function onUploadWithoutTemplate(filePaths: string[]) {

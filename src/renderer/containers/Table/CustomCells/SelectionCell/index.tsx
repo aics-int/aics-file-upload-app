@@ -17,7 +17,9 @@ interface Props<T extends Record<string, any>> extends CellProps<T> {
     This renders a checkbox that controls the selection state
     of an individual row.
 */
-export default function SelectionCell<T extends Record<string, any>>(props: Props<T>) {
+export default function SelectionCell<T extends Record<string, any>>(
+  props: Props<T>
+) {
   const dispatch = useDispatch();
   const lastRowSelected = useSelector(getLastSelectedUpload);
   const checkBoxProps = props.row.getToggleRowSelectedProps();

@@ -11,7 +11,6 @@ import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
 import DisplayCell from "../../DefaultCells/DisplayCell";
 
-
 const { Option } = Select;
 
 export default function ProgramCell(props: CellProps<FileModel, string[]>) {

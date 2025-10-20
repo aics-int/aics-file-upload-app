@@ -72,17 +72,21 @@ function TableRow<T extends Record<string, any>>(props: Props<T>) {
         </div>
       ))}
     </div>
-  )
+  );
 
   if (!props.getContextMenuItems) {
     return content;
   }
 
   return (
-    <Dropdown overlay={props.getContextMenuItems(props)} trigger={['contextMenu']} onVisibleChange={(isVisible) => !isVisible && setIsHighlighted(false)}>
-        {content}
+    <Dropdown
+      overlay={props.getContextMenuItems(props)}
+      trigger={["contextMenu"]}
+      onVisibleChange={(isVisible) => !isVisible && setIsHighlighted(false)}
+    >
+      {content}
     </Dropdown>
-  )
+  );
 }
 
 // Memoize the component

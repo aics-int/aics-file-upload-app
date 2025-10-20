@@ -30,9 +30,7 @@ const styles = require("./styles.pcss");
 
 interface Props {
   title?: string;
-  getContextMenuItems: (
-    row: Row<UploadSummaryTableRow>,
-  ) => React.ReactElement;
+  getContextMenuItems: (row: Row<UploadSummaryTableRow>) => React.ReactElement;
   onSelect: (
     rows: Row<UploadSummaryTableRow>[],
     isDeselecting: boolean

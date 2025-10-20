@@ -22,7 +22,11 @@ import {
   ReduxLogicTransformDependencies,
 } from "../types";
 
-import { receiveAnnotationUsage, receiveMetadata, receiveProgramOptions } from "./actions";
+import {
+  receiveAnnotationUsage,
+  receiveMetadata,
+  receiveProgramOptions,
+} from "./actions";
 import {
   CREATE_BARCODE,
   GET_BARCODE_SEARCH_RESULTS,
@@ -322,9 +326,9 @@ const getProgramOptionsLogic = createLogic({
   latest: true,
   process: async (
     { labkeyClient }: ReduxLogicProcessDependencies,
-  dispatch: ReduxLogicNextCb,
-  done: ReduxLogicDoneCb
-) => {
+    dispatch: ReduxLogicNextCb,
+    done: ReduxLogicDoneCb
+  ) => {
     const request = () => labkeyClient.getProgramOptions();
 
     try {

@@ -49,7 +49,7 @@ export default class ChunkedFileReader {
    * read will be sent back in the given 'onProgress' callback. The starting
    * point for the file read may be offset from the first byte using the 'offset'
    * parameter.
-   * 
+   *
    * Returns the MD5 hash of the file upon resolution. This MD5 is calculated
    * while the file is read.
    *
@@ -57,14 +57,21 @@ export default class ChunkedFileReader {
    * cancelled at any time.
    */
   public async read(config: {
-    uploadId: string,
-    source: string,
-    onProgress: (chunk: Uint8Array, hashThusFar: string) => Promise<void>,
-    chunkSize: number,
-    offset: number,
-    partiallyCalculatedMd5?: string
+    uploadId: string;
+    source: string;
+    onProgress: (chunk: Uint8Array, hashThusFar: string) => Promise<void>;
+    chunkSize: number;
+    offset: number;
+    partiallyCalculatedMd5?: string;
   }): Promise<string> {
-    const { uploadId, source, onProgress, chunkSize, offset, partiallyCalculatedMd5 } = config;
+    const {
+      uploadId,
+      source,
+      onProgress,
+      chunkSize,
+      offset,
+      partiallyCalculatedMd5,
+    } = config;
     const readStreamChunkSize = Math.min(chunkSize, READ_STREAM_MAX_CHUNK_SIZE);
     const readStream = fs.createReadStream(source, {
       // Offset the start byte by the offset param
@@ -127,7 +134,9 @@ export default class ChunkedFileReader {
             // Otherwise, run each chunk progress update consecutively
             // failing at the first failure
             const serializedPartialMd5 = hasher.serialize();
-            const progressUpdates = chunks.map((c) => () => onProgress(c, serializedPartialMd5));
+            const progressUpdates = chunks.map(
+              (c) => () => onProgress(c, serializedPartialMd5)
+            );
             const progressUpdateQueue = new BatchedTaskQueue(
               progressUpdates,
               1

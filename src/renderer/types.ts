@@ -28,12 +28,12 @@ export interface Duration {
 //  But, unfortunately, putting them down there causes some nasty circular dependency issues.
 //   -TF 2025-01-22
 export interface SelectUploadTypeAction {
-  payload: UploadType,
-  type: string
+  payload: UploadType;
+  type: string;
 }
 
 export enum UploadType {
-  File = 'File',
+  File = "File",
   // We use the term "Chunked File" in the UI, "Multifile" in FSS.
-  Multifile = 'Chunked File',
+  Multifile = "Chunked File",
 }

@@ -317,9 +317,9 @@ export default class LabkeyClient extends HttpCacheClient {
       "AnnotationOption",
       filters
     );
-  
+
     const response = await this.get(query);
-  
+
     return response.rows.map((row: any) => ({
       annotationOptionId: row.AnnotationOptionId,
       value: row.Value,

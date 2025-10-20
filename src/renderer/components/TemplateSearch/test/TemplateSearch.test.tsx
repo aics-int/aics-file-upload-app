@@ -11,10 +11,11 @@ import { mockState } from "../../../state/test/mocks";
 describe("<TemplateSearch />", () => {
   // Removes warning from antd component being tested
   before(() => {
-    window.matchMedia = () => ({ 
-      addListener: noop, 
-      removeListener: noop,
-    } as any);
+    window.matchMedia = () =>
+      ({
+        addListener: noop,
+        removeListener: noop,
+      } as any);
   });
 
   it("shows template options as given", () => {
