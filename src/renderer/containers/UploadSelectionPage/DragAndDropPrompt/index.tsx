@@ -64,24 +64,30 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
       </div>
       {isManualInputEnabled && (
         <form className={styles.manualInput} onSubmit={handleSubmit}>
-          <label className={styles.manualInputLabel} htmlFor="manualFileInput">
+          <label
+            className={styles.manualInputLabel}
+            htmlFor="manualFileNameInput"
+          >
             FMS File Name:
           </label>
           <input
-            id="manualFileInput"
-            name="manualFileInput"
+            id="manualFileNameInput"
+            name="manualFileNameInput"
             className={styles.manualInputField}
             onChange={handleFileNameChange}
             value={fileName}
             placeholder="Enter FMS File Name"
           />
           <br />
-          <label className={styles.manualInputLabel} htmlFor="manualFilePath">
+          <label
+            className={styles.manualInputLabel}
+            htmlFor="manualFilePathInput"
+          >
             VAST File Path:
           </label>
           <input
-            id="manualFilePath"
-            name="manualFilePath"
+            id="manualFilePathInput"
+            name="manualFilePathInput"
             className={styles.manualInputField}
             onChange={handleFilePathChange}
             value={filePath}
