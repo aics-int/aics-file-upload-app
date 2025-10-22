@@ -1,5 +1,3 @@
-import { basename } from "path";
-
 import { createLogic } from "redux-logic";
 
 import { AnnotationName } from "../../constants";
