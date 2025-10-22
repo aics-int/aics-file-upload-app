@@ -71,7 +71,7 @@ describe("Selection logics", () => {
       expect(getPage(store.getState())).to.equal(Page.UploadWithTemplate);
     });
 
-    it("sets files up for upload", async () => {
+    it("sets files up for upload, no custom filename", async () => {
       const { logicMiddleware, store } = createMockReduxStore(mockState);
 
       // before
@@ -88,6 +88,28 @@ describe("Selection logics", () => {
       expect(Object.keys(upload)).to.be.lengthOf(1);
       const file = upload[Object.keys(upload)[0]];
       expect(file.file).to.equal(FILE_FULL_PATH);
+    });
+
+    it("sets files up for upload, using custom filename", async () => {
+      const { logicMiddleware, store } = createMockReduxStore(mockState);
+
+      // before
+      expect(getUpload(store.getState())).to.be.empty;
+
+      // apply
+      store.dispatch(selections.actions.selectUploadType(UploadType.File));
+      store.dispatch(
+        selections.actions.loadFiles([{ path: FILE_FULL_PATH, name: "bla" }])
+      );
+
+      // after
+      await logicMiddleware.whenComplete();
+      const upload = getUpload(store.getState());
+
+      expect(Object.keys(upload)).to.be.lengthOf(1);
+      const file = upload[Object.keys(upload)[0]];
+      expect(file.file).to.equal(FILE_FULL_PATH);
+      expect(file.customFileName).to.equal("bla");
     });
 
     it("should stop loading on success", async () => {
