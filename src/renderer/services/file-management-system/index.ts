@@ -281,7 +281,7 @@ export default class FileManagementSystem {
   public async upload(upload: UploadJob): Promise<void> {
     try {
       const source = upload.serviceFields.files[0]?.file.originalPath;
-      const customFileName = upload.serviceFields.files[0]?.file.fileName;
+      const customFileName = upload.serviceFields.files[0]?.file.customFileName;
       const fileName = customFileName || path.basename(source);
       const isMultifile = upload.serviceFields?.multifile;
       const shouldBeInLocal =
