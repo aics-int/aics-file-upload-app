@@ -112,6 +112,35 @@ describe("Upload selectors", () => {
       );
       expect(unexpectedAnnotation).to.be.undefined;
     });
+    it("Selects customFileName", () => {
+      const file = "/path/to/image.tiff";
+      const payload = getUploadRequests({
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...mockState.template,
+          appliedTemplate: {
+            ...mockAuditInfo,
+            annotations: [mockFavoriteColorTemplateAnnotation],
+            name: "foo",
+            templateId: 1,
+            version: 1,
+          },
+        },
+        upload: getMockStateWithHistory({
+          [file]: {
+            barcode: "452",
+            favoriteColor: ["Blue"],
+            file,
+            [AnnotationName.NOTES]: [],
+            plateId: 4,
+            unexpectedAnnotation: ["Hello World"],
+            [AnnotationName.WELL]: [],
+            customFileName: "bla",
+          },
+        }),
+      });
+      expect(payload[0].file.customFileName).to.equal("bla");
+    });
     it("Interprets no values for a boolean annotation as false", () => {
       const state: State = {
         ...nonEmptyStateForInitiatingUpload,
