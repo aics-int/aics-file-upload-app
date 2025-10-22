@@ -73,11 +73,13 @@ describe("CustomDataTable selectors", () => {
         ...mockState,
         upload: getMockStateWithHistory({
           abc123: {
-            file: "abc123",
+            file: "abc123/foo",
+            name: "foo",
             [AnnotationName.PLATE_BARCODE]: expected.slice(0, 2),
           },
           def456: {
-            file: "def456",
+            file: "def456/foo",
+            name: "foo",
             [AnnotationName.PLATE_BARCODE]: expected.slice(2),
           },
         }),
@@ -99,7 +101,8 @@ describe("CustomDataTable selectors", () => {
         ...mockState,
         upload: getMockStateWithHistory({
           abc123: {
-            file: "abc123",
+            file: "abc123/foo",
+            name: "foo",
             [AnnotationName.PLATE_BARCODE]: [plateBarcode],
           },
         }),
@@ -141,7 +144,8 @@ describe("CustomDataTable selectors", () => {
         },
         upload: getMockStateWithHistory({
           abc123: {
-            file: "abc123",
+            file: "abc123/foo",
+            name: "foo",
             [AnnotationName.PLATE_BARCODE]: [plateBarcode],
           },
         }),
@@ -160,7 +164,8 @@ describe("CustomDataTable selectors", () => {
         ...mockState,
         upload: getMockStateWithHistory({
           abc123: {
-            file: "abc123",
+            file: "abc123/foo",
+            name: "foo",
             [AnnotationName.PLATE_BARCODE]: ["230141"],
           },
         }),
@@ -179,7 +184,8 @@ describe("CustomDataTable selectors", () => {
         ...mockState,
         upload: getMockStateWithHistory({
           abc123: {
-            file: "abc123",
+            file: "abc123/foo",
+            name: "foo",
           },
         }),
       };

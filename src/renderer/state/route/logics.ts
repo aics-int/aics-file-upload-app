@@ -314,6 +314,7 @@ const viewUploadsLogic = createLogic({
           customMetadata,
           file: {
             originalPath: labkeyFileMetadata.publicFilePath as string,
+            name: "foo",
             fileType: labkeyFileMetadata.fileType,
           },
         })
