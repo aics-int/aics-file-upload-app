@@ -479,17 +479,18 @@ export const getUploadRequests = createSelector(
       },
       file: {
         disposition: "tape", // prevent czi -> ome.tiff conversions
-        ...(fileMetadata.fileId && { fileId: fileMetadata.fileId }),
         fileType:
           extensionToFileTypeMap[extname(filePath).toLowerCase()] ||
           FileType.OTHER,
         originalPath: filePath,
-        ...(fileMetadata.customFileName && {
-          fileName: fileMetadata.customFileName,
-        }),
         shouldBeInArchive: true,
         shouldBeInLocal: ShouldBeInLocal,
         uploadType: fileMetadata.uploadType,
+        // optional jss fields [fileId, customFileName]
+        ...(fileMetadata.fileId && { fileId: fileMetadata.fileId }),
+        ...(fileMetadata.customFileName && {
+          customFileName: fileMetadata.customFileName,
+        }),
       },
       // To support the current way of storing metadata in bob the blob, we continue to include
       // wellIds in the microscopy block.

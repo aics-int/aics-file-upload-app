@@ -63,7 +63,7 @@ export default class FileManagementSystem {
     serviceFields: Partial<UploadServiceFields> = {}
   ): Promise<UploadJob> {
     const jobName =
-      metadata.file.fileName || path.basename(metadata.file.originalPath);
+      metadata.file.customFileName || path.basename(metadata.file.originalPath);
     return this.jss.createJob({
       jobName,
       service: Service.FILE_UPLOAD_APP,
