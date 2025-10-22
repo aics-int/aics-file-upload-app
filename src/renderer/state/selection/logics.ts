@@ -54,7 +54,7 @@ const loadFilesLogic = createLogic({
           "Cannot parse selected files. Upload Type not defined."
         );
       }
-      dispatch(stopLoading()); // We are showing a loading indicator just while check the upload type?!
+      dispatch(stopLoading()); // Stop loading indicator after upload type check
       dispatch(
         addUploadFiles(
           action.payload.map((item: any) => {
