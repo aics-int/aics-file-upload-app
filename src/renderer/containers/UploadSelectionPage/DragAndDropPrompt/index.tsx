@@ -76,12 +76,12 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
             placeholder="Enter FMS File Name"
           />
           <br />
-          <label className={styles.manualInputLabel} htmlFor="manualFileInput">
+          <label className={styles.manualInputLabel} htmlFor="manualFilePath">
             VAST File Path:
           </label>
           <input
-            id="manualFileInput"
-            name="manualFileInput"
+            id="manualFilePath"
+            name="manualFilePath"
             className={styles.manualInputField}
             onChange={handleFilePathChange}
             value={filePath}
