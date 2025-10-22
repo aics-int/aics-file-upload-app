@@ -35,11 +35,10 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    // Assert that the file path and name are not empty, since submit button would be disabled otherwise
     const trimmedPath = filePath.trim();
     const trimmedName = fileName.trim();
-    if (trimmedPath && trimmedName) {
-      props.onAddFile([{ path: trimmedPath, name: trimmedName }]);
-    }
+    props.onAddFile([{ path: trimmedPath, name: trimmedName }]);
   };
 
   const onBrowse = async () => {
