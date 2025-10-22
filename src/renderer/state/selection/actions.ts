@@ -20,6 +20,7 @@ import {
   ApplyMassEditAction,
   CancelMassEditAction,
   LoadFilesAction,
+  ManualFileInput,
   RemoveRowFromDragEventAction,
   StartCellDragAction,
   StartMassEditAction,
@@ -28,7 +29,7 @@ import {
 } from "./types";
 
 export function loadFiles(
-  files: Array<string | import("./types").ManualFileInput>
+  files: Array<string | ManualFileInput>
 ): LoadFilesAction {
   return {
     autoSave: true,
