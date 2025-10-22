@@ -60,10 +60,10 @@ const loadFilesLogic = createLogic({
           action.payload.map((item: any) => {
             if (typeof item === "string") {
               // If the item is a string, it's a path to a file on disk, and came from the 'Open File' dialog.'
-              return { file: item, uploadType, customFileName: basename(item) };
+              return { file: item, uploadType, name: basename(item) };
             } else {
               // If the item is an object, it's a manually entered file name and path from our dev feature.'
-              return { file: item.path, uploadType, customFileName: item.name };
+              return { file: item.path, uploadType, name: item.name };
             }
           })
         )
