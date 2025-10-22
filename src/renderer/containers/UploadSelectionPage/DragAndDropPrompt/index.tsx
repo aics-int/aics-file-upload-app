@@ -12,7 +12,7 @@ const styles = require("./styles.pcss");
 
 interface DragAndDropPromptProps {
   openDialogOptions: OpenDialogOptions;
-  onDrop: (files: Array<string | { path: string; name: string }>) => void;
+  onAddFile: (files: Array<string | { path: string; name: string }>) => void;
   uploadType: UploadType;
 }
 
@@ -38,7 +38,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
     const trimmedPath = filePath.trim();
     const trimmedName = fileName.trim();
     if (trimmedPath) {
-      props.onDrop([{ path: trimmedPath, name: trimmedName }]);
+      props.onAddFile([{ path: trimmedPath, name: trimmedName }]);
     }
   };
 
@@ -50,7 +50,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
 
     // If cancel is clicked, this callback gets called and filePaths is undefined
     if (filePaths && !isEmpty(filePaths)) {
-      props.onDrop(filePaths);
+      props.onAddFile(filePaths);
     }
   };
 
@@ -73,7 +73,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
             className={styles.manualInputField}
             onChange={handleFileNameChange}
             value={fileName}
-            placeholder="Enter a full file path and press Enter"
+            placeholder="Enter FMS File Name"
           />
           <br />
           <label className={styles.manualInputLabel} htmlFor="manualFileInput">
@@ -85,7 +85,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
             className={styles.manualInputField}
             onChange={handleFilePathChange}
             value={filePath}
-            placeholder="Enter a full file path and press Enter"
+            placeholder="Enter VAST File Path"
           />
           <br />
           <button
