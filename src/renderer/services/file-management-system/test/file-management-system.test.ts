@@ -60,6 +60,40 @@ describe("FileManagementSystem", () => {
       // Assert
       expect(jss.createJob).to.have.been.calledOnce;
     });
+
+    it("Names the job by extracting filename from filepath", async () => {
+      // Act
+      await fms.initiateUpload(
+        { file: { originalPath: "foo/bar", fileType: "txt" } },
+        "test"
+      );
+
+      const jssJobName = jss.createJob.getCall(0).args[0].jobName;
+      expect(jssJobName).to.equal("bar");
+
+      // Assert
+      expect(jss.createJob).to.have.been.calledOnce;
+    });
+
+    it("Names the job using the custom filename", async () => {
+      // Act
+      await fms.initiateUpload(
+        {
+          file: {
+            originalPath: "foo/bar",
+            fileType: "txt",
+            customFileName: "baz",
+          },
+        },
+        "test"
+      );
+
+      const jssJobName = jss.createJob.getCall(0).args[0].jobName;
+      expect(jssJobName).to.equal("baz");
+
+      // Assert
+      expect(jss.createJob).to.have.been.calledOnce;
+    });
   });
 
   describe("upload", () => {
