@@ -37,7 +37,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
     if (e) e.preventDefault();
     const trimmedPath = filePath.trim();
     const trimmedName = fileName.trim();
-    if (trimmedPath) {
+    if (trimmedPath && trimmedName) {
       props.onAddFile([{ path: trimmedPath, name: trimmedName }]);
     }
   };
