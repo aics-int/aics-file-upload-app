@@ -6,13 +6,14 @@ import { useSelector } from "react-redux";
 
 import { RendererProcessEvents } from "../../../../shared/constants";
 import { getUploadType } from "../../../state/selection/selectors";
+import { ManualFileInput } from "../../../state/selection/types";
 import { UploadType } from "../../../types";
 
 const styles = require("./styles.pcss");
 
 interface DragAndDropPromptProps {
   openDialogOptions: OpenDialogOptions;
-  onAddFile: (files: Array<string | { path: string; name: string }>) => void;
+  onAddFile: (files: Array<string | ManualFileInput>) => void;
   uploadType: UploadType;
 }
 
