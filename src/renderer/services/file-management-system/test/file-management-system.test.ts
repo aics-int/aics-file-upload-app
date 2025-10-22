@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { basename } from "path";
 
 import { expect } from "chai";
 import { createSandbox, SinonStubbedInstance } from "sinon";
@@ -120,6 +121,58 @@ describe("FileManagementSystem", () => {
           serviceFields: { fssUploadId: "mockUploadId" },
         })
       ).to.be.true;
+    });
+
+    it("Uses extracted fileName in FSS upload", async () => {
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
+          type: "upload",
+        },
+      };
+
+      fss.upload.resolves({
+        status: UploadStatus.WORKING,
+        uploadId: "mockUploadId",
+        fileId: "mockFileId",
+      });
+
+      await fms.upload(upload);
+
+      const actualFileName = fss.upload.getCall(0).args[0];
+      const expectedFileName = basename(testFilePath);
+      expect(actualFileName).to.equal(expectedFileName);
+    });
+
+    it("Uses customFileName in FSS upload", async () => {
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [
+            {
+              file: {
+                fileType: "text",
+                originalPath: testFilePath,
+                customFileName: "bla",
+              },
+            },
+          ],
+          type: "upload",
+        },
+      };
+
+      fss.upload.resolves({
+        status: UploadStatus.WORKING,
+        uploadId: "mockUploadId",
+        fileId: "mockFileId",
+      });
+
+      await fms.upload(upload);
+
+      const actualFileName = fss.upload.getCall(0).args[0];
+      const expectedFileName = "bla";
+      expect(actualFileName).to.equal(expectedFileName);
     });
 
     it("calls retryFinalize on a localNasShortcut upload", async () => {
