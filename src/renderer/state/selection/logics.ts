@@ -52,9 +52,19 @@ const loadFilesLogic = createLogic({
           "Cannot parse selected files. Upload Type not defined."
         );
       }
-      dispatch(stopLoading());
+      dispatch(stopLoading()); // Stop loading indicator after upload type check
       dispatch(
-        addUploadFiles(action.payload.map((file) => ({ file, uploadType })))
+        addUploadFiles(
+          action.payload.map((item: any) => {
+            if (typeof item === "string") {
+              // If the item is a string, it's a path to a file on disk, and came from the 'Open File' dialog.'
+              return { file: item, uploadType };
+            } else {
+              // If the item is an object, it's a manually entered file name and path from our dev feature.'
+              return { file: item.path, uploadType, customFileName: item.name };
+            }
+          })
+        )
       );
       done();
     } catch (e) {

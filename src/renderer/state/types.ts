@@ -175,8 +175,9 @@ export interface UploadStateBranch {
 
 // Metadata associated with a file
 export interface FileModel {
-  file: string; // fullpath
+  file: string; // full VAST path
   uploadType?: UploadType;
+  customFileName?: string; // optional custom file name
   // Known custom annotations
   [AnnotationName.NOTES]?: string[];
   [AnnotationName.PLATE_BARCODE]?: string[];

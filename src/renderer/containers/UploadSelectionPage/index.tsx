@@ -61,7 +61,7 @@ export default function UploadSelectionPage() {
           >
             <DragAndDropPrompt
               openDialogOptions={openDialogOptions}
-              onDrop={(f) => {
+              onAddFile={(f) => {
                 dispatch(loadFiles(f));
               }}
               uploadType={uploadType}

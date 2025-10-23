@@ -6,36 +6,40 @@ import { useSelector } from "react-redux";
 
 import { RendererProcessEvents } from "../../../../shared/constants";
 import { getUploadType } from "../../../state/selection/selectors";
+import { ManualFileInput } from "../../../state/selection/types";
 import { UploadType } from "../../../types";
 
 const styles = require("./styles.pcss");
 
 interface DragAndDropPromptProps {
   openDialogOptions: OpenDialogOptions;
-  onDrop: (files: string[]) => void;
+  onAddFile: (files: Array<string | ManualFileInput>) => void;
   uploadType: UploadType;
 }
 
 export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
   const uploadType = useSelector(getUploadType);
 
-  const [inputValue, setInputValue] = useState("");
+  const [filePath, setFilePath] = useState("");
+  const [fileName, setFileName] = useState("");
 
   const isManualInputEnabled =
     String(process.env.ENABLE_MANUAL_FILE_INPUT).toLowerCase() === "true";
 
-  // Define the onChange handler function
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // Update the state with the new value from the input field
-    setInputValue(event.target.value);
+  const handleFileNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFileName(event.target.value);
+  };
+
+  const handleFilePathChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilePath(event.target.value);
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const trimmed = inputValue.trim();
-    if (trimmed) {
-      props.onDrop([trimmed]);
-    }
+    // Assert that the file path and name are not empty, since submit button would be disabled otherwise
+    const trimmedPath = filePath.trim();
+    const trimmedName = fileName.trim();
+    props.onAddFile([{ path: trimmedPath, name: trimmedName }]);
   };
 
   const onBrowse = async () => {
@@ -46,7 +50,7 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
 
     // If cancel is clicked, this callback gets called and filePaths is undefined
     if (filePaths && !isEmpty(filePaths)) {
-      props.onDrop(filePaths);
+      props.onAddFile(filePaths);
     }
   };
 
@@ -60,25 +64,44 @@ export default function DragAndDropPrompt(props: DragAndDropPromptProps) {
       </div>
       {isManualInputEnabled && (
         <form className={styles.manualInput} onSubmit={handleSubmit}>
-          <label className={styles.manualInputLabel} htmlFor="manualFileInput">
-            Dev file path override
+          <label
+            className={styles.manualInputLabel}
+            htmlFor="manualFileNameInput"
+          >
+            FMS File Name:
           </label>
           <input
-            id="manualFileInput"
-            name="manualFileInput"
+            id="manualFileNameInput"
+            name="manualFileNameInput"
             className={styles.manualInputField}
-            onChange={handleChange}
-            value={inputValue}
-            placeholder="Enter a full file path and press Enter"
+            onChange={handleFileNameChange}
+            value={fileName}
+            placeholder="Enter FMS File Name"
           />
+          <br />
+          <label
+            className={styles.manualInputLabel}
+            htmlFor="manualFilePathInput"
+          >
+            VAST File Path:
+          </label>
+          <input
+            id="manualFilePathInput"
+            name="manualFilePathInput"
+            className={styles.manualInputField}
+            onChange={handleFilePathChange}
+            value={filePath}
+            placeholder="Enter VAST File Path"
+          />
+          <br />
           <button
             type="submit"
             className={styles.manualInputButton}
-            disabled={!inputValue.trim()}
+            disabled={!filePath.trim() || !fileName.trim()}
             title={
-              !inputValue.trim()
-                ? "Enter a valid path to enable"
-                : "Submit path"
+              !filePath.trim() || !fileName.trim()
+                ? "Enter a valid path and name to enable"
+                : "Submit Upload"
             }
           >
             Submit
