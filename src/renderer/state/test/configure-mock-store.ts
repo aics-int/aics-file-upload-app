@@ -89,6 +89,7 @@ const reducers = {
   feedback: feedback.reducer,
   job: job.reducer,
   metadata: metadata.reducer,
+  metadataExtraction: metadataExtraction.reducer,
   route: route.reducer,
   selection: selection.reducer,
   setting: setting.reducer,
