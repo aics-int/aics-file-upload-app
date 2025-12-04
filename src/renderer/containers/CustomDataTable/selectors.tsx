@@ -17,6 +17,7 @@ import ImagingSessionCell from "../Table/CustomCells/ImagingSessionCell";
 import NotesCell from "../Table/CustomCells/NotesCell";
 import PlateBarcodeCell from "../Table/CustomCells/PlateBarcodeCell";
 import ProgramCell from "../Table/CustomCells/ProgramCell";
+import SeeMetadataCell from "../Table/CustomCells/SeeMetadataCell";
 import SelectionCell from "../Table/CustomCells/SelectionCell";
 import WellCell from "../Table/CustomCells/WellCell";
 import ReadOnlyCell from "../Table/DefaultCells/ReadOnlyCell";
@@ -145,6 +146,14 @@ export const getCanShowImagingSessionColumn = createSelector(
     )
 );
 
+const METADATA_COLUMN: CustomColumn = {
+  id: "SeeMetadata",
+  Header: "See Metadata",
+  Cell: SeeMetadataCell,
+  disableResizing: true,
+  width: 150,
+};
+
 // Uses shallow equality comparable selectors to avoid
 // re-rendering on each upload state change which would
 // cause downstream effects like reseting user adjusted
@@ -201,6 +210,11 @@ export const getColumnsForTable = createSelector(
       }));
     }
 
-    return [SELECTION_COLUMN, ...DEFAULT_COLUMNS, ...templateColumns];
+    return [
+      SELECTION_COLUMN,
+      ...DEFAULT_COLUMNS,
+      ...templateColumns,
+      METADATA_COLUMN,
+    ];
   }
 );

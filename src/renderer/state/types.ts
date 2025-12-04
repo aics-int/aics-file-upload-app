@@ -27,6 +27,7 @@ import {
   Lookup,
   Unit,
 } from "../services/labkey-client/types";
+import MetadataExtractionService from "../services/metadata-extraction-service";
 import {
   Template,
   WellResponse,
@@ -74,6 +75,7 @@ export interface ReduxLogicExtraDependencies<
   jssClient: JobStatusService;
   labkeyClient: LabkeyClient;
   mmsClient: MetadataManagementService;
+  mxsClient: MetadataExtractionService;
   storage: LocalStorage;
 }
 
@@ -313,6 +315,9 @@ export interface State {
 
   // Extra data that usually originates from the database
   metadata: MetadataStateBranch;
+
+  // Related to metadata extraction for annotation preview from files
+  metadataExtraction: MetadataExtractionState;
 
   // Which Upload wizard page to show, which tab to show
   route: RouteStateBranch;
