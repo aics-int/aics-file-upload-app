@@ -148,10 +148,10 @@ export const getCanShowImagingSessionColumn = createSelector(
 
 const METADATA_COLUMN: CustomColumn = {
   id: "SeeMetadata",
-  Header: "See Metadata",
+  Header: "",
   Cell: SeeMetadataCell,
   disableResizing: true,
-  width: 150,
+  width: 135,
 };
 
 // Uses shallow equality comparable selectors to avoid

@@ -31,7 +31,12 @@ export default function SeeMetadataCell(props: CellProps<any>) {
 
   return (
     <>
-      <Button onClick={showMetadata}>See Extracted Metadata</Button>
+      <Button
+        onClick={showMetadata}
+        style={{ fontSize: "11px", padding: "0 6px" }}
+      >
+        See Extracted Metadata
+      </Button>
       <Modal
         title="Extracted Metadata from Image"
         visible={isModalVisible}
