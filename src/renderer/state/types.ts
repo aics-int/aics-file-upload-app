@@ -35,7 +35,7 @@ import {
 import { LocalStorage } from "../types";
 import type { UploadType } from "../types";
 
-import type { MetadataExtractionState } from "./metadataExtraction/reducer";
+import type { MetadataExtractionState } from "./metadataExtraction/types";
 
 import Process = CreateLogic.Config.Process;
 import DepObj = CreateLogic.Config.DepObj;

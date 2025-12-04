@@ -1,21 +1,11 @@
 import { AnyAction } from "redux";
 
-import { MXSResult } from "../../services/metadata-extraction-service";
 import {
   FETCH_METADATA_REQUEST,
   FETCH_METADATA_SUCCEEDED,
   FETCH_METADATA_FAILED,
 } from "../metadataExtraction/constants";
-
-interface FileMetadataState {
-  [filePath: string]: {
-    loading: boolean;
-    metadata?: MXSResult;
-    error?: string;
-  };
-}
-
-export type MetadataExtractionState = FileMetadataState;
+import type { MetadataExtractionState } from "../metadataExtraction/types";
 
 export const initialState: MetadataExtractionState = {};
 

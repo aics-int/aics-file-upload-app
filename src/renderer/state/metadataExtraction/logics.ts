@@ -1,14 +1,16 @@
 import { createLogic } from "redux-logic";
 
 import {
+  fetchMetadataSucceeded,
+  fetchMetadataFailed,
+} from "../metadataExtraction/actions";
+import { FetchMetadataRequestAction } from "../metadataExtraction/actions";
+import { FETCH_METADATA_REQUEST } from "../metadataExtraction/constants";
+import {
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicNextCb,
   ReduxLogicDoneCb,
 } from "../types";
-
-import { fetchMetadataSucceeded, fetchMetadataFailed } from "./actions";
-import { FETCH_METADATA_REQUEST } from "./constants";
-import { FetchMetadataRequestAction } from "./types";
 
 const fetchMetadataLogic = createLogic({
   process: async (
