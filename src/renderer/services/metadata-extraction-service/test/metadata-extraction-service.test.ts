@@ -48,13 +48,18 @@ describe("MetadataExtractionService", () => {
         },
       };
 
-      httpClient.put.resolves(mxsResult as any);
+      httpClient.put.resolves({
+        status: 200,
+        data: mxsResult,
+      } as any);
 
       const result = await mxsClient.fetchExtractedMetadata(path);
 
       expect(result).to.equal(mxsResult);
       expect(httpClient.put).to.have.been.calledOnceWith(
-        "/metadata-extraction-service/extracted-annotations",
+        match((u: string) =>
+          u.endsWith("/metadata-extraction-service/extracted-annotations")
+        ),
         { path },
         match({
           headers: {
