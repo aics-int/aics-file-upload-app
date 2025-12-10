@@ -68,5 +68,56 @@ describe("MetadataExtractionService", () => {
         })
       );
     });
+    it("throws when file is invalid (415)", async () => {
+      const path = "/missing/file.tif";
+
+      const error = new Error("File not found") as any;
+      error.response = {
+        status: 415,
+        data: { message: "File not found" },
+      };
+
+      httpClient.put.rejects(error);
+
+      await expect(mxsClient.fetchExtractedMetadata(path)).to.be.rejectedWith(
+        "File not found"
+      );
+
+      expect(httpClient.put).to.have.been.calledOnceWith(
+        match((u: string) =>
+          u.endsWith("/metadata-extraction-service/extracted-annotations")
+        ),
+        { path },
+        match({
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    });
+
+    it("throws when file is unsupported (415)", async () => {
+      const path = "/some/path/to/file.pdf";
+
+      const error = new Error("Invalid image format") as any;
+      error.response = {
+        status: 415,
+        data: { message: "Invalid image format" },
+      };
+
+      httpClient.put.rejects(error);
+
+      await expect(mxsClient.fetchExtractedMetadata(path)).to.be.rejectedWith(
+        "Invalid image format"
+      );
+
+      expect(httpClient.put).to.have.been.calledOnceWith(
+        match((u: string) =>
+          u.endsWith("/metadata-extraction-service/extracted-annotations")
+        ),
+        { path },
+        match({
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    });
   });
 });
