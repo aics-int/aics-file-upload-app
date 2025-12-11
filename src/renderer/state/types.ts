@@ -27,12 +27,15 @@ import {
   Lookup,
   Unit,
 } from "../services/labkey-client/types";
+import MetadataExtractionService from "../services/metadata-extraction-service";
 import {
   Template,
   WellResponse,
 } from "../services/metadata-management-service/types";
 import { LocalStorage } from "../types";
 import type { UploadType } from "../types";
+
+import type { MetadataExtractionState } from "./metadataExtraction/types";
 
 import Process = CreateLogic.Config.Process;
 import DepObj = CreateLogic.Config.DepObj;
@@ -74,6 +77,7 @@ export interface ReduxLogicExtraDependencies<
   jssClient: JobStatusService;
   labkeyClient: LabkeyClient;
   mmsClient: MetadataManagementService;
+  mxsClient: MetadataExtractionService;
   storage: LocalStorage;
 }
 
@@ -313,6 +317,9 @@ export interface State {
 
   // Extra data that usually originates from the database
   metadata: MetadataStateBranch;
+
+  // Related to metadata extraction for annotation preview from files
+  metadataExtraction: MetadataExtractionState;
 
   // Which Upload wizard page to show, which tab to show
   route: RouteStateBranch;

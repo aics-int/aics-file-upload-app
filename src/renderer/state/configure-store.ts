@@ -23,6 +23,7 @@ import {
 } from "../services";
 import { FileManagementSystem, FileStorageService } from "../services";
 import ApplicationInfoService from "../services/application-info-service";
+import MetadataExtractionService from "../services/metadata-extraction-service";
 
 import EnvironmentAwareStorage from "./EnvironmentAwareStorage";
 import { addEvent } from "./feedback/actions";
@@ -34,6 +35,7 @@ import {
   feedback,
   job,
   metadata,
+  metadataExtraction,
   route,
   selection,
   setting,
@@ -45,6 +47,7 @@ const reducers = {
   feedback: feedback.reducer,
   job: job.reducer,
   metadata: metadata.reducer,
+  metadataExtraction: metadataExtraction.reducer,
   route: route.reducer,
   selection: selection.reducer,
   setting: setting.reducer,
@@ -56,6 +59,7 @@ const logics = [
   ...feedback.logics,
   ...job.logics,
   ...metadata.logics,
+  ...metadataExtraction.logics,
   ...route.logics,
   ...selection.logics,
   ...setting.logics,
@@ -91,6 +95,7 @@ const httpClient = axios;
 const useCache = Boolean(process.env.USE_CACHE) || false;
 const jssClient = new JobStatusService(httpClient, storage, useCache);
 const mmsClient = new MetadataManagementService(httpClient, storage, useCache);
+const mxsClient = new MetadataExtractionService(httpClient, storage, false);
 const labkeyClient = new LabkeyClient(httpClient, storage, useCache);
 const applicationInfoService = new ApplicationInfoService(
   httpClient,
@@ -108,6 +113,7 @@ export const reduxLogicDependencies: Partial<ReduxLogicExtraDependencies> = {
   jssClient,
   labkeyClient,
   mmsClient,
+  mxsClient,
   storage,
 };
 

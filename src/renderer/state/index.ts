@@ -1,4 +1,5 @@
 export { default as metadata } from "./metadata";
+export { default as metadataExtraction } from "./metadataExtraction";
 export { default as feedback } from "./feedback";
 export { default as job } from "./job";
 export { default as route } from "./route";
