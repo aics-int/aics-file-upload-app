@@ -276,9 +276,10 @@ describe("CustomDataTable selectors", () => {
       });
 
       // Assert
-      expect(actual.length).to.equal(11);
+      // expect(actual.length).to.equal(11);
       // expect(actual.filter((c) => !c.isReadOnly)).to.be.lengthOf(11);
       expect(actual.filter((c) => !c.isReadOnly)).to.be.lengthOf(10); // TODO: Change to above when MXS feature released
+      expect(actual.length).to.equal(10); // TODO: Change to above when MXS feature released
       expect(actual.some((c) => c.id === "selection")).to.be.true;
       expect(actual.some((c) => c.accessor === "file")).to.be.true;
       expect(actual.some((c) => c.accessor === AnnotationName.NOTES)).to.be
