@@ -210,7 +210,7 @@ export default class FileManagementSystem {
 
     // upload never started in fss
     if (!fssUploadId) {
-      return true;
+      return false;
     }
 
     const fssStatus = await this.fss.getStatus(fssUploadId);
