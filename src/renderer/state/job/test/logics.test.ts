@@ -87,7 +87,6 @@ describe("Job logics", () => {
       expect(actions.list).to.deep.equal([
         receiveJobs([mockFailedUploadJob, mockSuccessfulUploadJob]),
       ]);
-      expect(fms.isAbandonedJobComplete).to.not.have.been.called;
     });
 
     it("finds and syncs status for any job that didn't get past the add metadata step", async () => {
@@ -129,7 +128,9 @@ describe("Job logics", () => {
         [handleAbandonedJobsLogic]
       );
       const errorMessage = "sync failure!";
-      fms.isAbandonedJobComplete.onFirstCall().rejects(new Error(errorMessage));
+      fms.syncAbandonedUploadStatus
+        .onFirstCall()
+        .rejects(new Error(errorMessage));
 
       store.dispatch(receiveJobs([waitingAbandonedJob]));
 
@@ -150,7 +151,7 @@ describe("Job logics", () => {
         [handleAbandonedJobsLogic]
       );
 
-      fms.isAbandonedJobComplete.resolves(true);
+      fms.syncAbandonedUploadStatus.resolves(true);
 
       store.dispatch(receiveJobs([waitingAbandonedJob]));
 

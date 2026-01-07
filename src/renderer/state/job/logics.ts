@@ -55,11 +55,11 @@ export const handleAbandonedJobsLogic = createLogic({
           // check FSS status and sync if upload completed while app was closed
           const info = `Checking status of "${abandonedUpload.jobName}"`;
           dispatch(setInfoAlert(info));
-          const result = await fms.isAbandonedJobComplete(
+          const isComplete = await fms.syncAbandonedUploadStatus(
             abandonedUpload.jobId
           );
 
-          if (result) {
+          if (isComplete) {
             dispatch(
               setInfoAlert(
                 `Upload "${abandonedUpload.jobName}" was already completed.`
