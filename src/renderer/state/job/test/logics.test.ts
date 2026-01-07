@@ -87,10 +87,9 @@ describe("Job logics", () => {
       expect(actions.list).to.deep.equal([
         receiveJobs([mockFailedUploadJob, mockSuccessfulUploadJob]),
       ]);
-      expect(fms.retry).to.not.have.been.called;
     });
 
-    it("finds and retries any job that didn't get past the add metadata step", async () => {
+    it("finds and syncs status for any job that didn't get past the add metadata step", async () => {
       const { actions, logicMiddleware, store } = createMockReduxStore(
         mockState,
         logicDeps,
@@ -102,13 +101,11 @@ describe("Job logics", () => {
       await logicMiddleware.whenComplete();
       expect(actions.list).to.deep.equal([
         action,
-        setInfoAlert(
-          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
-        ),
+        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
       ]);
     });
 
-    it("finds and retries one abandoned job", async () => {
+    it("finds and syncs status for one abandoned job", async () => {
       const { actions, logicMiddleware, store } = createMockReduxStore(
         mockState,
         logicDeps,
@@ -120,9 +117,7 @@ describe("Job logics", () => {
       await logicMiddleware.whenComplete();
       expect(actions.list).to.deep.equal([
         receiveJobs([waitingAbandonedJob]),
-        setInfoAlert(
-          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
-        ),
+        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
       ]);
     });
 
@@ -132,41 +127,41 @@ describe("Job logics", () => {
         logicDeps,
         [handleAbandonedJobsLogic]
       );
-      const errorMessage = "retry failure!";
-      fms.retry.onFirstCall().rejects(new Error(errorMessage));
+      const errorMessage = "sync failure!";
+      fms.syncAbandonedUploadStatus
+        .onFirstCall()
+        .rejects(new Error(errorMessage));
 
       store.dispatch(receiveJobs([waitingAbandonedJob]));
 
       await logicMiddleware.whenComplete();
       expect(actions.list).to.deep.equal([
         receiveJobs([waitingAbandonedJob]),
-        setInfoAlert(
-          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
-        ),
+        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
         setErrorAlert(
-          `Retry for upload "${waitingAbandonedJob.jobName}" failed: ${errorMessage}`
+          `Failed to sync status for upload "${waitingAbandonedJob.jobName}": ${errorMessage}`
         ),
       ]);
     });
 
-    it("dispatches setErrorAlert if fms.retry fails", async () => {
+    it("dispatches success info alert if upload was already completed", async () => {
       const { actions, logicMiddleware, store } = createMockReduxStore(
         mockState,
         logicDeps,
         [handleAbandonedJobsLogic]
       );
 
-      fms.retry.rejects(new Error("Error"));
+      fms.syncAbandonedUploadStatus.resolves(true);
 
       store.dispatch(receiveJobs([waitingAbandonedJob]));
 
       await logicMiddleware.whenComplete();
       expect(actions.list).to.deep.equal([
         receiveJobs([waitingAbandonedJob]),
+        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
         setInfoAlert(
-          `Checking to see if "${waitingAbandonedJob.jobName}" was abandoned and can be resumed or retried.`
+          `Upload "${waitingAbandonedJob.jobName}" was already completed.`
         ),
-        setErrorAlert('Retry for upload "abandoned_job" failed: Error'),
       ]);
     });
   });

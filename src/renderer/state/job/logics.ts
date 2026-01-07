@@ -52,12 +52,24 @@ export const handleAbandonedJobsLogic = createLogic({
     await Promise.all(
       abandonedUploads.map(async (abandonedUpload) => {
         try {
-          // Alert user to abandoned job
-          const info = `Checking to see if "${abandonedUpload.jobName}" was abandoned and can be resumed or retried.`;
+          // check FSS status and sync if upload completed while app was closed
+          const info = `Checking status of "${abandonedUpload.jobName}"`;
           dispatch(setInfoAlert(info));
-          await fms.retry(abandonedUpload.jobId);
+          const isComplete = await fms.syncAbandonedUploadStatus(
+            abandonedUpload.jobId
+          );
+
+          if (isComplete) {
+            dispatch(
+              setInfoAlert(
+                `Upload "${abandonedUpload.jobName}" was already completed.`
+              )
+            );
+          }
+          // if not completed, we don't auto-retry and just leave
+          // the user can manually retry or cancel from the UI
         } catch (e) {
-          const message = `Retry for upload "${abandonedUpload.jobName}" failed: ${e.message}`;
+          const message = `Failed to sync status for upload "${abandonedUpload.jobName}": ${e.message}`;
           console.error(message, e);
           dispatch(setErrorAlert(message));
         }
