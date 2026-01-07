@@ -215,7 +215,12 @@ export default class FileManagementSystem {
 
     const fssStatus = await this.fss.getStatus(fssUploadId);
 
-    if (fssStatus.status === UploadStatus.COMPLETE && fssStatus.fileId) {
+    if (fssStatus.status === UploadStatus.COMPLETE) {
+      if (!fssStatus.fileId) {
+        throw new Error(
+          `FSS upload ${fssUploadId} is COMPLETE but missing fileId?`
+        );
+      }
       // fss reporting complete
       await this.complete(fuaUpload, fssStatus.fileId);
       return true;
