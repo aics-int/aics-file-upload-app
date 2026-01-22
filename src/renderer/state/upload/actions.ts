@@ -2,6 +2,7 @@ import {
   PREFERRED_TEMPLATE_ID,
   TEMP_UPLOAD_STORAGE_KEY,
 } from "../../../shared/constants";
+import { MXSResult } from "../../services/metadata-extraction-service";
 import { State, FileModel, UploadSummaryTableRow } from "../types";
 
 import {
@@ -33,6 +34,7 @@ import {
   UPLOAD_SUCCEEDED,
   ADD_UPLOAD_FILES,
   UPLOAD_WITHOUT_METADATA,
+  AUTOFILL_FROM_MXS,
 } from "./constants";
 import {
   AddUploadFilesAction,
@@ -62,6 +64,7 @@ import {
   UploadFailedAction,
   UploadSucceededAction,
   UploadWithoutMetadataAction,
+  AutofillFromMXSAction,
 } from "./types";
 
 export function addUploadFiles(
@@ -341,5 +344,19 @@ export function editFileMetadataFailed(
       jobName,
     },
     type: EDIT_FILE_METADATA_FAILED,
+  };
+}
+
+export function autofillFromMXS(
+  filePath: string,
+  mxsResult: MXSResult
+): AutofillFromMXSAction {
+  return {
+    autoSave: true,
+    payload: {
+      filePath,
+      mxsResult,
+    },
+    type: AUTOFILL_FROM_MXS,
   };
 }

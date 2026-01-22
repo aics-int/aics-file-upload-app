@@ -8,7 +8,7 @@ import { RESET_UPLOAD, VIEW_UPLOADS_SUCCEEDED } from "../route/constants";
 import { ResetUploadAction, ViewUploadsSucceededAction } from "../route/types";
 import { SET_APPLIED_TEMPLATE } from "../template/constants";
 import { SetAppliedTemplateAction } from "../template/types";
-import { TypeToDescriptionMap, UploadStateBranch } from "../types";
+import { FileModel, TypeToDescriptionMap, UploadStateBranch } from "../types";
 import { getReduxUndoFilterFn, makeReducer } from "../util";
 
 import {
@@ -23,6 +23,7 @@ import {
   UPDATE_UPLOAD_ROWS,
   UPDATE_UPLOADS,
   ADD_UPLOAD_FILES,
+  AUTOFILL_FROM_MXS,
 } from "./constants";
 import { getUpload } from "./selectors";
 import {
@@ -32,6 +33,7 @@ import {
   UpdateUploadAction,
   UpdateUploadRowsAction,
   UpdateUploadsAction,
+  AutofillFromMXSAction,
 } from "./types";
 
 export const initialState = {};
@@ -163,6 +165,51 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
     ) => ({
       ...originalUploads,
     }),
+  },
+  [AUTOFILL_FROM_MXS]: {
+    accepts: (action: AnyAction): action is AutofillFromMXSAction =>
+      action.type === AUTOFILL_FROM_MXS,
+    perform: (state: UploadStateBranch, action: AutofillFromMXSAction) => {
+      const { filePath, mxsResult } = action.payload;
+
+      if (!state[filePath]) {
+        return state;
+      }
+
+      const currentUpload = state[filePath];
+      const autofillData: Partial<FileModel> = {};
+
+      // Map MXS results to upload fields
+      // MXS returns { annotationName: { annotation_id, value } }
+      Object.entries(mxsResult).forEach(([annotationName, { value }]) => {
+        if (value !== null && value !== undefined) {
+          const currentValue = currentUpload[annotationName];
+          const isEmpty =
+            currentValue === undefined ||
+            currentValue === null ||
+            (Array.isArray(currentValue) && currentValue.length === 0);
+
+          if (isEmpty) {
+            autofillData[annotationName] = Array.isArray(value)
+              ? value
+              : [value];
+          }
+        }
+      });
+
+      // Only update if we have data to autofill
+      if (Object.keys(autofillData).length === 0) {
+        return state;
+      }
+
+      return {
+        ...state,
+        [filePath]: {
+          ...currentUpload,
+          ...autofillData,
+        },
+      };
+    },
   },
 };
 

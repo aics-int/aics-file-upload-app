@@ -74,6 +74,8 @@ export const UPDATE_UPLOAD_PROGRESS_INFO = makeConstant(
   "update-upload-progress-info"
 );
 
+export const AUTOFILL_FROM_MXS = "AUTOFILL_FROM_MXS";
+
 export const DRAFT_KEY = "draft";
 
 export const getUploadDraftKey = (name: string, created: Date) =>

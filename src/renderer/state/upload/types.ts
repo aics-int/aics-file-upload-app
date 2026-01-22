@@ -1,5 +1,8 @@
 import { UploadJob } from "../../services/job-status-service/types";
+import { MXSResult } from "../../services/metadata-extraction-service";
 import { AutoSaveAction, FileModel, State, WriteToStoreAction } from "../types";
+
+import { AUTOFILL_FROM_MXS } from "./constants";
 
 export interface MMSAnnotationValueRequest {
   annotationId: number;
@@ -162,6 +165,15 @@ export interface SaveUploadDraftSuccessAction extends WriteToStoreAction {
   // the store - for example when closing the upload tab we may save the draft but we want this value to be undefined.
   payload?: string;
   type: string;
+}
+
+export interface AutofillFromMXSAction {
+  autoSave: boolean;
+  payload: {
+    filePath: string;
+    mxsResult: MXSResult;
+  };
+  type: typeof AUTOFILL_FROM_MXS;
 }
 
 export enum FileType {
