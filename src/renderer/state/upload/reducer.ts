@@ -179,16 +179,13 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
       const currentUpload = state[filePath];
       const autofillData: Partial<FileModel> = {};
 
-      // Map MXS results to upload fields
-      // MXS returns { annotationName: { annotation_id, value } }
       Object.entries(mxsResult).forEach(([annotationName, { value }]) => {
-        if (value !== null && value !== undefined) {
+        if (value !== null && value !== undefined && value !== "") {
           const currentValue = currentUpload[annotationName];
           const isEmpty =
             currentValue === undefined ||
             currentValue === null ||
             (Array.isArray(currentValue) && currentValue.length === 0);
-
           if (isEmpty) {
             autofillData[annotationName] = Array.isArray(value)
               ? value
@@ -197,18 +194,18 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
         }
       });
 
-      // Only update if we have data to autofill
       if (Object.keys(autofillData).length === 0) {
         return state;
       }
 
-      return {
+      const newState = {
         ...state,
         [filePath]: {
           ...currentUpload,
           ...autofillData,
         },
       };
+      return newState;
     },
   },
 };
