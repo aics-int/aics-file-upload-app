@@ -4,17 +4,17 @@ import {
   fetchMetadataSucceeded,
   fetchMetadataFailed,
   fetchMetadataRequest,
+  FetchMetadataRequestAction,
 } from "../metadataExtraction/actions";
-import { FetchMetadataRequestAction } from "../metadataExtraction/actions";
 import { FETCH_METADATA_REQUEST } from "../metadataExtraction/constants";
+import { SET_APPLIED_TEMPLATE } from "../template/constants";
+import { SetAppliedTemplateAction } from "../template/types";
 import {
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicNextCb,
   ReduxLogicDoneCb,
 } from "../types";
 import { autofillFromMXS } from "../upload/actions";
-import { ADD_UPLOAD_FILES } from "../upload/constants";
-import { AddUploadFilesAction } from "../upload/types";
 
 const fetchMetadataLogic = createLogic({
   process: async (
@@ -29,7 +29,6 @@ const fetchMetadataLogic = createLogic({
     try {
       const metadata = await mxsClient.fetchExtractedMetadata(filePath);
       dispatch(fetchMetadataSucceeded(filePath, metadata));
-      // Autofill the upload row with the extracted metadata
       dispatch(autofillFromMXS(filePath, metadata));
     } catch (error) {
       dispatch(fetchMetadataFailed(filePath, error));
@@ -39,20 +38,29 @@ const fetchMetadataLogic = createLogic({
   type: FETCH_METADATA_REQUEST,
 });
 
-// NEW: Automatically fetch MXS metadata when files are added
-const autoFetchMetadataOnAddFilesLogic = createLogic({
+const autoFetchMetadataOnTemplateAppliedLogic = createLogic({
   process: async (
-    { action }: ReduxLogicProcessDependenciesWithAction<AddUploadFilesAction>,
+    {
+      action,
+    }: ReduxLogicProcessDependenciesWithAction<SetAppliedTemplateAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    // Dispatch fetch requests for each added file
-    for (const fileModel of action.payload) {
-      dispatch(fetchMetadataRequest(fileModel.file));
+    const payload = action.payload;
+    if (!payload || !payload.uploads) {
+      done();
+      return;
+    }
+
+    const uploads = payload.uploads;
+    const filePaths = Object.keys(uploads);
+
+    for (let i = 0; i < filePaths.length; i++) {
+      dispatch(fetchMetadataRequest(filePaths[i]));
     }
     done();
   },
-  type: ADD_UPLOAD_FILES,
+  type: SET_APPLIED_TEMPLATE,
 });
 
-export default [fetchMetadataLogic, autoFetchMetadataOnAddFilesLogic];
+export default [fetchMetadataLogic, autoFetchMetadataOnTemplateAppliedLogic];

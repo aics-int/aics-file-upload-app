@@ -78,6 +78,10 @@ export default function DisplayCell(props: Props) {
   const fileToAnnotationHasValueMap = useSelector(
     getFileToAnnotationHasValueMap
   );
+
+  // Check if this cell was autofilled by MXS
+  const isAutofilled =
+    props.row.original._autofilledFields?.includes(props.column.id) ?? false;
   const [isActive, setIsActive] = React.useState(false);
   const inputEl = React.useRef<HTMLInputElement>(null);
   const displayValue = useDisplayValue(props.value, props.column.type);
@@ -182,6 +186,7 @@ export default function DisplayCell(props: Props) {
   }
 
   function onDisplayInputKeyDown(e: React.KeyboardEvent) {
+    if (isAutofilled) return;
     if (e.key !== "Tab" && !e.ctrlKey && !e.metaKey && !e.altKey) {
       props.onStartEditing();
     }
@@ -215,18 +220,23 @@ export default function DisplayCell(props: Props) {
         >
           <input
             readOnly
-            disabled={props.disabled}
+            disabled={props.disabled || isAutofilled}
             ref={inputEl}
             tabIndex={-1}
             className={classNames(styles.readOnlyCell, {
               [styles.highlight]: isHighlighted,
+              [styles.autofilled]: isAutofilled,
             })}
             onKeyDown={onDisplayInputKeyDown}
             onBlur={() => setIsActive(false)}
-            onClick={() =>
-              isHighlighted ? props.onStartEditing() : setIsActive(true)
-            }
-            onDoubleClick={props.onStartEditing}
+            onClick={() => {
+              if (isAutofilled) return;
+              isHighlighted ? props.onStartEditing() : setIsActive(true);
+            }}
+            onDoubleClick={() => {
+              if (isAutofilled) return;
+              props.onStartEditing();
+            }}
             value={displayValue}
           />
           {shouldShowError && (

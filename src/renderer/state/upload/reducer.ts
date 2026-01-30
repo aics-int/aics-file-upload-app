@@ -178,6 +178,7 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
 
       const currentUpload = state[filePath];
       const autofillData: Partial<FileModel> = {};
+      const autofilledFields: string[] = [];
 
       Object.entries(mxsResult).forEach(([annotationName, { value }]) => {
         if (value !== null && value !== undefined && value !== "") {
@@ -186,10 +187,12 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
             currentValue === undefined ||
             currentValue === null ||
             (Array.isArray(currentValue) && currentValue.length === 0);
+
           if (isEmpty) {
             autofillData[annotationName] = Array.isArray(value)
               ? value
               : [value];
+            autofilledFields.push(annotationName);
           }
         }
       });
@@ -198,14 +201,17 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
         return state;
       }
 
-      const newState = {
+      return {
         ...state,
         [filePath]: {
           ...currentUpload,
           ...autofillData,
+          _autofilledFields: [
+            ...(currentUpload._autofilledFields || []),
+            ...autofilledFields,
+          ],
         },
       };
-      return newState;
     },
   },
 };
