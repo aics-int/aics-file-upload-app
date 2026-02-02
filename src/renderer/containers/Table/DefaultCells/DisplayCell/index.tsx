@@ -79,7 +79,6 @@ export default function DisplayCell(props: Props) {
     getFileToAnnotationHasValueMap
   );
 
-  // Check if this cell was autofilled by MXS
   const isAutofilled =
     props.row.original._autofilledFields?.includes(props.column.id) ?? false;
   const [isActive, setIsActive] = React.useState(false);
