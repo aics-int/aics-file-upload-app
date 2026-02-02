@@ -33,6 +33,7 @@ import {
 } from "../../services";
 import ApplicationInfoService from "../../services/application-info-service";
 import FileManagementSystem from "../../services/file-management-system";
+import MetadataExtractionService from "../../services/metadata-extraction-service";
 import EnvironmentAwareStorage from "../EnvironmentAwareStorage";
 import { State } from "../types";
 
@@ -59,6 +60,7 @@ export interface ReduxLogicDependencies {
   jssClient: SinonStubbedInstance<JobStatusService>;
   labkeyClient: SinonStubbedInstance<LabkeyClient>;
   mmsClient: SinonStubbedInstance<MetadataManagementService>;
+  mxsClient: SinonStubbedInstance<MetadataExtractionService>;
   storage: SinonStubbedInstance<EnvironmentAwareStorage>;
 }
 
@@ -67,6 +69,7 @@ const applicationInfoService = createStubInstance(ApplicationInfoService);
 const jssClient = createStubInstance(JobStatusService);
 const labkeyClient = createStubInstance(LabkeyClient);
 const mmsClient = createStubInstance(MetadataManagementService);
+const mxsClient = createStubInstance(MetadataExtractionService);
 const fms = createStubInstance(FileManagementSystem);
 
 export const ipcRenderer = {
@@ -82,6 +85,7 @@ export const mockReduxLogicDeps: ReduxLogicDependencies = {
   jssClient,
   labkeyClient,
   mmsClient,
+  mxsClient,
   storage,
 };
 
@@ -101,6 +105,7 @@ const allLogics: Array<Logic<any, any, any, any, any, any>> = [
   ...feedback.logics,
   ...job.logics,
   ...metadata.logics,
+  ...metadataExtraction.logics,
   ...route.logics,
   ...selection.logics,
   ...setting.logics,
