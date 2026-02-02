@@ -13,9 +13,13 @@ import {
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicNextCb,
   ReduxLogicDoneCb,
+  State,
 } from "../types";
 import { autofillFromMXS } from "../upload/actions";
+import { ADD_UPLOAD_FILES } from "../upload/constants";
+import { AddUploadFilesAction } from "../upload/types";
 
+// fetches MXS data and stores in metadataExtraction state
 const fetchMetadataLogic = createLogic({
   process: async (
     {
@@ -29,7 +33,7 @@ const fetchMetadataLogic = createLogic({
     try {
       const metadata = await mxsClient.fetchExtractedMetadata(filePath);
       dispatch(fetchMetadataSucceeded(filePath, metadata));
-      dispatch(autofillFromMXS(filePath, metadata));
+      // Removed: dispatch(autofillFromMXS(filePath, metadata));
     } catch (error) {
       dispatch(fetchMetadataFailed(filePath, error));
     }
@@ -38,29 +42,53 @@ const fetchMetadataLogic = createLogic({
   type: FETCH_METADATA_REQUEST,
 });
 
-const autoFetchMetadataOnTemplateAppliedLogic = createLogic({
+// fetch MXS data when files are added (store for later use)
+const autoFetchMetadataOnAddFilesLogic = createLogic({
   process: async (
-    {
-      action,
-    }: ReduxLogicProcessDependenciesWithAction<SetAppliedTemplateAction>,
+    { action }: ReduxLogicProcessDependenciesWithAction<AddUploadFilesAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const payload = action.payload;
-    if (!payload || !payload.uploads) {
+    for (const fileModel of action.payload) {
+      dispatch(fetchMetadataRequest(fileModel.file));
+    }
+    done();
+  },
+  type: ADD_UPLOAD_FILES,
+});
+
+// autofill from cached metadataExtraction state when template is selected
+const autofillOnTemplateAppliedLogic = createLogic({
+  process: async (
+    {
+      action,
+      getState,
+    }: ReduxLogicProcessDependenciesWithAction<SetAppliedTemplateAction> & {
+      getState: () => State;
+    },
+    dispatch: ReduxLogicNextCb,
+    done: ReduxLogicDoneCb
+  ) => {
+    const state = getState();
+    const uploads = action.payload?.uploads;
+    if (!uploads) {
       done();
       return;
     }
 
-    const uploads = payload.uploads;
-    const filePaths = Object.keys(uploads);
-
-    for (let i = 0; i < filePaths.length; i++) {
-      dispatch(fetchMetadataRequest(filePaths[i]));
+    for (const filePath of Object.keys(uploads)) {
+      const cachedMetadata = state.metadataExtraction[filePath]?.metadata;
+      if (cachedMetadata) {
+        dispatch(autofillFromMXS(filePath, cachedMetadata));
+      }
     }
     done();
   },
   type: SET_APPLIED_TEMPLATE,
 });
 
-export default [fetchMetadataLogic, autoFetchMetadataOnTemplateAppliedLogic];
+export default [
+  fetchMetadataLogic,
+  autoFetchMetadataOnAddFilesLogic,
+  autofillOnTemplateAppliedLogic,
+];
