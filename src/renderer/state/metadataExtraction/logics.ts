@@ -33,7 +33,6 @@ const fetchMetadataLogic = createLogic({
     try {
       const metadata = await mxsClient.fetchExtractedMetadata(filePath);
       dispatch(fetchMetadataSucceeded(filePath, metadata));
-      // Removed: dispatch(autofillFromMXS(filePath, metadata));
     } catch (error) {
       dispatch(fetchMetadataFailed(filePath, error));
     }
