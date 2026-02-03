@@ -2,8 +2,6 @@ import { Select } from "antd";
 import { castArray } from "lodash";
 import React, { useState } from "react";
 
-import { createEnterKeyHandler } from "../util";
-
 const styles = require("../defaultInputStyles.pcss");
 
 interface Props {
@@ -34,7 +32,6 @@ export default function DropdownEditor({
       className={styles.defaultInput}
       mode={disableMultiSelect ? undefined : "multiple"}
       onBlur={handleCommit}
-      onInputKeyDown={createEnterKeyHandler(handleCommit)}
       onChange={(v: string[]) => setValue(v)}
       value={value}
     >
