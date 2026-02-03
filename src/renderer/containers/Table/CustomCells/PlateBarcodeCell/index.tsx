@@ -130,7 +130,7 @@ export default function PlateBarcodeCell(
         retrieveOptionsOverride={(i?: string) =>
           i && dispatch(requestBarcodeSearchResults(i))
         }
-        onBlur={onCommit}
+        onBlur={() => onCommit()}
         onInputKeyDown={createEnterKeyHandler(onCommit)}
         selectSearchValue={onCommit}
         value={props.value?.[0]}
