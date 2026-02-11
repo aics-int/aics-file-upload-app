@@ -167,14 +167,9 @@ export const getTemplateColumnsForTable = createSelector(
       return [];
     }
 
-    const plateRelatedColumnNames = new Set(
-      PLATE_RELATED_COLUMNS.map((c) => c.accessor)
-    );
-
     return [
       ...PLATE_RELATED_COLUMNS,
       ...template.annotations
-        .filter((annotation) => !plateRelatedColumnNames.has(annotation.name))
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .map((annotation) => {
           const type = annotationTypes.find(
