@@ -36,7 +36,6 @@ interface OwnProps {
   lookupAnnotationName: keyof MetadataStateBranch;
   lookupTable?: string;
   onBlur?: () => void;
-  onInputKeyDown?: (e: React.KeyboardEvent) => void;
   placeholder?: string;
 }
 
@@ -136,7 +135,6 @@ class LookupSearch extends React.Component<Props, { searchValue?: string }> {
           mode={mode}
           dropdownRender={this.props.dropdownRender}
           notFoundContent={notFoundContent}
-          onInputKeyDown={this.props.onInputKeyDown}
           onBlur={onBlur}
           // Unable to type this variable most explicitly due to "type narrowing in discriminated unions"
           // typing as any for now though actual value will either be a string or string[]

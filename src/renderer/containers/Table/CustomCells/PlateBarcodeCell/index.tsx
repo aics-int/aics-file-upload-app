@@ -28,7 +28,6 @@ import {
 import { updateUpload } from "../../../../state/upload/actions";
 import LookupSearch from "../../../LookupSearch";
 import DisplayCell from "../../DefaultCells/DisplayCell";
-import { createEnterKeyHandler } from "../../Editors/util";
 
 const styles = require("./styles.pcss");
 
@@ -130,8 +129,7 @@ export default function PlateBarcodeCell(
         retrieveOptionsOverride={(i?: string) =>
           i && dispatch(requestBarcodeSearchResults(i))
         }
-        onBlur={onCommit}
-        onInputKeyDown={createEnterKeyHandler(onCommit)}
+        onBlur={() => onCommit()}
         selectSearchValue={onCommit}
         value={props.value?.[0]}
       />
