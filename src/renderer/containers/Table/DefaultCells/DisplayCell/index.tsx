@@ -80,7 +80,7 @@ export default function DisplayCell(props: Props) {
   );
 
   const isAutofilled =
-    props.row.original._autofilledFields?.includes(props.column.id) ?? false;
+    props.row.original.autofilledFields?.includes(props.column.id) ?? false;
   const [isActive, setIsActive] = React.useState(false);
   const inputEl = React.useRef<HTMLInputElement>(null);
   const displayValue = useDisplayValue(props.value, props.column.type);

@@ -182,7 +182,7 @@ export interface FileModel {
   file: string; // full VAST path
   uploadType?: UploadType;
   customFileName?: string; // optional custom file name
-  _autofilledFields?: string[];
+  autofilledFields?: string[];
   // Known custom annotations
   [AnnotationName.NOTES]?: string[];
   [AnnotationName.PLATE_BARCODE]?: string[];

@@ -374,7 +374,7 @@ export const getAnnotations = (
   );
 
   // Get the list of autofilled fields to exclude from upload
-  const autofilledFields = new Set(fileMetadata._autofilledFields || []);
+  const autofilledFields = new Set(fileMetadata.autofilledFields || []);
 
   const customData = removeExcludedFields(fileMetadata);
   const annotations = Object.entries(customData).reduce(

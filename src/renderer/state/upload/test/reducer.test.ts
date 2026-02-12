@@ -324,7 +324,7 @@ describe("upload reducer", () => {
       expect(result.present[filePath]["Favorite Color"]).to.deep.equal([
         "Blue",
       ]);
-      expect(result.present[filePath]._autofilledFields).to.deep.equal([
+      expect(result.present[filePath].autofilledFields).to.deep.equal([
         "Favorite Color",
       ]);
     });
@@ -350,7 +350,7 @@ describe("upload reducer", () => {
 
       expect(result.present[filePath]["Favorite Color"]).to.deep.equal(["Red"]);
       expect(result.present[filePath]["Other Field"]).to.deep.equal(["Test"]);
-      expect(result.present[filePath]._autofilledFields).to.deep.equal([
+      expect(result.present[filePath].autofilledFields).to.deep.equal([
         "Other Field",
       ]);
     });
@@ -379,7 +379,7 @@ describe("upload reducer", () => {
       expect(result.present[filePath]["Field A"]).to.deep.equal([]);
       expect(result.present[filePath]["Field B"]).to.deep.equal([]);
       expect(result.present[filePath]["Field C"]).to.deep.equal(["Valid"]);
-      expect(result.present[filePath]._autofilledFields).to.deep.equal([
+      expect(result.present[filePath].autofilledFields).to.deep.equal([
         "Field C",
       ]);
     });
@@ -405,7 +405,7 @@ describe("upload reducer", () => {
 
       expect(result.present[filePath]["Field A"]).to.deep.equal([]);
       expect(result.present[filePath]["Field B"]).to.deep.equal(["Valid"]);
-      expect(result.present[filePath]._autofilledFields).to.deep.equal([
+      expect(result.present[filePath].autofilledFields).to.deep.equal([
         "Field B",
       ]);
     });
@@ -428,7 +428,7 @@ describe("upload reducer", () => {
       );
 
       expect(result.present[filePath]["Timelapse"]).to.deep.equal([false]);
-      expect(result.present[filePath]._autofilledFields).to.deep.equal([
+      expect(result.present[filePath].autofilledFields).to.deep.equal([
         "Timelapse",
       ]);
     });
@@ -460,7 +460,7 @@ describe("upload reducer", () => {
           file: filePath,
           "Field A": [],
           "Field B": [],
-          _autofilledFields: ["Field A"],
+          autofilledFields: ["Field A"],
         },
       };
       const mxsResult = {
@@ -472,7 +472,7 @@ describe("upload reducer", () => {
         autofillFromMXS(filePath, mxsResult)
       );
 
-      expect(result.present[filePath]._autofilledFields).to.deep.equal([
+      expect(result.present[filePath].autofilledFields).to.deep.equal([
         "Field A",
         "Field B",
       ]);

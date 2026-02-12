@@ -182,7 +182,7 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
 
       Object.entries(mxsResult).forEach(([annotationName, { value }]) => {
         if (value !== null && value !== undefined && value !== "") {
-          // Always use MXS value since MXS will override on backend anyway
+          // always use MXS value since MXS will override on backend anyway
           autofillData[annotationName] = Array.isArray(value) ? value : [value];
           autofilledFields.push(annotationName);
         }
@@ -197,8 +197,8 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
         [filePath]: {
           ...currentUpload,
           ...autofillData,
-          _autofilledFields: [
-            ...(currentUpload._autofilledFields || []),
+          autofilledFields: [
+            ...(currentUpload.autofilledFields || []),
             ...autofilledFields,
           ],
         },
