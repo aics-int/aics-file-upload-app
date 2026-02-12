@@ -329,7 +329,7 @@ describe("upload reducer", () => {
       ]);
     });
 
-    it("does not overwrite existing user data", () => {
+    it("overwrites existing user data with MXS values", () => {
       const filePath = "/path/to/file.czi";
       const initialState = {
         [filePath]: {
@@ -348,9 +348,12 @@ describe("upload reducer", () => {
         autofillFromMXS(filePath, mxsResult)
       );
 
-      expect(result.present[filePath]["Favorite Color"]).to.deep.equal(["Red"]);
+      expect(result.present[filePath]["Favorite Color"]).to.deep.equal([
+        "Blue",
+      ]);
       expect(result.present[filePath]["Other Field"]).to.deep.equal(["Test"]);
       expect(result.present[filePath].autofilledFields).to.deep.equal([
+        "Favorite Color",
         "Other Field",
       ]);
     });
@@ -478,7 +481,7 @@ describe("upload reducer", () => {
       ]);
     });
 
-    it("returns unchanged state when no fields to autofill", () => {
+    it("overwrites pre-filled fields since MXS is source of truth", () => {
       const filePath = "/path/to/file.czi";
       const initialState = {
         [filePath]: {
@@ -495,8 +498,13 @@ describe("upload reducer", () => {
         autofillFromMXS(filePath, mxsResult)
       );
 
-      // State should be unchanged
-      expect(result.present).to.deep.equal(initialState);
+      expect(result.present).to.deep.equal({
+        [filePath]: {
+          file: filePath,
+          "Favorite Color": ["Blue"],
+          autofilledFields: ["Favorite Color"],
+        },
+      });
     });
   });
 });
