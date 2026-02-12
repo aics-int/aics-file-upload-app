@@ -182,18 +182,9 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
 
       Object.entries(mxsResult).forEach(([annotationName, { value }]) => {
         if (value !== null && value !== undefined && value !== "") {
-          const currentValue = currentUpload[annotationName];
-          const isEmpty =
-            currentValue === undefined ||
-            currentValue === null ||
-            (Array.isArray(currentValue) && currentValue.length === 0);
-
-          if (isEmpty) {
-            autofillData[annotationName] = Array.isArray(value)
-              ? value
-              : [value];
-            autofilledFields.push(annotationName);
-          }
+          // Always use MXS value since MXS will override on backend anyway
+          autofillData[annotationName] = Array.isArray(value) ? value : [value];
+          autofilledFields.push(annotationName);
         }
       });
 
