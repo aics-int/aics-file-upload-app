@@ -7,6 +7,8 @@ import { fetchMetadataRequest } from "../../../../state/metadataExtraction/actio
 import { getMetadataForFile } from "../../../../state/metadataExtraction/selectors";
 import { State } from "../../../../state/types";
 
+const styles = require("./styles.pcss");
+
 export default function SeeMetadataCell(props: CellProps<any>) {
   const dispatch = useDispatch();
   const filePath = (props.cell.row.original as any).file;
@@ -31,10 +33,7 @@ export default function SeeMetadataCell(props: CellProps<any>) {
 
   return (
     <>
-      <Button
-        onClick={showMetadata}
-        style={{ fontSize: "11px", padding: "0 6px" }}
-      >
+      <Button onClick={showMetadata} className={styles.seeMetadataButton}>
         See Extracted Metadata
       </Button>
       <Modal
@@ -43,8 +42,15 @@ export default function SeeMetadataCell(props: CellProps<any>) {
         onCancel={handleCancel}
         footer={null}
       >
+        <p className={styles.modalDescription}>
+          The <strong>Metadata Extraction Service (MXS)</strong> automatically
+          appends metadata from LabKey, microscopes, and other sources,
+          including fields not defined in your template. This metadata is
+          read-only in the File Upload App but editable in BioFile Finder by
+          authorized users. All appended metadata for this file is shown below.
+        </p>
         {metadataState.loading ? (
-          <div style={{ textAlign: "center" }}>
+          <div className={styles.loadingSpinner}>
             <Spin />
           </div>
         ) : metadataState.metadata ? (
