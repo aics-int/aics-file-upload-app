@@ -1,4 +1,4 @@
-import { Button, Modal, Spin } from "antd";
+import { Button, Modal, Spin, Table } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CellProps } from "react-table";
@@ -38,7 +38,7 @@ export default function SeeMetadataCell(props: CellProps<any>) {
         See Extracted Metadata
       </Button>
       <Modal
-        title="Extracted Metadata from Image"
+        title="Automatically Appended Metadata"
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={null}
@@ -48,15 +48,21 @@ export default function SeeMetadataCell(props: CellProps<any>) {
             <Spin />
           </div>
         ) : metadataState.metadata ? (
-          <div>
-            <ul>
-              {Object.entries(metadataState.metadata).map(([key, valueObj]) => (
-                <li key={key}>
-                  <strong>{key}:</strong> {String(valueObj.value)}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Table
+            dataSource={Object.entries(metadataState.metadata).map(
+              ([key, valueObj]) => ({
+                key,
+                field: key,
+                value: String(valueObj.value),
+              })
+            )}
+            columns={[
+              { title: "Data Type", dataIndex: "field", key: "field" },
+              { title: "Value", dataIndex: "value", key: "value" },
+            ]}
+            pagination={false}
+            size="small"
+          />
         ) : metadataState.error ? (
           <div>
             Error retrieving metadata for this file: {metadataState.error}
