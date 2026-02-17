@@ -203,7 +203,13 @@ export default function DisplayCell(props: Props) {
       autoAdjustOverflow
       mouseEnterDelay={TOOLTIP_ENTER_DELAY}
       mouseLeaveDelay={TOOLTIP_LEAVE_DELAY}
-      title={cellAtDragStart ? "" : displayValue}
+      title={
+        cellAtDragStart
+          ? ""
+          : isAutofilled
+          ? "This metadata was automatically appended."
+          : displayValue
+      }
     >
       <div className={styles.tooltipAnchor} onDragEnter={onDragEnter}>
         {/* This input is solely for keyboard navigation */}
