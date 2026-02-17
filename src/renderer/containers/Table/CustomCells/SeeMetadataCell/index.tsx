@@ -44,10 +44,9 @@ export default function SeeMetadataCell(props: CellProps<any>) {
       >
         <p className={styles.modalDescription}>
           The <strong>Metadata Extraction Service (MXS)</strong> automatically
-          appends metadata from LabKey, microscopes, and other sources,
-          including fields not defined in your template. This metadata is
+          appends metadata extracted from your image file. This metadata is
           read-only in the File Upload App but editable in BioFile Finder by
-          authorized users. All appended metadata for this file is shown below.
+          authorized users.
         </p>
         {metadataState.loading ? (
           <div className={styles.loadingSpinner}>
