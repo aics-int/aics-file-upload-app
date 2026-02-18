@@ -359,7 +359,6 @@ export const getUploadValidationErrors = createSelector(
   }
 );
 
-// the userData relates to the same file
 export const getAnnotations = (
   fileMetadata: FileModel,
   appliedTemplate: TemplateWithTypeNames
@@ -374,9 +373,17 @@ export const getAnnotations = (
     {}
   );
 
+  // Get the list of autofilled fields to exclude from upload
+  const autofilledFields = new Set(fileMetadata.autofilledFields || []);
+
   const customData = removeExcludedFields(fileMetadata);
   const annotations = Object.entries(customData).reduce(
     (annotationsAccum, [annotationName, value]) => {
+      // Skip autofilled fields - MXS will handle these during upload
+      if (autofilledFields.has(annotationName)) {
+        return annotationsAccum;
+      }
+
       const annotation = annotationNameToAnnotationMap[annotationName];
       if (annotation) {
         // Special case where no value for a boolean type is the same as
@@ -441,6 +448,7 @@ export const getAnnotations = (
     },
     [] as MMSAnnotationValueRequest[]
   );
+
   const programValue = fileMetadata[AnnotationName.PROGRAM];
   const programPresent = Array.isArray(programValue)
     ? !isEmpty(programValue)
