@@ -34,7 +34,7 @@ export default function MyUploadsPage() {
     getUploadsByTemplateUsage
   );
   const allUploads = React.useMemo(
-    () => [...uploadsWithoutTemplates, ...uploadsWithTemplates],
+    () => [...uploadsWithoutTemplates, ...uploadsWithTemplates].slice(0, 100),
     [uploadsWithTemplates, uploadsWithoutTemplates]
   );
   const requestsInProgress = useSelector(getRequestsInProgress);
