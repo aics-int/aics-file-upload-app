@@ -1,4 +1,4 @@
-import { Button, Modal, Spin } from "antd";
+import { Button, Modal, Spin, Table } from "antd";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CellProps } from "react-table";
@@ -6,6 +6,8 @@ import { CellProps } from "react-table";
 import { fetchMetadataRequest } from "../../../../state/metadataExtraction/actions";
 import { getMetadataForFile } from "../../../../state/metadataExtraction/selectors";
 import { State } from "../../../../state/types";
+
+const styles = require("./styles.pcss");
 
 export default function SeeMetadataCell(props: CellProps<any>) {
   const dispatch = useDispatch();
@@ -31,32 +33,41 @@ export default function SeeMetadataCell(props: CellProps<any>) {
 
   return (
     <>
-      <Button
-        onClick={showMetadata}
-        style={{ fontSize: "11px", padding: "0 6px" }}
-      >
+      <Button onClick={showMetadata} className={styles.seeMetadataButton}>
         See Extracted Metadata
       </Button>
       <Modal
-        title="Extracted Metadata from Image"
+        title="Automatically Appended Metadata"
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={null}
       >
+        <p className={styles.modalDescription}>
+          The <strong>Metadata Extraction Service (MXS)</strong> automatically
+          appends metadata extracted from your image file. This metadata is
+          read-only in the File Upload App but editable in BioFile Finder by
+          authorized users.
+        </p>
         {metadataState.loading ? (
-          <div style={{ textAlign: "center" }}>
+          <div className={styles.loadingSpinner}>
             <Spin />
           </div>
         ) : metadataState.metadata ? (
-          <div>
-            <ul>
-              {Object.entries(metadataState.metadata).map(([key, valueObj]) => (
-                <li key={key}>
-                  <strong>{key}:</strong> {String(valueObj.value)}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Table
+            dataSource={Object.entries(metadataState.metadata).map(
+              ([key, valueObj]) => ({
+                key,
+                field: key,
+                value: String(valueObj.value),
+              })
+            )}
+            columns={[
+              { title: "Data Type", dataIndex: "field", key: "field" },
+              { title: "Value", dataIndex: "value", key: "value" },
+            ]}
+            pagination={false}
+            size="small"
+          />
         ) : metadataState.error ? (
           <div>
             Error retrieving metadata for this file: {metadataState.error}
