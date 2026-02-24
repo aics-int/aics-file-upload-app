@@ -15,7 +15,7 @@ import {
   JSSJobStatus,
 } from "../../services/job-status-service/types";
 import { getRequestsInProgress } from "../../state/feedback/selectors";
-import { getUploadsByTemplateUsage } from "../../state/job/selectors";
+import { getRecentUploads } from "../../state/job/selectors";
 import { viewUploads } from "../../state/route/actions";
 import { AsyncRequest, UploadSummaryTableRow } from "../../state/types";
 import { cancelUploads, retryUploads } from "../../state/upload/actions";
@@ -30,7 +30,7 @@ const styles = require("./styles.pcss");
  */
 export default function MyUploadsPage() {
   const dispatch = useDispatch();
-  const recentUploads = useSelector(getUploadsByTemplateUsage).slice(0, 100);
+  const recentUploads = useSelector(getRecentUploads).slice(0, 100);
   const requestsInProgress = useSelector(getRequestsInProgress);
   const isRequestingJobs = requestsInProgress.includes(AsyncRequest.GET_JOBS);
 

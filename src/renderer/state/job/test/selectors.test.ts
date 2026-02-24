@@ -15,7 +15,7 @@ import {
 import {
   getIsSafeToExit,
   getJobIdToUploadJobMap,
-  getUploadsByTemplateUsage,
+  getRecentUploads,
 } from "../selectors";
 
 describe("Job selectors", () => {
@@ -38,7 +38,7 @@ describe("Job selectors", () => {
       const jobs = [...nonEmptyJobStateBranch.uploadJobs];
 
       // Act
-      const uploads = getUploadsByTemplateUsage(state);
+      const uploads = getRecentUploads(state);
 
       // Assert
       expect(uploads).to.be.lengthOf(3);
@@ -90,7 +90,7 @@ describe("Job selectors", () => {
       };
 
       // Act
-      const uploads = getUploadsByTemplateUsage({
+      const uploads = getRecentUploads({
         ...mockState,
         job: {
           ...mockState.job,

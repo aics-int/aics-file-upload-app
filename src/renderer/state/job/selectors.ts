@@ -22,7 +22,7 @@ export const getJobIdToUploadJobMap = createSelector(
     }, new Map<string, UploadJob>())
 );
 
-export const getUploadsByTemplateUsage = createSelector(
+export const getRecentUploads = createSelector(
   [getUploadJobs, getJobIdToCopyProgress, getTemplateIdToName],
   (
     uploadJobs,
