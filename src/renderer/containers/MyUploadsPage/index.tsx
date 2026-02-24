@@ -174,6 +174,7 @@ export default function MyUploadsPage() {
           </div>
         ) : (
           <UploadTable
+            title="Uploads"
             uploads={recentUploads}
             getContextMenuItems={getContextMenuItems}
             onSelect={onSelect}
