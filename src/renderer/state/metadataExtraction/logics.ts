@@ -5,12 +5,8 @@ import {
   fetchMetadataFailed,
   fetchMetadataRequest,
   FetchMetadataRequestAction,
-  FetchMetadataSucceededAction,
 } from "../metadataExtraction/actions";
-import {
-  FETCH_METADATA_REQUEST,
-  FETCH_METADATA_SUCCEEDED,
-} from "../metadataExtraction/constants";
+import { FETCH_METADATA_REQUEST } from "../metadataExtraction/constants";
 import { SET_APPLIED_TEMPLATE } from "../template/constants";
 import { SetAppliedTemplateAction } from "../template/types";
 import {
@@ -90,38 +86,8 @@ const autofillOnTemplateAppliedLogic = createLogic({
   type: SET_APPLIED_TEMPLATE,
 });
 
-// autofill when metadata arrives after a template has already been applied
-const autofillOnMetadataArrivedLogic = createLogic({
-  process: async (
-    {
-      action,
-      getState,
-    }: ReduxLogicProcessDependenciesWithAction<FetchMetadataSucceededAction> & {
-      getState: () => State;
-    },
-    dispatch: ReduxLogicNextCb,
-    done: ReduxLogicDoneCb
-  ) => {
-    const state = getState();
-    const appliedTemplate = state.template.appliedTemplate;
-    if (!appliedTemplate) {
-      done();
-      return;
-    }
-
-    const { filePath, metadata } = action.payload;
-    const uploads = state.upload.present;
-    if (uploads[filePath]) {
-      dispatch(autofillFromMXS(filePath, metadata));
-    }
-    done();
-  },
-  type: FETCH_METADATA_SUCCEEDED,
-});
-
 export default [
   fetchMetadataLogic,
   autoFetchMetadataOnAddFilesLogic,
   autofillOnTemplateAppliedLogic,
-  autofillOnMetadataArrivedLogic,
 ];
