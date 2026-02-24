@@ -28,10 +28,7 @@ export const getUploadsByTemplateUsage = createSelector(
     uploadJobs,
     jobIdToCopyProgress,
     templateIdToName
-  ): {
-    uploadsWithTemplates: UploadSummaryTableRow[];
-    uploadsWithoutTemplates: UploadSummaryTableRow[];
-  } => {
+  ): UploadSummaryTableRow[] => {
     const replacedJobIdSet = uploadJobs.reduce((setSoFar, job) => {
       if (job.serviceFields?.originalJobId) {
         setSoFar.add(job.serviceFields?.originalJobId);
@@ -39,36 +36,24 @@ export const getUploadsByTemplateUsage = createSelector(
       return setSoFar;
     }, new Set());
 
-    const uploadsWithTemplates: UploadSummaryTableRow[] = [];
-    const uploadsWithoutTemplates: UploadSummaryTableRow[] = [];
-    orderBy(uploadJobs, ["created"], ["desc"])
+    return orderBy(uploadJobs, ["created"], ["desc"])
       .filter(({ jobId }) => !replacedJobIdSet.has(jobId))
-      .forEach((job) => {
-        const upload: UploadSummaryTableRow = {
-          ...job,
-          created: new Date(job.created),
-          modified: new Date(job.modified),
-          progress: jobIdToCopyProgress[job.jobId],
-          fileId: job.serviceFields?.result
-            ?.map((file) => file.fileId)
-            .join(", "),
-          filePath: job.serviceFields?.result
-            ?.map((file) => file.readPath)
-            .join(", "),
-          template:
-            templateIdToName[
-              job.serviceFields?.files?.[0]?.customMetadata?.templateId || 0
-            ],
-        };
-
-        if (job.serviceFields?.files?.[0]?.customMetadata) {
-          uploadsWithTemplates.push(upload);
-        } else {
-          uploadsWithoutTemplates.push(upload);
-        }
-      });
-
-    return { uploadsWithTemplates, uploadsWithoutTemplates };
+      .map((job) => ({
+        ...job,
+        created: new Date(job.created),
+        modified: new Date(job.modified),
+        progress: jobIdToCopyProgress[job.jobId],
+        fileId: job.serviceFields?.result
+          ?.map((file) => file.fileId)
+          .join(", "),
+        filePath: job.serviceFields?.result
+          ?.map((file) => file.readPath)
+          .join(", "),
+        template:
+          templateIdToName[
+            job.serviceFields?.files?.[0]?.customMetadata?.templateId || 0
+          ],
+      }));
   }
 );
 
