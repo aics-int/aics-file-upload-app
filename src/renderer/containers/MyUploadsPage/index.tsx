@@ -30,13 +30,7 @@ const styles = require("./styles.pcss");
  */
 export default function MyUploadsPage() {
   const dispatch = useDispatch();
-  const { uploadsWithTemplates, uploadsWithoutTemplates } = useSelector(
-    getUploadsByTemplateUsage
-  );
-  const allUploads = React.useMemo(
-    () => [...uploadsWithoutTemplates, ...uploadsWithTemplates].slice(0, 100),
-    [uploadsWithTemplates, uploadsWithoutTemplates]
-  );
+  const recentUploads = useSelector(getUploadsByTemplateUsage).slice(0, 100);
   const requestsInProgress = useSelector(getRequestsInProgress);
   const isRequestingJobs = requestsInProgress.includes(AsyncRequest.GET_JOBS);
 
@@ -180,7 +174,7 @@ export default function MyUploadsPage() {
           </div>
         ) : (
           <UploadTable
-            uploads={allUploads}
+            uploads={recentUploads}
             getContextMenuItems={getContextMenuItems}
             onSelect={onSelect}
           />
