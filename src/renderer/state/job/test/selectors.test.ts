@@ -20,7 +20,7 @@ import {
 
 describe("Job selectors", () => {
   describe("getUploadsByTemplateUsage", () => {
-    it("divides jobs by if they have been used with a template", () => {
+    it("returns all uploads sorted by created desc", () => {
       // Arrange
       const state = {
         ...mockState,
@@ -38,14 +38,12 @@ describe("Job selectors", () => {
       const jobs = [...nonEmptyJobStateBranch.uploadJobs];
 
       // Act
-      const { uploadsWithTemplates, uploadsWithoutTemplates } =
-        getUploadsByTemplateUsage(state);
+      const uploads = getUploadsByTemplateUsage(state);
 
       // Assert
-      expect(uploadsWithTemplates).to.be.lengthOf(1);
-      expect(uploadsWithoutTemplates).to.be.lengthOf(2);
+      expect(uploads).to.be.lengthOf(3);
       let foundWorkingJob = false;
-      uploadsWithoutTemplates.forEach((jobTableRow) => {
+      uploads.forEach((jobTableRow) => {
         const match = jobs.find((job) => {
           return (
             job.jobName === jobTableRow.jobName &&
@@ -92,19 +90,17 @@ describe("Job selectors", () => {
       };
 
       // Act
-      const { uploadsWithTemplates, uploadsWithoutTemplates } =
-        getUploadsByTemplateUsage({
-          ...mockState,
-          job: {
-            ...mockState.job,
-            uploadJobs: [expectedJob, mockReplacedJob1, mockReplacedJob2],
-          },
-        });
+      const uploads = getUploadsByTemplateUsage({
+        ...mockState,
+        job: {
+          ...mockState.job,
+          uploadJobs: [expectedJob, mockReplacedJob1, mockReplacedJob2],
+        },
+      });
 
       // Assert
-      expect(uploadsWithTemplates).to.be.lengthOf(0);
-      expect(uploadsWithoutTemplates).to.be.lengthOf(1);
-      expect(uploadsWithoutTemplates[0].jobId).to.equal(expectedJob.jobId);
+      expect(uploads).to.be.lengthOf(1);
+      expect(uploads[0].jobId).to.equal(expectedJob.jobId);
     });
   });
 
