@@ -15,17 +15,31 @@ import {
 import {
   getIsSafeToExit,
   getJobIdToUploadJobMap,
-  getUploadsByTemplateUsage,
+  getRecentUploads,
 } from "../selectors";
 
 describe("Job selectors", () => {
   describe("getUploadsByTemplateUsage", () => {
-    it("divides jobs by if they have been used with a template", () => {
+    it("returns all uploads sorted by created desc", () => {
       // Arrange
+      const oldest = {
+        ...mockSuccessfulUploadJob,
+        created: new Date("Oct 1, 2020"),
+      };
+      const middle = {
+        ...mockWorkingUploadJob,
+        created: new Date("Oct 2, 2020"),
+      };
+      const newest = {
+        ...mockFailedUploadJob,
+        created: new Date("Oct 3, 2020"),
+      };
       const state = {
         ...mockState,
         job: {
           ...nonEmptyJobStateBranch,
+          // Provide in non-sorted order to ensure selector sorts
+          uploadJobs: [middle, oldest, newest],
           copyProgress: {
             [mockWorkingUploadJob.jobId]: {
               completedBytes: 2,
@@ -35,32 +49,24 @@ describe("Job selectors", () => {
           },
         },
       };
-      const jobs = [...nonEmptyJobStateBranch.uploadJobs];
 
       // Act
-      const { uploadsWithTemplates, uploadsWithoutTemplates } =
-        getUploadsByTemplateUsage(state);
+      const uploads = getRecentUploads(state);
 
       // Assert
-      expect(uploadsWithTemplates).to.be.lengthOf(1);
-      expect(uploadsWithoutTemplates).to.be.lengthOf(2);
-      let foundWorkingJob = false;
-      uploadsWithoutTemplates.forEach((jobTableRow) => {
-        const match = jobs.find((job) => {
-          return (
-            job.jobName === jobTableRow.jobName &&
-            job.jobId === jobTableRow.jobId &&
-            job.currentStage === jobTableRow.currentStage &&
-            job.status === jobTableRow.status
-          );
-        });
-        if (jobTableRow.status === JSSJobStatus.WORKING) {
-          expect(jobTableRow.progress).to.not.be.undefined;
-          foundWorkingJob = true;
-        }
-        expect(match).to.not.be.undefined;
-      });
-      expect(foundWorkingJob).to.be.true;
+      expect(uploads).to.be.lengthOf(3);
+      expect(uploads[0].jobId).to.equal(newest.jobId);
+      expect(uploads[1].jobId).to.equal(middle.jobId);
+      expect(uploads[2].jobId).to.equal(oldest.jobId);
+      for (let i = 0; i < uploads.length - 1; i++) {
+        expect(uploads[i].created.getTime()).to.be.greaterThanOrEqual(
+          uploads[i + 1].created.getTime()
+        );
+      }
+      const workingUpload = uploads.find(
+        (u) => u.status === JSSJobStatus.WORKING
+      );
+      expect(workingUpload?.progress).to.not.be.undefined;
     });
 
     it("hides any jobs that are duplicates of the original", () => {
@@ -92,19 +98,17 @@ describe("Job selectors", () => {
       };
 
       // Act
-      const { uploadsWithTemplates, uploadsWithoutTemplates } =
-        getUploadsByTemplateUsage({
-          ...mockState,
-          job: {
-            ...mockState.job,
-            uploadJobs: [expectedJob, mockReplacedJob1, mockReplacedJob2],
-          },
-        });
+      const uploads = getRecentUploads({
+        ...mockState,
+        job: {
+          ...mockState.job,
+          uploadJobs: [expectedJob, mockReplacedJob1, mockReplacedJob2],
+        },
+      });
 
       // Assert
-      expect(uploadsWithTemplates).to.be.lengthOf(0);
-      expect(uploadsWithoutTemplates).to.be.lengthOf(1);
-      expect(uploadsWithoutTemplates[0].jobId).to.equal(expectedJob.jobId);
+      expect(uploads).to.be.lengthOf(1);
+      expect(uploads[0].jobId).to.equal(expectedJob.jobId);
     });
   });
 
