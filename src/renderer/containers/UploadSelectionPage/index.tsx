@@ -1,10 +1,11 @@
-import { Button } from "antd";
+import { Button, Tooltip } from "antd";
 import { OpenDialogOptions } from "electron";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import DragAndDrop from "../../components/DragAndDrop";
 import PageFooter from "../../components/PageFooter";
+import { getIsAnyMetadataExtractionLoading } from "../../state/metadataExtraction/selectors";
 import { closeUpload, selectPage } from "../../state/route/actions";
 import { loadFiles } from "../../state/selection/actions";
 import { getUploadType } from "../../state/selection/selectors";
@@ -25,6 +26,7 @@ const styles = require("./styles.pcss");
 export default function UploadSelectionPage() {
   const dispatch = useDispatch();
 
+  const isMxsLoading = useSelector(getIsAnyMetadataExtractionLoading);
   const uploadType = useSelector(getUploadType);
   const uploadList = useSelector(getUploadAsTableRows);
 
@@ -75,14 +77,20 @@ export default function UploadSelectionPage() {
           <Button className={styles.footerButton} danger onClick={onCancel}>
             Cancel Upload
           </Button>
-          <Button
-            className={styles.footerButton}
-            onClick={onContinue}
-            disabled={uploadList.length === 0}
-            type="primary"
+          <Tooltip
+            title={isMxsLoading ? "Waiting on data from MXS" : undefined}
           >
-            Continue to Metadata
-          </Button>
+            <span>
+              <Button
+                className={styles.footerButton}
+                onClick={onContinue}
+                disabled={uploadList.length === 0 || isMxsLoading}
+                type="primary"
+              >
+                Continue to Metadata
+              </Button>
+            </span>
+          </Tooltip>
         </PageFooter>
       </div>
     </div>
