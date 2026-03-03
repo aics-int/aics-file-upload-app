@@ -22,8 +22,10 @@ export default function SeeMetadataCell(props: CellProps<any>) {
 
   const showMetadata = () => {
     setIsModalVisible(true);
-    // dispatch action to fetch metadata
-    dispatch(fetchMetadataRequest(filePath));
+    // Only fetch metadata if not already cached
+    if (!metadataState.metadata) {
+      dispatch(fetchMetadataRequest(filePath));
+    }
   };
 
   const handleCancel = () => {
