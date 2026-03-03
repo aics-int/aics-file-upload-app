@@ -197,7 +197,9 @@ const initiateUploadLogic = createLogic({
       dispatch(
         initiateUploadFailed(
           action.payload,
-          `Something went wrong while initiating the upload. Details: ${error?.message}`
+          `Something went wrong while initiating the upload. Details: ${
+            error?.response?.data?.message || error?.message
+          }`
         )
       );
       done();
@@ -214,7 +216,9 @@ const initiateUploadLogic = createLogic({
       } catch (error) {
         dispatch(
           uploadFailed(
-            `Something went wrong while uploading your files. Details: ${error?.message}`,
+            `Something went wrong while uploading your files. Details: ${
+              error?.response?.data?.message || error?.message
+            }`,
             upload.jobName
           )
         );
@@ -754,7 +758,9 @@ const uploadWithoutMetadataLogic = createLogic({
     } catch (error) {
       dispatch(
         uploadFailed(
-          `Something went wrong while initiating the upload. Details: ${error?.message}`,
+          `Something went wrong while initiating the upload. Details: ${
+            error?.response?.data?.message || error?.message
+          }`,
           deps.action.payload.join(", ")
         )
       );
@@ -769,7 +775,9 @@ const uploadWithoutMetadataLogic = createLogic({
       } catch (error) {
         dispatch(
           uploadFailed(
-            `Something went wrong while uploading your files. Details: ${error?.message}`,
+            `Something went wrong while uploading your files. Details: ${
+              error?.response?.data?.message || error?.message
+            }`,
             name
           )
         );
