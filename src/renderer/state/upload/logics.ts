@@ -100,6 +100,12 @@ import {
   UploadWithoutMetadataAction,
 } from "./types";
 
+// Extract the most informative error message from an axios error,
+// falling back to the generic JS error message
+function getErrorMessage(error: any): string {
+  return error?.response?.data?.message || error?.message || "Unknown cause";
+}
+
 const applyTemplateLogic = createLogic({
   process: async (
     {
@@ -197,9 +203,9 @@ const initiateUploadLogic = createLogic({
       dispatch(
         initiateUploadFailed(
           action.payload,
-          `Something went wrong while initiating the upload. Details: ${
-            error?.response?.data?.message || error?.message
-          }`
+          `Something went wrong while initiating the upload. Details: ${getErrorMessage(
+            error
+          )}`
         )
       );
       done();
@@ -216,9 +222,9 @@ const initiateUploadLogic = createLogic({
       } catch (error) {
         dispatch(
           uploadFailed(
-            `Something went wrong while uploading your files. Details: ${
-              error?.response?.data?.message || error?.message
-            }`,
+            `Something went wrong while uploading your files. Details: ${getErrorMessage(
+              error
+            )}`,
             upload.jobName
           )
         );
@@ -758,9 +764,9 @@ const uploadWithoutMetadataLogic = createLogic({
     } catch (error) {
       dispatch(
         uploadFailed(
-          `Something went wrong while initiating the upload. Details: ${
-            error?.response?.data?.message || error?.message
-          }`,
+          `Something went wrong while initiating the upload. Details: ${getErrorMessage(
+            error
+          )}`,
           deps.action.payload.join(", ")
         )
       );
@@ -775,9 +781,9 @@ const uploadWithoutMetadataLogic = createLogic({
       } catch (error) {
         dispatch(
           uploadFailed(
-            `Something went wrong while uploading your files. Details: ${
-              error?.response?.data?.message || error?.message
-            }`,
+            `Something went wrong while uploading your files. Details: ${getErrorMessage(
+              error
+            )}`,
             name
           )
         );
