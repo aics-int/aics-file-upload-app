@@ -350,7 +350,7 @@ export default class FileManagementSystem {
         serviceFields: {
           ...upload.serviceFields,
           error:
-            error?.response?.data?.message || error?.message || "Upload failed",
+            error?.response?.data?.message || error?.message || "Unknown cause",
         },
       });
       throw error;
