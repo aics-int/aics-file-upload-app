@@ -296,6 +296,9 @@ describe("Upload logics", () => {
         undefined,
         uploadLogics
       );
+      const fileNames = getUploadFileNames(
+        nonEmptyStateForInitiatingUpload
+      ).join(", ");
       const apiMessage = "Path does not exist: /aled/eadf/test";
       const axiosError = new Error(
         "Request failed with status code 400"
@@ -311,13 +314,14 @@ describe("Upload logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      const matchingAction = actions.find(
-        (a: any) => a.type === initiateUploadFailed("", "").type
-      );
-      expect(matchingAction.payload.error).to.include(apiMessage);
-      expect(matchingAction.payload.error).to.not.include(
-        "Request failed with status code"
-      );
+      expect(
+        actions.includesMatch(
+          initiateUploadFailed(
+            fileNames,
+            `Something went wrong while initiating the upload. Details: ${apiMessage}`
+          )
+        )
+      ).to.be.true;
     });
 
     it("does not continue upload given upload directory request failure", async () => {
