@@ -145,7 +145,7 @@ describe("FileManagementSystem", () => {
       await expect(fms.upload(upload)).to.be.rejectedWith(Error);
 
       const updateJobCall = jss.updateJob.getCall(0);
-      expect(updateJobCall.args[1].serviceFields.error).to.equal(
+      expect(updateJobCall.args[1]?.serviceFields?.error).to.equal(
         fssErrorMessage
       );
     });
@@ -164,7 +164,7 @@ describe("FileManagementSystem", () => {
       await expect(fms.upload(upload)).to.be.rejectedWith(Error);
 
       const updateJobCall = jss.updateJob.getCall(0);
-      expect(updateJobCall.args[1].serviceFields.error).to.equal(
+      expect(updateJobCall.args[1]?.serviceFields?.error).to.equal(
         "Network Error"
       );
     });
