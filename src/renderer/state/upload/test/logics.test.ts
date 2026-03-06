@@ -289,6 +289,41 @@ describe("Upload logics", () => {
       ).to.be.true;
     });
 
+    it("uses error message from API response body when initiate upload fails", async () => {
+      // Arrange
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        nonEmptyStateForInitiatingUpload,
+        undefined,
+        uploadLogics
+      );
+      const fileNames = getUploadFileNames(
+        nonEmptyStateForInitiatingUpload
+      ).join(", ");
+      const apiMessage = "Path does not exist: /aled/eadf/test";
+      const axiosError = new Error(
+        "Request failed with status code 400"
+      ) as any;
+      axiosError.response = {
+        status: 400,
+        data: { message: apiMessage, error: "Failed to validate request" },
+      };
+      fms.initiateUpload.rejects(axiosError);
+
+      // Act
+      store.dispatch(initiateUpload());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(
+        actions.includesMatch(
+          initiateUploadFailed(
+            fileNames,
+            `Something went wrong while initiating the upload. Details: ${apiMessage}`
+          )
+        )
+      ).to.be.true;
+    });
+
     it("does not continue upload given upload directory request failure", async () => {
       fms.initiateUpload.rejects(new Error("foo"));
       const { actions, logicMiddleware, store } = createMockReduxStore(
@@ -346,6 +381,40 @@ describe("Upload logics", () => {
         actions.includesMatch(
           uploadFailed(
             `Something went wrong while uploading your files. Details: ${errorMessage}`,
+            initiatedUpload.jobName
+          )
+        )
+      ).to.be.true;
+    });
+
+    it("uses error message from API response body when upload fails", async () => {
+      // Arrange
+      fms.initiateUpload.resolves(initiatedUpload);
+      jssClient.existsById.resolves(true);
+      const apiMessage = "Path does not exist: /aled/eadf/test";
+      const axiosError = new Error(
+        "Request failed with status code 400"
+      ) as any;
+      axiosError.response = {
+        status: 400,
+        data: { message: apiMessage, error: "Failed to validate request" },
+      };
+      fms.upload.rejects(axiosError);
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        nonEmptyStateForInitiatingUpload,
+        mockReduxLogicDeps,
+        uploadLogics
+      );
+
+      // Act
+      store.dispatch(initiateUpload());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(
+        actions.includesMatch(
+          uploadFailed(
+            `Something went wrong while uploading your files. Details: ${apiMessage}`,
             initiatedUpload.jobName
           )
         )

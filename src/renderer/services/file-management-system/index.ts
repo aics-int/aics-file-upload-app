@@ -349,7 +349,8 @@ export default class FileManagementSystem {
         status: JSSJobStatus.FAILED,
         serviceFields: {
           ...upload.serviceFields,
-          error: error?.message ?? "Upload failed",
+          error:
+            error?.response?.data?.message || error?.message || "Unknown cause",
         },
       });
       throw error;

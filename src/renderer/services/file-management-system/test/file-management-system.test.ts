@@ -123,6 +123,52 @@ describe("FileManagementSystem", () => {
       ).to.be.true;
     });
 
+    it("stores informative error message from FSS response on failure", async () => {
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
+          type: "upload",
+        },
+      };
+
+      const fssErrorMessage = "Path does not exist: /aled/eadf/test";
+      const axiosError = new Error(
+        "Request failed with status code 400"
+      ) as any;
+      axiosError.response = {
+        status: 400,
+        data: { message: fssErrorMessage, error: "Failed to validate request" },
+      };
+      fss.upload.rejects(axiosError);
+
+      await expect(fms.upload(upload)).to.be.rejectedWith(Error);
+
+      const updateJobCall = jss.updateJob.getCall(0);
+      expect(updateJobCall.args[1]?.serviceFields?.error).to.equal(
+        fssErrorMessage
+      );
+    });
+
+    it("falls back to generic error message when no response data", async () => {
+      const upload: UploadJob = {
+        ...mockJob,
+        serviceFields: {
+          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
+          type: "upload",
+        },
+      };
+
+      fss.upload.rejects(new Error("Network Error"));
+
+      await expect(fms.upload(upload)).to.be.rejectedWith(Error);
+
+      const updateJobCall = jss.updateJob.getCall(0);
+      expect(updateJobCall.args[1]?.serviceFields?.error).to.equal(
+        "Network Error"
+      );
+    });
+
     it("Uses extracted fileName in FSS upload", async () => {
       const upload: UploadJob = {
         ...mockJob,
