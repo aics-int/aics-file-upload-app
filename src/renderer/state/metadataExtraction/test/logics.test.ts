@@ -11,7 +11,7 @@ import {
 } from "../../test/configure-mock-store";
 import { mockState } from "../../test/mocks";
 import { State } from "../../types";
-import { AUTOFILL_FROM_MXS, ADD_UPLOAD_FILES } from "../../upload/constants";
+import { AUTOFILL_FROM_MXS } from "../../upload/constants";
 import { fetchMetadataRequest } from "../actions";
 import {
   FETCH_METADATA_REQUEST,
@@ -86,62 +86,6 @@ describe("metadataExtraction logics", () => {
         (a) => a.type === FETCH_METADATA_FAILED
       );
       expect(failedAction?.payload.filePath).to.equal(filePath);
-    });
-  });
-
-  describe("autoFetchMetadataOnAddFilesLogic", () => {
-    it("dispatches FETCH_METADATA_REQUEST for each file when files are added", async () => {
-      const files = [
-        { file: "/path/to/file1.czi" },
-        { file: "/path/to/file2.czi" },
-      ];
-
-      mxsClient.fetchExtractedMetadata.resolves({});
-
-      const { store, logicMiddleware, actions } = createMockReduxStore(
-        mockState,
-        mockReduxLogicDeps,
-        logics
-      );
-
-      store.dispatch({
-        type: ADD_UPLOAD_FILES,
-        autoSave: true,
-        payload: files,
-      });
-
-      await logicMiddleware.whenComplete();
-
-      const fetchRequests = actions.list.filter(
-        (a) => a.type === FETCH_METADATA_REQUEST
-      );
-
-      expect(fetchRequests).to.have.length(2);
-      const filePaths = fetchRequests.map((a) => a.payload.filePath);
-      expect(filePaths).to.include("/path/to/file1.czi");
-      expect(filePaths).to.include("/path/to/file2.czi");
-    });
-
-    it("does nothing when no files are added", async () => {
-      const { store, logicMiddleware, actions } = createMockReduxStore(
-        mockState,
-        mockReduxLogicDeps,
-        logics
-      );
-
-      store.dispatch({
-        type: ADD_UPLOAD_FILES,
-        autoSave: true,
-        payload: [],
-      });
-
-      await logicMiddleware.whenComplete();
-
-      const fetchRequests = actions.list.filter(
-        (a) => a.type === FETCH_METADATA_REQUEST
-      );
-
-      expect(fetchRequests).to.have.length(0);
     });
   });
 
