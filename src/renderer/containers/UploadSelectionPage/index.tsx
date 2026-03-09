@@ -51,10 +51,12 @@ export default function UploadSelectionPage() {
     dispatch(closeUpload());
   };
 
-  const onContinue = () => {
+  const onContinue = async () => {
     const templateId = appliedTemplateId || savedTemplateId;
     if (templateId) {
-      dispatch(applyTemplate(templateId));
+      // Ensure template application completes before navigating to avoid
+      // late state updates clobbering user edits on the metadata page.
+      await (dispatch as any)(applyTemplate(templateId));
     }
     dispatch(selectPage(Page.AddMetadata));
   };
