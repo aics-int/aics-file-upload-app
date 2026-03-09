@@ -17,7 +17,6 @@ import {
   useTable,
 } from "react-table";
 
-
 import { JOB_STATUSES } from "../../services/job-status-service/types";
 import { UploadSummaryTableRow } from "../../state/types";
 import Table from "../Table";
