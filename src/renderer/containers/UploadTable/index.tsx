@@ -1,4 +1,5 @@
 import { Empty } from "antd";
+import { shell } from "electron";
 import * as React from "react";
 import {
   CellProps,
@@ -16,6 +17,7 @@ import {
   useTable,
 } from "react-table";
 
+
 import { JOB_STATUSES } from "../../services/job-status-service/types";
 import { UploadSummaryTableRow } from "../../state/types";
 import Table from "../Table";
@@ -27,6 +29,12 @@ import DefaultHeader from "../Table/Headers/DefaultHeader";
 import SelectionHeader from "../Table/Headers/SelectionHeader";
 
 const styles = require("./styles.pcss");
+
+function getBffUrl(fileId: string): string {
+  return `https://bff.allencell.org/app?c=file_name%3A0.4%2CKind%3A0.2%2CType%3A0.25%2Cfile_size%3A0.15&filter=%7B%22name%22%3A%22file_id%22%2C%22value%22%3A%22${encodeURIComponent(
+    fileId
+  )}%22%2C%22type%22%3A%22default%22%7D&source=%7B%22name%22%3A%22AICS+FMS%22%7D&sort=%7B%22annotationName%22%3A%22uploaded%22%2C%22order%22%3A%22DESC%22%7D`;
+}
 
 interface Props {
   title?: string;
@@ -84,6 +92,18 @@ const COLUMNS: Column<UploadSummaryTableRow>[] = [
   },
   {
     accessor: "fileId",
+    Cell: function Cell(props: CellProps<UploadSummaryTableRow>) {
+      if (!props.value) return <ReadOnlyCell {...props} />;
+      return (
+        <span
+          className={styles.fileIdLink}
+          onClick={() => shell.openExternal(getBffUrl(props.value))}
+          title={`Open ${props.value} in BFF`}
+        >
+          {props.value}
+        </span>
+      );
+    },
     description: "Unique FMS ID assigned to the uploaded file",
     id: "File ID",
   },
