@@ -97,7 +97,16 @@ const COLUMNS: Column<UploadSummaryTableRow>[] = [
       return (
         <span
           className={styles.fileIdLink}
-          onClick={() => shell.openExternal(getBffUrl(props.value))}
+          onClick={() => {
+            shell
+              .openExternal(getBffUrl(props.value))
+              .catch((error) => {
+                // Log the error to avoid unhandled promise rejection
+                // and to aid in debugging issues opening external URLs.
+                // eslint-disable-next-line no-console
+                console.error("Failed to open external URL in default browser", error);
+              });
+          }}
           title={`Open ${props.value} in BFF`}
         >
           {props.value}
