@@ -30,6 +30,11 @@ import {
   getDateTimeAnnotationTypeId,
   getPlateBarcodeToPlates,
 } from "../metadata/selectors";
+import {
+  fetchMetadataRequest,
+  fetchMetadataSucceeded,
+  fetchMetadataFailed,
+} from "../metadataExtraction/actions";
 import { closeUpload, viewUploads, resetUpload } from "../route/actions";
 import { handleStartingNewUploadJob } from "../route/logics";
 import { updateMassEditRow } from "../selection/actions";
@@ -48,7 +53,6 @@ import {
   PlateAtImagingSession,
   ReduxLogicDoneCb,
   ReduxLogicNextCb,
-  ReduxLogicProcessDependencies,
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicRejectCb,
   ReduxLogicTransformDependenciesWithAction,
@@ -88,6 +92,7 @@ import {
   getUploadRequests,
 } from "./selectors";
 import {
+  AddUploadFilesAction,
   ApplyTemplateAction,
   CancelUploadAction,
   InitiateUploadAction,
@@ -156,11 +161,31 @@ const applyTemplateLogic = createLogic({
 });
 
 const addUploadFilesLogic = createLogic({
-  process: (
-    { getState }: ReduxLogicProcessDependencies,
+  process: async (
+    {
+      action,
+      getState,
+      mxsClient,
+    }: ReduxLogicProcessDependenciesWithAction<AddUploadFilesAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
+    // Fetch metadata for all new files, awaiting completion
+    await Promise.all(
+      action.payload.map(async (fileModel: FileModel) => {
+        dispatch(fetchMetadataRequest(fileModel.file));
+        try {
+          const metadata = await mxsClient.fetchExtractedMetadata(
+            fileModel.file
+          );
+          dispatch(fetchMetadataSucceeded(fileModel.file, metadata));
+        } catch (error) {
+          dispatch(fetchMetadataFailed(fileModel.file, error));
+        }
+      })
+    );
+
+    // Apply template after metadata is cached
     const selectedTemplate = getAppliedTemplate(getState())?.templateId;
     const savedTemplate = getTemplateId(getState());
     if (selectedTemplate) {
