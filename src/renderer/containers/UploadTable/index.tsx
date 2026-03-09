@@ -100,6 +100,7 @@ const COLUMNS: Column<UploadSummaryTableRow>[] = [
           onClick={() => shell.openExternal(getBffUrl(props.value))}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
               shell.openExternal(getBffUrl(props.value));
             }
           }}
