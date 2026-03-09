@@ -31,9 +31,18 @@ import SelectionHeader from "../Table/Headers/SelectionHeader";
 const styles = require("./styles.pcss");
 
 function getBffUrl(fileId: string): string {
-  return `https://bff.allencell.org/app?c=file_name%3A0.4%2CKind%3A0.2%2CType%3A0.25%2Cfile_size%3A0.15&filter=%7B%22name%22%3A%22file_id%22%2C%22value%22%3A%22${encodeURIComponent(
-    fileId
-  )}%22%2C%22type%22%3A%22default%22%7D&source=%7B%22name%22%3A%22AICS+FMS%22%7D&sort=%7B%22annotationName%22%3A%22uploaded%22%2C%22order%22%3A%22DESC%22%7D`;
+  const url = new URL("https://bff.allencell.org/app");
+  url.searchParams.set("c", "file_name:0.4,Kind:0.2,Type:0.25,file_size:0.15");
+  url.searchParams.set(
+    "filter",
+    JSON.stringify({ name: "file_id", value: fileId, type: "default" })
+  );
+  url.searchParams.set("source", JSON.stringify({ name: "AICS FMS" }));
+  url.searchParams.set(
+    "sort",
+    JSON.stringify({ annotationName: "uploaded", order: "DESC" })
+  );
+  return url.toString();
 }
 
 interface Props {
@@ -97,7 +106,7 @@ const COLUMNS: Column<UploadSummaryTableRow>[] = [
       return (
         <span
           className={styles.fileIdLink}
-          onClick={() => shell.openExternal(getBffUrl(props.value))}
+          onClick={() => shell.openExternal(getBffUrl(props.value)).catch(console.error)}
           title={`Open ${props.value} in BFF`}
         >
           {props.value}
