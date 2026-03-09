@@ -155,10 +155,17 @@ const applyTemplateLogic = createLogic({
 
 const addUploadFilesLogic = createLogic({
   process: (
-    _deps: ReduxLogicProcessDependencies,
-    _dispatch: ReduxLogicNextCb,
+    { getState }: ReduxLogicProcessDependencies,
+    dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
+    const selectedTemplate = getAppliedTemplate(getState())?.templateId;
+    const savedTemplate = getTemplateId(getState());
+    if (selectedTemplate) {
+      dispatch(applyTemplate(selectedTemplate));
+    } else if (savedTemplate) {
+      dispatch(applyTemplate(savedTemplate));
+    }
     done();
   },
   type: ADD_UPLOAD_FILES,
