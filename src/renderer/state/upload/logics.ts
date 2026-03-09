@@ -38,6 +38,7 @@ import {
   getSelectedUploads,
   getSelectedUser,
 } from "../selection/selectors";
+import { getTemplateId } from "../setting/selectors";
 import { ensureDraftGetsSaved, getApplyTemplateInfo } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import { getAppliedTemplate } from "../template/selectors";
@@ -56,6 +57,7 @@ import { batchActions } from "../util";
 
 import {
   addUploadFiles,
+  applyTemplate,
   cancelUploadFailed,
   cancelUploadSucceeded,
   editFileMetadataFailed,
