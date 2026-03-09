@@ -9,7 +9,10 @@ import { getIsAnyMetadataExtractionLoading } from "../../state/metadataExtractio
 import { closeUpload, selectPage } from "../../state/route/actions";
 import { loadFiles } from "../../state/selection/actions";
 import { getUploadType } from "../../state/selection/selectors";
+import { getTemplateId } from "../../state/setting/selectors";
+import { getAppliedTemplate } from "../../state/template/selectors";
 import { Page } from "../../state/types";
+import { applyTemplate } from "../../state/upload/actions";
 import { getUploadAsTableRows } from "../../state/upload/selectors";
 import { UploadType } from "../../types";
 
@@ -29,6 +32,8 @@ export default function UploadSelectionPage() {
   const isMxsLoading = useSelector(getIsAnyMetadataExtractionLoading);
   const uploadType = useSelector(getUploadType);
   const uploadList = useSelector(getUploadAsTableRows);
+  const appliedTemplateId = useSelector(getAppliedTemplate)?.templateId;
+  const savedTemplateId = useSelector(getTemplateId);
 
   // Default to "File" option
   let openDialogOptions: OpenDialogOptions = {
@@ -47,6 +52,10 @@ export default function UploadSelectionPage() {
   };
 
   const onContinue = () => {
+    const templateId = appliedTemplateId || savedTemplateId;
+    if (templateId) {
+      dispatch(applyTemplate(templateId));
+    }
     dispatch(selectPage(Page.AddMetadata));
   };
 

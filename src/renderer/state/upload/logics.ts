@@ -38,7 +38,6 @@ import {
   getSelectedUploads,
   getSelectedUser,
 } from "../selection/selectors";
-import { getTemplateId } from "../setting/selectors";
 import { ensureDraftGetsSaved, getApplyTemplateInfo } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import { getAppliedTemplate } from "../template/selectors";
@@ -57,7 +56,6 @@ import { batchActions } from "../util";
 
 import {
   addUploadFiles,
-  applyTemplate,
   cancelUploadFailed,
   cancelUploadSucceeded,
   editFileMetadataFailed,
@@ -157,17 +155,10 @@ const applyTemplateLogic = createLogic({
 
 const addUploadFilesLogic = createLogic({
   process: (
-    { getState }: ReduxLogicProcessDependencies,
-    dispatch: ReduxLogicNextCb,
+    _deps: ReduxLogicProcessDependencies,
+    _dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const selectedTemplate = getAppliedTemplate(getState())?.templateId;
-    const savedTemplate = getTemplateId(getState());
-    if (selectedTemplate) {
-      dispatch(applyTemplate(selectedTemplate));
-    } else if (savedTemplate) {
-      dispatch(applyTemplate(savedTemplate));
-    }
     done();
   },
   type: ADD_UPLOAD_FILES,
