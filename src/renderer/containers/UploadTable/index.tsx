@@ -98,6 +98,13 @@ const COLUMNS: Column<UploadSummaryTableRow>[] = [
         <span
           className={styles.fileIdLink}
           onClick={() => shell.openExternal(getBffUrl(props.value))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              shell.openExternal(getBffUrl(props.value));
+            }
+          }}
+          role="link"
+          tabIndex={0}
           title={`Open ${props.value} in BFF`}
         >
           {props.value}
