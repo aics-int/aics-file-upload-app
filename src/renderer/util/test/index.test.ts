@@ -12,6 +12,7 @@ import {
   getPowerOf1000,
   handleFileSelection,
   splitTrimAndFilter,
+  toPosixPath,
 } from "../";
 import { UploadType } from "../../types";
 
@@ -73,6 +74,21 @@ describe("General utilities", () => {
     });
     it("returns 1 if input is 999999", () => {
       expect(getPowerOf1000(999999)).to.equal(1);
+    });
+  });
+
+  describe("toPosixPath", () => {
+    it("converts Windows UNC network path to posix", () => {
+      const windowsPath =
+        "\\\\allen\\aics\\lumenoid\\assay_optimization\\data\\3500008300_20260217_ZSD2\\2026-02-17";
+      expect(toPosixPath(windowsPath)).to.equal(
+        "//allen/aics/lumenoid/assay_optimization/data/3500008300_20260217_ZSD2/2026-02-17"
+      );
+    });
+
+    it("leaves posix paths unchanged", () => {
+      const posixPath = "/allen/aics/data/file.czi";
+      expect(toPosixPath(posixPath)).to.equal(posixPath);
     });
   });
 
