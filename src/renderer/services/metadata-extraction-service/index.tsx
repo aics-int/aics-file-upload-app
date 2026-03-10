@@ -12,11 +12,11 @@ export default class MetadataExtractionService extends HttpCacheClient {
   ) {
     super(httpClient, localStorage, useCache);
   }
-  public async fetchExtractedMetadata(filePath: string): Promise<MXSResult> {
+  public async fetchExtractedMetadata(path: string): Promise<MXSResult> {
     const url = `${mxsURL}/extracted-annotations`;
     const response = await this.put(
       url,
-      { path: filePath },
+      { path: path },
       {
         headers: {
           "Content-Type": "application/json",
