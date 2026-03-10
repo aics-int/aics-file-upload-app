@@ -33,10 +33,6 @@ function getBffUrl(fileId: string): string {
   const baseUrl = "https://bff.allencell.org/app";
   const url = new URL(baseUrl);
 
-  // Column configuration
-  const columns = "file_name:0.4,Kind:0.2,Type:0.25,file_size:0.15";
-  url.searchParams.set("c", columns);
-
   // Query parameters as structured JSON
   const filter = {
     name: "file_id",
@@ -48,14 +44,8 @@ function getBffUrl(fileId: string): string {
     name: "AICS FMS",
   };
 
-  const sort = {
-    annotationName: "uploaded",
-    order: "DESC",
-  };
-
   url.searchParams.set("filter", JSON.stringify(filter));
   url.searchParams.set("source", JSON.stringify(source));
-  url.searchParams.set("sort", JSON.stringify(sort));
 
   return url.toString();
 }
