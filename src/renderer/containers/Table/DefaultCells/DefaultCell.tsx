@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { CellProps } from "react-table";
 
 import { ColumnType } from "../../../services/labkey-client/types";
+import { setErrorAlert } from "../../../state/feedback/actions";
 import { FileModel } from "../../../state/types";
 import { updateUpload } from "../../../state/upload/actions";
 import { Duration } from "../../../types";
@@ -25,9 +26,14 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
   const { column, value } = props;
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
-
   function commitChanges(value: ColumnValue) {
     setIsEditing(false);
+
+    if (column.type === ColumnType.NUMBER && Number.isNaN(Number(value))) {
+      dispatch(setErrorAlert(`${column.id} expects a number value`));
+      return;
+    }
+
     dispatch(updateUpload(props.row.id, { [props.column.id]: value }));
   }
 
