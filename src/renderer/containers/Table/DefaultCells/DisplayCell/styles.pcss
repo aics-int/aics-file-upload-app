@@ -67,3 +67,12 @@
     border: none;
     border-color: transparent;
 }
+
+@keyframes flash-error {
+    0% { background-color: var(--error); }
+    100% { background-color: transparent; }
+}
+
+.type-error-flash {
+    animation: flash-error 1s ease-out;
+}

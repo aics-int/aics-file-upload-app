@@ -26,10 +26,14 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
   const { column, value } = props;
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
+  const [hasTypeError, setHasTypeError] = useState(false);
+
   function commitChanges(value: ColumnValue) {
     setIsEditing(false);
 
     if (column.type === ColumnType.NUMBER && Number.isNaN(Number(value))) {
+      setHasTypeError(true);
+      setTimeout(() => setHasTypeError(false), 1000);
       dispatch(setErrorAlert(`${column.id} expects a number value`));
       return;
     }
@@ -94,5 +98,11 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
     }
   }
 
-  return <DisplayCell {...props} onStartEditing={() => setIsEditing(true)} />;
+  return (
+    <DisplayCell
+      {...props}
+      hasTypeError={hasTypeError}
+      onStartEditing={() => setIsEditing(true)}
+    />
+  );
 }

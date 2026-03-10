@@ -31,6 +31,7 @@ const styles = require("./styles.pcss");
 
 interface Props extends CellProps<FileModel> {
   disabled?: boolean;
+  hasTypeError?: boolean;
   onStartEditing: () => void;
   onTabExit?: () => void;
 }
@@ -231,6 +232,7 @@ export default function DisplayCell(props: Props) {
             className={classNames(styles.readOnlyCell, {
               [styles.highlight]: isHighlighted,
               [styles.autofilled]: isAutofilled,
+              [styles.typeErrorFlash]: props.hasTypeError,
             })}
             onKeyDown={onDisplayInputKeyDown}
             onBlur={() => setIsActive(false)}
