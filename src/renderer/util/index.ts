@@ -147,9 +147,6 @@ export enum FileType {
   ZEISS_CONFIG_FILE = "zeiss-config-file",
 }
 
-export const toPosixPath = (filePath: string): string =>
-  filePath.replace(/\\/g, "/");
-
 export const extensionToFileTypeMap: { [index: string]: FileType } = {
   ".csv": FileType.CSV,
   ".czexp": FileType.ZEISS_CONFIG_FILE,

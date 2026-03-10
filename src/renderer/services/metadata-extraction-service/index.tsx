@@ -1,5 +1,4 @@
 import { LocalStorage } from "../../types";
-import { toPosixPath } from "../../util";
 import HttpCacheClient from "../http-cache-client";
 import { HttpClient } from "../types";
 
@@ -15,10 +14,9 @@ export default class MetadataExtractionService extends HttpCacheClient {
   }
   public async fetchExtractedMetadata(filePath: string): Promise<MXSResult> {
     const url = `${mxsURL}/extracted-annotations`;
-    const posixPath = toPosixPath(filePath);
     const response = await this.put(
       url,
-      { path: posixPath },
+      { path: filePath },
       {
         headers: {
           "Content-Type": "application/json",
