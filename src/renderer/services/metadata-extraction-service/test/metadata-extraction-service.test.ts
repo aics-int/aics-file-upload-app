@@ -94,6 +94,39 @@ describe("MetadataExtractionService", () => {
       );
     });
 
+    it("converts Windows-style paths to posix for MXS", async () => {
+      const windowsPath =
+        "\\\\allen\\aics\\lumenoid\\assay_optimization\\data\\3500008300_20260217_ZSD2\\2026-02-17";
+      const expectedPosixPath =
+        "//allen/aics/lumenoid/assay_optimization/data/3500008300_20260217_ZSD2/2026-02-17";
+
+      const mxsResult: MXSResult = {
+        AnnotationA: {
+          annotation_id: 1,
+          value: "foo",
+        },
+      };
+
+      httpClient.put.resolves({
+        status: 200,
+        data: mxsResult,
+      } as any);
+
+      await mxsClient.fetchExtractedMetadata(windowsPath);
+
+      expect(httpClient.put).to.have.been.calledOnceWith(
+        match((u: string) =>
+          u.endsWith("/metadata-extraction-service/extracted-annotations")
+        ),
+        { path: expectedPosixPath },
+        match({
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+    });
+
     it("throws when file is unsupported (415)", async () => {
       const path = "/some/path/to/file.pdf";
 
