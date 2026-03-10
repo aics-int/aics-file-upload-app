@@ -1,3 +1,5 @@
+import * as path from "path";
+
 import { LocalStorage } from "../../types";
 import HttpCacheClient from "../http-cache-client";
 import { HttpClient } from "../types";
@@ -12,11 +14,12 @@ export default class MetadataExtractionService extends HttpCacheClient {
   ) {
     super(httpClient, localStorage, useCache);
   }
-  public async fetchExtractedMetadata(path: string): Promise<MXSResult> {
+  public async fetchExtractedMetadata(filePath: string): Promise<MXSResult> {
     const url = `${mxsURL}/extracted-annotations`;
+    const posixPath = filePath.split(path.sep).join(path.posix.sep);
     const response = await this.put(
       url,
-      { path: path },
+      { path: posixPath },
       {
         headers: {
           "Content-Type": "application/json",
