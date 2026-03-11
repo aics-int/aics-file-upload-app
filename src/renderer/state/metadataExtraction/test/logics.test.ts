@@ -69,10 +69,8 @@ describe("metadataExtraction logics", () => {
     });
 
     it("MXS is called with posix path", async () => {
-      const windowsPath =
-        "\\\\allen\\aics\\lumenoid\\assay_optimization\\data\\3500008300_20260217_ZSD2\\2026-02-17";
-      const posixPath =
-        "/allen/aics/lumenoid/assay_optimization/data/3500008300_20260217_ZSD2/2026-02-17";
+      const windowsPath = "\\\\server\\share\\folder\\file.czi";
+      const posixPath = "/server/share/folder/file.czi";
       const mxsResult: MXSResult = {
         "Imaged By": { annotation_id: 108, value: "test_user" },
       };
