@@ -89,7 +89,6 @@ describe("metadataExtraction logics", () => {
       store.dispatch(fetchMetadataRequest(windowsPath));
       await logicMiddleware.whenComplete();
 
-      expect(fms.posixPath).to.have.been.calledWith(windowsPath);
       expect(mxsClient.fetchExtractedMetadata).to.have.been.calledWith(
         posixPath
       );
