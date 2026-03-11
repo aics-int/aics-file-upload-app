@@ -24,6 +24,7 @@ const fetchMetadataLogic = createLogic({
   process: async (
     {
       action,
+      fms,
       mxsClient,
     }: ReduxLogicProcessDependenciesWithAction<FetchMetadataRequestAction>,
     dispatch: ReduxLogicNextCb,
@@ -31,7 +32,8 @@ const fetchMetadataLogic = createLogic({
   ) => {
     const { filePath } = action.payload;
     try {
-      const metadata = await mxsClient.fetchExtractedMetadata(filePath);
+      const posixPath = fms.posixPath(filePath);
+      const metadata = await mxsClient.fetchExtractedMetadata(posixPath);
       dispatch(fetchMetadataSucceeded(filePath, metadata));
     } catch (error) {
       dispatch(fetchMetadataFailed(filePath, error));

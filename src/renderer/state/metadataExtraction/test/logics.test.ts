@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
+import FileManagementSystem from "../../../services/file-management-system";
 import MetadataExtractionService, {
   MXSResult,
 } from "../../../services/metadata-extraction-service";
@@ -23,10 +24,13 @@ import logics from "../logics";
 describe("metadataExtraction logics", () => {
   const sandbox = createSandbox();
   let mxsClient: SinonStubbedInstance<MetadataExtractionService>;
+  let fms: SinonStubbedInstance<FileManagementSystem>;
 
   beforeEach(() => {
     mxsClient = createStubInstance(MetadataExtractionService);
+    fms = createStubInstance(FileManagementSystem);
     sandbox.replace(mockReduxLogicDeps, "mxsClient", mxsClient);
+    sandbox.replace(mockReduxLogicDeps, "fms", fms);
   });
 
   afterEach(() => {
@@ -41,6 +45,7 @@ describe("metadataExtraction logics", () => {
         Timelapse: { annotation_id: 50, value: false },
       };
 
+      fms.posixPath.returns(filePath);
       mxsClient.fetchExtractedMetadata.resolves(mxsResult);
 
       const { store, logicMiddleware, actions } = createMockReduxStore(
@@ -63,10 +68,41 @@ describe("metadataExtraction logics", () => {
       expect(succeededAction?.payload.metadata).to.deep.equal(mxsResult);
     });
 
+    it("MXS is called with posix path", async () => {
+      const windowsPath = "\\\\server\\share\\folder\\file.czi";
+      const posixPath = "/server/share/folder/file.czi";
+      const mxsResult: MXSResult = {
+        "Imaged By": { annotation_id: 108, value: "test_user" },
+      };
+
+      fms.posixPath.returns(posixPath);
+      mxsClient.fetchExtractedMetadata.resolves(mxsResult);
+
+      const { store, logicMiddleware, actions } = createMockReduxStore(
+        mockState,
+        mockReduxLogicDeps,
+        logics
+      );
+
+      store.dispatch(fetchMetadataRequest(windowsPath));
+      await logicMiddleware.whenComplete();
+
+      expect(mxsClient.fetchExtractedMetadata).to.have.been.calledWith(
+        posixPath
+      );
+
+      // Redux state key should use original filePath, not posix
+      const succeededAction = actions.list.find(
+        (a) => a.type === FETCH_METADATA_SUCCEEDED
+      );
+      expect(succeededAction?.payload.filePath).to.equal(windowsPath);
+    });
+
     it("dispatches FETCH_METADATA_FAILED on error", async () => {
       const filePath = "/path/to/file.czi";
       const error = new Error("Network error");
 
+      fms.posixPath.returns(filePath);
       mxsClient.fetchExtractedMetadata.rejects(error);
 
       const { store, logicMiddleware, actions } = createMockReduxStore(
