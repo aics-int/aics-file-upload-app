@@ -68,7 +68,7 @@ describe("metadataExtraction logics", () => {
       expect(succeededAction?.payload.metadata).to.deep.equal(mxsResult);
     });
 
-    it("converts Windows paths to posix before calling MXS", async () => {
+    it("MXS is called with posix path", async () => {
       const windowsPath =
         "\\\\allen\\aics\\lumenoid\\assay_optimization\\data\\3500008300_20260217_ZSD2\\2026-02-17";
       const posixPath =
