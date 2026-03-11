@@ -1,5 +1,12 @@
 # Version Notes
 
+## 3.5.6 (3/11/25)
+
+- Autofill metadata was not working on windows systems- fixed
+- Can open past uploads in bff by clicking on File ID
+- FSS errors now display a more informative message
+- View Metadata window now uses cached data instead of second MXS call
+
 ## 3.5.5 (2/26/25)
 
 - Autofill metadata known by MXS
