@@ -1,4 +1,5 @@
 import { Empty } from "antd";
+import { shell } from "electron";
 import * as React from "react";
 import {
   CellProps,
@@ -27,6 +28,27 @@ import DefaultHeader from "../Table/Headers/DefaultHeader";
 import SelectionHeader from "../Table/Headers/SelectionHeader";
 
 const styles = require("./styles.pcss");
+
+function getBffUrl(fileId: string): string {
+  const baseUrl = "https://bff.allencell.org/app";
+  const url = new URL(baseUrl);
+
+  // Query parameters as structured JSON
+  const filter = {
+    name: "file_id",
+    value: fileId,
+    type: "default",
+  };
+
+  const source = {
+    name: "AICS FMS",
+  };
+
+  url.searchParams.set("filter", JSON.stringify(filter));
+  url.searchParams.set("source", JSON.stringify(source));
+
+  return url.toString();
+}
 
 interface Props {
   title?: string;
@@ -84,6 +106,28 @@ const COLUMNS: Column<UploadSummaryTableRow>[] = [
   },
   {
     accessor: "fileId",
+    Cell: function Cell(props: CellProps<UploadSummaryTableRow>) {
+      if (!props.value) return <ReadOnlyCell {...props} />;
+      return (
+        <span
+          className={styles.fileIdLink}
+          onClick={() => {
+            shell.openExternal(getBffUrl(props.value)).catch((error) => {
+              // Log the error to avoid unhandled promise rejection
+              // and to aid in debugging issues opening external URLs.
+              // eslint-disable-next-line no-console
+              console.error(
+                "Failed to open external URL in default browser",
+                error
+              );
+            });
+          }}
+          title={`Open ${props.value} in BFF`}
+        >
+          {props.value}
+        </span>
+      );
+    },
     description: "Unique FMS ID assigned to the uploaded file",
     id: "File ID",
   },
