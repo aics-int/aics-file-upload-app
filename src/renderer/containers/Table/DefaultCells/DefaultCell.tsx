@@ -30,15 +30,18 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
 
   function commitChanges(value: ColumnValue) {
     setIsEditing(false);
+    dispatch(updateUpload(props.row.id, { [props.column.id]: value }));
+  }
 
-    if (column.type === ColumnType.NUMBER && Number.isNaN(Number(value))) {
+  function commitNumberChanges(value: ColumnValue) {
+    if (Number.isNaN(Number(value))) {
+      setIsEditing(false);
       setHasTypeError(true);
       setTimeout(() => setHasTypeError(false), 1000);
       dispatch(setErrorAlert(`${column.id} expects a number value`));
       return;
     }
-
-    dispatch(updateUpload(props.row.id, { [props.column.id]: value }));
+    commitChanges(value);
   }
 
   if (isEditing) {
@@ -51,11 +54,17 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
           />
         );
       case ColumnType.TEXT:
-      case ColumnType.NUMBER:
         return (
           <TextEditor
             initialValue={value as string[]}
             commitChanges={commitChanges}
+          />
+        );
+      case ColumnType.NUMBER:
+        return (
+          <TextEditor
+            initialValue={value as string[]}
+            commitChanges={commitNumberChanges}
           />
         );
       case ColumnType.DURATION:
