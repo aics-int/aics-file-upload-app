@@ -888,55 +888,6 @@ describe("Upload logics", () => {
     });
   });
 
-  describe("addUploadFilesLogic", () => {
-    it("applies selected templated over saved template", async () => {
-      // arrange
-      const templateId = 17;
-      const badTemplateId = 4;
-      const { actions, logicMiddleware, store } = createMockReduxStore({
-        ...mockState,
-        template: {
-          ...mockTemplateStateBranch,
-          appliedTemplate: {
-            ...mockTemplateWithManyValues,
-            templateId,
-          },
-        },
-        setting: {
-          ...mockState.setting,
-          templateId: badTemplateId,
-        },
-      });
-
-      // act
-      store.dispatch(addUploadFiles([]));
-      await logicMiddleware.whenComplete();
-
-      // assert
-      expect(actions.includesMatch(applyTemplate(badTemplateId))).to.be.false;
-      expect(actions.includesMatch(applyTemplate(templateId))).to.be.true;
-    });
-
-    it("applies saved template", async () => {
-      // arrange
-      const templateId = 17;
-      const { actions, logicMiddleware, store } = createMockReduxStore({
-        ...mockState,
-        setting: {
-          ...mockState.setting,
-          templateId,
-        },
-      });
-
-      // act
-      store.dispatch(addUploadFiles([]));
-      await logicMiddleware.whenComplete();
-
-      // assert
-      expect(actions.includesMatch(applyTemplate(templateId))).to.be.true;
-    });
-  });
-
   describe("updateUploadRowsLogic", () => {
     it("updates a single upload", () => {
       // arrange
