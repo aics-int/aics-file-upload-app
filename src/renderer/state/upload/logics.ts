@@ -38,7 +38,6 @@ import {
   getSelectedUploads,
   getSelectedUser,
 } from "../selection/selectors";
-import { getTemplateId } from "../setting/selectors";
 import { ensureDraftGetsSaved, getApplyTemplateInfo } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import { getAppliedTemplate } from "../template/selectors";
@@ -48,7 +47,6 @@ import {
   PlateAtImagingSession,
   ReduxLogicDoneCb,
   ReduxLogicNextCb,
-  ReduxLogicProcessDependencies,
   ReduxLogicProcessDependenciesWithAction,
   ReduxLogicRejectCb,
   ReduxLogicTransformDependenciesWithAction,
@@ -57,7 +55,6 @@ import { batchActions } from "../util";
 
 import {
   addUploadFiles,
-  applyTemplate,
   cancelUploadFailed,
   cancelUploadSucceeded,
   editFileMetadataFailed,
@@ -69,7 +66,6 @@ import {
   uploadFailed,
 } from "./actions";
 import {
-  ADD_UPLOAD_FILES,
   APPLY_TEMPLATE,
   CANCEL_UPLOADS,
   INITIATE_UPLOAD,
@@ -153,24 +149,6 @@ const applyTemplateLogic = createLogic({
     done();
   },
   type: APPLY_TEMPLATE,
-});
-
-const addUploadFilesLogic = createLogic({
-  process: (
-    { getState }: ReduxLogicProcessDependencies,
-    dispatch: ReduxLogicNextCb,
-    done: ReduxLogicDoneCb
-  ) => {
-    const selectedTemplate = getAppliedTemplate(getState())?.templateId;
-    const savedTemplate = getTemplateId(getState());
-    if (selectedTemplate) {
-      dispatch(applyTemplate(selectedTemplate));
-    } else if (savedTemplate) {
-      dispatch(applyTemplate(savedTemplate));
-    }
-    done();
-  },
-  type: ADD_UPLOAD_FILES,
 });
 
 const initiateUploadLogic = createLogic({
@@ -802,7 +780,6 @@ const uploadWithoutMetadataLogic = createLogic({
 });
 
 export default [
-  addUploadFilesLogic,
   applyTemplateLogic,
   cancelUploadsLogic,
   initiateUploadLogic,
