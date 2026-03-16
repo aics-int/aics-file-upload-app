@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { CellProps } from "react-table";
 
 import { ColumnType } from "../../../services/labkey-client/types";
+import { setErrorAlert } from "../../../state/feedback/actions";
 import { FileModel } from "../../../state/types";
 import { updateUpload } from "../../../state/upload/actions";
 import { Duration } from "../../../types";
@@ -25,10 +26,22 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
   const { column, value } = props;
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
+  const [hasTypeError, setHasTypeError] = useState(false);
 
   function commitChanges(value: ColumnValue) {
     setIsEditing(false);
     dispatch(updateUpload(props.row.id, { [props.column.id]: value }));
+  }
+
+  function commitNumberChanges(value: ColumnValue) {
+    if (Number.isNaN(Number(value))) {
+      setIsEditing(false);
+      setHasTypeError(true);
+      setTimeout(() => setHasTypeError(false), 1000);
+      dispatch(setErrorAlert(`${column.id} expects a number value`));
+      return;
+    }
+    commitChanges(value);
   }
 
   if (isEditing) {
@@ -41,11 +54,17 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
           />
         );
       case ColumnType.TEXT:
-      case ColumnType.NUMBER:
         return (
           <TextEditor
             initialValue={value as string[]}
             commitChanges={commitChanges}
+          />
+        );
+      case ColumnType.NUMBER:
+        return (
+          <TextEditor
+            initialValue={value as string[]}
+            commitChanges={commitNumberChanges}
           />
         );
       case ColumnType.DURATION:
@@ -88,5 +107,11 @@ export default function DefaultCell(props: CellProps<FileModel, ColumnValue>) {
     }
   }
 
-  return <DisplayCell {...props} onStartEditing={() => setIsEditing(true)} />;
+  return (
+    <DisplayCell
+      {...props}
+      hasTypeError={hasTypeError}
+      onStartEditing={() => setIsEditing(true)}
+    />
+  );
 }
