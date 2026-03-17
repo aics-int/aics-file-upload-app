@@ -54,8 +54,8 @@ export default function UploadSelectionPage() {
   const onContinue = async () => {
     const templateId = appliedTemplateId || savedTemplateId;
     if (templateId) {
-      // Ensure template application completes before navigating to avoid
-      // late state updates clobbering user edits on the metadata page.
+      // ensure template applies before switching page
+      // also autofills all known metadata
       await (dispatch as any)(applyTemplate(templateId));
     }
     dispatch(selectPage(Page.AddMetadata));
