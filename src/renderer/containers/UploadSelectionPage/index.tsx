@@ -1,4 +1,4 @@
-import { Button, Tooltip } from "antd";
+import { Button, Spin, Tooltip } from "antd";
 import { OpenDialogOptions } from "electron";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -102,6 +102,7 @@ export default function UploadSelectionPage() {
               </Button>
             </span>
           </Tooltip>
+          {isMxsLoading && <Spin size="small" />}
         </PageFooter>
       </div>
     </div>
