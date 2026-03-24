@@ -391,7 +391,7 @@ const updateUploadLogic = createLogic({
     // If a plate barcode is being updated check for imaging sessions
     const plateBarcode = upload[AnnotationName.PLATE_BARCODE]?.[0];
     if (plateBarcode) {
-      const plateBarcodeToPlates = getPlateBarcodeToPlates(deps.getState());
+      let plateBarcodeToPlates = getPlateBarcodeToPlates(deps.getState());
       // Avoid re-querying for the imaging sessions if this
       // plate barcode has been selected before
       if (!Object.keys(plateBarcodeToPlates).includes(plateBarcode)) {
@@ -421,12 +421,10 @@ const updateUploadLogic = createLogic({
           imagingSessionsWithPlateInfo.push({ wells });
         }
 
-        dispatch(
-          setPlateBarcodeToPlates({
-            ...plateBarcodeToPlates,
-            [plateBarcode]: imagingSessionsWithPlateInfo,
-          })
-        );
+        plateBarcodeToPlates = {
+          ...plateBarcodeToPlates,
+          [plateBarcode]: imagingSessionsWithPlateInfo,
+        };
       }
 
       // autoselect well if row and col data available from mxs
@@ -439,7 +437,7 @@ const updateUploadLogic = createLogic({
         // row and col are 1-indexed in metadata, convert to 0-indexed
         const row = Number(rowValue) - 1;
         const col = Number(colValue) - 1;
-        const plates = getPlateBarcodeToPlates(deps.getState())[plateBarcode];
+        const plates = plateBarcodeToPlates[plateBarcode];
         const well = plates?.[0]?.wells.find(
           (w) => w.row === row && w.col === col
         );
@@ -451,6 +449,8 @@ const updateUploadLogic = createLogic({
           );
         }
       }
+
+      dispatch(setPlateBarcodeToPlates(plateBarcodeToPlates));
     }
 
     done();
