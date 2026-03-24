@@ -427,26 +427,20 @@ const updateUploadLogic = createLogic({
             [plateBarcode]: imagingSessionsWithPlateInfo,
           })
         );
-      }
 
-      // Auto-select well if Row and Column are available from MXS
-      const fileKey = deps.action.payload.key;
-      const mxsData = deps.getState().metadataExtraction[fileKey]?.metadata;
-      const rowValue = mxsData?.["Row"]?.value;
-      const colValue = mxsData?.["Column"]?.value;
+        // autoselect well if row and col data available from mxs
+        const fileKey = deps.action.payload.key;
+        const mxsData = deps.getState().metadataExtraction[fileKey]?.metadata;
+        const rowValue = mxsData?.["Row"]?.value;
+        const colValue = mxsData?.["Column"]?.value;
 
-      if (rowValue !== undefined && colValue !== undefined) {
-        // row is 1-indexed for metadata convert to 0 index
-        const row = Number(rowValue) - 1;
-
-        // col is 1-indexed for metadata, convert to 0 index
-        const col = Number(colValue) - 1;
-
-        if (row >= 0 && col >= 0) {
-          const plate = getPlateBarcodeToPlates(deps.getState())[
-            plateBarcode
-          ]?.[0];
-          const well = plate?.wells.find((w) => w.row === row && w.col === col);
+        if (rowValue !== undefined && colValue !== undefined) {
+          // row and col are 1-indexed in metadata, convert to 0-indexed
+          const row = Number(rowValue) - 1;
+          const col = Number(colValue) - 1;
+          const well = imagingSessionsWithPlateInfo[0]?.wells.find(
+            (w) => w.row === row && w.col === col
+          );
           if (well) {
             dispatch(
               updateUpload(fileKey, {
