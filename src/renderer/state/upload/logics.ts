@@ -425,6 +425,7 @@ const updateUploadLogic = createLogic({
           ...plateBarcodeToPlates,
           [plateBarcode]: imagingSessionsWithPlateInfo,
         };
+        dispatch(setPlateBarcodeToPlates(plateBarcodeToPlates));
       }
 
       // autoselect well if row and col data available from mxs
@@ -449,8 +450,6 @@ const updateUploadLogic = createLogic({
           );
         }
       }
-
-      dispatch(setPlateBarcodeToPlates(plateBarcodeToPlates));
     }
 
     done();
