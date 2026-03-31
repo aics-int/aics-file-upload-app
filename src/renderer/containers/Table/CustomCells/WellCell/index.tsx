@@ -38,6 +38,8 @@ export default function WellCell(props: CellProps<FileModel>) {
   const plateBarcodeToPlates = useSelector(getPlateBarcodeToPlates);
   const [isEditing, setIsEditing] = React.useState(false);
   const [selectedWells, setSelectedWells] = React.useState<AicsGridCell[]>([]);
+  const isAutofilled =
+    props.row.original.autofilledFields?.includes(AnnotationName.WELL) ?? false;
   const associatedWells = props.row.original[AnnotationName.WELL] || [];
   const plateBarcode = props.row.original[AnnotationName.PLATE_BARCODE]?.[0];
   const imagingSessionName =
@@ -156,7 +158,9 @@ export default function WellCell(props: CellProps<FileModel>) {
         value={wellLabels.sort()}
         disabled={!wells?.[0].length}
         onTabExit={() => setIsEditing(false)}
-        onStartEditing={() => wells?.[0].length && setIsEditing(true)}
+        onStartEditing={() =>
+          !isAutofilled && wells?.[0].length && setIsEditing(true)
+        }
       />
       <Modal
         title="Associate Wells with this row by selecting wells and clicking Associate"

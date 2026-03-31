@@ -446,6 +446,7 @@ const updateUploadLogic = createLogic({
           dispatch(
             updateUpload(fileKey, {
               [AnnotationName.WELL]: [well.wellId],
+              autofilledFields: [AnnotationName.WELL],
             })
           );
         }

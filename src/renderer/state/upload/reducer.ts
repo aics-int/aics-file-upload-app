@@ -83,11 +83,22 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
         };
       }
 
+      const currentUpload = state[action.payload.key];
+      const mergedAutofilledFields = upload.autofilledFields
+        ? [
+            ...new Set([
+              ...(currentUpload.autofilledFields || []),
+              ...upload.autofilledFields,
+            ]),
+          ]
+        : currentUpload.autofilledFields;
+
       return {
         ...state,
         [action.payload.key]: {
-          ...state[action.payload.key],
+          ...currentUpload,
           ...upload,
+          autofilledFields: mergedAutofilledFields,
         },
       };
     },
