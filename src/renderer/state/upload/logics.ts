@@ -440,9 +440,12 @@ const updateUploadLogic = createLogic({
         const row = Number(rowValue) - 1;
         const col = Number(colValue) - 1;
         const plates = updatedPlateBarcodeToPlates[plateBarcode];
-        const well = plates?.[0]?.wells.find(
-          (w) => w.row === row && w.col === col
+        // this should match the logic in WellCell
+        const imagingSessionName = upload[AnnotationName.IMAGING_SESSION]?.[0];
+        const plate = plates?.find((p) =>
+          imagingSessionName ? p.name === imagingSessionName : !p.name
         );
+        const well = plate?.wells.find((w) => w.row === row && w.col === col);
         if (well) {
           dispatch(
             updateUpload(fileKey, {
