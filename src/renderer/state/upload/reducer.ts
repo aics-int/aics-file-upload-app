@@ -98,7 +98,9 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
         [action.payload.key]: {
           ...currentUpload,
           ...upload,
-          autofilledFields: mergedAutofilledFields,
+          ...(mergedAutofilledFields && {
+            autofilledFields: mergedAutofilledFields,
+          }),
         },
       };
     },
