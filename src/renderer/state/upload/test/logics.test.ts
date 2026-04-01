@@ -828,6 +828,207 @@ describe("Upload logics", () => {
       ).to.deep.equal([plateBarcode]);
     });
 
+    it("autoselects well when mxs has row and col data", async () => {
+      // Arrange
+      const plateBarcode = "490109230";
+      const { store, logicMiddleware } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        metadataExtraction: {
+          [uploadRowKey]: {
+            loading: false,
+            metadata: {
+              Row: { annotation_id: 1, value: 1 },
+              Column: { annotation_id: 2, value: 3 },
+            },
+          },
+        },
+        template: {
+          ...mockTemplateStateBranch,
+          appliedTemplate: {
+            ...mockTemplateWithManyValues,
+            annotations: [mockTextAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          [uploadRowKey]: {
+            [mockTextAnnotation.name]: [],
+            file: "/path/to/file3",
+            [AnnotationName.NOTES]: [],
+            templateId: 8,
+            [AnnotationName.WELL]: [],
+          },
+        }),
+      });
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([]);
+      mmsClient.getPlate.resolves({
+        plate: {
+          barcode: "",
+          comments: "",
+          plateGeometryId: 8,
+          plateId: 14,
+          plateStatusId: 3,
+          ...mockAuditInfo,
+        },
+        wells: [
+          {
+            row: 0,
+            col: 0,
+            wellId: 100,
+            plateId: 14,
+            cellPopulations: [],
+            solutions: [],
+          },
+          {
+            row: 0,
+            col: 2,
+            wellId: 102,
+            plateId: 14,
+            cellPopulations: [],
+            solutions: [],
+          },
+        ],
+      });
+
+      // Act
+      store.dispatch(
+        updateUpload(uploadRowKey, {
+          [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      // Row=1, Col=3 -> 0, 2 -> which is wellId 102
+      expect(
+        getUpload(store.getState())[uploadRowKey][AnnotationName.WELL]
+      ).to.deep.equal([102]);
+    });
+
+    it("does not autoselect well when mxs has no row/col data", async () => {
+      // Arrange
+      const plateBarcode = "490109230";
+      const { store, logicMiddleware } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...mockTemplateStateBranch,
+          appliedTemplate: {
+            ...mockTemplateWithManyValues,
+            annotations: [mockTextAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          [uploadRowKey]: {
+            [mockTextAnnotation.name]: [],
+            file: "/path/to/file3",
+            [AnnotationName.NOTES]: [],
+            templateId: 8,
+            [AnnotationName.WELL]: [],
+          },
+        }),
+      });
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([]);
+      mmsClient.getPlate.resolves({
+        plate: {
+          barcode: "",
+          comments: "",
+          plateGeometryId: 8,
+          plateId: 14,
+          plateStatusId: 3,
+          ...mockAuditInfo,
+        },
+        wells: [
+          {
+            row: 0,
+            col: 0,
+            wellId: 100,
+            plateId: 14,
+            cellPopulations: [],
+            solutions: [],
+          },
+        ],
+      });
+
+      // Act
+      store.dispatch(
+        updateUpload(uploadRowKey, {
+          [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // Assert well empty, no row or col data in this one
+      expect(
+        getUpload(store.getState())[uploadRowKey][AnnotationName.WELL]
+      ).to.deep.equal([]);
+    });
+
+    it("does not autoselect well when no matching well found", async () => {
+      // Arrange
+      const plateBarcode = "490109230";
+      const { store, logicMiddleware } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        metadataExtraction: {
+          [uploadRowKey]: {
+            loading: false,
+            metadata: {
+              Row: { annotation_id: 1, value: 5 },
+              Column: { annotation_id: 2, value: 5 },
+            },
+          },
+        },
+        template: {
+          ...mockTemplateStateBranch,
+          appliedTemplate: {
+            ...mockTemplateWithManyValues,
+            annotations: [mockTextAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          [uploadRowKey]: {
+            [mockTextAnnotation.name]: [],
+            file: "/path/to/file3",
+            [AnnotationName.NOTES]: [],
+            templateId: 8,
+            [AnnotationName.WELL]: [],
+          },
+        }),
+      });
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([]);
+      mmsClient.getPlate.resolves({
+        plate: {
+          barcode: "",
+          comments: "",
+          plateGeometryId: 8,
+          plateId: 14,
+          plateStatusId: 3,
+          ...mockAuditInfo,
+        },
+        wells: [
+          {
+            row: 0,
+            col: 0,
+            wellId: 100,
+            plateId: 14,
+            cellPopulations: [],
+            solutions: [],
+          },
+        ],
+      });
+
+      // Act
+      store.dispatch(
+        updateUpload(uploadRowKey, {
+          [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // Assert no well at 4,4 so dont select
+      expect(
+        getUpload(store.getState())[uploadRowKey][AnnotationName.WELL]
+      ).to.deep.equal([]);
+    });
+
     it("queries for plate barcode without imaging session if none found", async () => {
       // Arrange
       const plateBarcode = "490139230";

@@ -63,6 +63,7 @@ import {
   initiateUploadSucceeded,
   replaceUpload,
   saveUploadDraftSuccess,
+  updateUpload,
   uploadFailed,
 } from "./actions";
 import {
@@ -369,6 +370,7 @@ const updateUploadLogic = createLogic({
     const plateBarcode = upload[AnnotationName.PLATE_BARCODE]?.[0];
     if (plateBarcode) {
       const plateBarcodeToPlates = getPlateBarcodeToPlates(deps.getState());
+      let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
       // Avoid re-querying for the imaging sessions if this
       // plate barcode has been selected before
       if (!Object.keys(plateBarcodeToPlates).includes(plateBarcode)) {
@@ -398,12 +400,38 @@ const updateUploadLogic = createLogic({
           imagingSessionsWithPlateInfo.push({ wells });
         }
 
-        dispatch(
-          setPlateBarcodeToPlates({
-            ...plateBarcodeToPlates,
-            [plateBarcode]: imagingSessionsWithPlateInfo,
-          })
+        updatedPlateBarcodeToPlates = {
+          ...plateBarcodeToPlates,
+          [plateBarcode]: imagingSessionsWithPlateInfo,
+        };
+        dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
+      }
+
+      // autoselect well if row and col data available from mxs
+      const fileKey = deps.action.payload.key;
+      const mxsData = deps.getState().metadataExtraction[fileKey]?.metadata;
+      const rowValue = mxsData?.["Row"]?.value;
+      const colValue = mxsData?.["Column"]?.value;
+
+      if (rowValue !== undefined && colValue !== undefined) {
+        // row and col are 1-indexed in metadata, convert to 0-indexed
+        const row = Number(rowValue) - 1;
+        const col = Number(colValue) - 1;
+        const plates = updatedPlateBarcodeToPlates[plateBarcode];
+        // this should match the logic in WellCell
+        const imagingSessionName = upload[AnnotationName.IMAGING_SESSION]?.[0];
+        const plate = plates?.find((p) =>
+          imagingSessionName ? p.name === imagingSessionName : !p.name
         );
+        const well = plate?.wells.find((w) => w.row === row && w.col === col);
+        if (well) {
+          dispatch(
+            updateUpload(fileKey, {
+              [AnnotationName.WELL]: [well.wellId],
+              autofilledFields: [AnnotationName.WELL],
+            })
+          );
+        }
       }
     }
 
