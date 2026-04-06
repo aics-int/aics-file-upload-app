@@ -26,6 +26,7 @@ import {
   PROGRAM_ANNOTATION_ID,
 } from "../../constants";
 import { ColumnType } from "../../services/labkey-client/types";
+import { MXSResult } from "../../services/metadata-extraction-service";
 import { UploadRequest } from "../../services/types";
 import { Duration } from "../../types";
 import { extensionToFileTypeMap } from "../../util";
@@ -41,6 +42,8 @@ import {
   getPlateBarcodeToPlates,
   getTextAnnotationTypeId,
 } from "../metadata/selectors";
+import { getMetadataExtractionState } from "../metadataExtraction/selectors";
+import { MetadataExtractionState } from "../metadataExtraction/types";
 import { getShouldBeInLocal } from "../selection/selectors";
 import { getCompleteAppliedTemplate } from "../template/selectors";
 import {
@@ -373,17 +376,9 @@ export const getAnnotations = (
     {}
   );
 
-  // Get the list of autofilled fields to exclude from upload
-  const autofilledFields = new Set(fileMetadata.autofilledFields || []);
-
   const customData = removeExcludedFields(fileMetadata);
   const annotations = Object.entries(customData).reduce(
     (annotationsAccum, [annotationName, value]) => {
-      // Skip autofilled fields - MXS will handle these during upload
-      if (autofilledFields.has(annotationName)) {
-        return annotationsAccum;
-      }
-
       const annotation = annotationNameToAnnotationMap[annotationName];
       if (annotation) {
         // Special case where no value for a boolean type is the same as
@@ -469,45 +464,90 @@ export const getAnnotations = (
   return annotations;
 };
 
+export const getExtractedAnnotationsNotInTemplate = (
+  mxsMetadata: MXSResult,
+  templateAnnotationNames: Set<string>
+): MMSAnnotationValueRequest[] =>
+  Object.entries(mxsMetadata).reduce(
+    (accum, [annotationName, { annotation_id, value }]) => {
+      if (
+        !templateAnnotationNames.has(annotationName) &&
+        value !== null &&
+        value !== undefined &&
+        value !== ""
+      ) {
+        accum.push({
+          annotationId: annotation_id,
+          values: castArray(value).map((v) => v.toString()),
+        });
+      }
+      return accum;
+    },
+    [] as MMSAnnotationValueRequest[]
+  );
+
 export const getUploadRequests = createSelector(
-  [getUpload, getCompleteAppliedTemplate, getShouldBeInLocal],
+  [
+    getUpload,
+    getCompleteAppliedTemplate,
+    getShouldBeInLocal,
+    getMetadataExtractionState,
+  ],
   (
     uploads: UploadStateBranch,
     template?: TemplateWithTypeNames,
-    ShouldBeInLocal?: boolean
+    ShouldBeInLocal?: boolean,
+    metadataExtractionState?: MetadataExtractionState
   ): UploadRequest[] => {
     if (!template) {
       throw new Error("Template has not been applied");
     }
 
-    return Object.entries(uploads).map(([filePath, fileMetadata]) => ({
-      customMetadata: {
-        annotations: getAnnotations(fileMetadata, template),
-        templateId: template.templateId,
-      },
-      file: {
-        disposition: "tape", // prevent czi -> ome.tiff conversions
-        fileType:
-          extensionToFileTypeMap[extname(filePath).toLowerCase()] ||
-          FileType.OTHER,
-        originalPath: filePath,
-        shouldBeInArchive: true,
-        shouldBeInLocal: ShouldBeInLocal,
-        uploadType: fileMetadata.uploadType,
-        // optional jss fields [fileId, customFileName]
-        ...(fileMetadata.fileId && { fileId: fileMetadata.fileId }),
-        ...(fileMetadata.customFileName && {
-          customFileName: fileMetadata.customFileName,
-        }),
-      },
-      // To support the current way of storing metadata in bob the blob, we continue to include
-      // wellIds in the microscopy block.
-      microscopy: {
-        ...(fileMetadata[AnnotationName.WELL]?.length && {
-          wellIds: fileMetadata[AnnotationName.WELL],
-        }),
-      },
-    }));
+    const templateAnnotationNames = new Set(
+      template.annotations.map((a) => a.name)
+    );
+
+    return Object.entries(uploads).map(([filePath, fileMetadata]) => {
+      const mxsMetadata = metadataExtractionState?.[filePath]?.metadata;
+      const extractedAnnotations = mxsMetadata
+        ? getExtractedAnnotationsNotInTemplate(
+            mxsMetadata,
+            templateAnnotationNames
+          )
+        : [];
+
+      return {
+        customMetadata: {
+          annotations: [
+            ...getAnnotations(fileMetadata, template),
+            ...extractedAnnotations,
+          ],
+          templateId: template.templateId,
+        },
+        file: {
+          disposition: "tape", // prevent czi -> ome.tiff conversions
+          fileType:
+            extensionToFileTypeMap[extname(filePath).toLowerCase()] ||
+            FileType.OTHER,
+          originalPath: filePath,
+          shouldBeInArchive: true,
+          shouldBeInLocal: ShouldBeInLocal,
+          uploadType: fileMetadata.uploadType,
+          // optional jss fields [fileId, customFileName]
+          ...(fileMetadata.fileId && { fileId: fileMetadata.fileId }),
+          ...(fileMetadata.customFileName && {
+            customFileName: fileMetadata.customFileName,
+          }),
+        },
+        // To support the current way of storing metadata in bob the blob, we continue to include
+        // wellIds in the microscopy block.
+        microscopy: {
+          ...(fileMetadata[AnnotationName.WELL]?.length && {
+            wellIds: fileMetadata[AnnotationName.WELL],
+          }),
+        },
+      };
+    });
   }
 );
 
