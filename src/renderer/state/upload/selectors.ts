@@ -473,7 +473,6 @@ export const getExtractedAnnotationsNotInTemplate = (
       if (
         !templateAnnotationNames.has(annotationName) &&
         value !== null &&
-        value !== undefined &&
         value !== ""
       ) {
         accum.push({
