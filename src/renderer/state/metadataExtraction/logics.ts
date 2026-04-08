@@ -1,5 +1,8 @@
 import { createLogic } from "redux-logic";
 
+import { DAY_AS_MS, HOUR_AS_MS, MINUTE_AS_MS } from "../../constants";
+import { Duration } from "../../types";
+import { getDurationAnnotationTypeId } from "../metadata/selectors";
 import {
   fetchMetadataSucceeded,
   fetchMetadataFailed,
@@ -18,6 +21,18 @@ import {
 import { autofillFromMXS } from "../upload/actions";
 import { ADD_UPLOAD_FILES } from "../upload/constants";
 import { AddUploadFilesAction } from "../upload/types";
+
+function msToDuration(ms: number): Duration {
+  let remaining = ms;
+  const days = Math.floor(remaining / DAY_AS_MS);
+  remaining -= days * DAY_AS_MS;
+  const hours = Math.floor(remaining / HOUR_AS_MS);
+  remaining -= hours * HOUR_AS_MS;
+  const minutes = Math.floor(remaining / MINUTE_AS_MS);
+  remaining -= minutes * MINUTE_AS_MS;
+  const seconds = Math.floor(remaining / 1000);
+  return { days, hours, minutes, seconds };
+}
 
 // fetches MXS data and stores in metadataExtraction state
 const fetchMetadataLogic = createLogic({
@@ -72,15 +87,34 @@ const autofillOnTemplateAppliedLogic = createLogic({
   ) => {
     const state = getState();
     const uploads = action.payload?.uploads;
+    const template = action.payload?.template;
     if (!uploads) {
       done();
       return;
     }
 
+    const durationTypeId = getDurationAnnotationTypeId(state);
+    const durationAnnotationNames = new Set(
+      (template?.annotations || [])
+        .filter((a) => a.annotationTypeId === durationTypeId)
+        .map((a) => a.name)
+    );
+
     for (const filePath of Object.keys(uploads)) {
       const cachedMetadata = state.metadataExtraction[filePath]?.metadata;
       if (cachedMetadata) {
-        dispatch(autofillFromMXS(filePath, cachedMetadata));
+        const convertedMetadata = Object.fromEntries(
+          Object.entries(cachedMetadata).map(([name, entry]) => {
+            if (
+              durationAnnotationNames.has(name) &&
+              typeof entry.value === "number"
+            ) {
+              return [name, { ...entry, value: msToDuration(entry.value) }];
+            }
+            return [name, entry];
+          })
+        );
+        dispatch(autofillFromMXS(filePath, convertedMetadata as any));
       }
     }
     done();
