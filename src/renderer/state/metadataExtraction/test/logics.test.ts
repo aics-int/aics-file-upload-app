@@ -19,7 +19,7 @@ import {
   FETCH_METADATA_SUCCEEDED,
   FETCH_METADATA_FAILED,
 } from "../constants";
-import logics from "../logics";
+import logics, { msToDuration } from "../logics";
 
 describe("metadataExtraction logics", () => {
   const sandbox = createSandbox();
@@ -355,6 +355,31 @@ describe("metadataExtraction logics", () => {
 
       expect(autofillActions).to.have.length(1);
       expect(autofillActions[0].payload.filePath).to.equal(fileWithMetadata);
+    });
+  });
+
+  describe("msToDuration", () => {
+    it("converts milliseconds to a Duration object", () => {
+      const ms =
+        2 * 24 * 60 * 60 * 1000 + // 2 days
+        3 * 60 * 60 * 1000 + // 3 hours
+        4 * 60 * 1000 + // 4 minutes
+        5 * 1000; // 5 seconds
+      expect(msToDuration(ms)).to.deep.equal({
+        days: 2,
+        hours: 3,
+        minutes: 4,
+        seconds: 5,
+      });
+    });
+
+    it("returns zeros for 0ms", () => {
+      expect(msToDuration(0)).to.deep.equal({
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+      });
     });
   });
 });
