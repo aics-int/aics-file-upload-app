@@ -103,18 +103,20 @@ const autofillOnTemplateAppliedLogic = createLogic({
     for (const filePath of Object.keys(uploads)) {
       const cachedMetadata = state.metadataExtraction[filePath]?.metadata;
       if (cachedMetadata) {
-        const convertedMetadata = Object.fromEntries(
-          Object.entries(cachedMetadata).map(([name, entry]) => {
-            if (
-              durationAnnotationNames.has(name) &&
-              typeof entry.value === "number"
-            ) {
-              return [name, { ...entry, value: msToDuration(entry.value) }];
-            }
-            return [name, entry];
-          })
-        );
-        dispatch(autofillFromMXS(filePath, convertedMetadata as any));
+        // sometimes metadata from mxs needs to be converted into a format
+        // we can render in the ui, do these conversions here
+        const convertedMetadata: Record<string, any> = { ...cachedMetadata };
+        // convert durations
+        for (const name of durationAnnotationNames) {
+          const entry = convertedMetadata[name];
+          if (entry) {
+            convertedMetadata[name] = {
+              ...entry,
+              value: msToDuration(entry.value as number),
+            };
+          }
+        }
+        dispatch(autofillFromMXS(filePath, convertedMetadata));
       }
     }
     done();
