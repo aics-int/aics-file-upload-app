@@ -471,7 +471,7 @@ export const getExtractedAnnotations = (
     .filter(({ value }) => value !== null && value !== "")
     .map(({ annotation_id, value }) => ({
       annotationId: annotation_id,
-      values: castArray(value!).map((v) => v.toString()),
+      values: castArray(value).map(String),
     }));
 
 export const getUploadRequests = createSelector(
