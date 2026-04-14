@@ -22,7 +22,7 @@ import { autofillFromMXS } from "../upload/actions";
 import { ADD_UPLOAD_FILES } from "../upload/constants";
 import { AddUploadFilesAction } from "../upload/types";
 
-function msToDuration(ms: number): Duration {
+export function msToDuration(ms: number): Duration {
   let remaining = ms;
   const days = Math.floor(remaining / DAY_AS_MS);
   remaining -= days * DAY_AS_MS;
