@@ -46,7 +46,7 @@ import {
   getUploadAsTableRows,
   getUploadValidationErrors,
   getAnnotations,
-  getExtractedAnnotationsNotInTemplate,
+  getExtractedAnnotations,
 } from "../selectors";
 import { FileType } from "../types";
 
@@ -1224,22 +1224,18 @@ describe("Upload selectors", () => {
     });
   });
 
-  describe("getExtractedAnnotationsNotInTemplate", () => {
-    const templateAnnotationNames = new Set(["Template Field"]);
-
-    it("should include extracted fields not in the template using MXS annotation_id", () => {
+  describe("getExtractedAnnotations", () => {
+    it("should include extracted fields using MXS annotation_id", () => {
       const mxsMetadata = {
-        "Non-Template Field": { annotation_id: 999, value: "extracted value" },
-        "Template Field": { annotation_id: 1, value: "template value" },
+        "Cell Line": { annotation_id: 999, value: "AICS-22" },
+        Duration: { annotation_id: 1, value: "3600" },
       };
 
-      const result = getExtractedAnnotationsNotInTemplate(
-        mxsMetadata,
-        templateAnnotationNames
-      );
+      const result = getExtractedAnnotations(mxsMetadata);
 
       expect(result).to.deep.equal([
-        { annotationId: 999, values: ["extracted value"] },
+        { annotationId: 999, values: ["AICS-22"] },
+        { annotationId: 1, values: ["3600"] },
       ]);
     });
 
@@ -1250,10 +1246,7 @@ describe("Upload selectors", () => {
         "Valid Field": { annotation_id: 12, value: "valid" },
       };
 
-      const result = getExtractedAnnotationsNotInTemplate(
-        mxsMetadata,
-        templateAnnotationNames
-      );
+      const result = getExtractedAnnotations(mxsMetadata);
 
       expect(result).to.deep.equal([{ annotationId: 12, values: ["valid"] }]);
     });

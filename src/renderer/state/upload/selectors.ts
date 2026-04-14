@@ -464,26 +464,15 @@ export const getAnnotations = (
   return annotations;
 };
 
-export const getExtractedAnnotationsNotInTemplate = (
-  mxsMetadata: MXSResult,
-  templateAnnotationNames: Set<string>
+export const getExtractedAnnotations = (
+  mxsMetadata: MXSResult
 ): MMSAnnotationValueRequest[] =>
-  Object.entries(mxsMetadata).reduce(
-    (accum, [annotationName, { annotation_id, value }]) => {
-      if (
-        !templateAnnotationNames.has(annotationName) &&
-        value !== null &&
-        value !== ""
-      ) {
-        accum.push({
-          annotationId: annotation_id,
-          values: castArray(value).map((v) => v.toString()),
-        });
-      }
-      return accum;
-    },
-    [] as MMSAnnotationValueRequest[]
-  );
+  Object.values(mxsMetadata)
+    .filter(({ value }) => value !== null && value !== "")
+    .map(({ annotation_id, value }) => ({
+      annotationId: annotation_id,
+      values: castArray(value).map((v) => v.toString()),
+    }));
 
 export const getUploadRequests = createSelector(
   [
@@ -502,24 +491,21 @@ export const getUploadRequests = createSelector(
       throw new Error("Template has not been applied");
     }
 
-    const templateAnnotationNames = new Set(
-      template.annotations.map((a) => a.name)
-    );
-
     return Object.entries(uploads).map(([filePath, fileMetadata]) => {
-      const mxsMetadata = metadataExtractionState?.[filePath]?.metadata;
-      const extractedAnnotations = mxsMetadata
-        ? getExtractedAnnotationsNotInTemplate(
-            mxsMetadata,
-            templateAnnotationNames
-          )
-        : [];
+      // raw metadata
+      const mxsMetadata = metadataExtractionState?.[filePath]?.metadata ?? {};
+
+      const extractedAnnotations = getExtractedAnnotations(mxsMetadata);
 
       return {
         customMetadata: {
           annotations: [
-            ...getAnnotations(fileMetadata, template),
             ...extractedAnnotations,
+            // this omits what is already in MXS extracted metadata, and only adds whats missing from user
+            ...getAnnotations(
+              omit(fileMetadata, Object.keys(mxsMetadata)) as FileModel,
+              template
+            ),
           ],
           templateId: template.templateId,
         },
