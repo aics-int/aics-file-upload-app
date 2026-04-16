@@ -46,6 +46,7 @@ import {
   getUploadAsTableRows,
   getUploadValidationErrors,
   getAnnotations,
+  getExtractedAnnotations,
 } from "../selectors";
 import { FileType } from "../types";
 
@@ -1201,6 +1202,53 @@ describe("Upload selectors", () => {
       const result = getAnnotations(fileMetadataBlank, appliedTemplate as any);
 
       expect(result).to.be.an("array").that.is.empty;
+    });
+
+    it("should include autofilled fields in upload annotations", () => {
+      const fileMetadataWithAutofill = {
+        "Test Annotation": ["autofilled value"],
+        autofilledFields: ["Test Annotation"],
+      } as any;
+
+      const result = getAnnotations(
+        fileMetadataWithAutofill,
+        appliedTemplate as any
+      );
+
+      expect(result).to.deep.equal([
+        {
+          annotationId: 1000,
+          values: ["autofilled value"],
+        },
+      ]);
+    });
+  });
+
+  describe("getExtractedAnnotations", () => {
+    it("should include extracted fields using MXS annotation_id", () => {
+      const mxsMetadata = {
+        "Cell Line": { annotation_id: 999, value: "AICS-22" },
+        Duration: { annotation_id: 1, value: "3600" },
+      };
+
+      const result = getExtractedAnnotations(mxsMetadata);
+
+      expect(result).to.deep.equal([
+        { annotationId: 999, values: ["AICS-22"] },
+        { annotationId: 1, values: ["3600"] },
+      ]);
+    });
+
+    it("should exclude fields with null or empty values", () => {
+      const mxsMetadata = {
+        "Null Field": { annotation_id: 10, value: null },
+        "Empty Field": { annotation_id: 11, value: "" },
+        "Valid Field": { annotation_id: 12, value: "valid" },
+      };
+
+      const result = getExtractedAnnotations(mxsMetadata);
+
+      expect(result).to.deep.equal([{ annotationId: 12, values: ["valid"] }]);
     });
   });
 });

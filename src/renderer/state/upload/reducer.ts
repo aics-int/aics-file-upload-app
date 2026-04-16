@@ -195,7 +195,7 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
 
       Object.entries(mxsResult).forEach(([annotationName, { value }]) => {
         if (value !== null && value !== undefined && value !== "") {
-          // always use MXS value since MXS will override on backend anyway
+          // always use MXS value; also send to MMS on upload and MXS may update later
           autofillData[annotationName] = Array.isArray(value) ? value : [value];
           autofilledFields.push(annotationName);
         }
