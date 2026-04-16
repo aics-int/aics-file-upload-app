@@ -1,5 +1,12 @@
 # Version Notes
 
+## 3.6.0 (4/16/25)
+
+- Metadata is now uploaded from the client
+- Above change enables nd2, sldy metadata extractions
+- Well is auto selected from extracted metadata, if available
+- Errors make cells flash a more noticeable color
+
 ## 3.5.6 (3/11/25)
 
 - Autofill metadata was not working on windows systems- fixed
