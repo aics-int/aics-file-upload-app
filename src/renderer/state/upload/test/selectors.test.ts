@@ -1057,6 +1057,51 @@ describe("Upload selectors", () => {
       ).to.be.true;
     });
 
+    it("does not add well error if row is a timelapse master file", () => {
+      const errors = getUploadValidationErrors({
+        ...nonEmptyStateForInitiatingUpload,
+        upload: getMockStateWithHistory({
+          foo: {
+            "Favorite Color": 1,
+            file: "foo",
+            key: "foo",
+            [AnnotationName.NOTES]: [],
+            [AnnotationName.PLATE_BARCODE]: ["1491201"],
+            [AnnotationName.WELL]: [],
+            [AnnotationName.PROGRAM]: ["foo"],
+            "Is Timelapse Master File": [true],
+          },
+        }),
+      });
+      expect(
+        errors.includes(
+          `"foo" is missing the following required annotations: ${AnnotationName.WELL}`
+        )
+      ).to.be.false;
+    });
+
+    it("still adds well error if Is Timelapse Master File True does not exist", () => {
+      const errors = getUploadValidationErrors({
+        ...nonEmptyStateForInitiatingUpload,
+        upload: getMockStateWithHistory({
+          foo: {
+            "Favorite Color": 1,
+            file: "foo",
+            key: "foo",
+            [AnnotationName.NOTES]: [],
+            [AnnotationName.PLATE_BARCODE]: ["1491201"],
+            [AnnotationName.WELL]: [],
+            [AnnotationName.PROGRAM]: ["foo"],
+          },
+        }),
+      });
+      expect(
+        errors.includes(
+          `"foo" is missing the following required annotations: ${AnnotationName.WELL}`
+        )
+      ).to.be.true;
+    });
+
     it("adds error if a row does not have a program annotation and is meant to", () => {
       const errors = getUploadValidationErrors({
         ...nonEmptyStateForInitiatingUpload,
