@@ -333,7 +333,10 @@ export const getUploadValidationErrors = createSelector(
               );
             }
           }
-          if (!annotationHasValueMap[AnnotationName.WELL]) {
+          if (
+            !annotationHasValueMap[AnnotationName.WELL] &&
+            !annotationHasValueMap["Is Timelapse Master File"]
+          ) {
             requiredAnnotationsThatDontHaveValues.push(AnnotationName.WELL);
           }
         }
