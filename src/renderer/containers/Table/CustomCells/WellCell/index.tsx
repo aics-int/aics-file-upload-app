@@ -40,6 +40,8 @@ export default function WellCell(props: CellProps<FileModel>) {
   const [selectedWells, setSelectedWells] = React.useState<AicsGridCell[]>([]);
   const isAutofilled =
     props.row.original.autofilledFields?.includes(AnnotationName.WELL) ?? false;
+  const isTimelapsemaster =
+    props.row.original["Is Timelapse Master File"]?.[0] === true;
   const associatedWells = props.row.original[AnnotationName.WELL] || [];
   const plateBarcode = props.row.original[AnnotationName.PLATE_BARCODE]?.[0];
   const imagingSessionName =
@@ -156,10 +158,13 @@ export default function WellCell(props: CellProps<FileModel>) {
       <DisplayCell
         {...props}
         value={wellLabels.sort()}
-        disabled={!wells?.[0].length}
+        disabled={!wells?.[0].length || isTimelapsemaster}
         onTabExit={() => setIsEditing(false)}
         onStartEditing={() =>
-          !isAutofilled && wells?.[0].length && setIsEditing(true)
+          !isAutofilled &&
+          !isTimelapsemaster &&
+          wells?.[0].length &&
+          setIsEditing(true)
         }
       />
       <Modal
