@@ -30,7 +30,7 @@ const styles = require("./styles.pcss");
  */
 export default function MyUploadsPage() {
   const dispatch = useDispatch();
-  const recentUploads = useSelector(getRecentUploads).slice(0, 100);
+  const recentUploads = useSelector(getRecentUploads);
   const requestsInProgress = useSelector(getRequestsInProgress);
   const isRequestingJobs = requestsInProgress.includes(AsyncRequest.GET_JOBS);
 
