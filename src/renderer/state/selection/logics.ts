@@ -98,13 +98,29 @@ const startMassEditLogic = createLogic({
       return;
     }
     const { annotations } = template;
-    const massEditRow = annotations.reduce(
+    const massEditRow: MassEditRow = annotations.reduce(
       (row, annotation) => ({
         ...row,
         [annotation.name]: [],
       }),
       {}
     );
+
+    // make mass edit rows autofilled like regular ones
+    const selectedRowIds: string[] = action.payload;
+    const upload = getUpload(getState());
+    const autofilledFieldSets = selectedRowIds.map(
+      (id) => new Set<string>(upload[id]?.autofilledFields || [])
+    );
+    if (autofilledFieldSets.length) {
+      const setList = [
+        ...new Set(autofilledFieldSets.flatMap((set) => [...set])),
+      ];
+      if (setList.length) {
+        massEditRow.autofilledFields = setList;
+      }
+    }
+
     next({
       ...action,
       payload: {
