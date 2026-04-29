@@ -177,7 +177,7 @@ const stopCellDragLogic = createLogic({
       const columnId = cellAtDragStart.columnId;
       const rowIds = rows
         .map((row: UploadRowTableId) => row.id)
-        .filter((id) => !upload[id]?.autofilledFields?.includes(columnId));
+        .filter((id: any) => !upload[id]?.autofilledFields?.includes(columnId));
       const value = upload[cellAtDragStart.rowId][columnId];
       if (rowIds.length) {
         dispatch(updateUploadRows(rowIds, { [columnId]: value }));
