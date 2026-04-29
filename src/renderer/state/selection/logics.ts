@@ -173,10 +173,15 @@ const stopCellDragLogic = createLogic({
   ) => {
     const { cellAtDragStart, rows } = ctx;
     if (cellAtDragStart && rows?.length) {
-      const rowIds = rows.map((row: UploadRowTableId) => row.id);
       const upload = getUpload(getState());
-      const value = upload[cellAtDragStart.rowId][cellAtDragStart.columnId];
-      dispatch(updateUploadRows(rowIds, { [cellAtDragStart.columnId]: value }));
+      const columnId = cellAtDragStart.columnId;
+      const rowIds = rows
+        .map((row: UploadRowTableId) => row.id)
+        .filter((id) => !upload[id]?.autofilledFields?.includes(columnId));
+      const value = upload[cellAtDragStart.rowId][columnId];
+      if (rowIds.length) {
+        dispatch(updateUploadRows(rowIds, { [columnId]: value }));
+      }
     }
     done();
   },
