@@ -410,7 +410,6 @@ const updateUploadLogic = createLogic({
       const currentMassEditRow = getMassEditRow(deps.getState());
       if (currentMassEditRow) {
         // in mass edit, grey the well column once plate data is available
-        // the actual per-file well autofill happens on Apply
         const existingAutofilledFields =
           currentMassEditRow.autofilledFields || [];
         if (!existingAutofilledFields.includes(AnnotationName.WELL)) {
