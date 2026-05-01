@@ -163,6 +163,49 @@ describe("Selection logics", () => {
         selectedRowIds
       );
     });
+
+    it("greys a field in mass edit if any selected row has it autofilled", () => {
+      // Arrange
+      const selectedRowIds = ["1", "2", "3"];
+      const { store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        upload: getMockStateWithHistory({
+          "1": { file: "/path/1", autofilledFields: ["Favorite Color"] },
+          "2": {
+            file: "/path/2",
+            autofilledFields: ["Favorite Color", AnnotationName.WELL],
+          },
+          "3": { file: "/path/3" },
+        }),
+      });
+
+      // Act
+      store.dispatch(startMassEdit(selectedRowIds));
+
+      // Assert
+      expect(
+        getMassEditRow(store.getState())?.autofilledFields
+      ).to.have.members(["Favorite Color", AnnotationName.WELL]);
+    });
+
+    it("does not set autofilledFields if no selected rows have any", () => {
+      // Arrange
+      const selectedRowIds = ["1", "2"];
+      const { store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        upload: getMockStateWithHistory({
+          "1": { file: "/path/1" },
+          "2": { file: "/path/2" },
+        }),
+      });
+
+      // Act
+      store.dispatch(startMassEdit(selectedRowIds));
+
+      // Assert
+      expect(getMassEditRow(store.getState())?.autofilledFields).to.be
+        .undefined;
+    });
   });
 
   describe("applyMassEditLogic", () => {
@@ -242,6 +285,95 @@ describe("Selection logics", () => {
           })
         )
       ).to.be.true;
+    });
+
+    it("does not overwrite autofilled cells when dragging", async () => {
+      // Arrange
+      const uploadValue = "false";
+      const cellAtDragStart = {
+        rowId: "14",
+        columnId: "Is Aligned?",
+        rowIndex: 2,
+      };
+      const autofilledRowId = "9";
+      const nonAutofilledRowIds = ["21", "3", "18"];
+      const rowsSelectedForDragEvent = [
+        ...nonAutofilledRowIds,
+        autofilledRowId,
+      ].map((id, index) => ({ id, index }));
+      const { actions, logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...mockSelection,
+          cellAtDragStart,
+          rowsSelectedForDragEvent,
+        },
+        upload: getMockStateWithHistory({
+          [cellAtDragStart.rowId]: {
+            file: "/some/path/source.txt",
+            [cellAtDragStart.columnId]: uploadValue,
+          },
+          [autofilledRowId]: {
+            file: "/some/path/autofilled.txt",
+            autofilledFields: [cellAtDragStart.columnId],
+          },
+        }),
+      });
+
+      // Act
+      store.dispatch(stopCellDrag());
+      await logicMiddleware.whenComplete();
+
+      // Assert - only non-autofilled rows receive the update
+      expect(
+        actions.includesMatch(
+          updateUploadRows(nonAutofilledRowIds, {
+            [cellAtDragStart.columnId]: uploadValue,
+          })
+        )
+      ).to.be.true;
+      expect(
+        actions.includesMatch(
+          updateUploadRows([...nonAutofilledRowIds, autofilledRowId], {
+            [cellAtDragStart.columnId]: uploadValue,
+          })
+        )
+      ).to.be.false;
+    });
+
+    it("does not dispatch if all dragged rows are autofilled", async () => {
+      // Arrange
+      const cellAtDragStart = {
+        rowId: "14",
+        columnId: "Is Aligned?",
+        rowIndex: 2,
+      };
+      const rowsSelectedForDragEvent = [{ id: "9", index: 0 }];
+      const { actions, logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...mockSelection,
+          cellAtDragStart,
+          rowsSelectedForDragEvent,
+        },
+        upload: getMockStateWithHistory({
+          [cellAtDragStart.rowId]: {
+            file: "/some/path/source.txt",
+            [cellAtDragStart.columnId]: "false",
+          },
+          "9": {
+            file: "/some/path/autofilled.txt",
+            autofilledFields: [cellAtDragStart.columnId],
+          },
+        }),
+      });
+
+      // Act
+      store.dispatch(stopCellDrag());
+      await logicMiddleware.whenComplete();
+
+      // Assert - no updateUploadRows dispatched since the only dragged row was autofilled
+      expect(actions.includesType(updateUploadRows([], {}).type)).to.be.false;
     });
   });
 });

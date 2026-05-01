@@ -21,6 +21,7 @@ import { setPlateBarcodeToPlates } from "../../metadata/actions";
 import { SET_PLATE_BARCODE_TO_PLATES } from "../../metadata/constants";
 import { getPlateBarcodeToPlates } from "../../metadata/selectors";
 import { resetUpload } from "../../route/actions";
+import { updateMassEditRow } from "../../selection/actions";
 import { setAppliedTemplate } from "../../template/actions";
 import {
   createMockReduxStore,
@@ -41,6 +42,7 @@ import {
   mockTemplateStateBranch,
   mockTemplateWithManyValues,
   mockTextAnnotation,
+  mockSelection,
   mockWellUpload,
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
@@ -1027,6 +1029,64 @@ describe("Upload logics", () => {
       expect(
         getUpload(store.getState())[uploadRowKey][AnnotationName.WELL]
       ).to.deep.equal([]);
+    });
+
+    it("greys well column in mass edit after plate data is fetched", async () => {
+      // Arrange
+      const plateBarcode = "490109230";
+      const { actions, store, logicMiddleware } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...mockSelection,
+          massEditRow: { [AnnotationName.PLATE_BARCODE]: [plateBarcode] },
+          rowsSelectedForMassEdit: [uploadRowKey],
+        },
+        template: {
+          ...mockTemplateStateBranch,
+          appliedTemplate: {
+            ...mockTemplateWithManyValues,
+            annotations: [mockTextAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          [uploadRowKey]: {
+            [mockTextAnnotation.name]: [],
+            file: "/path/to/file3",
+            [AnnotationName.NOTES]: [],
+            templateId: 8,
+            [AnnotationName.WELL]: [],
+          },
+        }),
+      });
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([]);
+      mmsClient.getPlate.resolves({
+        plate: {
+          barcode: "",
+          comments: "",
+          plateGeometryId: 8,
+          plateId: 14,
+          plateStatusId: 3,
+          ...mockAuditInfo,
+        },
+        wells: [],
+      });
+
+      // Act
+      store.dispatch(
+        updateUpload(uploadRowKey, {
+          [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // Assert - mass edit row gets WELL added to autofilledFields
+      expect(
+        actions.includesMatch(
+          updateMassEditRow({
+            autofilledFields: [AnnotationName.WELL],
+          })
+        )
+      ).to.be.true;
     });
 
     it("queries for plate barcode without imaging session if none found", async () => {

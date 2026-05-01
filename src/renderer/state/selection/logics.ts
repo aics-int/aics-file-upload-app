@@ -98,13 +98,35 @@ const startMassEditLogic = createLogic({
       return;
     }
     const { annotations } = template;
-    const massEditRow = annotations.reduce(
+    const massEditRow: MassEditRow = annotations.reduce(
       (row, annotation) => ({
         ...row,
         [annotation.name]: [],
       }),
       {}
     );
+
+    // grey out mass edit UI columns if rows are autofilled
+    // if any selected row is already autofilled
+    // user should not be able to mass edit on that row
+    // to avoid potentially overwriting extracted metadata.
+    const selectedRowIds: string[] = action.payload;
+    const upload = getUpload(getState());
+
+    // get set of autofilled fields that we should not mass edit
+    const autofilledFieldSets = selectedRowIds.map(
+      (id) => new Set<string>(upload[id]?.autofilledFields || [])
+    );
+    if (autofilledFieldSets.length) {
+      const setList = [
+        ...new Set(autofilledFieldSets.flatMap((set) => [...set])),
+      ];
+      if (setList.length) {
+        // disable mass edit for any fields in the set
+        massEditRow.autofilledFields = setList;
+      }
+    }
+
     next({
       ...action,
       payload: {
@@ -157,10 +179,18 @@ const stopCellDragLogic = createLogic({
   ) => {
     const { cellAtDragStart, rows } = ctx;
     if (cellAtDragStart && rows?.length) {
-      const rowIds = rows.map((row: UploadRowTableId) => row.id);
       const upload = getUpload(getState());
-      const value = upload[cellAtDragStart.rowId][cellAtDragStart.columnId];
-      dispatch(updateUploadRows(rowIds, { [cellAtDragStart.columnId]: value }));
+      const columnId = cellAtDragStart.columnId;
+      // get row ids that dont have autofill
+      const rowIds = rows
+        .map((row: UploadRowTableId) => row.id)
+        .filter((id: any) => !upload[id]?.autofilledFields?.includes(columnId));
+      const value = upload[cellAtDragStart.rowId][columnId];
+
+      // drag to copy protection against overwriting rows already autofilled by mxs
+      if (rowIds.length) {
+        dispatch(updateUploadRows(rowIds, { [columnId]: value }));
+      }
     }
     done();
   },

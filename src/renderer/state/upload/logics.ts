@@ -407,30 +407,48 @@ const updateUploadLogic = createLogic({
         dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
       }
 
-      // autoselect well if row and col data available from mxs
-      const fileKey = deps.action.payload.key;
-      const mxsData = deps.getState().metadataExtraction[fileKey]?.metadata;
-      const rowValue = mxsData?.["Row"]?.value;
-      const colValue = mxsData?.["Column"]?.value;
-
-      if (rowValue !== undefined && colValue !== undefined) {
-        // row and col are 1-indexed in metadata, convert to 0-indexed
-        const row = Number(rowValue) - 1;
-        const col = Number(colValue) - 1;
-        const plates = updatedPlateBarcodeToPlates[plateBarcode];
-        // this should match the logic in WellCell
-        const imagingSessionName = upload[AnnotationName.IMAGING_SESSION]?.[0];
-        const plate = plates?.find((p) =>
-          imagingSessionName ? p.name === imagingSessionName : !p.name
-        );
-        const well = plate?.wells.find((w) => w.row === row && w.col === col);
-        if (well) {
+      const currentMassEditRow = getMassEditRow(deps.getState());
+      if (currentMassEditRow) {
+        // in mass edit, grey the well column once plate data is available
+        const existingAutofilledFields =
+          currentMassEditRow.autofilledFields || [];
+        if (!existingAutofilledFields.includes(AnnotationName.WELL)) {
           dispatch(
-            updateUpload(fileKey, {
-              [AnnotationName.WELL]: [well.wellId],
-              autofilledFields: [AnnotationName.WELL],
+            updateMassEditRow({
+              autofilledFields: [
+                ...existingAutofilledFields,
+                AnnotationName.WELL,
+              ],
             })
           );
+        }
+      } else {
+        // autoselect well if row and col data available from mxs
+        const fileKey = deps.action.payload.key;
+        const mxsData = deps.getState().metadataExtraction[fileKey]?.metadata;
+        const rowValue = mxsData?.["Row"]?.value;
+        const colValue = mxsData?.["Column"]?.value;
+
+        if (rowValue !== undefined && colValue !== undefined) {
+          // row and col are 1-indexed in metadata, convert to 0-indexed
+          const row = Number(rowValue) - 1;
+          const col = Number(colValue) - 1;
+          const plates = updatedPlateBarcodeToPlates[plateBarcode];
+          // this should match the logic in WellCell
+          const imagingSessionName =
+            upload[AnnotationName.IMAGING_SESSION]?.[0];
+          const plate = plates?.find((p) =>
+            imagingSessionName ? p.name === imagingSessionName : !p.name
+          );
+          const well = plate?.wells.find((w) => w.row === row && w.col === col);
+          if (well) {
+            dispatch(
+              updateUpload(fileKey, {
+                [AnnotationName.WELL]: [well.wellId],
+                autofilledFields: [AnnotationName.WELL],
+              })
+            );
+          }
         }
       }
     }
@@ -478,6 +496,28 @@ const updateUploadLogic = createLogic({
 });
 
 const updateUploadRowsLogic = createLogic({
+  process: async (
+    deps: ReduxLogicProcessDependenciesWithAction<UpdateUploadRowsAction>,
+    dispatch: ReduxLogicNextCb,
+    done: ReduxLogicDoneCb
+  ) => {
+    const { metadataUpdate, uploadKeys } = deps.action.payload;
+    const plateBarcode = (metadataUpdate as Partial<FileModel>)[
+      AnnotationName.PLATE_BARCODE
+    ]?.[0];
+
+    if (plateBarcode) {
+      for (const fileKey of uploadKeys) {
+        dispatch(
+          updateUpload(fileKey, {
+            [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+          })
+        );
+      }
+    }
+
+    done();
+  },
   transform: (
     {
       action,
