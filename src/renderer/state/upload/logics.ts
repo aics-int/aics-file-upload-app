@@ -478,6 +478,28 @@ const updateUploadLogic = createLogic({
 });
 
 const updateUploadRowsLogic = createLogic({
+  process: async (
+    deps: ReduxLogicProcessDependenciesWithAction<UpdateUploadRowsAction>,
+    dispatch: ReduxLogicNextCb,
+    done: ReduxLogicDoneCb
+  ) => {
+    const { metadataUpdate, uploadKeys } = deps.action.payload;
+    const plateBarcode = (metadataUpdate as Partial<FileModel>)[
+      AnnotationName.PLATE_BARCODE
+    ]?.[0];
+
+    if (plateBarcode) {
+      for (const fileKey of uploadKeys) {
+        dispatch(
+          updateUpload(fileKey, {
+            [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+          })
+        );
+      }
+    }
+
+    done();
+  },
   transform: (
     {
       action,

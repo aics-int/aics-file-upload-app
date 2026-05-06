@@ -162,7 +162,9 @@ const stopCellDragLogic = createLogic({
       // get row ids that dont have autofill
       const rowIds = rows
         .map((row: UploadRowTableId) => row.id)
-        .filter((id: any) => !upload[id]?.autofilledFields?.includes(columnId));
+        .filter(
+          (id: string) => !upload[id]?.autofilledFields?.includes(columnId)
+        );
       const value = upload[cellAtDragStart.rowId][columnId];
 
       // drag to copy protection against overwriting rows already autofilled by mxs
