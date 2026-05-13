@@ -1200,6 +1200,54 @@ describe("Upload logics", () => {
       const upload = getUpload(store.getState());
       expect(upload[uploadRowKey]["Birth Date"][0]).to.be.a("Date");
     });
+
+    it("dispatches individual updateUpload per row when plate barcode is updated", async () => {
+      // arrange
+      const plateBarcode = "3500004832";
+      const uploadRowKey1 = "/path/to/file1";
+      const uploadRowKey2 = "/path/to/file2";
+
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([]);
+      mmsClient.getPlate.resolves({
+        plate: {
+          barcode: plateBarcode,
+          comments: "",
+          plateGeometryId: 8,
+          plateId: 14,
+          plateStatusId: 3,
+          ...mockAuditInfo,
+        },
+        wells: [],
+      });
+
+      const { logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        upload: getMockStateWithHistory({
+          [uploadRowKey1]: { file: uploadRowKey1 },
+          [uploadRowKey2]: { file: uploadRowKey2 },
+        }),
+      });
+
+      // act
+      store.dispatch(
+        updateUploadRows([uploadRowKey1, uploadRowKey2], {
+          [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // assert - updateUploadLogic ran for each row, triggering imaging session lookup per row
+      expect(labkeyClient.findImagingSessionsByPlateBarcode.callCount).to.equal(
+        2
+      );
+      const upload = getUpload(store.getState());
+      expect(upload[uploadRowKey1][AnnotationName.PLATE_BARCODE]).to.deep.equal(
+        [plateBarcode]
+      );
+      expect(upload[uploadRowKey2][AnnotationName.PLATE_BARCODE]).to.deep.equal(
+        [plateBarcode]
+      );
+    });
   });
   describe("saveUploadDraftLogic", () => {
     it("shows save dialog and does not dispatch saveUploadDraftSuccess if user cancels save", async () => {
