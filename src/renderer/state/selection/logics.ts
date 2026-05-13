@@ -160,7 +160,7 @@ const stopCellDragLogic = createLogic({
       const upload = getUpload(getState());
       const columnId = cellAtDragStart.columnId;
       // get row ids that dont have autofill
-      const rowIds = rows
+      const notAutofilledRowIds = rows
         .map((row: UploadRowTableId) => row.id)
         .filter(
           (id: string) => !upload[id]?.autofilledFields?.includes(columnId)
@@ -168,8 +168,8 @@ const stopCellDragLogic = createLogic({
       const value = upload[cellAtDragStart.rowId][columnId];
 
       // drag to copy protection against overwriting rows already autofilled by mxs
-      if (rowIds.length) {
-        dispatch(updateUploadRows(rowIds, { [columnId]: value }));
+      if (notAutofilledRowIds.length) {
+        dispatch(updateUploadRows(notAutofilledRowIds, { [columnId]: value }));
       }
     }
     done();
