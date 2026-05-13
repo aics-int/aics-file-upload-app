@@ -484,12 +484,16 @@ const updateUploadRowsLogic = createLogic({
     done: ReduxLogicDoneCb
   ) => {
     const { metadataUpdate, uploadKeys } = deps.action.payload;
+
+    // checks whether the drag and drop update contains plate barcode
     const plateBarcode = (metadataUpdate as Partial<FileModel>)[
       AnnotationName.PLATE_BARCODE
-    ]?.[0];
+    ]?.[0]; // update contains plate barcode value, or undefined if no plateBarcode value
 
     if (plateBarcode) {
       for (const fileKey of uploadKeys) {
+        // dispatch update to plate barcode for each row
+        // which will trigger well autofill
         dispatch(
           updateUpload(fileKey, {
             [AnnotationName.PLATE_BARCODE]: [plateBarcode],
