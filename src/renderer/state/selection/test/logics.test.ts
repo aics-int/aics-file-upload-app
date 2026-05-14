@@ -21,6 +21,7 @@ import {
 } from "../../test/mocks";
 import { Page } from "../../types";
 import { updateUploadRows } from "../../upload/actions";
+import { UPDATE_UPLOAD_ROWS } from "../../upload/constants";
 import { getUpload } from "../../upload/selectors";
 import { applyMassEdit, startMassEdit, stopCellDrag } from "../actions";
 import { getMassEditRow, getRowsSelectedForMassEdit } from "../selectors";
@@ -242,6 +243,98 @@ describe("Selection logics", () => {
           })
         )
       ).to.be.true;
+    });
+
+    it("excludes autofilled rows from update", async () => {
+      // Arrange
+      const uploadValue = "false";
+      const columnId = "Is Aligned?";
+      const autofilledRowId = "9";
+      const nonAutofilledRowIds = ["21", "3", "18"];
+      const rowsSelectedForDragEvent = [
+        ...nonAutofilledRowIds,
+        autofilledRowId,
+      ].map((id, index) => ({ id, index }));
+      const cellAtDragStart = { rowId: "14", columnId, rowIndex: 2 };
+      const uploadState: Record<string, any> = {
+        [cellAtDragStart.rowId]: {
+          file: "/some/path/to/a/file.txt",
+          [columnId]: uploadValue,
+        },
+        [autofilledRowId]: {
+          file: "/some/path/to/autofilled.txt",
+          autofilledFields: [columnId],
+        },
+      };
+      nonAutofilledRowIds.forEach((id) => {
+        uploadState[id] = { file: `/some/path/${id}.txt` };
+      });
+      const { actions, logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...mockSelection,
+          cellAtDragStart,
+          rowsSelectedForDragEvent,
+        },
+        upload: getMockStateWithHistory(uploadState),
+      });
+
+      // Act
+      store.dispatch(stopCellDrag());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(
+        actions.includesMatch(
+          updateUploadRows(nonAutofilledRowIds, { [columnId]: uploadValue })
+        )
+      ).to.be.true;
+      expect(
+        actions.includesMatch(
+          updateUploadRows([...nonAutofilledRowIds, autofilledRowId], {
+            [columnId]: uploadValue,
+          })
+        )
+      ).to.be.false;
+    });
+
+    it("does not dispatch update if all selected rows are autofilled", async () => {
+      // Arrange
+      const columnId = "Is Aligned?";
+      const rowIds = ["21", "3"];
+      const rowsSelectedForDragEvent = rowIds.map((id, index) => ({
+        id,
+        index,
+      }));
+      const cellAtDragStart = { rowId: "14", columnId, rowIndex: 2 };
+      const uploadState: Record<string, any> = {
+        [cellAtDragStart.rowId]: {
+          file: "/some/path/to/a/file.txt",
+          [columnId]: "false",
+        },
+      };
+      rowIds.forEach((id) => {
+        uploadState[id] = {
+          file: `/some/path/${id}.txt`,
+          autofilledFields: [columnId],
+        };
+      });
+      const { actions, logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...mockSelection,
+          cellAtDragStart,
+          rowsSelectedForDragEvent,
+        },
+        upload: getMockStateWithHistory(uploadState),
+      });
+
+      // Act
+      store.dispatch(stopCellDrag());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(actions.includesType(UPDATE_UPLOAD_ROWS)).to.be.false;
     });
   });
 });
