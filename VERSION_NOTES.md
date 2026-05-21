@@ -1,20 +1,25 @@
 # Version Notes
 
-## 3.6.0 (4/16/25)
+## 3.6.1 (5/21/26)
+
+- Bugfix for mass editing not triggering well autofill
+- Removed 100 upload history
+
+## 3.6.0 (4/16/26)
 
 - Metadata is now uploaded from the client
 - Above change enables nd2, sldy metadata extractions
 - Well is auto selected from extracted metadata, if available
 - Errors make cells flash a more noticeable color
 
-## 3.5.6 (3/11/25)
+## 3.5.6 (3/11/26)
 
 - Autofill metadata was not working on windows systems- fixed
 - Can open past uploads in bff by clicking on File ID
 - FSS errors now display a more informative message
 - View Metadata window now uses cached data instead of second MXS call
 
-## 3.5.5 (2/26/25)
+## 3.5.5 (2/26/26)
 
 - Autofill metadata known by MXS
 - Option to view metadata for files known by MXS
