@@ -36,6 +36,22 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
 };
 
 /**
+ * Converts an osx mount path to a VAST path starting with /allen.
+ * removes any prefix before /allen (ex: /Volumes/allen/... -> /allen/...).
+ * Throws an error if /allen is not found in the path.
+ */
+export function convertToVastPath(filePath: string): string {
+  const VAST_PREFIX = "/allen";
+  const allenIndex = filePath.toLowerCase().indexOf(VAST_PREFIX);
+
+  if (allenIndex === -1) {
+    throw new Error("You must select files that are on VAST");
+  }
+
+  return filePath.slice(allenIndex);
+}
+
+/**
  * Takes a list of file paths and checks to see if they can be read and if they match
  *  the given UploadType.
  */
