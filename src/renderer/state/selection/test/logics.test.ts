@@ -33,6 +33,7 @@ describe("Selection logics", () => {
   const FOLDER_NAME = "a_directory";
   const FILE_FULL_PATH = resolve(__dirname, TEST_FILES_DIR, FILE_NAME);
   const FOLDER_FULL_PATH = resolve(__dirname, TEST_FILES_DIR, FOLDER_NAME);
+  const VAST_FILE_PATH = "/allen/aics/test/cells.txt";
 
   let mmsClient: SinonStubbedInstance<MetadataManagementService>;
 
@@ -80,7 +81,7 @@ describe("Selection logics", () => {
 
       // apply
       store.dispatch(selections.actions.selectUploadType(UploadType.File));
-      store.dispatch(selections.actions.loadFiles([FILE_FULL_PATH]));
+      store.dispatch(selections.actions.loadFiles([VAST_FILE_PATH]));
 
       // after
       await logicMiddleware.whenComplete();
@@ -88,7 +89,7 @@ describe("Selection logics", () => {
 
       expect(Object.keys(upload)).to.be.lengthOf(1);
       const file = upload[Object.keys(upload)[0]];
-      expect(file.file).to.equal(FILE_FULL_PATH);
+      expect(file.file).to.equal(VAST_FILE_PATH);
     });
 
     it("sets files up for upload, using custom filename", async () => {
@@ -100,7 +101,7 @@ describe("Selection logics", () => {
       // apply
       store.dispatch(selections.actions.selectUploadType(UploadType.File));
       store.dispatch(
-        selections.actions.loadFiles([{ path: FILE_FULL_PATH, name: "bla" }])
+        selections.actions.loadFiles([{ path: VAST_FILE_PATH, name: "bla" }])
       );
 
       // after
@@ -109,7 +110,7 @@ describe("Selection logics", () => {
 
       expect(Object.keys(upload)).to.be.lengthOf(1);
       const file = upload[Object.keys(upload)[0]];
-      expect(file.file).to.equal(FILE_FULL_PATH);
+      expect(file.file).to.equal(VAST_FILE_PATH);
       expect(file.customFileName).to.equal("bla");
     });
 
