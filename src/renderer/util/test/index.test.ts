@@ -8,6 +8,7 @@ import * as rimraf from "rimraf";
 import { restore, SinonStub, stub } from "sinon";
 
 import {
+  convertToVastPath,
   getDirectorySize,
   getPowerOf1000,
   handleFileSelection,
@@ -73,6 +74,38 @@ describe("General utilities", () => {
     });
     it("returns 1 if input is 999999", () => {
       expect(getPowerOf1000(999999)).to.equal(1);
+    });
+  });
+
+  describe("convertToVastPath", () => {
+    it("returns path unchanged if it already starts with /allen", () => {
+      expect(convertToVastPath("/allen/aics/test.czi")).to.equal(
+        "/allen/aics/test.czi"
+      );
+    });
+
+    it("removes OSX /Volumes prefix to produce a VAST path", () => {
+      expect(convertToVastPath("/Volumes/allen/aics/test.czi")).to.equal(
+        "/allen/aics/test.czi"
+      );
+    });
+
+    it("handles Windows-style double-slash prefix", () => {
+      expect(convertToVastPath("//allen/aics/test.czi")).to.equal(
+        "/allen/aics/test.czi"
+      );
+    });
+
+    it("throws 'You must select files that are on VAST' when /allen is absent", () => {
+      expect(() => convertToVastPath("/abc/cde/xyz/test.czi")).to.throw(
+        "You must select files that are on VAST"
+      );
+    });
+
+    it("throws when path has no recognizable VAST mount", () => {
+      expect(() => convertToVastPath("/Users/brian/Desktop/test.czi")).to.throw(
+        "You must select files that are on VAST"
+      );
     });
   });
 
