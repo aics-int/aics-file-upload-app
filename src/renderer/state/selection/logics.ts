@@ -21,7 +21,6 @@ import { addUploadFiles, updateUploadRows } from "../upload/actions";
 import { getUpload } from "../upload/selectors";
 import { batchActions } from "../util";
 
-
 import {
   APPLY_MASS_EDIT,
   LOAD_FILES,
