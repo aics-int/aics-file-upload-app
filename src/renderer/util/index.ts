@@ -41,7 +41,7 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
  * Throws an error if /allen is not found in the path.
  */
 export function convertToVastPath(filePath: string): string {
-  const VAST_PREFIX = "/allen";
+  const VAST_PREFIX = "/allen/";
   const allenIndex = filePath.toLowerCase().indexOf(VAST_PREFIX);
 
   if (allenIndex === -1) {
