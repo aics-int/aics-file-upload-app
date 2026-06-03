@@ -19,6 +19,7 @@ import {
   mockState,
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
+import { AlertType } from "../../types";
 import { Page } from "../../types";
 import { updateUploadRows } from "../../upload/actions";
 import { UPDATE_UPLOAD_ROWS } from "../../upload/constants";
@@ -126,6 +127,24 @@ describe("Selection logics", () => {
       // after
       await logicMiddleware.whenComplete();
       expect(feedback.selectors.getIsLoading(store.getState())).to.equal(false);
+    });
+
+    it("sets an error alert when a non-VAST path is selected", async () => {
+      const { logicMiddleware, store } = createMockReduxStore(mockState);
+
+      store.dispatch(selections.actions.selectUploadType(UploadType.File));
+      store.dispatch(
+        selections.actions.loadFiles(["/Users/brian/Desktop/not_vast.czi"])
+      );
+
+      await logicMiddleware.whenComplete();
+      const alert = feedback.selectors.getAlert(store.getState());
+      expect(alert).to.not.be.undefined;
+      expect(alert?.type).to.equal(AlertType.ERROR);
+      expect(alert?.message).to.include(
+        "You must select files that are on VAST"
+      );
+      expect(getUpload(store.getState())).to.be.empty;
     });
 
     it("should stop loading on error", async () => {
