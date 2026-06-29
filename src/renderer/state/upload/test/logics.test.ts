@@ -1248,6 +1248,55 @@ describe("Upload logics", () => {
         [plateBarcode]
       );
     });
+
+    it("preserves imaging session when applied alongside plate barcode", async () => {
+      // arrange - reproduces the mass edit case where a plate barcode and an
+      // imaging session are applied to rows together (issue #290)
+      const plateBarcode = "3500004832";
+      const imagingSession = "imaging session 9";
+      const uploadRowKey1 = "/path/to/file1";
+      const uploadRowKey2 = "/path/to/file2";
+
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([]);
+      mmsClient.getPlate.resolves({
+        plate: {
+          barcode: plateBarcode,
+          comments: "",
+          plateGeometryId: 8,
+          plateId: 14,
+          plateStatusId: 3,
+          ...mockAuditInfo,
+        },
+        wells: [],
+      });
+
+      const { logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        upload: getMockStateWithHistory({
+          [uploadRowKey1]: { file: uploadRowKey1 },
+          [uploadRowKey2]: { file: uploadRowKey2 },
+        }),
+      });
+
+      // act
+      store.dispatch(
+        updateUploadRows([uploadRowKey1, uploadRowKey2], {
+          [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+          [AnnotationName.IMAGING_SESSION]: [imagingSession],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // assert - imaging session is not wiped by the per-row plate barcode
+      // re-dispatch
+      const upload = getUpload(store.getState());
+      expect(
+        upload[uploadRowKey1][AnnotationName.IMAGING_SESSION]
+      ).to.deep.equal([imagingSession]);
+      expect(
+        upload[uploadRowKey2][AnnotationName.IMAGING_SESSION]
+      ).to.deep.equal([imagingSession]);
+    });
   });
   describe("saveUploadDraftLogic", () => {
     it("shows save dialog and does not dispatch saveUploadDraftSuccess if user cancels save", async () => {
