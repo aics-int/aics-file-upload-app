@@ -19,6 +19,7 @@ import {
   mockState,
   nonEmptyStateForInitiatingUpload,
 } from "../../test/mocks";
+import { AlertType } from "../../types";
 import { Page } from "../../types";
 import { updateUploadRows } from "../../upload/actions";
 import { UPDATE_UPLOAD_ROWS } from "../../upload/constants";
@@ -33,6 +34,7 @@ describe("Selection logics", () => {
   const FOLDER_NAME = "a_directory";
   const FILE_FULL_PATH = resolve(__dirname, TEST_FILES_DIR, FILE_NAME);
   const FOLDER_FULL_PATH = resolve(__dirname, TEST_FILES_DIR, FOLDER_NAME);
+  const VAST_FILE_PATH = "/allen/aics/test/cells.txt";
 
   let mmsClient: SinonStubbedInstance<MetadataManagementService>;
 
@@ -80,7 +82,7 @@ describe("Selection logics", () => {
 
       // apply
       store.dispatch(selections.actions.selectUploadType(UploadType.File));
-      store.dispatch(selections.actions.loadFiles([FILE_FULL_PATH]));
+      store.dispatch(selections.actions.loadFiles([VAST_FILE_PATH]));
 
       // after
       await logicMiddleware.whenComplete();
@@ -88,7 +90,7 @@ describe("Selection logics", () => {
 
       expect(Object.keys(upload)).to.be.lengthOf(1);
       const file = upload[Object.keys(upload)[0]];
-      expect(file.file).to.equal(FILE_FULL_PATH);
+      expect(file.file).to.equal(VAST_FILE_PATH);
     });
 
     it("sets files up for upload, using custom filename", async () => {
@@ -100,7 +102,7 @@ describe("Selection logics", () => {
       // apply
       store.dispatch(selections.actions.selectUploadType(UploadType.File));
       store.dispatch(
-        selections.actions.loadFiles([{ path: FILE_FULL_PATH, name: "bla" }])
+        selections.actions.loadFiles([{ path: VAST_FILE_PATH, name: "bla" }])
       );
 
       // after
@@ -109,7 +111,7 @@ describe("Selection logics", () => {
 
       expect(Object.keys(upload)).to.be.lengthOf(1);
       const file = upload[Object.keys(upload)[0]];
-      expect(file.file).to.equal(FILE_FULL_PATH);
+      expect(file.file).to.equal(VAST_FILE_PATH);
       expect(file.customFileName).to.equal("bla");
     });
 
@@ -125,6 +127,24 @@ describe("Selection logics", () => {
       // after
       await logicMiddleware.whenComplete();
       expect(feedback.selectors.getIsLoading(store.getState())).to.equal(false);
+    });
+
+    it("sets an error alert when a non-VAST path is selected", async () => {
+      const { logicMiddleware, store } = createMockReduxStore(mockState);
+
+      store.dispatch(selections.actions.selectUploadType(UploadType.File));
+      store.dispatch(
+        selections.actions.loadFiles(["/Users/brian/Desktop/not_vast.czi"])
+      );
+
+      await logicMiddleware.whenComplete();
+      const alert = feedback.selectors.getAlert(store.getState());
+      expect(alert).to.not.be.undefined;
+      expect(alert?.type).to.equal(AlertType.ERROR);
+      expect(alert?.message).to.include(
+        "You must select files that are on VAST"
+      );
+      expect(getUpload(store.getState())).to.be.empty;
     });
 
     it("should stop loading on error", async () => {
