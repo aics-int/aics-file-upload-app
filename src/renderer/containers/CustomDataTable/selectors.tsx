@@ -159,10 +159,6 @@ const METADATA_COLUMN: CustomColumn = {
 // cause downstream effects like reseting user adjusted
 // column widths for selectors that rely on upload state
 // changes
-// Names of annotations rendered by the dedicated PLATE_RELATED_COLUMNS above.
-// Templates may also include these as regular annotations; rendering both would
-// create duplicate react-table columns (which throws) and break editing for
-// fields like "Imaging Session", so we let the dedicated columns win.
 const PLATE_RELATED_COLUMN_NAMES: ReadonlySet<string> = new Set(
   PLATE_RELATED_COLUMNS.map((column) => column.accessor as string)
 );
