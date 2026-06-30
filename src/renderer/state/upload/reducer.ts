@@ -69,10 +69,7 @@ const actionToConfigMap: TypeToDescriptionMap<UploadStateBranch> = {
 
       let { upload } = action.payload;
       const modifiedAnnotations = Object.keys(upload);
-      // Reset Imaging Session and Well on Plate Barcode changes, unless a new
-      // value is provided in the same update (e.g. a mass edit applying a
-      // plate barcode and imaging session together). Spreading `upload` last
-      // lets explicitly provided values win over the reset defaults.
+      // Reset Imaging Session and Well on Plate Barcode changes
       if (modifiedAnnotations.includes(AnnotationName.PLATE_BARCODE)) {
         upload = {
           [AnnotationName.IMAGING_SESSION]: [],

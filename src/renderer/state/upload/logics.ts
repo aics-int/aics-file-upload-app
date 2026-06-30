@@ -491,9 +491,7 @@ const updateUploadRowsLogic = createLogic({
     ]?.[0]; // update contains plate barcode value, or undefined if no plateBarcode value
 
     if (plateBarcode) {
-      // Preserve any imaging session / well provided in the same update (e.g.
-      // a mass edit) so the plate barcode re-dispatch below does not wipe them
-      // out via the UPDATE_UPLOAD reset logic.
+      // Preserve any imaging session provided in the same update as barcode
       const imagingSession = (metadataUpdate as Partial<FileModel>)[
         AnnotationName.IMAGING_SESSION
       ];
