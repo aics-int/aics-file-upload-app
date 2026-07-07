@@ -19,7 +19,11 @@ import {
   splitTrimAndFilter,
 } from "../../util";
 import { requestFailed } from "../actions";
-import { setErrorAlert } from "../feedback/actions";
+import {
+  addRequestToInProgress,
+  removeRequestFromInProgress,
+  setErrorAlert,
+} from "../feedback/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
   getAnnotations,
@@ -358,6 +362,53 @@ function formatUpload(
   return formattedUpload;
 }
 
+// Fetches the imaging sessions and plate info for a barcode, returning an
+// updated plateBarcodeToPlates map. If the barcode has already been queried the
+// existing map is returned by reference unchanged, so callers can cheaply check
+// whether anything new was fetched before persisting it.
+async function fetchPlateBarcodeToPlates(
+  deps: ReduxLogicProcessDependenciesWithAction<
+    UpdateUploadAction | UpdateUploadRowsAction
+  >,
+  plateBarcode: string
+) {
+  const plateBarcodeToPlates = getPlateBarcodeToPlates(deps.getState());
+  // Avoid re-querying for the imaging sessions if this
+  // plate barcode has been selected before
+  if (Object.keys(plateBarcodeToPlates).includes(plateBarcode)) {
+    return plateBarcodeToPlates;
+  }
+
+  const imagingSessionsForPlateBarcode =
+    await deps.labkeyClient.findImagingSessionsByPlateBarcode(plateBarcode);
+  const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
+    await Promise.all(
+      imagingSessionsForPlateBarcode.map(async (is) => {
+        const { wells } = await deps.mmsClient.getPlate(
+          plateBarcode,
+          is["ImagingSessionId"]
+        );
+
+        return {
+          wells,
+          imagingSessionId: is["ImagingSessionId"],
+          name: is["ImagingSessionId/Name"],
+        };
+      })
+    );
+
+  // If the barcode has no imaging sessions, find info of plate without
+  if (!imagingSessionsWithPlateInfo.length) {
+    const { wells } = await deps.mmsClient.getPlate(plateBarcode);
+    imagingSessionsWithPlateInfo.push({ wells });
+  }
+
+  return {
+    ...plateBarcodeToPlates,
+    [plateBarcode]: imagingSessionsWithPlateInfo,
+  };
+}
+
 const updateUploadLogic = createLogic({
   process: async (
     deps: ReduxLogicProcessDependenciesWithAction<UpdateUploadAction>,
@@ -370,40 +421,13 @@ const updateUploadLogic = createLogic({
     const plateBarcode = upload[AnnotationName.PLATE_BARCODE]?.[0];
     if (plateBarcode) {
       const plateBarcodeToPlates = getPlateBarcodeToPlates(deps.getState());
-      let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
-      // Avoid re-querying for the imaging sessions if this
-      // plate barcode has been selected before
-      if (!Object.keys(plateBarcodeToPlates).includes(plateBarcode)) {
-        const imagingSessionsForPlateBarcode =
-          await deps.labkeyClient.findImagingSessionsByPlateBarcode(
-            plateBarcode
-          );
-        const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
-          await Promise.all(
-            imagingSessionsForPlateBarcode.map(async (is) => {
-              const { wells } = await deps.mmsClient.getPlate(
-                plateBarcode,
-                is["ImagingSessionId"]
-              );
-
-              return {
-                wells,
-                imagingSessionId: is["ImagingSessionId"],
-                name: is["ImagingSessionId/Name"],
-              };
-            })
-          );
-
-        // If the barcode has no imaging sessions, find info of plate without
-        if (!imagingSessionsWithPlateInfo.length) {
-          const { wells } = await deps.mmsClient.getPlate(plateBarcode);
-          imagingSessionsWithPlateInfo.push({ wells });
-        }
-
-        updatedPlateBarcodeToPlates = {
-          ...plateBarcodeToPlates,
-          [plateBarcode]: imagingSessionsWithPlateInfo,
-        };
+      const updatedPlateBarcodeToPlates = await fetchPlateBarcodeToPlates(
+        deps,
+        plateBarcode
+      );
+      // Only persist when this is a newly queried barcode (fetchPlateBarcodeToPlates
+      // returns the existing map by reference when nothing new was fetched)
+      if (updatedPlateBarcodeToPlates !== plateBarcodeToPlates) {
         dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
       }
 
@@ -496,20 +520,44 @@ const updateUploadRowsLogic = createLogic({
         AnnotationName.IMAGING_SESSION
       ];
       const well = (metadataUpdate as Partial<FileModel>)[AnnotationName.WELL];
-      for (const fileKey of uploadKeys) {
-        // dispatch update to plate barcode for each row
-        // which will trigger well autofill
-        dispatch(
-          updateUpload(fileKey, {
-            [AnnotationName.PLATE_BARCODE]: [plateBarcode],
-            ...(imagingSession !== undefined && {
-              [AnnotationName.IMAGING_SESSION]: imagingSession,
-            }),
-            ...(well !== undefined && {
-              [AnnotationName.WELL]: well,
-            }),
-          })
+
+      // Applying a barcode to many rows can take a while (each row autofills its
+      // well from the plate info), so surface a loading indicator to reassure
+      // users the app has not frozen. See CustomDataTable for the spinner.
+      dispatch(addRequestToInProgress(AsyncRequest.UPDATE_MASS_EDIT));
+      try {
+        // Query the plate info once up front so the per-row updates below reuse
+        // the cached result instead of each firing a redundant request
+        const plateBarcodeToPlates = getPlateBarcodeToPlates(deps.getState());
+        const updatedPlateBarcodeToPlates = await fetchPlateBarcodeToPlates(
+          deps,
+          plateBarcode
         );
+        if (updatedPlateBarcodeToPlates !== plateBarcodeToPlates) {
+          dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
+        }
+
+        for (const fileKey of uploadKeys) {
+          // dispatch update to plate barcode for each row
+          // which will trigger well autofill
+          dispatch(
+            updateUpload(fileKey, {
+              [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+              ...(imagingSession !== undefined && {
+                [AnnotationName.IMAGING_SESSION]: imagingSession,
+              }),
+              ...(well !== undefined && {
+                [AnnotationName.WELL]: well,
+              }),
+            })
+          );
+          // Yield to the event loop between rows so the UI can repaint (keeping
+          // the loading spinner responsive) rather than blocking on the whole
+          // batch synchronously
+          await new Promise((resolve) => setTimeout(resolve));
+        }
+      } finally {
+        dispatch(removeRequestFromInProgress(AsyncRequest.UPDATE_MASS_EDIT));
       }
     }
 

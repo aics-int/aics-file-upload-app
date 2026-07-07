@@ -1,3 +1,4 @@
+import { Spin } from "antd";
 import React from "react";
 import { useSelector } from "react-redux";
 import {
@@ -13,9 +14,10 @@ import {
 } from "react-table";
 
 import { AnnotationName } from "../../constants";
+import { getRequestsInProgressContains } from "../../state/feedback/selectors";
 import { getMassEditRow } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
-import { FileModel } from "../../state/types";
+import { AsyncRequest, FileModel, State } from "../../state/types";
 import { getUploadAsTableRows } from "../../state/upload/selectors";
 import { useHiddenColumns } from "../../util/hooks";
 import MassEditTable from "../MassEditTable";
@@ -59,6 +61,9 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
   const rows = useSelector(getUploadAsTableRows);
   const template = useSelector(getAppliedTemplate);
   const isMassEditing = useSelector(getMassEditRow);
+  const isApplyingMassEdit = useSelector((state: State) =>
+    getRequestsInProgressContains(state, AsyncRequest.UPDATE_MASS_EDIT)
+  );
   const columnDefinitions = useSelector(getColumnsForTable);
   const canShowWellColumn = useSelector(getCanShowWellColumn);
   const canShowImagingSessionColumn = useSelector(
@@ -134,10 +139,14 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
   );
 
   return (
-    <>
+    <Spin
+      spinning={isApplyingMassEdit}
+      tip="Applying edits to files. This may take a moment for large uploads..."
+      size="large"
+    >
       {isMassEditing && <MassEditTable columnToWidthMap={columnToWidthMap} />}
       <TableToolHeader selectedRows={tableInstance.selectedFlatRows || []} />
       <Table tableInstance={tableInstance} />
-    </>
+    </Spin>
   );
 }
