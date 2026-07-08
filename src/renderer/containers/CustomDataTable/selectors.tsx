@@ -159,6 +159,10 @@ const METADATA_COLUMN: CustomColumn = {
 // cause downstream effects like reseting user adjusted
 // column widths for selectors that rely on upload state
 // changes
+const PLATE_RELATED_COLUMN_NAMES: ReadonlySet<string> = new Set(
+  PLATE_RELATED_COLUMNS.map((column) => column.accessor as string)
+);
+
 export const getTemplateColumnsForTable = createSelector(
   [getAnnotationTypes, getAppliedTemplate],
   (annotationTypes, template): CustomColumn[] => {
@@ -169,6 +173,9 @@ export const getTemplateColumnsForTable = createSelector(
     return [
       ...PLATE_RELATED_COLUMNS,
       ...template.annotations
+        .filter(
+          (annotation) => !PLATE_RELATED_COLUMN_NAMES.has(annotation.name)
+        )
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .map((annotation) => {
           const type = annotationTypes.find(

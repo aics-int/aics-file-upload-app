@@ -491,12 +491,25 @@ const updateUploadRowsLogic = createLogic({
     ]?.[0]; // update contains plate barcode value, or undefined if no plateBarcode value
 
     if (plateBarcode) {
+      // Preserve any imaging session / well provided in the same update (e.g.
+      // a mass edit) so the plate barcode re-dispatch below does not wipe them
+      // out via the UPDATE_UPLOAD reset logic.
+      const imagingSession = (metadataUpdate as Partial<FileModel>)[
+        AnnotationName.IMAGING_SESSION
+      ];
+      const well = (metadataUpdate as Partial<FileModel>)[AnnotationName.WELL];
       for (const fileKey of uploadKeys) {
         // dispatch update to plate barcode for each row
         // which will trigger well autofill
         dispatch(
           updateUpload(fileKey, {
             [AnnotationName.PLATE_BARCODE]: [plateBarcode],
+            ...(imagingSession !== undefined && {
+              [AnnotationName.IMAGING_SESSION]: imagingSession,
+            }),
+            ...(well !== undefined && {
+              [AnnotationName.WELL]: well,
+            }),
           })
         );
       }
