@@ -399,41 +399,44 @@ const updateUploadLogic = createLogic({
 
     const plateBarcodeToPlates = getPlateBarcodeToPlates(state);
     let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
-    const platesForBarcode = plateBarcodeToPlates[plateBarcode];
+    const cachedPlates = plateBarcodeToPlates[plateBarcode];
     // Avoid re-querying for the imaging sessions if this plate barcode has
     // been selected before, unless the entry is stale (e.g. restored from a
     // draft) and doesn't know about the selected imaging session
     const isCacheMissingImagingSession =
       !!imagingSessionName &&
-      !platesForBarcode?.some((p) => p.name === imagingSessionName);
-    if (!platesForBarcode || isCacheMissingImagingSession) {
+      !cachedPlates?.some((p) => p.name === imagingSessionName);
+    if (!cachedPlates || isCacheMissingImagingSession) {
       const imagingSessionsForPlateBarcode =
         await deps.labkeyClient.findImagingSessionsByPlateBarcode(plateBarcode);
-      const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
-        await Promise.all(
-          imagingSessionsForPlateBarcode.map(async (is) => {
-            const { wells } = await deps.mmsClient.getPlate(
-              plateBarcode,
-              is["ImagingSessionId"]
-            );
+      // A barcode resolves to one plate per imaging session it was imaged at
+      const platesForBarcode: PlateAtImagingSession[] = await Promise.all(
+        imagingSessionsForPlateBarcode.map(async (is) => {
+          const { wells } = await deps.mmsClient.getPlate(
+            plateBarcode,
+            is["ImagingSessionId"]
+          );
 
-            return {
-              wells,
-              imagingSessionId: is["ImagingSessionId"],
-              name: is["ImagingSessionId/Name"],
-            };
-          })
-        );
+          return {
+            wells,
+            imagingSessionId: is["ImagingSessionId"],
+            name: is["ImagingSessionId/Name"],
+          };
+        })
+      );
 
-      // If the barcode has no imaging sessions, find info of plate without
-      if (!imagingSessionsWithPlateInfo.length) {
+      // A barcode with no imaging sessions has a single session-less plate,
+      // represented as an entry without a name/imagingSessionId so consumers
+      // (well autofill below, WellCell) can match it when no imaging session
+      // is selected
+      if (!platesForBarcode.length) {
         const { wells } = await deps.mmsClient.getPlate(plateBarcode);
-        imagingSessionsWithPlateInfo.push({ wells });
+        platesForBarcode.push({ wells });
       }
 
       updatedPlateBarcodeToPlates = {
         ...plateBarcodeToPlates,
-        [plateBarcode]: imagingSessionsWithPlateInfo,
+        [plateBarcode]: platesForBarcode,
       };
       dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
     }
