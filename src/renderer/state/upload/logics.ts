@@ -365,73 +365,103 @@ const updateUploadLogic = createLogic({
     done: ReduxLogicDoneCb
   ) => {
     const upload = deps.action.payload.upload || deps.action.payload;
+    const fileKey: string | undefined = deps.action.payload.key;
+    const modifiedAnnotations = Object.keys(upload);
 
-    // If a plate barcode is being updated check for imaging sessions
-    const plateBarcode = upload[AnnotationName.PLATE_BARCODE]?.[0];
-    if (plateBarcode) {
-      const plateBarcodeToPlates = getPlateBarcodeToPlates(deps.getState());
-      let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
-      // Avoid re-querying for the imaging sessions if this
-      // plate barcode has been selected before
-      if (!Object.keys(plateBarcodeToPlates).includes(plateBarcode)) {
-        const imagingSessionsForPlateBarcode =
-          await deps.labkeyClient.findImagingSessionsByPlateBarcode(
-            plateBarcode
-          );
-        const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
-          await Promise.all(
-            imagingSessionsForPlateBarcode.map(async (is) => {
-              const { wells } = await deps.mmsClient.getPlate(
-                plateBarcode,
-                is["ImagingSessionId"]
-              );
+    // Plate wells depend on both the plate barcode and the imaging session
+    // (a barcode may exist only as imaging-session plates, in which case the
+    // wells aren't known until an imaging session is selected), so react to
+    // updates of either
+    if (
+      !modifiedAnnotations.includes(AnnotationName.PLATE_BARCODE) &&
+      !modifiedAnnotations.includes(AnnotationName.IMAGING_SESSION)
+    ) {
+      done();
+      return;
+    }
 
-              return {
-                wells,
-                imagingSessionId: is["ImagingSessionId"],
-                name: is["ImagingSessionId/Name"],
-              };
-            })
-          );
+    // The update may contain only one of plate barcode / imaging session;
+    // fall back to what is already stored for this row (or the mass edit row)
+    const state = deps.getState();
+    const storedRow = fileKey
+      ? getUpload(state)[fileKey]
+      : getMassEditRow(state);
+    const plateBarcode =
+      upload[AnnotationName.PLATE_BARCODE]?.[0] ??
+      storedRow?.[AnnotationName.PLATE_BARCODE]?.[0];
+    if (!plateBarcode) {
+      done();
+      return;
+    }
+    const imagingSessionName =
+      upload[AnnotationName.IMAGING_SESSION]?.[0] ??
+      storedRow?.[AnnotationName.IMAGING_SESSION]?.[0];
 
-        // If the barcode has no imaging sessions, find info of plate without
-        if (!imagingSessionsWithPlateInfo.length) {
-          const { wells } = await deps.mmsClient.getPlate(plateBarcode);
-          imagingSessionsWithPlateInfo.push({ wells });
-        }
+    const plateBarcodeToPlates = getPlateBarcodeToPlates(state);
+    let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
+    const platesForBarcode = plateBarcodeToPlates[plateBarcode];
+    // Avoid re-querying for the imaging sessions if this plate barcode has
+    // been selected before, unless the entry is stale (e.g. restored from a
+    // draft) and doesn't know about the selected imaging session
+    const isCacheMissingImagingSession =
+      !!imagingSessionName &&
+      !platesForBarcode?.some((p) => p.name === imagingSessionName);
+    if (!platesForBarcode || isCacheMissingImagingSession) {
+      const imagingSessionsForPlateBarcode =
+        await deps.labkeyClient.findImagingSessionsByPlateBarcode(plateBarcode);
+      const imagingSessionsWithPlateInfo: PlateAtImagingSession[] =
+        await Promise.all(
+          imagingSessionsForPlateBarcode.map(async (is) => {
+            const { wells } = await deps.mmsClient.getPlate(
+              plateBarcode,
+              is["ImagingSessionId"]
+            );
 
-        updatedPlateBarcodeToPlates = {
-          ...plateBarcodeToPlates,
-          [plateBarcode]: imagingSessionsWithPlateInfo,
-        };
-        dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
+            return {
+              wells,
+              imagingSessionId: is["ImagingSessionId"],
+              name: is["ImagingSessionId/Name"],
+            };
+          })
+        );
+
+      // If the barcode has no imaging sessions, find info of plate without
+      if (!imagingSessionsWithPlateInfo.length) {
+        const { wells } = await deps.mmsClient.getPlate(plateBarcode);
+        imagingSessionsWithPlateInfo.push({ wells });
       }
 
-      // autoselect well if row and col data available from mxs
-      const fileKey = deps.action.payload.key;
-      const mxsData = deps.getState().metadataExtraction[fileKey]?.metadata;
-      const rowValue = mxsData?.["Row"]?.value;
-      const colValue = mxsData?.["Column"]?.value;
+      updatedPlateBarcodeToPlates = {
+        ...plateBarcodeToPlates,
+        [plateBarcode]: imagingSessionsWithPlateInfo,
+      };
+      dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
+    }
 
-      if (rowValue !== undefined && colValue !== undefined) {
-        // row and col are 1-indexed in metadata, convert to 0-indexed
-        const row = Number(rowValue) - 1;
-        const col = Number(colValue) - 1;
-        const plates = updatedPlateBarcodeToPlates[plateBarcode];
-        // this should match the logic in WellCell
-        const imagingSessionName = upload[AnnotationName.IMAGING_SESSION]?.[0];
-        const plate = plates?.find((p) =>
-          imagingSessionName ? p.name === imagingSessionName : !p.name
+    // autoselect well if row and col data available from mxs
+    const mxsData = fileKey
+      ? deps.getState().metadataExtraction[fileKey]?.metadata
+      : undefined;
+    const rowValue = mxsData?.["Row"]?.value;
+    const colValue = mxsData?.["Column"]?.value;
+
+    if (fileKey && rowValue !== undefined && colValue !== undefined) {
+      // row and col are 1-indexed in metadata, convert to 0-indexed
+      const row = Number(rowValue) - 1;
+      const col = Number(colValue) - 1;
+      const plates = updatedPlateBarcodeToPlates[plateBarcode];
+      // this should match the logic in WellCell
+      const plate = plates?.find((p) =>
+        imagingSessionName ? p.name === imagingSessionName : !p.name
+      );
+      const well = plate?.wells.find((w) => w.row === row && w.col === col);
+      if (well) {
+        dispatch(
+          updateUpload(fileKey, {
+            [AnnotationName.WELL]: [well.wellId],
+            autofilledFields: [AnnotationName.WELL],
+          })
         );
-        const well = plate?.wells.find((w) => w.row === row && w.col === col);
-        if (well) {
-          dispatch(
-            updateUpload(fileKey, {
-              [AnnotationName.WELL]: [well.wellId],
-              autofilledFields: [AnnotationName.WELL],
-            })
-          );
-        }
       }
     }
 
@@ -490,14 +520,15 @@ const updateUploadRowsLogic = createLogic({
       AnnotationName.PLATE_BARCODE
     ]?.[0]; // update contains plate barcode value, or undefined if no plateBarcode value
 
+    // Preserve any imaging session / well provided in the same update (e.g.
+    // a mass edit) so the plate barcode re-dispatch below does not wipe them
+    // out via the UPDATE_UPLOAD reset logic.
+    const imagingSession = (metadataUpdate as Partial<FileModel>)[
+      AnnotationName.IMAGING_SESSION
+    ];
+    const well = (metadataUpdate as Partial<FileModel>)[AnnotationName.WELL];
+
     if (plateBarcode) {
-      // Preserve any imaging session / well provided in the same update (e.g.
-      // a mass edit) so the plate barcode re-dispatch below does not wipe them
-      // out via the UPDATE_UPLOAD reset logic.
-      const imagingSession = (metadataUpdate as Partial<FileModel>)[
-        AnnotationName.IMAGING_SESSION
-      ];
-      const well = (metadataUpdate as Partial<FileModel>)[AnnotationName.WELL];
       for (const fileKey of uploadKeys) {
         // dispatch update to plate barcode for each row
         // which will trigger well autofill
@@ -507,6 +538,21 @@ const updateUploadRowsLogic = createLogic({
             ...(imagingSession !== undefined && {
               [AnnotationName.IMAGING_SESSION]: imagingSession,
             }),
+            ...(well !== undefined && {
+              [AnnotationName.WELL]: well,
+            }),
+          })
+        );
+      }
+    } else if (imagingSession?.length) {
+      // An imaging session applied without a barcode (e.g. a mass edit onto
+      // rows that already have barcodes) also determines the wells, so
+      // re-dispatch per row to trigger well autofill against each row's
+      // own plate barcode
+      for (const fileKey of uploadKeys) {
+        dispatch(
+          updateUpload(fileKey, {
+            [AnnotationName.IMAGING_SESSION]: imagingSession,
             ...(well !== undefined && {
               [AnnotationName.WELL]: well,
             }),
