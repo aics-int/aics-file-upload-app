@@ -156,6 +156,7 @@ export interface FeedbackStateBranch {
   deferredAction?: AnyAction; // action to dispatch when modal closes
   events: AppEvent[];
   isLoading: boolean;
+  loadingMessage?: string;
   requestsInProgress: string[];
   tutorialTooltip?: TutorialStep;
   uploadError?: string;

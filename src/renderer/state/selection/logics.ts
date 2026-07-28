@@ -122,7 +122,7 @@ const startMassEditLogic = createLogic({
 });
 
 const applyMassEditLogic = createLogic({
-  process: (
+  process: async (
     { ctx }: ReduxLogicProcessDependencies,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -138,6 +138,11 @@ const applyMassEditLogic = createLogic({
       }),
       {}
     );
+    // Applying the edit to many rows can block the UI thread for a while,
+    // so surface a loading indicator and yield so it can paint first.
+    // updateUploadRowsLogic dispatches stopLoading once the updates land.
+    dispatch(startLoading("Applying changes. This may take a moment..."));
+    await new Promise((resolve) => setTimeout(resolve, 50));
     dispatch(updateUploadRows(rowIds, rowData));
     done();
   },

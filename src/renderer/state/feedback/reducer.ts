@@ -216,9 +216,10 @@ const actionToConfigMap: TypeToDescriptionMap<FeedbackStateBranch> = {
   [START_LOADING]: {
     accepts: (action: AnyAction): action is StartLoadingAction =>
       action.type === START_LOADING,
-    perform: (state: FeedbackStateBranch) => ({
+    perform: (state: FeedbackStateBranch, action: StartLoadingAction) => ({
       ...state,
       isLoading: true,
+      loadingMessage: action.payload,
     }),
   },
   [STOP_LOADING]: {
@@ -227,6 +228,7 @@ const actionToConfigMap: TypeToDescriptionMap<FeedbackStateBranch> = {
     perform: (state: FeedbackStateBranch) => ({
       ...state,
       isLoading: false,
+      loadingMessage: undefined,
     }),
   },
   [ADD_REQUEST_IN_PROGRESS]: {

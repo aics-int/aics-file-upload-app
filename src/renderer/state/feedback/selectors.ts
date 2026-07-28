@@ -11,6 +11,8 @@ import {
 
 // BASIC SELECTORS
 export const getIsLoading = (state: State) => state.feedback.isLoading;
+export const getLoadingMessage = (state: State) =>
+  state.feedback.loadingMessage;
 export const getAlert = (state: State) => state.feedback.alert;
 export const getRequestsInProgress = (state: State) =>
   state.feedback.requestsInProgress;

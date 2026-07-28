@@ -13,6 +13,7 @@ export interface CheckForUpdateAction {
 }
 
 export interface StartLoadingAction {
+  payload?: string;
   type: string;
 }
 

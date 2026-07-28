@@ -1,5 +1,5 @@
 import "@aics/aics-react-labkey/dist/styles.css";
-import { message } from "antd";
+import { message, Spin } from "antd";
 import { ipcRenderer } from "electron";
 import { camelizeKeys } from "humps";
 import * as React from "react";
@@ -20,7 +20,12 @@ import {
   setErrorAlert,
   setSuccessAlert,
 } from "../../state/feedback/actions";
-import { getAlert, getRecentEvent } from "../../state/feedback/selectors";
+import {
+  getAlert,
+  getIsLoading,
+  getLoadingMessage,
+  getRecentEvent,
+} from "../../state/feedback/selectors";
 import { receiveJobInsert, receiveJobs } from "../../state/job/actions";
 import { getIsSafeToExit } from "../../state/job/selectors";
 import {
@@ -57,6 +62,8 @@ export default function App() {
   const dispatch = useDispatch();
 
   const alert = useSelector(getAlert);
+  const isLoading = useSelector(getIsLoading);
+  const loadingMessage = useSelector(getLoadingMessage);
   const isSafeToExit = useSelector(getIsSafeToExit);
   const limsUrl = useSelector(getLimsUrl);
   const user = useSelector(getLoggedInUser);
@@ -219,6 +226,14 @@ export default function App() {
       />
       <TemplateEditorModal />
       <OpenTemplateModal />
+      {isLoading && (
+        <div className={styles.loadingOverlay}>
+          <Spin size="large" />
+          <div className={styles.loadingMessage}>
+            {loadingMessage || "Loading..."}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

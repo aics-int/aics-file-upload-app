@@ -102,8 +102,9 @@ export function checkForUpdate(): CheckForUpdateAction {
   };
 }
 
-export function startLoading(): StartLoadingAction {
+export function startLoading(message?: string): StartLoadingAction {
   return {
+    payload: message,
     type: START_LOADING,
   };
 }

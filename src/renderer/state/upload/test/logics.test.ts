@@ -1407,9 +1407,10 @@ describe("Upload logics", () => {
       );
       await logicMiddleware.whenComplete();
 
-      // assert - updateUploadLogic ran for each row, triggering imaging session lookup per row
+      // assert - the plate cache is warmed once up front, so the per-row
+      // updateUploadLogic runs hit the cache instead of re-querying
       expect(labkeyClient.findImagingSessionsByPlateBarcode.callCount).to.equal(
-        2
+        1
       );
       const upload = getUpload(store.getState());
       expect(upload[uploadRowKey1][AnnotationName.PLATE_BARCODE]).to.deep.equal(
