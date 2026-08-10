@@ -122,7 +122,7 @@ const startMassEditLogic = createLogic({
 });
 
 const applyMassEditLogic = createLogic({
-  process: (
+  process: async (
     { ctx }: ReduxLogicProcessDependencies,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -137,6 +137,15 @@ const applyMassEditLogic = createLogic({
         }),
       }),
       {}
+    );
+    // mass edit blocks the UI thread while metadata is extracted for all the files
+    // so we  show a loading indicator and wait for it to render before starting
+    // updateUploadRowsLogic will later stop the indicator when the changes are done
+    dispatch(startLoading());
+    await new Promise((resolve) =>
+      typeof requestAnimationFrame === "function"
+        ? requestAnimationFrame(() => requestAnimationFrame(resolve))
+        : setTimeout(resolve, 0)
     );
     dispatch(updateUploadRows(rowIds, rowData));
     done();
