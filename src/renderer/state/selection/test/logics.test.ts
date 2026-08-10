@@ -218,6 +218,28 @@ describe("Selection logics", () => {
         )
       ).to.be.true;
     });
+
+    it("shows a loading indicator while the edit is applied", async () => {
+      // Arrange
+      const { actions, logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...mockSelection,
+          rowsSelectedForMassEdit: ["1", "2"],
+          massEditRow: { color: ["blue"] },
+        },
+      });
+
+      // Act
+      store.dispatch(applyMassEdit());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(actions.includesType(feedback.actions.startLoading().type)).to.be
+        .true;
+      // updateUploadRowsLogic stops the indicator once the rows are updated
+      expect(feedback.selectors.getIsLoading(store.getState())).to.be.false;
+    });
   });
 
   describe("stopCellDragLogic", () => {
