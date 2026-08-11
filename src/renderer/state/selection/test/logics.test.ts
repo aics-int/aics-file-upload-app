@@ -377,6 +377,42 @@ describe("Selection logics", () => {
 
       // Assert
       expect(actions.includesType(UPDATE_UPLOAD_ROWS)).to.be.false;
+      // No rows to update, so the loading indicator never shows
+      expect(actions.includesType(feedback.actions.startLoading().type)).to.be
+        .false;
+    });
+
+    it("shows a loading indicator while the dragged value is applied", async () => {
+      // Arrange
+      const cellAtDragStart = {
+        rowId: "14",
+        columnId: "Is Aligned?",
+        rowIndex: 2,
+      };
+      const { actions, logicMiddleware, store } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        selection: {
+          ...mockSelection,
+          cellAtDragStart,
+          rowsSelectedForDragEvent: [{ id: "21", index: 0 }],
+        },
+        upload: getMockStateWithHistory({
+          [cellAtDragStart.rowId]: {
+            file: "/some/path/to/a/file.txt",
+            [cellAtDragStart.columnId]: "false",
+          },
+        }),
+      });
+
+      // Act
+      store.dispatch(stopCellDrag());
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(actions.includesType(feedback.actions.startLoading().type)).to.be
+        .true;
+      // updateUploadRowsLogic stops the indicator once the rows are updated
+      expect(feedback.selectors.getIsLoading(store.getState())).to.be.false;
     });
   });
 });
