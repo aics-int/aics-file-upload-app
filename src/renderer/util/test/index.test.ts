@@ -96,6 +96,27 @@ describe("General utilities", () => {
       );
     });
 
+    it("converts Windows UNC paths with backslashes", () => {
+      expect(
+        convertToVastPath("\\\\allen\\aics\\users\\sara.carlson\\test.czi")
+      ).to.equal("/allen/aics/users/sara.carlson/test.czi");
+    });
+
+    it("converts Windows mapped-drive paths containing allen", () => {
+      expect(convertToVastPath("Z:\\allen\\aics\\test.czi")).to.equal(
+        "/allen/aics/test.czi"
+      );
+    });
+
+    it("forces the allen mount component to lowercase", () => {
+      expect(convertToVastPath("\\\\ALLEN\\aics\\test.czi")).to.equal(
+        "/allen/aics/test.czi"
+      );
+      expect(convertToVastPath("/Volumes/Allen/aics/test.czi")).to.equal(
+        "/allen/aics/test.czi"
+      );
+    });
+
     it("throws 'You must select files that are on VAST' when /allen is absent", () => {
       expect(() => convertToVastPath("/abc/cde/xyz/test.czi")).to.throw(
         "You must select files that are on VAST"
