@@ -8,6 +8,7 @@ import { MainProcessEvents, SCHEMA_SYNONYM } from "../../../shared/constants";
 import TemplateSearch from "../../components/TemplateSearch";
 import { AnnotationName } from "../../constants";
 import {
+  getIsLoading,
   getRequestsInProgress,
   getUploadError,
 } from "../../state/feedback/selectors";
@@ -33,6 +34,7 @@ export default function AddMetadataPage() {
   const appliedTemplate = useSelector(getAppliedTemplate);
   const imagingSessions = useSelector(getImagingSessions);
   const isReadOnly = useSelector(getAreSelectedUploadsInFlight);
+  const isApplyingMassEdit = useSelector(getIsLoading);
   const requestsInProgress = useSelector(getRequestsInProgress);
   const uploadError = useSelector(getUploadError);
   const validationErrors = useSelector(getUploadValidationErrors);
@@ -73,6 +75,14 @@ export default function AddMetadataPage() {
 
   return (
     <div className={styles.page}>
+      {isApplyingMassEdit && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinContainer}>
+            <div>Applying changes. This may take a moment...</div>
+            <Spin />
+          </div>
+        </div>
+      )}
       <div>
         {!selectedUploads.length && ( // If we're adding new files, not editing ones that have been uploaded.
           <Button
