@@ -36,19 +36,25 @@ const canUserRead = async (filePath: string): Promise<boolean> => {
 };
 
 /**
- * Converts an osx mount path to a VAST path starting with /allen.
- * removes any prefix before /allen (ex: /Volumes/allen/... -> /allen/...).
+ * Converts an osx mount path or Windows path to a VAST path starting with /allen.
+ * Removes any prefix before /allen (ex: /Volumes/allen/... -> /allen/...,
+ * \\allen\aics\... -> /allen/aics/...).
  * Throws an error if /allen is not found in the path.
  */
 export function convertToVastPath(filePath: string): string {
   const VAST_PREFIX = "/allen/";
-  const allenIndex = filePath.toLowerCase().indexOf(VAST_PREFIX);
+  // Normalize Windows paths: backslashes -> forward slashes
+  // (ex: \\allen\aics\... -> //allen/aics/...)
+  const normalized = filePath.replace(/\\/g, "/");
+  const allenIndex = normalized.toLowerCase().indexOf(VAST_PREFIX);
 
   if (allenIndex === -1) {
     throw new Error("You must select files that are on VAST");
   }
 
-  return filePath.slice(allenIndex);
+  // Slice from the match, forcing the mount component to lowercase "allen"
+  // (Windows generates both "Allen" and "ALLEN" in the wild)
+  return VAST_PREFIX + normalized.slice(allenIndex + VAST_PREFIX.length);
 }
 
 /**
