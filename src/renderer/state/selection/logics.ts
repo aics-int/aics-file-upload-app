@@ -121,8 +121,22 @@ const startMassEditLogic = createLogic({
   type: START_MASS_EDIT,
 });
 
+/**
+ * shows a loading indicator which spins while the caller blocks the UI thread
+ * used for mass edit applies and drag and drop applies across many files
+ * the caller need to call stopLoading once the updates are applied
+ */
+async function startLoadingAndAwaitPaint(dispatch: ReduxLogicNextCb) {
+  dispatch(startLoading());
+  await new Promise((resolve) =>
+    typeof requestAnimationFrame === "function"
+      ? requestAnimationFrame(() => requestAnimationFrame(resolve))
+      : setTimeout(resolve, 0)
+  );
+}
+
 const applyMassEditLogic = createLogic({
-  process: (
+  process: async (
     { ctx }: ReduxLogicProcessDependencies,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -138,6 +152,9 @@ const applyMassEditLogic = createLogic({
       }),
       {}
     );
+    // mass edit blocks the UI thread while every row is updated, show loading wheel
+    // updateUploadRowsLogic stops the indicator once the changes are done
+    await startLoadingAndAwaitPaint(dispatch);
     dispatch(updateUploadRows(rowIds, rowData));
     done();
   },
@@ -155,7 +172,7 @@ const applyMassEditLogic = createLogic({
 });
 
 const stopCellDragLogic = createLogic({
-  process: (
+  process: async (
     { ctx, getState }: ReduxLogicProcessDependencies,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
@@ -174,6 +191,9 @@ const stopCellDragLogic = createLogic({
 
       // drag to copy protection against overwriting rows already autofilled by mxs
       if (notAutofilledRowIds.length) {
+        // drag to copy blocks the UI thread just like a mass edi
+        // updateUploadRowsLogic stops the indicator once the changes are done
+        await startLoadingAndAwaitPaint(dispatch);
         dispatch(updateUploadRows(notAutofilledRowIds, { [columnId]: value }));
       }
     }

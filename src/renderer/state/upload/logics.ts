@@ -19,7 +19,7 @@ import {
   splitTrimAndFilter,
 } from "../../util";
 import { requestFailed } from "../actions";
-import { setErrorAlert } from "../feedback/actions";
+import { setErrorAlert, stopLoading } from "../feedback/actions";
 import { setPlateBarcodeToPlates } from "../metadata/actions";
 import {
   getAnnotations,
@@ -564,6 +564,8 @@ const updateUploadRowsLogic = createLogic({
       }
     }
 
+    // stop the loading wheel
+    dispatch(stopLoading());
     done();
   },
   transform: (
