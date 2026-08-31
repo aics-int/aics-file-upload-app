@@ -159,10 +159,10 @@ export default class FileManagementSystem {
   /**
    * Attempts to retry the upload for the given failed job.
    */
-  public async retry(uploadId: string): Promise<void> {
+  public async retry(uploadId: string, force = false): Promise<void> {
     const fuaUpload = (await this.jss.getJob(uploadId)) as UploadJob;
 
-    if (fuaUpload.status === JSSJobStatus.SUCCEEDED) {
+    if (!force && fuaUpload.status === JSSJobStatus.SUCCEEDED) {
       this.succeedUpload(
         uploadId,
         fuaUpload.serviceFields.result?.[0].fileId || "",
