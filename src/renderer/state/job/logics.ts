@@ -1,5 +1,6 @@
 import { createLogic } from "redux-logic";
 
+import { FILE_NAMES_TO_FORCE_RETRY } from "../../constants";
 import { UploadStatus } from "../../services/file-storage-service";
 import {
   FAILED_STATUSES,
@@ -45,8 +46,10 @@ export const handleAbandonedJobsLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const abandonedUploads = action.payload.filter(({ status }) =>
-      IN_PROGRESS_STATUSES.includes(status)
+    const abandonedUploads = action.payload.filter(
+      ({ status, jobName }) =>
+        IN_PROGRESS_STATUSES.includes(status) ||
+        FILE_NAMES_TO_FORCE_RETRY.has(jobName || "")
     );
 
     await Promise.all(

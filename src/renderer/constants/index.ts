@@ -28,7 +28,10 @@ export const TOOLTIP_LEAVE_DELAY = 0;
 // Program annotation ID
 export const PROGRAM_ANNOTATION_ID = 153;
 
-// TEMPORARY SOLUTION: uploads with these file names can be retried regardless of status
+// TEMPORARY SOLUTION: these uploads succeeded in FSS but never completed
+// FUA's portion; on app start they are synced like abandoned uploads so
+// the completion routine runs (send metadata to MMS, mark the FUA job
+// SUCCEEDED). Remove once these uploads have gone through.
 export const FILE_NAMES_TO_FORCE_RETRY = new Set([
   "3500009020_nikon0_20260807_C11_60.nd2",
   "3500009012_nikon0_20260803_C3_030.nd2",
