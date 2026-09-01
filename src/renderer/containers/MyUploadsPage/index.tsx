@@ -9,7 +9,11 @@ import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Row } from "react-table";
 
-import { TOOLTIP_ENTER_DELAY, TOOLTIP_LEAVE_DELAY } from "../../constants";
+import {
+  FILE_NAMES_TO_FORCE_RETRY,
+  TOOLTIP_ENTER_DELAY,
+  TOOLTIP_LEAVE_DELAY,
+} from "../../constants";
 import {
   IN_PROGRESS_STATUSES,
   JSSJobStatus,
@@ -41,7 +45,9 @@ export default function MyUploadsPage() {
   const [areSelectedUploadsAllFailed, areSelectedUploadsAllInProgress] =
     React.useMemo(() => {
       const selectedAllFailedUploads = selectedUploads.every(
-        (upload) => upload.status === JSSJobStatus.FAILED
+        (upload) =>
+          upload.status === JSSJobStatus.FAILED ||
+          FILE_NAMES_TO_FORCE_RETRY.has(upload.jobName || "")
       );
       let selectedAllInProgressUploads = false;
       if (!selectedAllFailedUploads) {
@@ -97,7 +103,10 @@ export default function MyUploadsPage() {
       <Menu>
         <Menu.Item onClick={onRowView}>View</Menu.Item>
         <Menu.Item
-          disabled={row.original.status !== JSSJobStatus.FAILED}
+          disabled={
+            row.original.status !== JSSJobStatus.FAILED &&
+            !FILE_NAMES_TO_FORCE_RETRY.has(row.original.jobName || "")
+          }
           onClick={onRowRetry}
         >
           Retry

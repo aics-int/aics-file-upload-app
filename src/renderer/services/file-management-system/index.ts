@@ -2,6 +2,7 @@ import * as path from "path";
 
 import * as uuid from "uuid";
 
+import { FILE_NAMES_TO_FORCE_RETRY } from "../../constants";
 import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
 import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, { UploadStatus } from "../file-storage-service";
@@ -159,10 +160,11 @@ export default class FileManagementSystem {
   /**
    * Attempts to retry the upload for the given failed job.
    */
-  public async retry(uploadId: string, force = false): Promise<void> {
+  public async retry(uploadId: string): Promise<void> {
     const fuaUpload = (await this.jss.getJob(uploadId)) as UploadJob;
+    const forceRetry = FILE_NAMES_TO_FORCE_RETRY.has(fuaUpload.jobName || "");
 
-    if (!force && fuaUpload.status === JSSJobStatus.SUCCEEDED) {
+    if (!forceRetry && fuaUpload.status === JSSJobStatus.SUCCEEDED) {
       this.succeedUpload(
         uploadId,
         fuaUpload.serviceFields.result?.[0].fileId || "",

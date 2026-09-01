@@ -39,71 +39,12 @@ import {
   ReceiveJobUpdateAction,
 } from "./types";
 
-// TEMPORARY SOLUTION: uploads with these file names are force-retried on app
-// start regardless of their status
-const FILE_NAMES_TO_FORCE_RETRY = new Set([
-  "3500009020_nikon0_20260807_C11_60.nd2",
-  "3500009012_nikon0_20260803_C3_030.nd2",
-  "3500009012_nikon0_20260803_D8_073.nd2",
-  "3500009012_nikon0_20260803_D7_072.nd2",
-  "3500009012_nikon0_20260803_D7_071.nd2",
-  "3500009012_nikon0_20260803_D6_068.nd2",
-  "3500009012_nikon0_20260803_D7_070.nd2",
-  "3500009012_nikon0_20260803_D6_069.nd2",
-  "3500009012_nikon0_20260803_D5_065.nd2",
-  "3500009012_nikon0_20260803_D6_067.nd2",
-  "3500009012_nikon0_20260803_D4_063.nd2",
-  "3500009012_nikon0_20260803_D5_064.nd2",
-  "3500009012_nikon0_20260803_D5_066.nd2",
-  "3500009012_nikon0_20260803_D4_061.nd2",
-  "3500009012_nikon0_20260803_D4_062.nd2",
-  "3500009012_nikon0_20260803_D3_059.nd2",
-  "3500009012_nikon0_20260803_D3_058.nd2",
-  "3500009012_nikon0_20260803_D3_060.nd2",
-  "3500009012_nikon0_20260803_D2_057.nd2",
-  "3500009012_nikon0_20260803_D2_055.nd2",
-  "3500009012_nikon0_20260803_D2_056.nd2",
-  "3500009012_nikon0_20260803_C11_053.nd2",
-  "3500009012_nikon0_20260803_C11_054.nd2",
-  "3500009012_nikon0_20260803_C10_051.nd2",
-  "3500009012_nikon0_20260803_C10_049.nd2",
-  "3500009012_nikon0_20260803_C11_052.nd2",
-  "3500009012_nikon0_20260803_C10_050.nd2",
-  "3500009012_nikon0_20260803_C9_048.nd2",
-  "3500009012_nikon0_20260803_C9_046.nd2",
-  "3500009012_nikon0_20260803_C9_047.nd2",
-  "3500009012_nikon0_20260803_C8_045.nd2",
-  "3500009012_nikon0_20260803_C8_043.nd2",
-  "3500009012_nikon0_20260803_C8_044.nd2",
-  "3500009012_nikon0_20260803_C7_041.nd2",
-  "3500009012_nikon0_20260803_C6_037.nd2",
-  "3500009012_nikon0_20260803_C6_039.nd2",
-  "3500009012_nikon0_20260803_C5_035.nd2",
-  "3500009012_nikon0_20260803_C4_032.nd2",
-  "3500009012_nikon0_20260803_C4_031.nd2",
-  "3500009012_nikon0_20260803_C5_034.nd2",
-]);
-
 export const handleAbandonedJobsLogic = createLogic({
   process: async (
     { action, fms }: ReduxLogicProcessDependenciesWithAction<ReceiveJobsAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    await Promise.all(
-      action.payload
-        .filter(({ jobName }) => FILE_NAMES_TO_FORCE_RETRY.has(jobName || ""))
-        .map((job) =>
-          fms.retry(job.jobId, true).catch((e) => {
-            dispatch(
-              setErrorAlert(
-                `failed to force retry upload "${job.jobName}": ${e.message}`
-              )
-            );
-          })
-        )
-    );
-
     const abandonedUploads = action.payload.filter(({ status }) =>
       IN_PROGRESS_STATUSES.includes(status)
     );
