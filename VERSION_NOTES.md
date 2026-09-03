@@ -1,5 +1,12 @@
 # Version Notes
 
+## 3.6.2 (09/03/26)
+
+- Added support for osx VAST mounts
+- Applying imaging session on mass editor is fixed
+- Fixed abandoned upload routine to finish uploading metadata when uploads finish while client is shutdown
+- Fix for certain windows vast mount paths getting rejected
+
 ## 3.6.1 (5/21/26)
 
 - Bugfix for mass editing not triggering well autofill
