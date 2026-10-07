@@ -66,7 +66,7 @@ describe("Job selectors", () => {
       const workingUpload = uploads.find(
         (u) => u.status === JSSJobStatus.WORKING
       );
-      expect(workingUpload?.progress).to.not.be.undefined;
+      expect(workingUpload?.byteProgress).to.not.be.undefined;
     });
 
     it("hides any jobs that are duplicates of the original", () => {

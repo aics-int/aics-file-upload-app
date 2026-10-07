@@ -7,6 +7,7 @@ import {
   UploadJob,
   JSSJobStatus,
   JSSJob,
+  Service,
 } from "../../services/job-status-service/types";
 import {
   removeRequestFromInProgress,
@@ -45,8 +46,11 @@ export const handleAbandonedJobsLogic = createLogic({
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const abandonedUploads = action.payload.filter(({ status }) =>
-      IN_PROGRESS_STATUSES.includes(status)
+    // Storage service 2.0 jobs are not synced through the legacy app job
+    const abandonedUploads = action.payload.filter(
+      ({ service, status }) =>
+        service !== Service.FILE_STORAGE_SERVICE &&
+        IN_PROGRESS_STATUSES.includes(status)
     );
 
     await Promise.all(

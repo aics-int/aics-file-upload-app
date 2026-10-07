@@ -4,13 +4,14 @@ import { ipcRenderer } from "electron";
 import { camelizeKeys } from "humps";
 import * as React from "react";
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 
 import {
   MainProcessEvents,
   RendererProcessEvents,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
+import JSSResponseMapper from "../../services/job-status-service/jss-response-mapper";
 import {
   JSSJob,
   Service,
@@ -26,8 +27,12 @@ import {
   setSuccessAlert,
 } from "../../state/feedback/actions";
 import { getAlert, getRecentEvent } from "../../state/feedback/selectors";
-import { receiveJobInsert, receiveJobs } from "../../state/job/actions";
-import { getIsSafeToExit } from "../../state/job/selectors";
+import {
+  receiveJobInsert,
+  receiveJobs,
+  receiveJobUpdate,
+} from "../../state/job/actions";
+import { getIsSafeToExit, getUploadJobs } from "../../state/job/selectors";
 import {
   requestMetadata,
   requestTemplates,
@@ -38,7 +43,7 @@ import {
   openEnvironmentDialog,
 } from "../../state/setting/actions";
 import { getLimsUrl, getLoggedInUser } from "../../state/setting/selectors";
-import { AlertType, AsyncRequest, Page } from "../../state/types";
+import { AlertType, AsyncRequest, Page, State } from "../../state/types";
 import { openUploadDraft, saveUploadDraft } from "../../state/upload/actions";
 import AddMetadataPage from "../AddMetadataPage";
 import MyUploadsPage from "../MyUploadsPage";
@@ -60,6 +65,7 @@ message.config({
 
 export default function App() {
   const dispatch = useDispatch();
+  const store = useStore<State>();
 
   const alert = useSelector(getAlert);
   const isSafeToExit = useSelector(getIsSafeToExit);
@@ -79,27 +85,61 @@ export default function App() {
   // Subscribe to job changes for current `limsUrl` and `user`
   useEffect(() => {
     dispatch(addRequestToInProgress(AsyncRequest.GET_JOBS));
-    // Storage service jobs written to JSS 2.0, until the 2.0 stream replaces this
-    const v2UploadJobsPromise = jssV2Client
-      .getAllJobs({
-        user,
-        service: Service.FILE_STORAGE_SERVICE,
-        parentId: { $eq: null },
-      })
-      .catch((error) => {
+    const v2BootstrapPromise = (async () => {
+      try {
+        const v2UploadJobs = await jssV2Client.getAllJobs({
+          user,
+          service: Service.FILE_STORAGE_SERVICE,
+          parentId: { $eq: null },
+        });
+        dispatch(receiveJobs(v2UploadJobs as UploadJob[]));
+      } catch (error) {
         dispatch(
           setErrorAlert(`Could not retrieve recent uploads: ${error.message}`)
         );
-        return [];
-      });
+      }
+      dispatch(removeRequestFromInProgress(AsyncRequest.GET_JOBS));
+    })();
+
+    const v2EventSource = new AutoReconnectingEventSource(
+      `${limsUrl}/jss/2.0/job/subscribe?user=${user}`,
+      { withCredentials: true }
+    );
+    // Child jobs are skipped, the parent job carries the upload's progress and stage
+    const parseV2UploadJob = (event: MessageEvent): UploadJob | undefined => {
+      const job = JSSResponseMapper.map(
+        camelizeKeys(JSON.parse(event.data)) as UploadJob
+      );
+      return job.service === Service.FILE_STORAGE_SERVICE && !job.parentId
+        ? job
+        : undefined;
+    };
+
+    v2EventSource.addEventListener("jobInsert", (event: MessageEvent) => {
+      const job = parseV2UploadJob(event);
+      if (job) {
+        dispatch(receiveJobInsert(job));
+      }
+    });
+
+    v2EventSource.addEventListener("jobUpdate", (event: MessageEvent) => {
+      const job = parseV2UploadJob(event);
+      if (job) {
+        dispatch(receiveJobUpdate(job));
+      }
+    });
+
     const eventSource = new AutoReconnectingEventSource(
       `${limsUrl}/jss/1.0/job/subscribe/${user}`,
       { withCredentials: true }
     );
 
     eventSource.addEventListener("initialJobs", async (event: MessageEvent) => {
-      const v2UploadJobs = (await v2UploadJobsPromise) as UploadJob[];
-      dispatch(removeRequestFromInProgress(AsyncRequest.GET_JOBS));
+      // Wait for the 2.0 jobs so they are kept rather than overwritten
+      await v2BootstrapPromise;
+      const v2UploadJobs = getUploadJobs(store.getState()).filter(
+        (job) => job.service === Service.FILE_STORAGE_SERVICE
+      );
       const jobs = camelizeKeys(JSON.parse(event.data)) as JSSJob[];
       // Separate user's other jobs from ones created by this app
       // also filter out any replaced jobs
@@ -124,22 +164,34 @@ export default function App() {
       handleUploadJobUpdates(job, dispatch);
     });
 
-    eventSource.onDisconnect(() =>
-      dispatch(
-        setErrorAlert(
-          "Lost connection to the server, attempting to reconnect..."
-        )
-      )
-    );
-
-    eventSource.onReconnect(() =>
-      dispatch(setSuccessAlert("Reconnected successfully!"))
-    );
+    // Alert once for both streams
+    let disconnectedStreamCount = 0;
+    const onDisconnect = () => {
+      disconnectedStreamCount++;
+      if (disconnectedStreamCount === 1) {
+        dispatch(
+          setErrorAlert(
+            "Lost connection to the server, attempting to reconnect..."
+          )
+        );
+      }
+    };
+    const onReconnect = () => {
+      disconnectedStreamCount--;
+      if (disconnectedStreamCount === 0) {
+        dispatch(setSuccessAlert("Reconnected successfully!"));
+      }
+    };
+    eventSource.onDisconnect(onDisconnect);
+    eventSource.onReconnect(onReconnect);
+    v2EventSource.onDisconnect(onDisconnect);
+    v2EventSource.onReconnect(onReconnect);
 
     return function cleanUp() {
       eventSource.close();
+      v2EventSource.close();
     };
-  }, [limsUrl, user, dispatch]);
+  }, [limsUrl, user, dispatch, store]);
 
   // Event handlers for menu events
   useEffect(() => {

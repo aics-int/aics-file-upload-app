@@ -42,7 +42,7 @@ export const getRecentUploads = createSelector(
         ...job,
         created: new Date(job.created),
         modified: new Date(job.modified),
-        progress: jobIdToCopyProgress[job.jobId],
+        byteProgress: jobIdToCopyProgress[job.jobId],
         fileId: job.serviceFields?.result
           ?.map((file) => file.fileId)
           .join(", "),

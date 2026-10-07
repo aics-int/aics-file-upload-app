@@ -68,7 +68,7 @@ describe("<StatusCell />", () => {
     // Arrange
     const row = {
       original: {
-        progress: {
+        byteProgress: {
           bytesUploaded: 4245,
           totalBytes: 82341,
           step: Step.ONE_CHECKSUM,
@@ -92,7 +92,7 @@ describe("<StatusCell />", () => {
     // Arrange
     const row = {
       original: {
-        progress: {
+        byteProgress: {
           bytesUploaded: 0,
           totalBytes: 82341,
           step: Step.TWO,
@@ -116,7 +116,7 @@ describe("<StatusCell />", () => {
     // Arrange
     const row = {
       original: {
-        progress: {
+        byteProgress: {
           bytesUploaded: 50001,
           totalBytes: 82341,
           step: Step.TWO,
@@ -134,5 +134,26 @@ describe("<StatusCell />", () => {
       "WORKING - Step 2 of 2: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(60);
+  });
+
+  it("shows progress and stage from a storage service 2.0 job", () => {
+    // Arrange
+    const row = {
+      original: {
+        currentStage: "UPLOAD_TO_S3",
+        progress: 42,
+      },
+    };
+
+    // Act
+    const wrapper = mount(
+      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
+    );
+
+    // Assert
+    expect(wrapper.find(Tooltip).prop("title")).to.equal(
+      "WORKING - Uploading file"
+    );
+    expect(wrapper.find(Progress).prop("percent")).to.equal(42);
   });
 });

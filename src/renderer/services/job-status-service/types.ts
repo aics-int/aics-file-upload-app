@@ -93,6 +93,9 @@ export interface JSSJob {
   // Id of the parent job, or parent process, of this job (if any).
   parentId?: string;
 
+  // Percent complete, 0 to 100. Set on 2.0 storage service upload jobs.
+  progress?: number;
+
   // Name of the service that created or owns this job.
   service?: string;
 

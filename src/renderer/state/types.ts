@@ -379,7 +379,7 @@ export interface UploadSummaryTableRow extends UploadJob {
   fileId?: string;
   filePath?: string;
   template?: string;
-  progress?: UploadProgressInfo;
+  byteProgress?: UploadProgressInfo;
 }
 
 export interface MassEditRow {

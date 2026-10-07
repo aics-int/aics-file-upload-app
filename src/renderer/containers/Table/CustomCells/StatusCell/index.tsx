@@ -29,6 +29,17 @@ const STEP_INFO = {
   [Step.TWO]: "Step 2 of 2: Uploading file",
 };
 
+// `currentStage` values set by the storage service on its 2.0 upload job
+const STAGE_INFO: { [stage: string]: string } = {
+  INITIALIZED: "Waiting to start",
+  CALCULATE_FILE_SIZE: "Calculating file size",
+  COPY_TO_FMS_CACHE: "Copying to FMS cache",
+  CHECKSUM: "Calculating MD5 checksum",
+  UPLOAD_TO_S3: "Uploading file",
+  S3_DOWNLOAD: "Downloading from cloud storage",
+  LABKEY_SYNC: "Registering file in FMS",
+};
+
 function getBytesDisplay(bytes: number): string {
   const powerOf1000 = getPowerOf1000(bytes);
   const unit = POWER_OF_1000_TO_ABBREV.get(powerOf1000);
@@ -69,12 +80,24 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     content = <CloseCircleFilled className={styles.unrecoverable} />;
     // TODO SWE-875 update progress for pre and post upload
     // based on props.row.original.progress.status=[PRE | UPLOAD | POST]
+  } else if (props.row.original.progress !== undefined) {
+    const { currentStage = "", progress } = props.row.original;
+    const stageInfo = STAGE_INFO[currentStage] || currentStage;
+    tooltip = `${tooltip} - ${stageInfo}`;
+    content = (
+      <>
+        <Progress type="circle" percent={progress} width={25} status="active" />
+        <div className={styles.activeInfo}>
+          <p>{stageInfo}</p>
+        </div>
+      </>
+    );
   } else {
     const {
       bytesUploaded = 0,
       totalBytes = 0,
       step = 0,
-    } = props.row.original.progress || {};
+    } = props.row.original.byteProgress || {};
 
     const displayForStep = getBytesDisplay(bytesUploaded);
     const totalForStep = getBytesDisplay(totalBytes);
