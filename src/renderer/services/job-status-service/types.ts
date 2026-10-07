@@ -1,51 +1,47 @@
 import { FSSResponseFile, UploadRequest } from "../types";
 
-export interface UploadServiceFields {
-  // Contains the result of the upload
-  result?: FSSResponseFile[];
-
-  // If user decides to cancel an upload, the app sets this value to true.
-  // This will be true only for uploads after 9/21/20 when this heuristic was created. Otherwise, check the error
-  // field of serviceFields to see if the upload was cancelled.
+// The app's fields on the storage service's upload job, stored under `serviceFields.uploadRequest`
+export interface UploadRequestServiceFields {
+  // Set when the user cancels the upload
   cancelled?: boolean;
 
-  // Present when the upload fails, contains the error message from
-  // the exception caught.
-  error?: string;
+  // Why the app's portion of the upload failed. Null clears a previous error.
+  error?: string | null;
 
   // Metadata for the upload file at the time of upload saved
   // to the job to avoid losing it in the event of a failure.
-  // Set as an array of potentially > 1 values to be backwards
-  // compatible with uploads accomplished with old versions
-  // of this app.
   files: UploadRequest[];
-
-  // Unique ID for tracking the upload according to FSS
-  fssUploadId?: string;
 
   // Identifies the upload as part of a larger group of uploads
   // useful for grouping uploads that were uploaded together
   groupId?: string;
 
-  // Tracks the modified date present in the upload file's metadata at the time
-  // the MD5 calculation began. If this date is different than the current
-  // upload file's metadata it can be concluded that the MD5 may no longer
-  // represent the current state of the file.
-  lastModifiedInMS?: number;
+  // Controls whether the file is send over the network in chunks, or if it is accessible directly via a path on the local NAS.
+  localNasShortcut?: boolean;
 
-  // Rather than re-use a FAILED job representing a failed upload, a new one is created by this app.
-  // This tracks the original job for posterity.
-  originalJobId?: string;
+  // True once the app has written the file's metadata to MMS, false if that failed
+  metadataWritten?: boolean;
 
-  // Rather than re-use a FAILED job representing a failed upload, a new one is created by this app.
-  // This points to 1+ jobs that replace this job as a form of tracking the upload. One job
-  // is created for each file present in the upload.
-  // More than 1 job should only be present in uploads made by old versions of this app.
-  replacementJobIds?: string[];
+  // Determines whether an uploaded folder should be interpreted as a "multifile".
+  multifile?: boolean;
+
+  // Contains the result of the upload
+  result?: FSSResponseFile[];
+
+  // A marker we have used for upload jobs in the past that we are now stuck with
+  type: "upload";
+}
+
+export interface UploadServiceFields {
+  // Set by the storage service once the file has been stored
+  fileId?: string;
+
+  // Set by the storage service
+  fileSize?: number;
 
   // This object is filled in by processes [services] that run after the initial upload
   // upload clients like this one can gain insight into processes run on the file
-  // after upload, for example the FMS Mongo ETL. Property added after 08/02/21.
+  // after upload, for example the FMS Mongo ETL.
   postUploadProcessing?: {
     [process: string]: {
       service: string;
@@ -57,22 +53,9 @@ export interface UploadServiceFields {
     };
   };
 
-  // A marker we have used for upload jobs in the past that we are now stuck with
-  // hopefully eventually we can fully rely on using something like the 'service' field
-  type: "upload";
-
-  // Controls whether the file is send over the network in chunks, or if it is accessible directly via a path on the local NAS.
-  localNasShortcut?: boolean;
-
-  // Determines whether an uploaded folder should be interpreted as a "multifile".
-  multifile?: boolean;
+  // Sent by the app with the upload and saved by the storage service when it creates the job
+  uploadRequest?: UploadRequestServiceFields;
 }
-
-// The app's fields on the storage service's 2.0 upload job, stored under `serviceFields.uploadRequest`
-export type UploadRequestServiceFields = Pick<
-  UploadServiceFields,
-  "files" | "type" | "localNasShortcut" | "multifile" | "groupId"
->;
 
 export interface JSSJob {
   // Name of the most recent host to update the status of the job.
@@ -84,8 +67,11 @@ export interface JSSJob {
   // Datetime job was created
   created: Date;
 
+  // Why the job failed, if it did
+  error?: string;
+
   // Unique ID for job
-  jobId: string;
+  id: string;
 
   // Human friendly name of the job, if any.
   jobName?: string;
@@ -99,7 +85,7 @@ export interface JSSJob {
   // Id of the parent job, or parent process, of this job (if any).
   parentId?: string;
 
-  // Percent complete, 0 to 100. Set on 2.0 storage service upload jobs.
+  // Percent complete, 0 to 100
   progress?: number;
 
   // Name of the service that created or owns this job.
@@ -122,27 +108,20 @@ export interface JSSJob {
 
 // Useful for tracking which service owns any given JSS Job
 export enum Service {
-  FILE_UPLOAD_APP = "file-upload-app",
   FILE_STORAGE_SERVICE = "file-storage-service-2",
 }
 
+// The storage service's job for a single upload, `id` is the upload id
 export interface UploadJob extends JSSJob {
   jobName: string;
   serviceFields: UploadServiceFields;
 }
 
-export interface CreateJobRequest
-  extends Omit<UploadJob, "jobId" | "created" | "modified"> {
-  jobId?: string;
-}
-
-export interface UpdateJobRequest
-  extends Omit<
-    Partial<UploadJob>,
-    "jobId" | "created" | "modified" | "user" | "serviceFields"
-  > {
-  serviceFields?: Partial<UploadServiceFields> & {
-    uploadRequest?: UploadRequestServiceFields;
+export interface UpdateJobRequest {
+  error?: string;
+  status?: JSSJobStatus;
+  serviceFields?: {
+    uploadRequest?: Partial<UploadRequestServiceFields>;
   };
 }
 
@@ -159,7 +138,7 @@ interface MongoFieldQuery {
 
 export interface JobQuery {
   created?: Date | MongoFieldQuery;
-  jobId?: string | MongoFieldQuery;
+  id?: string | MongoFieldQuery;
   modified?: Date | MongoFieldQuery;
   currentHost?: string | MongoFieldQuery;
   currentStage?: string | MongoFieldQuery;

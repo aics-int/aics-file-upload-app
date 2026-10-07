@@ -1,18 +1,14 @@
+import { castArray } from "lodash";
 import { createLogic } from "redux-logic";
 
-import { UploadStatus } from "../../services/file-storage-service";
 import {
   FAILED_STATUSES,
-  IN_PROGRESS_STATUSES,
   UploadJob,
   JSSJobStatus,
-  JSSJob,
-  Service,
 } from "../../services/job-status-service/types";
 import {
+  addRequestToInProgress,
   removeRequestFromInProgress,
-  setErrorAlert,
-  setInfoAlert,
 } from "../feedback/actions";
 import { getRequestsInProgress } from "../feedback/selectors";
 import {
@@ -20,79 +16,68 @@ import {
   ReduxLogicDoneCb,
   ReduxLogicNextCb,
   ReduxLogicProcessDependenciesWithAction,
-  ReduxLogicRejectCb,
   ReduxLogicTransformDependencies,
-  ReduxLogicTransformDependenciesWithAction,
 } from "../types";
 import { uploadFailed, uploadSucceeded } from "../upload/actions";
-import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 
-import { updateUploadProgressInfo } from "./actions";
-import {
-  RECEIVE_JOB_UPDATE,
-  RECEIVE_JOBS,
-  RECEIVE_FSS_JOB_COMPLETION_UPDATE,
-} from "./constants";
-import { getJobIdToUploadJobMap, getUploadJobs } from "./selectors";
-import {
-  ReceiveFSSJobCompletionUpdateAction,
-  ReceiveJobsAction,
-  ReceiveJobUpdateAction,
-} from "./types";
+import { RECEIVE_JOB_UPDATE, RECEIVE_JOBS } from "./constants";
+import { getJobIdToUploadJobMap, getUploadStatus } from "./selectors";
+import { ReceiveJobsAction, ReceiveJobUpdateAction } from "./types";
 
-export const handleAbandonedJobsLogic = createLogic({
+// Once the storage service has stored the file, the app writes the file's metadata.
+// This runs for live updates and for uploads that finished while the app was closed.
+export const completeUploadsLogic = createLogic({
   process: async (
-    { action, fms }: ReduxLogicProcessDependenciesWithAction<ReceiveJobsAction>,
+    {
+      action,
+      fms,
+      getState,
+    }: ReduxLogicProcessDependenciesWithAction<
+      ReceiveJobsAction | ReceiveJobUpdateAction
+    >,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    // Storage service 2.0 jobs are not synced through the legacy app job
-    const abandonedUploads = action.payload.filter(
-      ({ service, status }) =>
-        service !== Service.FILE_STORAGE_SERVICE &&
-        IN_PROGRESS_STATUSES.includes(status)
+    const uploadsNeedingMetadata = castArray(action.payload).filter(
+      (job: UploadJob) =>
+        job.status === JSSJobStatus.SUCCEEDED &&
+        job.serviceFields?.fileId &&
+        job.serviceFields.uploadRequest &&
+        job.serviceFields.uploadRequest.metadataWritten === undefined
     );
 
     await Promise.all(
-      abandonedUploads.map(async (abandonedUpload) => {
-        try {
-          // check FSS status and sync if upload completed while app was closed
-          const info = `Checking status of "${abandonedUpload.jobName}"`;
-          dispatch(setInfoAlert(info));
-          const isComplete = await fms.syncAbandonedUploadStatus(
-            abandonedUpload.jobId
-          );
-
-          if (isComplete) {
-            dispatch(
-              setInfoAlert(
-                `Upload "${abandonedUpload.jobName}" was already completed.`
-              )
-            );
-          }
-          // if not completed, we don't auto-retry and just leave
-          // the user can manually retry or cancel from the UI
-        } catch (e) {
-          const message = `Failed to sync status for upload "${abandonedUpload.jobName}": ${e.message}`;
-          console.error(message, e);
-          dispatch(setErrorAlert(message));
+      uploadsNeedingMetadata.map(async (upload) => {
+        // Ensure this isn't completing the upload more than once
+        const keyForRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${upload.id}`;
+        if (getRequestsInProgress(getState()).includes(keyForRequest)) {
+          return;
         }
+        dispatch(addRequestToInProgress(keyForRequest));
+        try {
+          await fms.complete(upload);
+        } catch (error) {
+          // The failure is recorded on the job, the job update alerts the user
+          console.error(`Failed to complete upload ${upload.jobName}`, error);
+        }
+        dispatch(removeRequestFromInProgress(keyForRequest));
       })
     );
 
     done();
   },
-  type: RECEIVE_JOBS,
+  type: [RECEIVE_JOBS, RECEIVE_JOB_UPDATE],
   warnTimeout: 0,
 });
 
 // The File Upload App considers a job to be successful and complete when
-// the upload job itself as well as the FMS Mongo ETL post upload process
+// the upload itself as well as the FMS Mongo ETL post upload process
 // have a successful status
-function isUploadSuccessfulAndComplete(job?: JSSJob): boolean {
+function isUploadSuccessfulAndComplete(job?: UploadJob): boolean {
   return (
-    job?.status === JSSJobStatus.SUCCEEDED &&
-    job?.serviceFields?.postUploadProcessing?.etl?.status ===
+    !!job &&
+    getUploadStatus(job) === JSSJobStatus.SUCCEEDED &&
+    job.serviceFields?.postUploadProcessing?.etl?.status ===
       JSSJobStatus.SUCCEEDED
   );
 }
@@ -110,6 +95,7 @@ const receiveJobUpdateLogics = createLogic({
     const { payload: updatedJob } = action;
     const jobName = updatedJob.jobName || "";
     const previousJob: UploadJob | undefined = ctx.previousJob;
+    const uploadRequest = updatedJob.serviceFields?.uploadRequest;
 
     // If the previous job was not successful and complete then the new
     // update shows that is it is then announce to the user that the upload has completed
@@ -120,15 +106,12 @@ const receiveJobUpdateLogics = createLogic({
       dispatch(uploadSucceeded(jobName));
     } else if (
       previousJob &&
-      FAILED_STATUSES.includes(updatedJob.status) &&
-      !FAILED_STATUSES.includes(previousJob.status) &&
-      !updatedJob.serviceFields?.cancelled
+      FAILED_STATUSES.includes(getUploadStatus(updatedJob)) &&
+      !FAILED_STATUSES.includes(getUploadStatus(previousJob)) &&
+      !uploadRequest?.cancelled
     ) {
-      const error = `Upload ${jobName} failed${
-        updatedJob?.serviceFields?.error
-          ? `: ${updatedJob?.serviceFields?.error}`
-          : ""
-      }`;
+      const reason = uploadRequest?.error || updatedJob.error;
+      const error = `Upload ${jobName} failed${reason ? `: ${reason}` : ""}`;
       dispatch(uploadFailed(error, jobName));
     }
 
@@ -140,108 +123,10 @@ const receiveJobUpdateLogics = createLogic({
   ) => {
     const updatedJob: UploadJob = action.payload;
     const jobIdToJobMap = getJobIdToUploadJobMap(getState());
-    ctx.previousJob = jobIdToJobMap.get(updatedJob.jobId);
+    ctx.previousJob = jobIdToJobMap.get(updatedJob.id);
     next(action);
   },
   type: RECEIVE_JOB_UPDATE,
 });
 
-const receiveFSSJobProgressUpdateLogics = createLogic({
-  transform: (
-    { action, getState }: ReduxLogicTransformDependencies,
-    next: ReduxLogicNextCb
-  ) => {
-    const fssUpload = action.payload;
-    const uploads = getUploadJobs(getState());
-    const matchingUploadJob = uploads.find(
-      (upload) => upload.serviceFields?.fssUploadId === fssUpload.jobId
-    );
-    next(
-      updateUploadProgressInfo(
-        matchingUploadJob?.jobId as string,
-        fssUpload.progress
-      )
-    );
-  },
-  type: UPDATE_UPLOAD_PROGRESS_INFO,
-});
-
-// Responds to when a newly completed FSS upload job has been found
-const receiveFSSJobCompletionUpdateLogics = createLogic({
-  process: async (
-    {
-      action,
-      fms,
-      getState,
-    }: ReduxLogicProcessDependenciesWithAction<ReceiveFSSJobCompletionUpdateAction>,
-    dispatch: ReduxLogicNextCb,
-    done: ReduxLogicDoneCb
-  ) => {
-    const fssUpload = action.payload;
-    const uploads = getUploadJobs(getState());
-    const matchingUploadJob = uploads.find(
-      (upload) => upload.serviceFields?.fssUploadId === fssUpload.jobId
-    );
-
-    // Ensure this isn't completing the upload more than once
-    if (matchingUploadJob) {
-      const jobShouldFailAccordingToFSSJobStage =
-        fssUpload.currentStage === UploadStatus.INACTIVE ||
-        fssUpload.currentStage === UploadStatus.RETRY;
-      const jobHasNotFailedAlready =
-        matchingUploadJob.status !== JSSJobStatus.FAILED;
-      if (
-        fssUpload.status === JSSJobStatus.SUCCEEDED &&
-        matchingUploadJob.status !== JSSJobStatus.SUCCEEDED
-      ) {
-        await fms.complete(
-          matchingUploadJob,
-          fssUpload.serviceFields?.fileId as string
-        );
-      } else if (
-        jobShouldFailAccordingToFSSJobStage &&
-        jobHasNotFailedAlready
-      ) {
-        await fms.failUpload(matchingUploadJob.jobId, "FSS upload failed");
-      }
-    }
-
-    dispatch(
-      removeRequestFromInProgress(
-        `${AsyncRequest.COMPLETE_UPLOAD}-${fssUpload.jobId}-${fssUpload.status}`
-      )
-    );
-    done();
-  },
-  validate: (
-    {
-      action,
-      getState,
-    }: ReduxLogicTransformDependenciesWithAction<ReceiveFSSJobCompletionUpdateAction>,
-    next: ReduxLogicNextCb,
-    reject: ReduxLogicRejectCb
-  ) => {
-    const fssUpload = action.payload;
-    const keyForRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${fssUpload.jobId}-${fssUpload.status}`;
-    const requestsInProgress = getRequestsInProgress(getState());
-    const isDuplicateUpdate = requestsInProgress.includes(keyForRequest);
-    const isFileIdInLabkey =
-      fssUpload.status === JSSJobStatus.SUCCEEDED &&
-      fssUpload.serviceFields?.fileId;
-    const isFailed = fssUpload.currentStage === UploadStatus.INACTIVE;
-    const requiresRetry = fssUpload.currentStage === UploadStatus.RETRY;
-    if (!isDuplicateUpdate && (isFailed || isFileIdInLabkey || requiresRetry)) {
-      next(action);
-    } else {
-      reject({ type: "ignore" });
-    }
-  },
-  type: RECEIVE_FSS_JOB_COMPLETION_UPDATE,
-});
-
-export default [
-  handleAbandonedJobsLogic,
-  receiveJobUpdateLogics,
-  receiveFSSJobProgressUpdateLogics,
-  receiveFSSJobCompletionUpdateLogics,
-];
+export default [completeUploadsLogic, receiveJobUpdateLogics];

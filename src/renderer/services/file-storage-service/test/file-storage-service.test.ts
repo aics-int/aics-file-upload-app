@@ -40,11 +40,24 @@ describe("FileStorageService", () => {
       const fileType = FileType.IMAGE;
       const sourcePath = "/allen/aics/test/my_cool_czi.czi";
 
-      const actual = await fss.upload(fileName, fileType, sourcePath, "VAST");
+      const uploadRequest = {
+        files: [{ file: { fileType, originalPath: sourcePath } }],
+        type: "upload" as const,
+      };
+
+      const actual = await fss.upload(
+        fileName,
+        fileType,
+        sourcePath,
+        "VAST",
+        false,
+        true,
+        uploadRequest
+      );
 
       expect(actual).to.deep.equal(expectedResponse);
       const actualPostBody = postStub.firstCall.args[1];
-      expect(actualPostBody).to.include({ fileName, fileType });
+      expect(actualPostBody).to.include({ fileName, fileType, uploadRequest });
     });
   });
 });

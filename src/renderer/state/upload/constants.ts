@@ -69,10 +69,6 @@ export const UPDATE_UPLOAD_ROWS = makeConstant(
   "update-upload-rows"
 );
 export const UPDATE_UPLOADS = makeConstant(BRANCH_NAME, "update-uploads");
-export const UPDATE_UPLOAD_PROGRESS_INFO = makeConstant(
-  BRANCH_NAME,
-  "update-upload-progress-info"
-);
 
 export const AUTOFILL_FROM_MXS = "AUTOFILL_FROM_MXS";
 

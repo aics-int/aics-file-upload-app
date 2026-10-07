@@ -1,25 +1,20 @@
 import { AnyAction } from "redux";
 
 import { JobStateBranch, TypeToDescriptionMap } from "../types";
-import { UPDATE_UPLOAD_PROGRESS_INFO } from "../upload/constants";
 import { makeReducer } from "../util";
 
 import {
-  RECEIVE_JOB_INSERT,
   RECEIVE_JOB_UPDATE,
   RECEIVE_JOBS,
   SET_LAST_SELECTED_UPLOAD,
 } from "./constants";
 import {
   ReceiveJobsAction,
-  ReceiveJobInsertAction,
-  UpdateUploadProgressInfoAction,
   ReceiveJobUpdateAction,
   SetLastSelectedUploadAction,
 } from "./types";
 
 export const initialState: JobStateBranch = {
-  copyProgress: {},
   uploadJobs: [],
 };
 
@@ -37,19 +32,6 @@ const actionToConfigMap: TypeToDescriptionMap<JobStateBranch> = {
       };
     },
   },
-  [RECEIVE_JOB_INSERT]: {
-    accepts: (action: AnyAction): action is ReceiveJobInsertAction =>
-      action.type === RECEIVE_JOB_INSERT,
-    perform: (
-      state: JobStateBranch,
-      { payload: newJob }: ReceiveJobInsertAction
-    ): JobStateBranch => {
-      return {
-        ...state,
-        uploadJobs: [newJob, ...state.uploadJobs],
-      };
-    },
-  },
   [RECEIVE_JOB_UPDATE]: {
     accepts: (action: AnyAction): action is ReceiveJobUpdateAction =>
       action.type === RECEIVE_JOB_UPDATE,
@@ -57,11 +39,17 @@ const actionToConfigMap: TypeToDescriptionMap<JobStateBranch> = {
       state: JobStateBranch,
       { payload: updatedJob }: ReceiveJobUpdateAction
     ): JobStateBranch => {
+      // A job may first appear on an update, once the app has saved its upload request onto it
+      const isNewJob = !state.uploadJobs.some(
+        (job) => job.id === updatedJob.id
+      );
       return {
         ...state,
-        uploadJobs: state.uploadJobs.map((job) =>
-          job.jobId === updatedJob.jobId ? updatedJob : job
-        ),
+        uploadJobs: isNewJob
+          ? [updatedJob, ...state.uploadJobs]
+          : state.uploadJobs.map((job) =>
+              job.id === updatedJob.id ? updatedJob : job
+            ),
       };
     },
   },
@@ -71,20 +59,6 @@ const actionToConfigMap: TypeToDescriptionMap<JobStateBranch> = {
     perform: (state: JobStateBranch, action: SetLastSelectedUploadAction) => ({
       ...state,
       lastSelectedUpload: action.payload,
-    }),
-  },
-  [UPDATE_UPLOAD_PROGRESS_INFO]: {
-    accepts: (action: AnyAction): action is UpdateUploadProgressInfoAction =>
-      action.type === UPDATE_UPLOAD_PROGRESS_INFO,
-    perform: (
-      state: JobStateBranch,
-      { payload: { jobId, progress } }: UpdateUploadProgressInfoAction
-    ) => ({
-      ...state,
-      copyProgress: {
-        ...state.copyProgress,
-        [jobId]: progress,
-      },
     }),
   },
 };

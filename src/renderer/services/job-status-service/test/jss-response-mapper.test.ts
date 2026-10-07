@@ -1,7 +1,7 @@
 import { expect } from "chai";
 
 import JSSResponseMapper from "../jss-response-mapper";
-import { UploadJob, UpdateJobRequest } from "../types";
+import { UploadJob } from "../types";
 
 import { mockJSSJob } from "./mocks";
 
@@ -11,37 +11,34 @@ describe("JSSResponseMapper", () => {
       const result = JSSResponseMapper.map(mockJSSJob);
       expect(result).to.deep.equal(mockJSSJob);
     });
-    it("maps 2.0 id to jobId", () => {
-      const { jobId, ...job } = mockJSSJob;
-      const result = JSSResponseMapper.map({ ...job, id: jobId } as any);
-      expect(result).to.deep.equal(mockJSSJob);
-    });
     it("expands service fields", () => {
       const now = new Date();
       const input: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
-          files: [
-            {
-              created: now,
-              file: {
-                customField: {
-                  age: 15,
+          uploadRequest: {
+            files: [
+              {
+                created: now,
+                file: {
+                  customField: {
+                    age: 15,
+                  },
+                  originalPath: "/path/to/file",
+                  filename: "file",
+                  fileType: "image",
                 },
-                originalPath: "/path/to/file",
-                filename: "file",
-                fileType: "image",
               },
-            },
-            {
-              file: {
-                originalPath: "/path/to/file2",
-                filename: "file2",
-                fileType: "image",
+              {
+                file: {
+                  originalPath: "/path/to/file2",
+                  filename: "file2",
+                  fileType: "image",
+                },
               },
-            },
-          ],
-          type: "upload",
+            ],
+            type: "upload",
+          },
         },
       };
       const metadata = {
@@ -62,11 +59,13 @@ describe("JSSResponseMapper", () => {
           filename: "file2",
         },
       };
-      const expected: UpdateJobRequest = {
+      const expected: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
-          files: [metadata, metadata2],
-          type: "upload",
+          uploadRequest: {
+            files: [metadata, metadata2],
+            type: "upload",
+          },
         },
       };
       const result = JSSResponseMapper.map(input);
@@ -76,15 +75,19 @@ describe("JSSResponseMapper", () => {
       const input: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
-          files: [],
-          type: "upload",
+          uploadRequest: {
+            files: [],
+            type: "upload",
+          },
         },
       };
       const expected: UploadJob = {
         ...mockJSSJob,
         serviceFields: {
-          files: [],
-          type: "upload",
+          uploadRequest: {
+            files: [],
+            type: "upload",
+          },
         },
       };
       const result = JSSResponseMapper.map(input);
@@ -96,8 +99,10 @@ describe("JSSResponseMapper", () => {
         ...mockJSSJob,
         currentStage,
         serviceFields: {
-          files: [],
-          type: "upload",
+          uploadRequest: {
+            files: [],
+            type: "upload",
+          },
         },
       };
       const result = JSSResponseMapper.map(input);

@@ -2,16 +2,14 @@ import * as path from "path";
 
 import * as uuid from "uuid";
 
-import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
 import { extensionToFileTypeMap, FileType } from "../../util";
-import FileStorageService, { UploadStatus } from "../file-storage-service";
+import FileStorageService from "../file-storage-service";
 import JobStatusService from "../job-status-service";
 import {
   IN_PROGRESS_STATUSES,
   UploadJob,
   JSSJobStatus,
-  UploadServiceFields,
-  Service,
+  UploadRequestServiceFields,
 } from "../job-status-service/types";
 import MetadataManagementService from "../metadata-management-service";
 import { UploadRequest } from "../types";
@@ -19,15 +17,7 @@ import { UploadRequest } from "../types";
 interface FileManagementClientConfig {
   fss: FileStorageService;
   jss: JobStatusService;
-  jssV2: JobStatusService;
   mms: MetadataManagementService;
-}
-
-export interface UploadProgressInfo {
-  md5BytesComputed?: number;
-  bytesUploaded?: number;
-  totalBytes: number;
-  step: Step;
 }
 
 /**
@@ -38,7 +28,6 @@ export interface UploadProgressInfo {
 export default class FileManagementSystem {
   private readonly fss: FileStorageService;
   private readonly jss: JobStatusService;
-  private readonly jssV2: JobStatusService;
   private readonly mms: MetadataManagementService;
 
   /**
@@ -52,70 +41,38 @@ export default class FileManagementSystem {
   public constructor(config: FileManagementClientConfig) {
     this.fss = config.fss;
     this.jss = config.jss;
-    this.jssV2 = config.jssV2;
     this.mms = config.mms;
   }
 
   /**
-   * Starts the upload in FSS, then saves the upload request on the storage service's 2.0 job.
-   * Storage services without a 2.0 job are tracked with a new app job instead (legacy).
+   * Starts the upload in FSS. FSS saves the upload request on the job it
+   * creates for the upload so the upload can be completed later.
    */
   public async startUpload(
     metadata: UploadRequest,
-    user: string,
-    serviceFields: Pick<UploadServiceFields, "groupId" | "multifile">
+    serviceFields: Pick<UploadRequestServiceFields, "groupId" | "multifile">
   ): Promise<void> {
-    const { uploadId } = await this.startFssUpload(
-      metadata,
-      serviceFields.multifile
-    );
-    const storageServiceJob = await this.jssV2.getJobOrNull(uploadId);
-    if (storageServiceJob) {
-      await this.jssV2.updateJob(uploadId, {
-        serviceFields: {
-          uploadRequest: {
-            files: [metadata],
-            type: "upload",
-            localNasShortcut: this.shouldBeLocalNasUpload(
-              metadata.file.originalPath
-            ),
-            ...serviceFields,
-          },
-        },
-      });
-    } else {
-      await this.initiateUpload(metadata, user, {
-        ...serviceFields,
-        fssUploadId: uploadId,
-      });
-    }
-  }
+    const source = metadata.file.originalPath;
+    const fileName = metadata.file.customFileName || path.basename(source);
+    const fileType =
+      extensionToFileTypeMap[path.extname(fileName).toLowerCase()] ||
+      FileType.OTHER;
 
-  /**
-   * Initiates the upload by creating a tracker job
-   * in JSS with the metadata to enable retry functionality
-   */
-  public initiateUpload(
-    metadata: UploadRequest,
-    user: string,
-    serviceFields: Partial<UploadServiceFields> = {}
-  ): Promise<UploadJob> {
-    const jobName =
-      metadata.file.customFileName || path.basename(metadata.file.originalPath);
-    return this.jss.createJob({
-      jobName,
-      service: Service.FILE_UPLOAD_APP,
-      status: JSSJobStatus.WAITING,
-      user,
-      serviceFields: {
+    // v4: single upload call
+    await this.fss.upload(
+      fileName,
+      fileType,
+      this.posixPath(source),
+      "VAST", // hard coded for now since we're not planning on bucket to bucket uploads
+      serviceFields.multifile,
+      metadata.file.shouldBeInLocal,
+      {
         files: [metadata],
         type: "upload",
-        localNasShortcut: this.shouldBeLocalNasUpload(
-          metadata.file.originalPath
-        ),
+        localNasShortcut: this.shouldBeLocalNasUpload(source),
         ...serviceFields,
-      },
-    });
+      }
+    );
   }
 
   public shouldBeLocalNasUpload(path: string) {
@@ -141,13 +98,19 @@ export default class FileManagementSystem {
   }
 
   /**
-   * Finishes the remaining work to finalize the upload after
-   * FSS's portion has been completed asynchronously
+   * Finishes the app's portion of the upload once the storage service has
+   * stored the file: writes the file's metadata to MMS and records the outcome on the job
    */
-  public async complete(upload: UploadJob, fileId: string): Promise<void> {
+  public async complete(upload: UploadJob): Promise<void> {
+    const fileId = upload.serviceFields.fileId as string;
+    let fileName: string;
+    let readPath: string;
     try {
       // Add metadata to file via MMS
-      const metadata = upload.serviceFields.files[0];
+      const metadata = upload.serviceFields.uploadRequest?.files[0];
+      if (!metadata) {
+        throw new Error("Upload has no metadata to write");
+      }
       const metadataWithUploadId = {
         ...metadata,
         customMetadata: metadata.customMetadata
@@ -160,7 +123,7 @@ export default class FileManagementSystem {
           : undefined,
         file: {
           ...metadata.file,
-          jobId: upload.jobId,
+          jobId: upload.id,
         },
       };
       await this.mms.createFileMetadata(fileId, metadataWithUploadId);
@@ -168,97 +131,65 @@ export default class FileManagementSystem {
       const { localPath, cloudPath, name } = await this.fss.getFileAttributes(
         fileId
       );
-      const readPath = localPath ?? cloudPath;
-      await this.jss.updateJob(
-        upload.jobId,
-        {
-          status: JSSJobStatus.SUCCEEDED,
-          serviceFields: {
-            result: [
-              {
-                fileId,
-                fileName: name,
-                readPath,
-              },
-            ],
+      fileName = name;
+      readPath = localPath ?? cloudPath;
+    } catch (error) {
+      await this.jss.updateJob(upload.id, {
+        serviceFields: {
+          uploadRequest: {
+            metadataWritten: false,
+            error: `Something went wrong trying to complete this app's portion of the upload. Details: ${error?.message}`,
           },
         },
-        false
-      );
-    } catch (error) {
-      await this.failUpload(
-        upload.jobId,
-        `Something went wrong trying to complete this app's portion of the upload. Details: ${error?.message}`
-      );
+      });
       throw error;
     }
+
+    await this.jss.updateJob(upload.id, {
+      serviceFields: {
+        uploadRequest: {
+          metadataWritten: true,
+          error: null,
+          result: [{ fileId, fileName, readPath }],
+        },
+      },
+    });
   }
 
   /**
-   * Attempts to retry the upload for the given failed job.
+   * Retries the given failed upload. If the storage service already has the
+   * file only the app's metadata write is retried.
    */
   public async retry(uploadId: string): Promise<void> {
-    const fuaUpload = (await this.jss.getJob(uploadId)) as UploadJob;
+    const upload = (await this.jss.getJob(uploadId)) as UploadJob;
+    const metadataWritten = upload.serviceFields.uploadRequest?.metadataWritten;
 
-    if (fuaUpload.status === JSSJobStatus.SUCCEEDED) {
-      this.succeedUpload(
-        uploadId,
-        fuaUpload.serviceFields.result?.[0].fileId || "",
-        fuaUpload.serviceFields.result?.[0].fileName || "",
-        fuaUpload.serviceFields.result?.[0].readPath || ""
-      );
+    if (metadataWritten === true) {
       throw new Error(`Upload cannot be retried if already successful.`);
     }
 
-    const { fssUploadId } = fuaUpload.serviceFields;
-
-    if (fssUploadId) {
-      // let fss try retry
-      await this.fss.retryUpload(fssUploadId);
+    if (metadataWritten === false) {
+      await this.complete(upload);
       return;
     }
 
-    // update existing job with retry info
+    await this.fss.retryUpload(uploadId);
     await this.jss.updateJob(uploadId, {
-      status: JSSJobStatus.WAITING,
       serviceFields: {
-        ...fuaUpload.serviceFields,
-        error: undefined, // clear previous error
-        cancelled: false,
+        uploadRequest: {
+          error: null,
+          cancelled: false,
+        },
       },
     });
-
-    await this.upload(fuaUpload);
-  }
-
-  /**
-   * Syncs the upload status for abandoned uploads that may have completed
-   * while app is closed. Used on app restart to update any abandoned uploads.
-   */
-  public async syncAbandonedUploadStatus(uploadId: string): Promise<boolean> {
-    const fssManagedJSSJob = (await this.jss.getJob(uploadId)) as UploadJob;
-    const fssStatus = await this.fss.getStatus(uploadId);
-
-    // if jss or fss succeeded, complete job
-    if (
-      fssManagedJSSJob.status === JSSJobStatus.SUCCEEDED ||
-      fssStatus.status === UploadStatus.COMPLETE
-    ) {
-      await this.complete(fssManagedJSSJob, fssStatus.fileId);
-      return true;
-    }
-    // upload is still in progress
-    return false;
   }
 
   /**
    * Attempts to cancel the ongoing upload. Unable to cancel uploads
-   * in progress or that have been copied into FMS.
+   * the storage service has already completed.
    */
   public async cancel(uploadId: string): Promise<void> {
-    const { status, ...upload } = (await this.jss.getJob(
-      uploadId
-    )) as UploadJob;
+    const { status } = await this.jss.getJob(uploadId);
 
     // Job must be in progress in order to cancel
     if (!IN_PROGRESS_STATUSES.includes(status)) {
@@ -267,116 +198,17 @@ export default class FileManagementSystem {
       );
     }
 
-    // If we haven't saved the FSS Job ID this either failed miserably or hasn't progressed much
-    let fssStatus;
-    const { fssUploadId } = upload.serviceFields;
-    if (fssUploadId) {
-      try {
-        fssStatus = await this.fss.getStatus(fssUploadId);
-      } catch (error) {
-        // No-op: Unnecessary to care why this failed if it did fail,
-        // assume upload is in a bad state and continue failing it
-      }
-
-      if (fssStatus) {
-        // If FSS has completed the upload it is too late to cancel
-        if (fssStatus.status === UploadStatus.COMPLETE) {
-          throw new Error(`Upload has progressed too far to be canceled`);
-        }
-
-        // Cancel upload in FSS
-        await this.fss.cancelUpload(fssUploadId);
-      }
-    }
+    await this.fss.cancelUpload(uploadId);
 
     // Update the job to provide feedback
-    await this.failUpload(uploadId, "Cancelled by user", true);
-  }
-
-  /**
-   * Marks the given upload as a failure
-   */
-  public async failUpload(
-    uploadId: string,
-    error: string,
-    cancelled = false
-  ): Promise<void> {
     await this.jss.updateJob(uploadId, {
       status: JSSJobStatus.FAILED,
+      error: "Cancelled by user",
       serviceFields: {
-        cancelled,
-        error,
+        uploadRequest: {
+          cancelled: true,
+        },
       },
     });
-  }
-
-  /**
-   * Marks the given upload as a Success
-   */
-  public async succeedUpload(
-    uploadId: string,
-    fileId: string,
-    fileName: string,
-    readPath: string
-  ): Promise<void> {
-    await this.jss.updateJob(uploadId, {
-      status: JSSJobStatus.SUCCEEDED,
-      serviceFields: {
-        result: [
-          {
-            fileId,
-            fileName,
-            readPath,
-          },
-        ],
-      },
-    });
-  }
-
-  /**
-   * Uploads the given file to FSS.
-   */
-  public async upload(upload: UploadJob): Promise<void> {
-    try {
-      const fssStatus = await this.startFssUpload(
-        upload.serviceFields.files[0],
-        upload.serviceFields?.multifile
-      );
-
-      // track using this upload.jobID
-      await this.jss.updateJob(upload.jobId, {
-        serviceFields: {
-          fssUploadId: fssStatus.uploadId,
-        },
-      });
-    } catch (error) {
-      await this.jss.updateJob(upload.jobId, {
-        status: JSSJobStatus.FAILED,
-        serviceFields: {
-          ...upload.serviceFields,
-          error:
-            error?.response?.data?.message || error?.message || "Unknown cause",
-        },
-      });
-      throw error;
-    }
-  }
-
-  private startFssUpload(metadata: UploadRequest, isMultifile?: boolean) {
-    const source = metadata.file.originalPath;
-    const fileName = metadata.file.customFileName || path.basename(source);
-    const fileType =
-      extensionToFileTypeMap[path.extname(fileName).toLowerCase()] ||
-      FileType.OTHER;
-
-    // v4: single upload call
-    return this.fss.upload(
-      fileName,
-      fileType,
-      this.posixPath(source),
-      "VAST", // hard coded for now since we're not planning on bucket to bucket uploads
-      isMultifile,
-      metadata.file.shouldBeInLocal
-    );
   }
 }

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { receiveFSSJobCompletionUpdate, receiveJobs } from "../../job/actions";
+import { receiveJobs } from "../../job/actions";
 import {
   receiveAnnotationUsage,
   requestAnnotationUsage,
@@ -17,7 +17,6 @@ import {
 } from "../../template/actions";
 import {
   mockFailedUploadJob,
-  mockFSSUploadJob,
   mockMMSTemplate,
   mockSuccessfulUploadJob,
   mockTemplateDraft,
@@ -301,39 +300,6 @@ describe("feedback reducer", () => {
         .true;
     });
   });
-  describe("receiveFSSJobCompletionUpdate", () => {
-    it("adds async request to progress", () => {
-      // Arrange
-      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockFSSUploadJob.jobId}-${mockFSSUploadJob.status}`;
-
-      // Act
-      const actual = reducer(
-        initialState,
-        receiveFSSJobCompletionUpdate(mockFSSUploadJob)
-      );
-
-      // Assert
-      expect(actual.requestsInProgress).to.deep.equal([expectedRequest]);
-    });
-
-    it("does not add duplicate requests", () => {
-      // Arrange
-      const expectedRequest = `${AsyncRequest.COMPLETE_UPLOAD}-${mockFSSUploadJob.jobId}-${mockFSSUploadJob.status}`;
-      const state = {
-        ...initialState,
-        requestsInProgress: [expectedRequest],
-      };
-
-      // Act
-      const actual = reducer(
-        state,
-        receiveFSSJobCompletionUpdate(mockFSSUploadJob)
-      );
-
-      // Assert
-      expect(actual.requestsInProgress).to.deep.equal([expectedRequest]);
-    });
-  });
   describe("initiateUpload", () => {
     it("adds INITIATE_UPLOAD-jobName to requestsInProgress and sets info alert", () => {
       const result = reducer(initialState, initiateUpload());
@@ -420,7 +386,7 @@ describe("feedback reducer", () => {
         cancelUploads([
           {
             ...mockSuccessfulUploadJob,
-            jobId: "foo",
+            id: "foo",
           },
         ])
       );

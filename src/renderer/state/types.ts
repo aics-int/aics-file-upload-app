@@ -11,7 +11,6 @@ import {
   JobStatusService,
   MetadataManagementService,
 } from "../services";
-import { UploadProgressInfo } from "../services/file-management-system";
 import { UploadJob } from "../services/job-status-service/types";
 import LabkeyClient from "../services/labkey-client";
 import {
@@ -165,10 +164,6 @@ export interface FeedbackStateBranch {
 export interface JobStateBranch {
   // JSS Jobs representing individual file uploads
   uploadJobs: UploadJob[];
-  // mapping between uploadIds and their upload progress
-  copyProgress: {
-    [uploadId: string]: UploadProgressInfo;
-  };
   lastSelectedUpload?: { id: string; index: number };
 }
 
@@ -379,7 +374,6 @@ export interface UploadSummaryTableRow extends UploadJob {
   fileId?: string;
   filePath?: string;
   template?: string;
-  byteProgress?: UploadProgressInfo;
 }
 
 export interface MassEditRow {

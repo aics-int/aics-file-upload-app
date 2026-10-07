@@ -206,7 +206,7 @@ export default function UploadTable(props: Props) {
           width: 200,
           sortType: SortType.DEFAULT,
         },
-        getRowId: (row) => row.jobId,
+        getRowId: (row) => row.id,
         // Prevents sorts from reseting after data is modified
         autoResetSortBy: false,
         // Prevents filters from reseting after data is modified

@@ -58,10 +58,10 @@ export default function MyUploadsPage() {
     (rows: Row<UploadSummaryTableRow>[], isDeselecting: boolean) => {
       if (isDeselecting) {
         const rowIds = new Set(rows.map((r) => r.id));
-        setSelectedUploads(selectedUploads.filter((u) => !rowIds.has(u.jobId)));
+        setSelectedUploads(selectedUploads.filter((u) => !rowIds.has(u.id)));
       } else {
         const uploads = rows.map((r) => r.original);
-        setSelectedUploads(uniqBy([...selectedUploads, ...uploads], "jobId"));
+        setSelectedUploads(uniqBy([...selectedUploads, ...uploads], "id"));
       }
     },
     [selectedUploads, setSelectedUploads]

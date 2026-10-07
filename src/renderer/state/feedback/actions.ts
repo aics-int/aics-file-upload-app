@@ -114,7 +114,7 @@ export function stopLoading(): StopLoadingAction {
 }
 
 export function addRequestToInProgress(
-  payload: AsyncRequest
+  payload: AsyncRequest | string
 ): AddRequestInProgressAction {
   return {
     payload,

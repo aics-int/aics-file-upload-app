@@ -451,20 +451,18 @@ const viewUploadsLogic = createLogic({
     ctx.requests = [];
     try {
       action.payload.forEach((upload) => {
+        const uploadRequest = upload.serviceFields?.uploadRequest;
         if (
           upload.status === JSSJobStatus.SUCCEEDED &&
-          upload.serviceFields?.result &&
-          Array.isArray(upload?.serviceFields?.result)
+          uploadRequest?.result &&
+          Array.isArray(uploadRequest.result)
         ) {
-          const originalFileIds = upload.serviceFields.result.map(
+          const originalFileIds = uploadRequest.result.map(
             ({ fileId }: FSSResponseFile) => fileId
           );
           ctx.fileIds = [...ctx.fileIds, ...originalFileIds];
-        } else if (
-          upload.serviceFields?.files &&
-          !isEmpty(upload.serviceFields?.files)
-        ) {
-          ctx.requests = [...ctx.requests, ...upload.serviceFields?.files];
+        } else if (uploadRequest?.files && !isEmpty(uploadRequest.files)) {
+          ctx.requests = [...ctx.requests, ...uploadRequest.files];
         } else {
           throw new Error(`Upload ${upload.jobName} has missing information`);
         }

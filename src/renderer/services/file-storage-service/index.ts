@@ -5,19 +5,8 @@ import { castArray } from "lodash";
 import { LocalStorage } from "../../types";
 import { FileType } from "../../util";
 import HttpCacheClient from "../http-cache-client";
-import { JSSJob } from "../job-status-service/types";
+import { UploadRequestServiceFields } from "../job-status-service/types";
 import { HttpClient } from "../types";
-
-export interface FSSUpload extends JSSJob {
-  serviceFields: {
-    fileId?: string;
-    fileSize?: number;
-    copyToFmsCacheProgress?: number; // hybrid only
-    checksumProgress?: number; // cloud + hybrid
-    s3UploadProgress?: number; // final stage
-    multifile?: boolean;
-  };
-}
 
 /**
  * Values for UploadStatus are defined by FSS2 (ClientUploadStatus): https://github.com/aics-int/file-storage-service/blob/main/src/main/java/org/alleninstitute/aics/fss/model/status/UploadStatus.java#L427
@@ -76,6 +65,7 @@ export default class FileStorageService extends HttpCacheClient {
   /**
    * FSS v4: Create a new upload.
    * This replaces registerUpload and chunked upload logic from v3.
+   * The upload request is saved on the job FSS creates for the upload, so it is never separated from the file.
    */
   public upload(
     fileName: string,
@@ -83,7 +73,8 @@ export default class FileStorageService extends HttpCacheClient {
     path: string,
     source = "VAST", // hardcoded for now
     isMultifile?: boolean,
-    shouldBeInLocal?: boolean
+    shouldBeInLocal?: boolean,
+    uploadRequest?: UploadRequestServiceFields
   ): Promise<UploadStatusResponse> {
     const url = `${FileStorageService.BASE_UPLOAD_PATH}`;
     const postBody = {
@@ -93,6 +84,7 @@ export default class FileStorageService extends HttpCacheClient {
       path,
       multifile: isMultifile ?? false,
       shouldBeInLocal,
+      uploadRequest,
     };
     return this.post<UploadStatusResponse>(
       url,

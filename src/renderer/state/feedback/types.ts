@@ -31,7 +31,7 @@ export interface ClearAlertAction {
 
 export interface AddRequestInProgressAction {
   type: string;
-  payload: AsyncRequest;
+  payload: AsyncRequest | string;
 }
 
 export interface RemoveRequestInProgressAction {

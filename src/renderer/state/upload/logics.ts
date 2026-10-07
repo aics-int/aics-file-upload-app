@@ -32,11 +32,7 @@ import {
 import { closeUpload, viewUploads, resetUpload } from "../route/actions";
 import { handleStartingNewUploadJob } from "../route/logics";
 import { updateMassEditRow } from "../selection/actions";
-import {
-  getMassEditRow,
-  getSelectedUploads,
-  getSelectedUser,
-} from "../selection/selectors";
+import { getMassEditRow, getSelectedUploads } from "../selection/selectors";
 import { ensureDraftGetsSaved, getApplyTemplateInfo } from "../stateHelpers";
 import { setAppliedTemplate } from "../template/actions";
 import { getAppliedTemplate } from "../template/selectors";
@@ -162,7 +158,6 @@ const initiateUploadLogic = createLogic({
   ) => {
     const groupId = FileManagementSystem.createUploadGroupId();
 
-    const user = getSelectedUser(getState());
     const requests = getUploadRequests(getState());
 
     dispatch(
@@ -171,7 +166,7 @@ const initiateUploadLogic = createLogic({
 
     const uploadTasks = requests.map((request) => async () => {
       try {
-        await fms.startUpload(request, user, {
+        await fms.startUpload(request, {
           groupId,
           multifile: request.file?.uploadType === UploadType.Multifile,
         });
@@ -224,7 +219,7 @@ export const cancelUploadsLogic = createLogic({
     await Promise.all(
       jobs.map(async (job) => {
         try {
-          await fms.cancel(job.jobId);
+          await fms.cancel(job.id);
           dispatch(cancelUploadSucceeded(job.jobName || ""));
         } catch (e) {
           dispatch(
@@ -251,7 +246,7 @@ const retryUploadsLogic = createLogic({
     await Promise.all(
       uploads.map(async (upload) => {
         try {
-          await fms.retry(upload.jobId);
+          await fms.retry(upload.id);
         } catch (e) {
           const error = `Retry upload ${upload.jobName} failed: ${e.message}`;
           dispatch(uploadFailed(error, upload.jobName || ""));
@@ -747,7 +742,7 @@ const submitFileMetadataUpdateLogic = createLogic({
       await Promise.all(
         editFileMetadataRequests.map((request) => {
           const matchingUpload = selectedUploads.find((u) =>
-            u.serviceFields?.result?.find(
+            u.serviceFields?.uploadRequest?.result?.find(
               (f) => f.fileId === request.file.fileId
             )
           );
@@ -760,8 +755,8 @@ const submitFileMetadataUpdateLogic = createLogic({
             );
             return;
           }
-          return jssClient.updateJob(matchingUpload.jobId, {
-            serviceFields: { files: [request] },
+          return jssClient.updateJob(matchingUpload.id, {
+            serviceFields: { uploadRequest: { files: [request] } },
           });
         })
       );
@@ -793,8 +788,6 @@ const uploadWithoutMetadataLogic = createLogic({
     done: ReduxLogicDoneCb
   ) => {
     const groupId = FileManagementSystem.createUploadGroupId();
-
-    const user = getSelectedUser(deps.getState());
 
     try {
       // Don't let users upload folders / multifiles without metadata.
@@ -837,7 +830,6 @@ const uploadWithoutMetadataLogic = createLogic({
             },
             microscopy: {},
           },
-          user,
           {
             groupId,
             multifile: false, // because we disallow uploading multifiles without metadata at all

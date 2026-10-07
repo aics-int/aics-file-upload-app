@@ -2,7 +2,6 @@ import { StateWithHistory } from "redux-undo";
 
 import { AnnotationName } from "../../constants";
 import { GridCell } from "../../entities";
-import { FSSUpload } from "../../services/file-storage-service";
 import {
   JSSJobStatus,
   Service,
@@ -177,14 +176,16 @@ export const mockWell: Well = {
 
 export const mockJob: UploadJob = {
   created: new Date(),
-  jobId: "1340202",
+  id: "1340202",
   jobName: "test_file.txt",
   modified: new Date(),
   originationHost: "dev-aics-fup-001",
-  service: Service.FILE_UPLOAD_APP,
+  service: Service.FILE_STORAGE_SERVICE,
   serviceFields: {
-    files: [],
-    type: "upload",
+    uploadRequest: {
+      files: [],
+      type: "upload",
+    },
   },
   status: JSSJobStatus.WAITING,
   updateParent: false,
@@ -427,16 +428,21 @@ export const mockSelectedWells: GridCell[] = [
 export const mockSuccessfulUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Completed",
-  jobId: "123434234",
+  id: "123434234",
   jobName: "mockJob1",
   modified: new Date(),
-  service: Service.FILE_UPLOAD_APP,
+  service: Service.FILE_STORAGE_SERVICE,
   serviceFields: {
-    result: [
-      { fileId: "cat", fileName: "cat", readPath: "cat" },
-      { fileId: "dog", fileName: "cat", readPath: "cat" },
-    ],
-    files: [],
+    fileId: "cat",
+    uploadRequest: {
+      files: [],
+      metadataWritten: true,
+      result: [
+        { fileId: "cat", fileName: "cat", readPath: "cat" },
+        { fileId: "dog", fileName: "cat", readPath: "cat" },
+      ],
+      type: "upload",
+    },
     postUploadProcessing: {
       etl: {
         service: "fms-mongo-etl",
@@ -445,57 +451,44 @@ export const mockSuccessfulUploadJob: UploadJob = {
         modified: new Date(),
       },
     },
-    type: "upload",
   },
   status: JSSJobStatus.SUCCEEDED,
-  user: "test_user",
-};
-
-export const mockFSSUploadJob: FSSUpload = {
-  created: new Date(),
-  currentStage: "UPLOAD_IN_PROGRESS",
-  jobId: "3333333333FSS",
-  jobName: "mockFSSUploadJob",
-  modified: new Date(),
-  service: Service.FILE_STORAGE_SERVICE,
-  serviceFields: {
-    fileId: "82beaf0460384911b6d6293fb333c4b0",
-  },
-  status: JSSJobStatus.WORKING,
   user: "test_user",
 };
 
 export const mockSuccessfulUploadJobWithUnexposedAnnotation: UploadJob = {
   created: new Date(),
   currentStage: "Completed",
-  jobId: "123434234",
+  id: "123434234",
   jobName: "mockJob1",
   modified: new Date(),
   serviceFields: {
-    files: [
-      {
-        customMetadata: {
-          annotations: [
-            {
-              annotationId: 1,
-              values: ["test", "1"],
-            },
-            {
-              annotationId: 4,
-              values: ["test", "1"],
-            },
-          ],
-          templateId: 1,
+    uploadRequest: {
+      files: [
+        {
+          customMetadata: {
+            annotations: [
+              {
+                annotationId: 1,
+                values: ["test", "1"],
+              },
+              {
+                annotationId: 4,
+                values: ["test", "1"],
+              },
+            ],
+            templateId: 1,
+          },
+          file: {
+            originalPath: "/some/filepath",
+            fileType: "other",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
         },
-        file: {
-          originalPath: "/some/filepath",
-          fileType: "other",
-          shouldBeInArchive: true,
-          shouldBeInLocal: true,
-        },
-      },
-    ],
-    type: "upload",
+      ],
+      type: "upload",
+    },
   },
   status: JSSJobStatus.SUCCEEDED,
   user: "test_user",
@@ -504,14 +497,15 @@ export const mockSuccessfulUploadJobWithUnexposedAnnotation: UploadJob = {
 export const mockWorkingUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Copying files",
-  jobId: "1111111111",
+  id: "1111111111",
   jobName: "mockWorkingUploadJob",
   modified: new Date(),
-  service: Service.FILE_UPLOAD_APP,
+  service: Service.FILE_STORAGE_SERVICE,
   serviceFields: {
-    files: [],
-    lastModifiedInMS: new Date().getMilliseconds(),
-    type: "upload",
+    uploadRequest: {
+      files: [],
+      type: "upload",
+    },
   },
   status: JSSJobStatus.WORKING,
   user: "test_user",
@@ -520,32 +514,33 @@ export const mockWorkingUploadJob: UploadJob = {
 export const mockWaitingUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Waiting",
-  jobId: "2222222222",
+  id: "2222222222",
   jobName: "mockWaitingUploadJob",
   modified: new Date(),
-  service: Service.FILE_UPLOAD_APP,
+  service: Service.FILE_STORAGE_SERVICE,
   serviceFields: {
-    files: [
-      {
-        customMetadata: {
-          annotations: [
-            {
-              annotationId: 1,
-              values: ["test", "1"],
-            },
-          ],
-          templateId: 1,
+    uploadRequest: {
+      files: [
+        {
+          customMetadata: {
+            annotations: [
+              {
+                annotationId: 1,
+                values: ["test", "1"],
+              },
+            ],
+            templateId: 1,
+          },
+          file: {
+            originalPath: "/some/filepath",
+            fileType: "other",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
         },
-        file: {
-          originalPath: "/some/filepath",
-          fileType: "other",
-          shouldBeInArchive: true,
-          shouldBeInLocal: true,
-        },
-      },
-    ],
-    lastModifiedInMS: new Date().getMilliseconds(),
-    type: "upload",
+      ],
+      type: "upload",
+    },
   },
   status: JSSJobStatus.WAITING,
   user: "test_user",
@@ -554,32 +549,33 @@ export const mockWaitingUploadJob: UploadJob = {
 export const mockFailedUploadJob: UploadJob = {
   created: new Date(),
   currentStage: "Copy error",
-  jobId: "3333333333",
+  id: "3333333333",
   jobName: "mockFailedUploadJob",
   modified: new Date(),
-  service: Service.FILE_UPLOAD_APP,
+  service: Service.FILE_STORAGE_SERVICE,
   serviceFields: {
-    files: [
-      {
-        customMetadata: {
-          annotations: [
-            {
-              annotationId: 1,
-              values: ["test", "1"],
-            },
-          ],
-          templateId: 1,
+    uploadRequest: {
+      files: [
+        {
+          customMetadata: {
+            annotations: [
+              {
+                annotationId: 1,
+                values: ["test", "1"],
+              },
+            ],
+            templateId: 1,
+          },
+          file: {
+            originalPath: "/some/filepath",
+            fileType: "other",
+            shouldBeInArchive: true,
+            shouldBeInLocal: true,
+          },
         },
-        file: {
-          originalPath: "/some/filepath",
-          fileType: "other",
-          shouldBeInArchive: true,
-          shouldBeInLocal: true,
-        },
-      },
-    ],
-    lastModifiedInMS: new Date().getMilliseconds(),
-    type: "upload",
+      ],
+      type: "upload",
+    },
   },
   status: JSSJobStatus.FAILED,
   user: "test_user",

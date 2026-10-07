@@ -1,48 +1,32 @@
 import { expect } from "chai";
 import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
-import { FileManagementSystem, JobStatusService } from "../../../services";
+import { FileManagementSystem } from "../../../services";
 import {
-  FSSUpload,
-  UploadStatus,
-} from "../../../services/file-storage-service";
-import {
-  IN_PROGRESS_STATUSES,
   JSSJobStatus,
   UploadJob,
 } from "../../../services/job-status-service/types";
-import { setErrorAlert, setInfoAlert } from "../../feedback/actions";
 import {
   createMockReduxStore,
   mockReduxLogicDeps,
-  ReduxLogicDependencies,
 } from "../../test/configure-mock-store";
 import {
   mockFailedUploadJob,
   mockState,
   mockSuccessfulUploadJob,
-  mockWaitingUploadJob,
   mockWorkingUploadJob,
 } from "../../test/mocks";
 import { State } from "../../types";
 import { uploadFailed, uploadSucceeded } from "../../upload/actions";
-import {
-  receiveFSSJobCompletionUpdate,
-  receiveJobs,
-  receiveJobUpdate,
-} from "../actions";
-import { RECEIVE_FSS_JOB_COMPLETION_UPDATE } from "../constants";
-import { handleAbandonedJobsLogic } from "../logics";
+import { receiveJobs, receiveJobUpdate } from "../actions";
+import { completeUploadsLogic } from "../logics";
 
 describe("Job logics", () => {
   const sandbox = createSandbox();
-  let jssClient: SinonStubbedInstance<JobStatusService>;
   let fms: SinonStubbedInstance<FileManagementSystem>;
 
   beforeEach(() => {
-    jssClient = createStubInstance(JobStatusService);
     fms = createStubInstance(FileManagementSystem);
-    sandbox.replace(mockReduxLogicDeps, "jssClient", jssClient);
     sandbox.replace(mockReduxLogicDeps, "fms", fms);
   });
 
@@ -50,118 +34,69 @@ describe("Job logics", () => {
     sandbox.restore();
   });
 
-  describe("handleAbandonedJobsLogic", () => {
-    let logicDeps: ReduxLogicDependencies;
-    let waitingAbandonedJob: UploadJob;
+  describe("completeUploadsLogic", () => {
+    const storedUpload: UploadJob = {
+      ...mockWorkingUploadJob,
+      status: JSSJobStatus.SUCCEEDED,
+      serviceFields: {
+        fileId: "file_id",
+        uploadRequest: { files: [], type: "upload" },
+      },
+    };
 
-    beforeEach(() => {
-      waitingAbandonedJob = {
-        ...mockWaitingUploadJob,
-        jobId: "abandoned_job_id",
-        jobName: "abandoned_job",
-        serviceFields: {
-          files: [
-            {
-              customMetadata: { annotations: [], templateId: 1 },
-              file: { fileType: "image", originalPath: "test_path" },
-            },
-          ],
-          type: "upload",
-        },
-      };
-    });
-
-    it("does not do anything if no abandoned jobs", async () => {
-      const { actions, logicMiddleware, store } = createMockReduxStore(
+    it("completes uploads the storage service has stored", async () => {
+      const { logicMiddleware, store } = createMockReduxStore(
         mockState,
-        logicDeps,
-        [handleAbandonedJobsLogic]
+        undefined,
+        [completeUploadsLogic]
       );
 
       store.dispatch(
-        receiveJobs([mockFailedUploadJob, mockSuccessfulUploadJob])
+        receiveJobs([storedUpload, mockWorkingUploadJob, mockFailedUploadJob])
       );
-
       await logicMiddleware.whenComplete();
-      expect(actions.list).to.deep.equal([
-        receiveJobs([mockFailedUploadJob, mockSuccessfulUploadJob]),
-      ]);
+
+      expect(fms.complete).to.have.been.calledOnceWith(storedUpload);
     });
 
-    it("finds and syncs status for any job that didn't get past the add metadata step", async () => {
-      const { actions, logicMiddleware, store } = createMockReduxStore(
+    it("skips uploads whose metadata write already succeeded or failed", async () => {
+      const { logicMiddleware, store } = createMockReduxStore(
         mockState,
-        logicDeps,
-        [handleAbandonedJobsLogic]
+        undefined,
+        [completeUploadsLogic]
       );
-      const action = receiveJobs([mockFailedUploadJob, waitingAbandonedJob]);
+      const failedMetadataWrite: UploadJob = {
+        ...storedUpload,
+        serviceFields: {
+          ...storedUpload.serviceFields,
+          uploadRequest: {
+            files: [],
+            type: "upload",
+            metadataWritten: false,
+          },
+        },
+      };
 
-      store.dispatch(action);
+      store.dispatch(
+        receiveJobs([mockSuccessfulUploadJob, failedMetadataWrite])
+      );
       await logicMiddleware.whenComplete();
-      expect(actions.list).to.deep.equal([
-        action,
-        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
-      ]);
+
+      expect(fms.complete).to.not.have.been.called;
     });
 
-    it("finds and syncs status for one abandoned job", async () => {
-      const { actions, logicMiddleware, store } = createMockReduxStore(
+    it("completes an upload only once if multiple updates arrive", async () => {
+      const { logicMiddleware, store } = createMockReduxStore(
         mockState,
-        logicDeps,
-        [handleAbandonedJobsLogic]
+        undefined,
+        [completeUploadsLogic]
       );
 
-      store.dispatch(receiveJobs([waitingAbandonedJob]));
-
+      store.dispatch(receiveJobUpdate(storedUpload));
+      store.dispatch(receiveJobUpdate(storedUpload));
       await logicMiddleware.whenComplete();
-      expect(actions.list).to.deep.equal([
-        receiveJobs([waitingAbandonedJob]),
-        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
-      ]);
-    });
 
-    it("sets error alert if an error is thrown", async () => {
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockState,
-        logicDeps,
-        [handleAbandonedJobsLogic]
-      );
-      const errorMessage = "sync failure!";
-      fms.syncAbandonedUploadStatus
-        .onFirstCall()
-        .rejects(new Error(errorMessage));
-
-      store.dispatch(receiveJobs([waitingAbandonedJob]));
-
-      await logicMiddleware.whenComplete();
-      expect(actions.list).to.deep.equal([
-        receiveJobs([waitingAbandonedJob]),
-        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
-        setErrorAlert(
-          `Failed to sync status for upload "${waitingAbandonedJob.jobName}": ${errorMessage}`
-        ),
-      ]);
-    });
-
-    it("dispatches success info alert if upload was already completed", async () => {
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        mockState,
-        logicDeps,
-        [handleAbandonedJobsLogic]
-      );
-
-      fms.syncAbandonedUploadStatus.resolves(true);
-
-      store.dispatch(receiveJobs([waitingAbandonedJob]));
-
-      await logicMiddleware.whenComplete();
-      expect(actions.list).to.deep.equal([
-        receiveJobs([waitingAbandonedJob]),
-        setInfoAlert(`Checking status of "${waitingAbandonedJob.jobName}"`),
-        setInfoAlert(
-          `Upload "${waitingAbandonedJob.jobName}" was already completed.`
-        ),
-      ]);
+      expect(fms.complete).to.have.been.calledOnce;
     });
   });
 
@@ -203,7 +138,7 @@ describe("Job logics", () => {
         serviceFields: {
           ...mockWorkingUploadJob.serviceFields,
         },
-        jobId: mockWorkingUploadJob.jobId,
+        id: mockWorkingUploadJob.id,
       });
 
       store.dispatch(action);
@@ -222,7 +157,7 @@ describe("Job logics", () => {
       );
       const action = receiveJobUpdate({
         ...mockSuccessfulUploadJob,
-        jobId: mockWorkingUploadJob.jobId,
+        id: mockWorkingUploadJob.id,
       });
 
       store.dispatch(action);
@@ -243,11 +178,15 @@ describe("Job logics", () => {
       );
       const action = receiveJobUpdate({
         ...mockFailedUploadJob,
-        jobId: mockWorkingUploadJob.jobId,
+        id: mockWorkingUploadJob.id,
         jobName: "someJobName",
         serviceFields: {
-          ...mockFailedUploadJob.serviceFields,
-          error: "foo",
+          uploadRequest: {
+            ...mockFailedUploadJob.serviceFields.uploadRequest,
+            files: [],
+            type: "upload",
+            error: "foo",
+          },
         },
       });
 
@@ -259,134 +198,6 @@ describe("Job logics", () => {
         action,
         uploadFailed("Upload someJobName failed: foo", "someJobName"),
       ]);
-    });
-  });
-
-  describe("receiveFSSJobCompletionUpdate", () => {
-    const fssUploadId = "9201341324";
-    const stateWithMatchingUpload = {
-      ...mockState,
-      job: {
-        ...mockState.job,
-        uploadJobs: [
-          {
-            ...mockWorkingUploadJob,
-            serviceFields: {
-              ...mockWorkingUploadJob.serviceFields,
-              fssUploadId,
-            },
-          },
-        ],
-      },
-    };
-    const successfulFSSUpload: FSSUpload = {
-      ...mockSuccessfulUploadJob,
-      jobId: fssUploadId,
-      serviceFields: {
-        fileId: "9203414",
-      },
-    };
-
-    it("completes upload only once if multiple FSS updates occur", async () => {
-      // Arrange
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        stateWithMatchingUpload,
-        undefined,
-        undefined,
-        false
-      );
-
-      // Act
-      store.dispatch(receiveFSSJobCompletionUpdate(successfulFSSUpload));
-      store.dispatch(receiveFSSJobCompletionUpdate(successfulFSSUpload));
-      store.dispatch(receiveFSSJobCompletionUpdate(successfulFSSUpload));
-      await logicMiddleware.whenComplete();
-
-      // Assert
-      expect(fms.complete).to.have.been.calledOnce;
-      expect(
-        actions.list.filter(
-          (action) => action.type === RECEIVE_FSS_JOB_COMPLETION_UPDATE
-        )
-      ).to.be.lengthOf(1);
-    });
-
-    it("rejects updates without file ids", async () => {
-      // Arrange
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        stateWithMatchingUpload,
-        undefined,
-        undefined,
-        false
-      );
-      const fssUpload = {
-        ...successfulFSSUpload,
-        serviceFields: {
-          ...successfulFSSUpload.serviceFields,
-          fileId: undefined,
-        },
-      };
-
-      // Act
-      const action = receiveFSSJobCompletionUpdate(fssUpload);
-      store.dispatch(action);
-      await logicMiddleware.whenComplete();
-
-      // Assert
-      expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
-        .false;
-    });
-
-    [UploadStatus.INACTIVE, UploadStatus.RETRY].forEach((currentStage) => {
-      it(`fails upload if FSS stage is ${currentStage}`, async () => {
-        // Arrange
-        const { actions, logicMiddleware, store } = createMockReduxStore(
-          stateWithMatchingUpload,
-          undefined,
-          undefined,
-          false
-        );
-        const fssUpload = {
-          ...successfulFSSUpload,
-          // Dummy value; Currently, FSS2 does not gauree that it will update jss status fields when it updates stage
-          status: JSSJobStatus.UNRECOVERABLE,
-          currentStage,
-        };
-
-        // Act
-        store.dispatch(receiveFSSJobCompletionUpdate(fssUpload));
-        await logicMiddleware.whenComplete();
-
-        // Assert
-        expect(fms.failUpload).to.have.been.calledOnce;
-        expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
-          .true;
-      });
-    });
-    IN_PROGRESS_STATUSES.forEach((status) => {
-      it(`rejects updates with ${status} status`, async () => {
-        // Arrange
-        const { actions, logicMiddleware, store } = createMockReduxStore(
-          stateWithMatchingUpload,
-          undefined,
-          undefined,
-          false
-        );
-        const fssUpload = {
-          ...successfulFSSUpload,
-          status,
-          serviceFields: {},
-        };
-
-        // Act
-        const action = receiveFSSJobCompletionUpdate(fssUpload);
-        store.dispatch(action);
-        await logicMiddleware.whenComplete();
-
-        // Assert
-        expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
-          .false;
-      });
     });
   });
 });

@@ -93,13 +93,7 @@ axiosRetry(axios, {
 });
 const httpClient = axios;
 const useCache = Boolean(process.env.USE_CACHE) || false;
-const jssClient = new JobStatusService(httpClient, storage, useCache, "1.0");
-export const jssV2Client = new JobStatusService(
-  httpClient,
-  storage,
-  useCache,
-  "2.0"
-);
+export const jssClient = new JobStatusService(httpClient, storage, useCache);
 const mmsClient = new MetadataManagementService(httpClient, storage, useCache);
 const mxsClient = new MetadataExtractionService(httpClient, storage, false);
 const labkeyClient = new LabkeyClient(httpClient, storage, useCache);
@@ -113,7 +107,6 @@ export const reduxLogicDependencies: Partial<ReduxLogicExtraDependencies> = {
   fms: new FileManagementSystem({
     fss: new FileStorageService(httpClient, storage),
     jss: jssClient,
-    jssV2: jssV2Client,
     mms: mmsClient,
   }),
   ipcRenderer,

@@ -15,15 +15,17 @@ describe("JSSRequestMapper", () => {
     it("flattens service fields when patch is true", () => {
       const now = new Date();
       const expected = {
-        "service_fields.files.0.created": now,
-        "service_fields.files.0.file.customField.age": 15,
-        "service_fields.files.0.file.example(dot)txt": 32,
-        "service_fields.files.0.file.fileType": "text",
-        "service_fields.files.0.file.originalPath": "/path/to/file",
-        "service_fields.files.0.file.fileName": "file",
-        "service_fields.files.1.file.originalPath": "/path/to/file2",
-        "service_fields.files.1.file.fileName": "file2",
-        "service_fields.files.1.file.fileType": "image",
+        "service_fields.uploadRequest.files.0.created": now,
+        "service_fields.uploadRequest.files.0.file.customField.age": 15,
+        "service_fields.uploadRequest.files.0.file.example(dot)txt": 32,
+        "service_fields.uploadRequest.files.0.file.fileType": "text",
+        "service_fields.uploadRequest.files.0.file.originalPath":
+          "/path/to/file",
+        "service_fields.uploadRequest.files.0.file.fileName": "file",
+        "service_fields.uploadRequest.files.1.file.originalPath":
+          "/path/to/file2",
+        "service_fields.uploadRequest.files.1.file.fileName": "file2",
+        "service_fields.uploadRequest.files.1.file.fileType": "image",
       };
       const metadata = {
         file: {
@@ -46,7 +48,7 @@ describe("JSSRequestMapper", () => {
       };
       const input: UpdateJobRequest = {
         serviceFields: {
-          files: [metadata, metadata2],
+          uploadRequest: { files: [metadata, metadata2] },
         },
       };
       const result = JSSRequestMapper.map(input, true);
@@ -55,20 +57,22 @@ describe("JSSRequestMapper", () => {
     });
     it("preserves non service fields if service fields provided", () => {
       const input: UpdateJobRequest = {
-        currentStage: "copying",
+        status: JSSJobStatus.WAITING,
         serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: "/path/to/here.txt",
+          uploadRequest: {
+            files: [
+              {
+                file: {
+                  fileType: "text",
+                  originalPath: "/path/to/here.txt",
+                },
               },
-            },
-          ],
+            ],
+          },
         },
       };
       const result = JSSRequestMapper.map(input);
-      expect(result.currentStage).to.not.be.undefined;
+      expect(result.status).to.not.be.undefined;
     });
     it("won't flatten past second level of properties by default", () => {
       const files = [
@@ -81,11 +85,11 @@ describe("JSSRequestMapper", () => {
       ];
       const input: UpdateJobRequest = {
         serviceFields: {
-          files,
+          uploadRequest: { files },
         },
       };
       const result = JSSRequestMapper.map(input);
-      expect(result["service_fields.files"]).to.equal(files);
+      expect(result["service_fields.uploadRequest"]).to.deep.equal({ files });
     });
   });
 });

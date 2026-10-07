@@ -6,7 +6,6 @@ import * as React from "react";
 
 import StatusCell from "..";
 import { JSSJobStatus } from "../../../../../services/job-status-service/types";
-import { Step } from "../Step";
 
 describe("<StatusCell />", () => {
   it("shows complete status when successful and complete", () => {
@@ -64,79 +63,7 @@ describe("<StatusCell />", () => {
     expect(wrapper.exists(CheckCircleFilled)).to.be.true;
   });
 
-  it("shows step 1 when in first step of upload", () => {
-    // Arrange
-    const row = {
-      original: {
-        byteProgress: {
-          bytesUploaded: 4245,
-          totalBytes: 82341,
-          step: Step.ONE_CHECKSUM,
-        },
-      },
-    };
-
-    // Act
-    const wrapper = mount(
-      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
-    );
-
-    // Assert
-    expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 1 of 2: Pre-upload, calculating MD5 checksum"
-    );
-    expect(wrapper.find(Progress).prop("percent")).to.equal(5);
-  });
-
-  it("shows step 2 when no bytes uploaded", () => {
-    // Arrange
-    const row = {
-      original: {
-        byteProgress: {
-          bytesUploaded: 0,
-          totalBytes: 82341,
-          step: Step.TWO,
-        },
-      },
-    };
-
-    // Act
-    const wrapper = mount(
-      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
-    );
-
-    // Assert
-    expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 2: Uploading file"
-    );
-    expect(wrapper.find(Progress).prop("percent")).to.equal(0);
-  });
-
-  it("shows step 2 when bytes have been uploaded", () => {
-    // Arrange
-    const row = {
-      original: {
-        byteProgress: {
-          bytesUploaded: 50001,
-          totalBytes: 82341,
-          step: Step.TWO,
-        },
-      },
-    };
-
-    // Act
-    const wrapper = mount(
-      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
-    );
-
-    // Assert
-    expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 2: Uploading file"
-    );
-    expect(wrapper.find(Progress).prop("percent")).to.equal(60);
-  });
-
-  it("shows progress and stage from a storage service 2.0 job", () => {
+  it("shows progress and stage of an in progress upload", () => {
     // Arrange
     const row = {
       original: {
@@ -155,5 +82,26 @@ describe("<StatusCell />", () => {
       "WORKING - Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(42);
+  });
+
+  it("shows the upload request error in the tooltip", () => {
+    // Arrange
+    const row = {
+      original: {
+        serviceFields: {
+          uploadRequest: { error: "MMS unavailable" },
+        },
+      },
+    };
+
+    // Act
+    const wrapper = mount(
+      <StatusCell row={row} value={JSSJobStatus.FAILED} {...({} as any)} />
+    );
+
+    // Assert
+    expect(wrapper.find(Tooltip).prop("title")).to.equal(
+      "FAILED: MMS unavailable"
+    );
   });
 });

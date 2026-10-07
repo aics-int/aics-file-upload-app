@@ -175,7 +175,6 @@ describe("Upload logics", () => {
     const fileName = getUploadFileNames(nonEmptyStateForInitiatingUpload)[0];
 
     it("adds job name to action payload, dispatches initiateUploadSucceeded", async () => {
-      jssClient.existsById.resolves(true);
       const { actions, logicMiddleware, store } = createMockReduxStore(
         {
           ...nonEmptyStateForInitiatingUpload,
@@ -203,14 +202,13 @@ describe("Upload logics", () => {
         .not.be.undefined;
       // Assert that each upload used the same groupId
       const groupIds = new Set(
-        fms.startUpload.getCalls().map((call) => call.args[2]?.groupId)
+        fms.startUpload.getCalls().map((call) => call.args[1]?.groupId)
       );
       expect(groupIds).to.be.lengthOf(1);
       expect(groupIds).to.not.be.lengthOf(fms.startUpload.callCount);
     });
 
     it("properly marks files with expected multifile extensions as multifiles", async () => {
-      jssClient.existsById.resolves(true);
       const { actions, logicMiddleware, store } = createMockReduxStore(
         {
           ...nonEmptyStateForInitiatingUpload,
@@ -242,7 +240,7 @@ describe("Upload logics", () => {
       // So we'll expect 3 "false" values and 2 "true" values.
       const multifileValues = fms.startUpload
         .getCalls()
-        .map((call) => call.args[2]?.multifile);
+        .map((call) => call.args[1]?.multifile);
       const multifileFalseValues = multifileValues.filter(
         (val) => val === false
       );
@@ -257,7 +255,6 @@ describe("Upload logics", () => {
         undefined,
         uploadLogics
       );
-      jssClient.existsById.resolves(true);
       // before
       expect(fms.startUpload.called).to.be.false;
 
@@ -271,7 +268,6 @@ describe("Upload logics", () => {
 
     it("dispatches uploadFailed if fms.startUpload fails", async () => {
       // Arrange
-      jssClient.existsById.resolves(true);
       const errorMessage = "uploadFile failed";
       fms.startUpload.rejects(new Error(errorMessage));
       const { actions, logicMiddleware, store } = createMockReduxStore(
@@ -297,7 +293,6 @@ describe("Upload logics", () => {
 
     it("uses error message from API response body when upload fails", async () => {
       // Arrange
-      jssClient.existsById.resolves(true);
       const apiMessage = "Path does not exist: /aled/eadf/test";
       const axiosError = new Error(
         "Request failed with status code 400"
@@ -330,7 +325,6 @@ describe("Upload logics", () => {
 
     it("resets upload state after initiate is complete", async () => {
       // Arrange
-      jssClient.existsById.resolves(true);
       const errorMessage = "uploadFile failed";
       fms.startUpload.rejects(new Error(errorMessage));
       const { actions, logicMiddleware, store } = createMockReduxStore(

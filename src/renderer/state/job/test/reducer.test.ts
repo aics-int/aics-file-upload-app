@@ -1,17 +1,11 @@
 import { expect } from "chai";
 
-import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 import { JSSJobStatus } from "../../../services/job-status-service/types";
 import {
   mockSuccessfulUploadJob,
   mockWorkingUploadJob,
 } from "../../test/mocks";
-import {
-  receiveJobInsert,
-  receiveJobs,
-  receiveJobUpdate,
-  updateUploadProgressInfo,
-} from "../actions";
+import { receiveJobs, receiveJobUpdate } from "../actions";
 import reducer from "../reducer";
 import { initialState } from "../reducer";
 
@@ -23,17 +17,8 @@ describe("job reducer", () => {
       expect(result.uploadJobs).to.equal(uploadJobs);
     });
   });
-  describe("receiveJobInsert", () => {
-    it("adds job to front of upload job list if serviceFields.type = 'upload'", () => {
-      const result = reducer(
-        initialState,
-        receiveJobInsert(mockWorkingUploadJob)
-      );
-      expect(result.uploadJobs[0]).to.equal(mockWorkingUploadJob);
-    });
-  });
   describe("receiveJobUpdate", () => {
-    it("replaces job with matching jobId in uploadJobs", () => {
+    it("replaces job with matching id in uploadJobs", () => {
       const updatedJob = {
         ...mockWorkingUploadJob,
         status: JSSJobStatus.SUCCEEDED,
@@ -45,36 +30,21 @@ describe("job reducer", () => {
         },
         receiveJobUpdate(updatedJob)
       );
-      expect(result.uploadJobs[0]).to.equal(updatedJob);
+      expect(result.uploadJobs).to.deep.equal([
+        updatedJob,
+        mockSuccessfulUploadJob,
+      ]);
     });
 
-    it("returns original state if job with matching jobId is not found", () => {
-      const state = {
-        ...initialState,
-        uploadJobs: [mockWorkingUploadJob],
-      };
-      const result = reducer(state, receiveJobUpdate(mockWorkingUploadJob));
-      expect(result).to.deep.equal(state);
-    });
-  });
-  describe("updateUploadProgressInfo", () => {
-    it("adds progress info for a jobId without overwriting other progress info", () => {
-      const newProgress = {
-        md5BytesComputed: 1,
-        totalBytes: 2,
-        step: Step.TWO,
-      };
+    it("adds job to front of uploadJobs if no job has a matching id", () => {
       const result = reducer(
-        {
-          ...initialState,
-          copyProgress: {
-            abc: { md5BytesComputed: 0, totalBytes: 100, step: Step.TWO },
-          },
-        },
-        updateUploadProgressInfo("def", newProgress)
+        { ...initialState, uploadJobs: [mockSuccessfulUploadJob] },
+        receiveJobUpdate(mockWorkingUploadJob)
       );
-      expect(result.copyProgress.abc).to.not.be.undefined;
-      expect(result.copyProgress.def).to.equal(newProgress);
+      expect(result.uploadJobs).to.deep.equal([
+        mockWorkingUploadJob,
+        mockSuccessfulUploadJob,
+      ]);
     });
   });
 });

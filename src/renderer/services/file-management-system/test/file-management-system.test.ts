@@ -12,7 +12,7 @@ import {
   JobStatusService,
   MetadataManagementService,
 } from "../..";
-import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
+import { mockJob, mockSuccessfulUploadJob } from "../../../state/test/mocks";
 import { UploadStatus } from "../../file-storage-service";
 import { JSSJobStatus, UploadJob } from "../../job-status-service/types";
 
@@ -20,7 +20,6 @@ describe("FileManagementSystem", () => {
   const sandbox = createSandbox();
   let fss: SinonStubbedInstance<FileStorageService>;
   let jss: SinonStubbedInstance<JobStatusService>;
-  let jssV2: SinonStubbedInstance<JobStatusService>;
   let mms: SinonStubbedInstance<MetadataManagementService>;
   let fms: FileManagementSystem;
   const testFilePath = path.resolve(os.tmpdir(), "md5-test.txt");
@@ -34,13 +33,11 @@ describe("FileManagementSystem", () => {
   beforeEach(() => {
     fss = sandbox.createStubInstance(FileStorageService);
     jss = sandbox.createStubInstance(JobStatusService);
-    jssV2 = sandbox.createStubInstance(JobStatusService);
     mms = sandbox.createStubInstance(MetadataManagementService);
 
     fms = new FileManagementSystem({
       fss: fss as any,
       jss: jss as any,
-      jssV2: jssV2 as any,
       mms: mms as any,
     });
   });
@@ -55,7 +52,7 @@ describe("FileManagementSystem", () => {
 
   describe("startUpload", () => {
     const metadata = {
-      file: { originalPath: "/allen/foo/bar.txt", fileType: "txt" },
+      file: { originalPath: testFilePath, fileType: "text" },
     };
     const serviceFields = { groupId: "group", multifile: false };
 
@@ -67,335 +64,173 @@ describe("FileManagementSystem", () => {
       });
     });
 
-    it("saves the upload request on the storage service's 2.0 job", async () => {
-      jssV2.getJobOrNull.resolves({ ...mockJob, jobId: "mockUploadId" });
+    it("sends the upload request to FSS with the upload", async () => {
+      await fms.startUpload(metadata, serviceFields);
 
-      await fms.startUpload(metadata, "test", serviceFields);
-
-      expect(jssV2.getJobOrNull).to.have.been.calledOnceWith("mockUploadId");
-      expect(jssV2.updateJob).to.have.been.calledOnceWith("mockUploadId", {
-        serviceFields: {
-          uploadRequest: {
-            files: [metadata],
-            type: "upload",
-            localNasShortcut: true,
-            groupId: "group",
-            multifile: false,
-          },
-        },
+      expect(fss.upload.getCall(0).args[6]).to.deep.equal({
+        files: [metadata],
+        type: "upload",
+        localNasShortcut: false,
+        groupId: "group",
+        multifile: false,
       });
-      expect(jss.createJob).to.not.have.been.called;
-    });
-
-    it("creates an app job tracking the FSS upload when there is no 2.0 job", async () => {
-      jssV2.getJobOrNull.resolves(null);
-
-      await fms.startUpload(metadata, "test", serviceFields);
-
-      expect(jss.createJob).to.have.been.calledOnce;
-      expect(
-        jss.createJob.getCall(0).args[0].serviceFields.fssUploadId
-      ).to.equal("mockUploadId");
-      expect(jssV2.updateJob).to.not.have.been.called;
-    });
-  });
-
-  describe("initiateUpload", () => {
-    it("creates tracking job in JSS", async () => {
-      // Act
-      await fms.initiateUpload(
-        { file: { originalPath: "", fileType: "txt" } },
-        "test"
-      );
-
-      // Assert
-      expect(jss.createJob).to.have.been.calledOnce;
-    });
-
-    it("Names the job by extracting filename from filepath", async () => {
-      // Act
-      await fms.initiateUpload(
-        { file: { originalPath: "foo/bar", fileType: "txt" } },
-        "test"
-      );
-
-      const jssJobName = jss.createJob.getCall(0).args[0].jobName;
-      expect(jssJobName).to.equal("bar");
-
-      // Assert
-      expect(jss.createJob).to.have.been.calledOnce;
-    });
-
-    it("Names the job using the custom filename", async () => {
-      // Act
-      await fms.initiateUpload(
-        {
-          file: {
-            originalPath: "foo/bar",
-            fileType: "txt",
-            customFileName: "baz",
-          },
-        },
-        "test"
-      );
-
-      const jssJobName = jss.createJob.getCall(0).args[0].jobName;
-      expect(jssJobName).to.equal("baz");
-
-      // Assert
-      expect(jss.createJob).to.have.been.calledOnce;
-    });
-  });
-
-  describe("upload", () => {
-    it("stores FSS uploadId in JSS after starting upload", async () => {
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
-          type: "upload",
-        },
-      };
-
-      fss.upload.resolves({
-        status: UploadStatus.WORKING,
-        uploadId: "mockUploadId",
-        fileId: "mockFileId",
-      });
-
-      await fms.upload(upload);
-
-      expect(fss.upload.calledOnce).to.be.true;
-      expect(
-        jss.updateJob.calledWith(upload.jobId, {
-          serviceFields: { fssUploadId: "mockUploadId" },
-        })
-      ).to.be.true;
-    });
-
-    it("stores informative error message from FSS response on failure", async () => {
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
-          type: "upload",
-        },
-      };
-
-      const fssErrorMessage = "Path does not exist: /aled/eadf/test";
-      const axiosError = new Error(
-        "Request failed with status code 400"
-      ) as any;
-      axiosError.response = {
-        status: 400,
-        data: { message: fssErrorMessage, error: "Failed to validate request" },
-      };
-      fss.upload.rejects(axiosError);
-
-      await expect(fms.upload(upload)).to.be.rejectedWith(Error);
-
-      const updateJobCall = jss.updateJob.getCall(0);
-      expect(updateJobCall.args[1]?.serviceFields?.error).to.equal(
-        fssErrorMessage
-      );
-    });
-
-    it("falls back to generic error message when no response data", async () => {
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
-          type: "upload",
-        },
-      };
-
-      fss.upload.rejects(new Error("Network Error"));
-
-      await expect(fms.upload(upload)).to.be.rejectedWith(Error);
-
-      const updateJobCall = jss.updateJob.getCall(0);
-      expect(updateJobCall.args[1]?.serviceFields?.error).to.equal(
-        "Network Error"
-      );
     });
 
     it("Uses extracted fileName in FSS upload", async () => {
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
-          type: "upload",
-        },
-      };
-
-      fss.upload.resolves({
-        status: UploadStatus.WORKING,
-        uploadId: "mockUploadId",
-        fileId: "mockFileId",
-      });
-
-      await fms.upload(upload);
+      await fms.startUpload(metadata, serviceFields);
 
       const actualFileName = fss.upload.getCall(0).args[0];
-      const expectedFileName = basename(testFilePath);
-      expect(actualFileName).to.equal(expectedFileName);
+      expect(actualFileName).to.equal(basename(testFilePath));
     });
 
     it("Uses customFileName in FSS upload", async () => {
-      const upload: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-                customFileName: "bla",
-              },
-            },
-          ],
-          type: "upload",
-        },
-      };
-
-      fss.upload.resolves({
-        status: UploadStatus.WORKING,
-        uploadId: "mockUploadId",
-        fileId: "mockFileId",
-      });
-
-      await fms.upload(upload);
+      await fms.startUpload(
+        { file: { ...metadata.file, customFileName: "bla" } },
+        serviceFields
+      );
 
       const actualFileName = fss.upload.getCall(0).args[0];
-      const expectedFileName = "bla";
-      expect(actualFileName).to.equal(expectedFileName);
-    });
-
-    it("calls retryFinalize on a localNasShortcut upload", async () => {
-      // Arrange
-      const { mtime: fileLastModified } = await fs.promises.stat(testFilePath);
-      const fileLastModifiedInMs = fileLastModified.getTime();
-      const fssUploadId = "234124141";
-      const fuaUploadJob: UploadJob = {
-        ...mockJob,
-        serviceFields: {
-          files: [
-            {
-              file: {
-                fileType: "text",
-                originalPath: testFilePath,
-              },
-            },
-          ],
-          localNasShortcut: true,
-          fssUploadId,
-          type: "upload",
-          lastModifiedInMS: fileLastModifiedInMs,
-        },
-      };
-      jss.getJob.onFirstCall().resolves(fuaUploadJob);
-      fss.getStatus
-        .onFirstCall()
-        .resolves({
-          uploadId: fssUploadId,
-          fileId: "mockFileId",
-          status: UploadStatus.RETRY,
-        })
-        .onSecondCall()
-        .resolves({
-          uploadId: fssUploadId,
-          fileId: "mockFileId",
-          status: UploadStatus.COMPLETE,
-        });
-
-      // Act
-      await fms.retry(fssUploadId);
-
-      // Assert
-      expect(jss.createJob.called).to.be.false;
+      expect(actualFileName).to.equal("bla");
     });
   });
 
   describe("complete", () => {
-    it("fails upload job on error", async () => {
+    const storedUpload: UploadJob = {
+      ...mockJob,
+      status: JSSJobStatus.SUCCEEDED,
+      serviceFields: {
+        fileId: "mockFileId",
+        uploadRequest: {
+          files: [{ file: { fileType: "text", originalPath: testFilePath } }],
+          type: "upload",
+        },
+      },
+    };
+
+    it("writes metadata to MMS and records the result on the job", async () => {
+      // Arrange
+      fss.getFileAttributes.resolves({
+        fileId: "mockFileId",
+        name: "file.txt",
+        size: 1,
+        localPath: "/allen/file.txt",
+        md5: "md5",
+      });
+
+      // Act
+      await fms.complete(storedUpload);
+
+      // Assert
+      expect(mms.createFileMetadata).to.have.been.calledOnce;
+      expect(jss.updateJob).to.have.been.calledOnceWith(storedUpload.id, {
+        serviceFields: {
+          uploadRequest: {
+            metadataWritten: true,
+            error: null,
+            result: [
+              {
+                fileId: "mockFileId",
+                fileName: "file.txt",
+                readPath: "/allen/file.txt",
+              },
+            ],
+          },
+        },
+      });
+    });
+
+    it("records the failure on the job if writing metadata fails", async () => {
       // Arrange
       mms.createFileMetadata.rejects(new Error("Test failure"));
 
       // Act
-      await expect(
-        fms.complete(mockWorkingUploadJob, "90124124")
-      ).to.be.rejectedWith(Error);
+      await expect(fms.complete(storedUpload)).to.be.rejectedWith(Error);
 
       // Assert
       expect(jss.updateJob).to.have.been.calledOnce;
+      const { uploadRequest } =
+        jss.updateJob.getCall(0).args[1].serviceFields || {};
+      expect(uploadRequest?.metadataWritten).to.be.false;
+      expect(uploadRequest?.error).to.contain("Test failure");
+    });
+  });
+
+  describe("retry", () => {
+    const mockUploadId = "mockUploadId";
+
+    it("only rewrites metadata if the storage service already has the file", async () => {
+      // Arrange
+      jss.getJob.resolves({
+        ...mockJob,
+        status: JSSJobStatus.SUCCEEDED,
+        serviceFields: {
+          fileId: "mockFileId",
+          uploadRequest: {
+            files: [{ file: { fileType: "text", originalPath: testFilePath } }],
+            type: "upload",
+            metadataWritten: false,
+          },
+        },
+      });
+      fss.getFileAttributes.resolves({
+        fileId: "mockFileId",
+        name: "file.txt",
+        size: 1,
+        localPath: "/allen/file.txt",
+        md5: "md5",
+      });
+
+      // Act
+      await fms.retry(mockUploadId);
+
+      // Assert
+      expect(mms.createFileMetadata).to.have.been.calledOnce;
+      expect(fss.retryUpload).to.not.have.been.called;
+    });
+
+    it("retries the upload in FSS and clears the previous error", async () => {
+      // Arrange
+      jss.getJob.resolves({ ...mockJob, status: JSSJobStatus.FAILED });
+
+      // Act
+      await fms.retry(mockUploadId);
+
+      // Assert
+      expect(fss.retryUpload).to.have.been.calledOnceWith(mockUploadId);
+      expect(jss.updateJob).to.have.been.calledOnceWith(mockUploadId, {
+        serviceFields: { uploadRequest: { error: null, cancelled: false } },
+      });
+    });
+
+    it("rejects retrying a successful upload", async () => {
+      // Arrange
+      jss.getJob.resolves(mockSuccessfulUploadJob);
+
+      // Act / Assert
+      await expect(fms.retry(mockUploadId)).to.be.rejectedWith(Error);
+      expect(fss.retryUpload).to.not.have.been.called;
     });
   });
 
   describe("cancel", () => {
     const mockUploadId = "90k123123";
 
-    it("cancels upload via reader and FSS", async () => {
+    it("cancels the upload in FSS and marks the job as cancelled", async () => {
       // Arrange
-      jss.getJob.resolves({
-        ...mockJob,
-        status: JSSJobStatus.WORKING,
-        serviceFields: {
-          ...mockJob.serviceFields,
-          fssUploadId: "12412m4413",
-        },
-      });
-
-      // still in progress
-      fss.getStatus.resolves({
-        uploadId: "12412m4413",
-        status: UploadStatus.WORKING,
-        fileId: "mockFileId",
-      });
+      jss.getJob.resolves({ ...mockJob, status: JSSJobStatus.WORKING });
 
       // Act
       await fms.cancel(mockUploadId);
 
       // Assert
-      expect(fss.cancelUpload).to.have.been.calledOnceWith("12412m4413");
-    });
-
-    it("sets job status to FAILED with cancellation flag", async () => {
-      // Arrange
-      jss.getJob.resolves(mockJob);
-
-      // Act
-      await fms.cancel(mockUploadId);
-
-      // Assert
+      expect(fss.cancelUpload).to.have.been.calledOnceWith(mockUploadId);
       expect(
         jss.updateJob.calledOnceWithExactly(mockUploadId, {
           status: JSSJobStatus.FAILED,
-          serviceFields: {
-            cancelled: true,
-            error: "Cancelled by user",
-          },
+          error: "Cancelled by user",
+          serviceFields: { uploadRequest: { cancelled: true } },
         })
       ).to.be.true;
-    });
-
-    it("rejects cancellations of uploads that have been successfully copied into the FMS", async () => {
-      // Arrange
-      jss.getJob.resolves({
-        ...mockJob,
-        status: JSSJobStatus.WORKING,
-        serviceFields: {
-          ...mockJob.serviceFields,
-          fssUploadId: "12412m4413",
-        },
-      });
-      fss.getStatus.resolves({
-        uploadId: "-1",
-        status: UploadStatus.COMPLETE,
-        fileId: "mockFileId",
-      });
-
-      // Act / Assert
-      await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
     });
 
     it("rejects cancellation if upload not in progress", async () => {
@@ -405,8 +240,9 @@ describe("FileManagementSystem", () => {
         status: JSSJobStatus.SUCCEEDED,
       });
 
-      // Act / Arrange
+      // Act / Assert
       await expect(fms.cancel(mockUploadId)).rejectedWith(Error);
+      expect(fss.cancelUpload).to.not.have.been.called;
     });
   });
 

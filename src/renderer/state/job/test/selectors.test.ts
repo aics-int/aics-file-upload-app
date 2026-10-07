@@ -1,6 +1,5 @@
 import { expect } from "chai";
 
-import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 import {
   UploadJob,
   JSSJobStatus,
@@ -16,6 +15,7 @@ import {
   getIsSafeToExit,
   getJobIdToUploadJobMap,
   getRecentUploads,
+  getUploadStatus,
 } from "../selectors";
 
 describe("Job selectors", () => {
@@ -40,13 +40,6 @@ describe("Job selectors", () => {
           ...nonEmptyJobStateBranch,
           // Provide in non-sorted order to ensure selector sorts
           uploadJobs: [middle, oldest, newest],
-          copyProgress: {
-            [mockWorkingUploadJob.jobId]: {
-              completedBytes: 2,
-              totalBytes: 100,
-              step: Step.TWO,
-            },
-          },
         },
       };
 
@@ -55,60 +48,54 @@ describe("Job selectors", () => {
 
       // Assert
       expect(uploads).to.be.lengthOf(3);
-      expect(uploads[0].jobId).to.equal(newest.jobId);
-      expect(uploads[1].jobId).to.equal(middle.jobId);
-      expect(uploads[2].jobId).to.equal(oldest.jobId);
+      expect(uploads[0].id).to.equal(newest.id);
+      expect(uploads[1].id).to.equal(middle.id);
+      expect(uploads[2].id).to.equal(oldest.id);
       for (let i = 0; i < uploads.length - 1; i++) {
         expect(uploads[i].created.getTime()).to.be.greaterThanOrEqual(
           uploads[i + 1].created.getTime()
         );
       }
-      const workingUpload = uploads.find(
-        (u) => u.status === JSSJobStatus.WORKING
-      );
-      expect(workingUpload?.byteProgress).to.not.be.undefined;
     });
 
-    it("hides any jobs that are duplicates of the original", () => {
-      // Arrange
-      const mockReplacedJob1: UploadJob = {
-        ...mockFailedUploadJob,
-        created: new Date("Oct 2, 2020 03:24:00"),
-        jobId: "replacement1",
-      };
-      const mockReplacedJob2: UploadJob = {
-        ...mockFailedUploadJob,
-        created: new Date("Oct 3, 2020 03:24:00"),
-        jobId: "replacement2",
-        status: JSSJobStatus.RETRYING,
-        serviceFields: {
-          ...mockFailedUploadJob.serviceFields,
-          originalJobId: mockReplacedJob1.jobId,
-        },
-      };
-      const expectedJob: UploadJob = {
-        ...mockFailedUploadJob,
-        created: new Date("Oct 1, 2020 03:24:00"),
-        serviceFields: {
-          files: [],
-          lastModifiedInMS: new Date().getMilliseconds(),
-          originalJobId: mockReplacedJob2.jobId,
-          type: "upload",
-        },
-      };
-
-      // Act
+    it("reads file id and path from the upload request result", () => {
       const uploads = getRecentUploads({
         ...mockState,
-        job: {
-          ...mockState.job,
-          uploadJobs: [expectedJob, mockReplacedJob1, mockReplacedJob2],
-        },
+        job: { ...mockState.job, uploadJobs: [mockSuccessfulUploadJob] },
       });
 
-      // Assert
-      expect(uploads).to.be.lengthOf(1);
-      expect(uploads[0].jobId).to.equal(expectedJob.jobId);
+      expect(uploads[0].fileId).to.equal("cat, dog");
+      expect(uploads[0].filePath).to.equal("cat, cat");
+    });
+  });
+
+  describe("getUploadStatus", () => {
+    it("is in progress while the app has not written metadata for a stored file", () => {
+      const job: UploadJob = {
+        ...mockSuccessfulUploadJob,
+        serviceFields: {
+          fileId: "cat",
+          uploadRequest: { files: [], type: "upload" },
+        },
+      };
+      expect(getUploadStatus(job)).to.equal(JSSJobStatus.WORKING);
+    });
+
+    it("is failed when writing metadata failed", () => {
+      const job: UploadJob = {
+        ...mockSuccessfulUploadJob,
+        serviceFields: {
+          fileId: "cat",
+          uploadRequest: { files: [], type: "upload", metadataWritten: false },
+        },
+      };
+      expect(getUploadStatus(job)).to.equal(JSSJobStatus.FAILED);
+    });
+
+    it("is succeeded once metadata is written", () => {
+      expect(getUploadStatus(mockSuccessfulUploadJob)).to.equal(
+        JSSJobStatus.SUCCEEDED
+      );
     });
   });
 
@@ -142,7 +129,7 @@ describe("Job selectors", () => {
   });
 
   describe("getJobIdToUploadJobMap", () => {
-    it("converts a list of jobs to a map of jobId's to jobs", () => {
+    it("converts a list of jobs to a map of job ids to jobs", () => {
       const map = getJobIdToUploadJobMap({
         ...mockState,
         job: {
@@ -151,10 +138,8 @@ describe("Job selectors", () => {
         },
       });
       expect(map.size).to.equal(2);
-      expect(map.get(mockWorkingUploadJob.jobId)).to.equal(
-        mockWorkingUploadJob
-      );
-      expect(map.get(mockSuccessfulUploadJob.jobId)).to.equal(
+      expect(map.get(mockWorkingUploadJob.id)).to.equal(mockWorkingUploadJob);
+      expect(map.get(mockSuccessfulUploadJob.id)).to.equal(
         mockSuccessfulUploadJob
       );
     });
