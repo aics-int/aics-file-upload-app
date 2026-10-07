@@ -68,6 +68,12 @@ export interface UploadServiceFields {
   multifile?: boolean;
 }
 
+// The app's fields on the storage service's 2.0 upload job, stored under `serviceFields.uploadRequest`
+export type UploadRequestServiceFields = Pick<
+  UploadServiceFields,
+  "files" | "type" | "localNasShortcut" | "multifile" | "groupId"
+>;
+
 export interface JSSJob {
   // Name of the most recent host to update the status of the job.
   currentHost?: string;
@@ -135,7 +141,9 @@ export interface UpdateJobRequest
     Partial<UploadJob>,
     "jobId" | "created" | "modified" | "user" | "serviceFields"
   > {
-  serviceFields?: Partial<UploadServiceFields>;
+  serviceFields?: Partial<UploadServiceFields> & {
+    uploadRequest?: UploadRequestServiceFields;
+  };
 }
 
 interface MongoFieldQuery {

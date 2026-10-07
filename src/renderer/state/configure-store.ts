@@ -113,6 +113,7 @@ export const reduxLogicDependencies: Partial<ReduxLogicExtraDependencies> = {
   fms: new FileManagementSystem({
     fss: new FileStorageService(httpClient, storage),
     jss: jssClient,
+    jssV2: jssV2Client,
     mms: mmsClient,
   }),
   ipcRenderer,

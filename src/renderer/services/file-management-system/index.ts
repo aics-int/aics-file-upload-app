@@ -19,6 +19,7 @@ import { UploadRequest } from "../types";
 interface FileManagementClientConfig {
   fss: FileStorageService;
   jss: JobStatusService;
+  jssV2: JobStatusService;
   mms: MetadataManagementService;
 }
 
@@ -37,6 +38,7 @@ export interface UploadProgressInfo {
 export default class FileManagementSystem {
   private readonly fss: FileStorageService;
   private readonly jss: JobStatusService;
+  private readonly jssV2: JobStatusService;
   private readonly mms: MetadataManagementService;
 
   /**
@@ -50,7 +52,43 @@ export default class FileManagementSystem {
   public constructor(config: FileManagementClientConfig) {
     this.fss = config.fss;
     this.jss = config.jss;
+    this.jssV2 = config.jssV2;
     this.mms = config.mms;
+  }
+
+  /**
+   * Starts the upload in FSS, then saves the upload request on the storage service's 2.0 job.
+   * Storage services without a 2.0 job are tracked with a new app job instead (legacy).
+   */
+  public async startUpload(
+    metadata: UploadRequest,
+    user: string,
+    serviceFields: Pick<UploadServiceFields, "groupId" | "multifile">
+  ): Promise<void> {
+    const { uploadId } = await this.startFssUpload(
+      metadata,
+      serviceFields.multifile
+    );
+    const storageServiceJob = await this.jssV2.getJobOrNull(uploadId);
+    if (storageServiceJob) {
+      await this.jssV2.updateJob(uploadId, {
+        serviceFields: {
+          uploadRequest: {
+            files: [metadata],
+            type: "upload",
+            localNasShortcut: this.shouldBeLocalNasUpload(
+              metadata.file.originalPath
+            ),
+            ...serviceFields,
+          },
+        },
+      });
+    } else {
+      await this.initiateUpload(metadata, user, {
+        ...serviceFields,
+        fssUploadId: uploadId,
+      });
+    }
   }
 
   /**
@@ -300,25 +338,9 @@ export default class FileManagementSystem {
    */
   public async upload(upload: UploadJob): Promise<void> {
     try {
-      const source = upload.serviceFields.files[0]?.file.originalPath;
-      const customFileName = upload.serviceFields.files[0]?.file.customFileName;
-      const fileName = customFileName || path.basename(source);
-      const isMultifile = upload.serviceFields?.multifile;
-      const shouldBeInLocal =
-        upload.serviceFields.files[0]?.file.shouldBeInLocal;
-
-      const fileType =
-        extensionToFileTypeMap[path.extname(fileName).toLowerCase()] ||
-        FileType.OTHER;
-
-      // v4: single upload call
-      const fssStatus = await this.fss.upload(
-        fileName,
-        fileType,
-        this.posixPath(source),
-        "VAST", // hard coded for now since we're not planning on bucket to bucket uploads
-        isMultifile,
-        shouldBeInLocal
+      const fssStatus = await this.startFssUpload(
+        upload.serviceFields.files[0],
+        upload.serviceFields?.multifile
       );
 
       // track using this upload.jobID
@@ -338,5 +360,23 @@ export default class FileManagementSystem {
       });
       throw error;
     }
+  }
+
+  private startFssUpload(metadata: UploadRequest, isMultifile?: boolean) {
+    const source = metadata.file.originalPath;
+    const fileName = metadata.file.customFileName || path.basename(source);
+    const fileType =
+      extensionToFileTypeMap[path.extname(fileName).toLowerCase()] ||
+      FileType.OTHER;
+
+    // v4: single upload call
+    return this.fss.upload(
+      fileName,
+      fileType,
+      this.posixPath(source),
+      "VAST", // hard coded for now since we're not planning on bucket to bucket uploads
+      isMultifile,
+      metadata.file.shouldBeInLocal
+    );
   }
 }

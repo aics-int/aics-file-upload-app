@@ -223,6 +223,33 @@ describe("JobStatusService 2.0", () => {
     });
   });
 
+  describe("getJobOrNull", () => {
+    it("Returns job when found", async () => {
+      sandbox.replace(
+        httpClient,
+        "get",
+        stub().resolves(makeAxiosResponse(mockV2Job))
+      );
+
+      const result = await jobStatusClient.getJobOrNull(jobId);
+      expect(result).to.deep.equal(mockJSSJob);
+    });
+    it("Returns null if JSS returns a 404", async () => {
+      const notFound = { response: { status: 404 } };
+      sandbox.replace(httpClient, "get", stub().rejects(notFound));
+
+      const result = await jobStatusClient.getJobOrNull(jobId);
+      expect(result).to.be.null;
+    });
+    it("Returns error response if JSS returns a 500", async () => {
+      sandbox.replace(httpClient, "get", stub().rejects(internalServerError));
+
+      return expect(jobStatusClient.getJobOrNull(jobId)).to.be.rejectedWith(
+        internalServerError
+      );
+    });
+  });
+
   describe("updateJob", () => {
     it("Returns bare job", async () => {
       sandbox.replace(
