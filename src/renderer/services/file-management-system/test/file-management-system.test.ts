@@ -20,6 +20,7 @@ describe("FileManagementSystem", () => {
   const sandbox = createSandbox();
   let fss: SinonStubbedInstance<FileStorageService>;
   let jss: SinonStubbedInstance<JobStatusService>;
+  let jssV2: SinonStubbedInstance<JobStatusService>;
   let mms: SinonStubbedInstance<MetadataManagementService>;
   let fms: FileManagementSystem;
   const testFilePath = path.resolve(os.tmpdir(), "md5-test.txt");
@@ -33,11 +34,13 @@ describe("FileManagementSystem", () => {
   beforeEach(() => {
     fss = sandbox.createStubInstance(FileStorageService);
     jss = sandbox.createStubInstance(JobStatusService);
+    jssV2 = sandbox.createStubInstance(JobStatusService);
     mms = sandbox.createStubInstance(MetadataManagementService);
 
     fms = new FileManagementSystem({
       fss: fss as any,
       jss: jss as any,
+      jssV2: jssV2 as any,
       mms: mms as any,
     });
   });
@@ -48,6 +51,53 @@ describe("FileManagementSystem", () => {
 
   after(async () => {
     await fs.promises.unlink(testFilePath);
+  });
+
+  describe("startUpload", () => {
+    const metadata = {
+      file: { originalPath: "/allen/foo/bar.txt", fileType: "txt" },
+    };
+    const serviceFields = { groupId: "group", multifile: false };
+
+    beforeEach(() => {
+      fss.upload.resolves({
+        status: UploadStatus.WORKING,
+        uploadId: "mockUploadId",
+        fileId: "mockFileId",
+      });
+    });
+
+    it("saves the upload request on the storage service's 2.0 job", async () => {
+      jssV2.getJobOrNull.resolves({ ...mockJob, jobId: "mockUploadId" });
+
+      await fms.startUpload(metadata, "test", serviceFields);
+
+      expect(jssV2.getJobOrNull).to.have.been.calledOnceWith("mockUploadId");
+      expect(jssV2.updateJob).to.have.been.calledOnceWith("mockUploadId", {
+        serviceFields: {
+          uploadRequest: {
+            files: [metadata],
+            type: "upload",
+            localNasShortcut: true,
+            groupId: "group",
+            multifile: false,
+          },
+        },
+      });
+      expect(jss.createJob).to.not.have.been.called;
+    });
+
+    it("creates an app job tracking the FSS upload when there is no 2.0 job", async () => {
+      jssV2.getJobOrNull.resolves(null);
+
+      await fms.startUpload(metadata, "test", serviceFields);
+
+      expect(jss.createJob).to.have.been.calledOnce;
+      expect(
+        jss.createJob.getCall(0).args[0].serviceFields.fssUploadId
+      ).to.equal("mockUploadId");
+      expect(jssV2.updateJob).to.not.have.been.called;
+    });
   });
 
   describe("initiateUpload", () => {

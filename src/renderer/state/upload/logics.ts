@@ -9,7 +9,6 @@ import { RendererProcessEvents } from "../../../shared/constants";
 import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 import FileManagementSystem from "../../services/file-management-system";
-import { UploadJob } from "../../services/job-status-service/types";
 import { AnnotationType, ColumnType } from "../../services/labkey-client/types";
 import { Template } from "../../services/metadata-management-service/types";
 import { UploadType } from "../../types";
@@ -59,7 +58,6 @@ import {
   cancelUploadSucceeded,
   editFileMetadataFailed,
   editFileMetadataSucceeded,
-  initiateUploadFailed,
   initiateUploadSucceeded,
   replaceUpload,
   saveUploadDraftSuccess,
@@ -167,44 +165,24 @@ const initiateUploadLogic = createLogic({
     const user = getSelectedUser(getState());
     const requests = getUploadRequests(getState());
 
-    let uploads: UploadJob[];
-    try {
-      uploads = await Promise.all(
-        requests.map((request) => {
-          const serviceFields = {
-            groupId,
-            multifile: request.file?.uploadType === UploadType.Multifile,
-          };
-          return fms.initiateUpload(request, user, serviceFields);
-        })
-      );
-    } catch (error) {
-      dispatch(
-        initiateUploadFailed(
-          action.payload,
-          `Something went wrong while initiating the upload. Details: ${getErrorMessage(
-            error
-          )}`
-        )
-      );
-      done();
-      return;
-    }
-
     dispatch(
       batchActions([initiateUploadSucceeded(action.payload), resetUpload()])
     );
 
-    const uploadTasks = uploads.map((upload) => async () => {
+    const uploadTasks = requests.map((request) => async () => {
       try {
-        await fms.upload(upload);
+        await fms.startUpload(request, user, {
+          groupId,
+          multifile: request.file?.uploadType === UploadType.Multifile,
+        });
       } catch (error) {
         dispatch(
           uploadFailed(
             `Something went wrong while uploading your files. Details: ${getErrorMessage(
               error
             )}`,
-            upload.jobName
+            request.file.customFileName ||
+              path.basename(request.file.originalPath)
           )
         );
       }
@@ -818,7 +796,6 @@ const uploadWithoutMetadataLogic = createLogic({
 
     const user = getSelectedUser(deps.getState());
 
-    let uploads: UploadJob[];
     try {
       // Don't let users upload folders / multifiles without metadata.
       // This is mainly because there's no graceful way to handle different upload types with no "Upload Type" input,
@@ -832,31 +809,6 @@ const uploadWithoutMetadataLogic = createLogic({
           );
         }
       }
-
-      uploads = await Promise.all(
-        deps.action.payload.map((filePath) => {
-          return deps.fms.initiateUpload(
-            {
-              file: {
-                disposition: "tape", // prevent czi -> ome.tiff conversions
-                fileType:
-                  extensionToFileTypeMap[
-                    path.extname(filePath).toLowerCase()
-                  ] || FileType.OTHER,
-                originalPath: filePath,
-                shouldBeInArchive: true,
-                shouldBeInLocal: true,
-              },
-              microscopy: {},
-            },
-            user,
-            {
-              groupId,
-              multifile: false, // because we disallow uploading multifiles without metadata at all
-            }
-          );
-        })
-      );
     } catch (error) {
       dispatch(
         uploadFailed(
@@ -870,17 +822,34 @@ const uploadWithoutMetadataLogic = createLogic({
       return;
     }
 
-    const uploadTasks = uploads.map((upload) => async () => {
-      const name = upload.jobName;
+    const uploadTasks = deps.action.payload.map((filePath) => async () => {
       try {
-        await deps.fms.upload(upload);
+        await deps.fms.startUpload(
+          {
+            file: {
+              disposition: "tape", // prevent czi -> ome.tiff conversions
+              fileType:
+                extensionToFileTypeMap[path.extname(filePath).toLowerCase()] ||
+                FileType.OTHER,
+              originalPath: filePath,
+              shouldBeInArchive: true,
+              shouldBeInLocal: true,
+            },
+            microscopy: {},
+          },
+          user,
+          {
+            groupId,
+            multifile: false, // because we disallow uploading multifiles without metadata at all
+          }
+        );
       } catch (error) {
         dispatch(
           uploadFailed(
             `Something went wrong while uploading your files. Details: ${getErrorMessage(
               error
             )}`,
-            name
+            path.basename(filePath)
           )
         );
       }

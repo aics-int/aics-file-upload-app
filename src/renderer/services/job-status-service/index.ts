@@ -103,6 +103,21 @@ export default class JobStatusService extends HttpCacheClient {
   }
 
   /***
+   * Get job by id, or null if JSS has no job with that id
+   * @param jobId corresponding id for job
+   */
+  public async getJobOrNull(jobId: string): Promise<JSSJob | null> {
+    try {
+      return await this.getJob(jobId);
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /***
    * Get jobs matching mongoDB query. 2.0 returns one page of jobs, newest first; 1.0 is not paged.
    * @param query query to be passed to mongoDB for finding matching jobs
    * @param page 1-indexed page to request, only used by 2.0

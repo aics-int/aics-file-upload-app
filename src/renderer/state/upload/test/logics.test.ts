@@ -13,7 +13,6 @@ import {
   LabkeyClient,
   MetadataManagementService,
 } from "../../../services";
-import { UploadJob } from "../../../services/job-status-service/types";
 import { ColumnType } from "../../../services/labkey-client/types";
 import { requestFailed } from "../../actions";
 import { SET_ALERT } from "../../feedback/constants";
@@ -53,7 +52,6 @@ import {
   cancelUploadSucceeded,
   editFileMetadataFailed,
   initiateUpload,
-  initiateUploadFailed,
   openUploadDraft,
   retryUploads,
   saveUploadDraft,
@@ -69,8 +67,6 @@ import {
   INITIATE_UPLOAD_SUCCEEDED,
   REPLACE_UPLOAD,
   SAVE_UPLOAD_DRAFT_SUCCESS,
-  UPLOAD_FAILED,
-  UPLOAD_SUCCEEDED,
 } from "../constants";
 import uploadLogics from "../logics";
 import { getUpload, getUploadFileNames } from "../selectors";
@@ -176,14 +172,9 @@ describe("Upload logics", () => {
   });
 
   describe("initiateUploadLogic", () => {
-    const jobId = "abcd";
-    const initiatedUpload: UploadJob = {
-      ...mockJob,
-      jobId,
-    };
+    const fileName = getUploadFileNames(nonEmptyStateForInitiatingUpload)[0];
 
     it("adds job name to action payload, dispatches initiateUploadSucceeded", async () => {
-      fms.initiateUpload.resolves(initiatedUpload);
       jssClient.existsById.resolves(true);
       const { actions, logicMiddleware, store } = createMockReduxStore(
         {
@@ -212,14 +203,13 @@ describe("Upload logics", () => {
         .not.be.undefined;
       // Assert that each upload used the same groupId
       const groupIds = new Set(
-        fms.initiateUpload.getCalls().map((call) => call.args[2]?.groupId)
+        fms.startUpload.getCalls().map((call) => call.args[2]?.groupId)
       );
       expect(groupIds).to.be.lengthOf(1);
-      expect(groupIds).to.not.be.lengthOf(fms.initiateUpload.callCount);
+      expect(groupIds).to.not.be.lengthOf(fms.startUpload.callCount);
     });
 
     it("properly marks files with expected multifile extensions as multifiles", async () => {
-      fms.initiateUpload.resolves(initiatedUpload);
       jssClient.existsById.resolves(true);
       const { actions, logicMiddleware, store } = createMockReduxStore(
         {
@@ -250,7 +240,7 @@ describe("Upload logics", () => {
       // Assert that each upload had the expected "multifile" value
       // Files 1 through 3 are "standard", Files 4 through 5 are multifiles.
       // So we'll expect 3 "false" values and 2 "true" values.
-      const multifileValues = fms.initiateUpload
+      const multifileValues = fms.startUpload
         .getCalls()
         .map((call) => call.args[2]?.multifile);
       const multifileFalseValues = multifileValues.filter(
@@ -261,88 +251,7 @@ describe("Upload logics", () => {
       expect(multifileTrueValues).to.have.length(2);
     });
 
-    it("sets error alert given validation error", async () => {
-      // Arrange
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload,
-        undefined,
-        uploadLogics
-      );
-      const fileNames = getUploadFileNames(
-        nonEmptyStateForInitiatingUpload
-      ).join(", ");
-      const error = "test failure";
-      fms.initiateUpload.rejects(new Error(error));
-
-      // Act
-      store.dispatch(initiateUpload());
-      await logicMiddleware.whenComplete();
-
-      // Assert
-      expect(
-        actions.includesMatch(
-          initiateUploadFailed(
-            fileNames,
-            `Something went wrong while initiating the upload. Details: ${error}`
-          )
-        )
-      ).to.be.true;
-    });
-
-    it("uses error message from API response body when initiate upload fails", async () => {
-      // Arrange
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload,
-        undefined,
-        uploadLogics
-      );
-      const fileNames = getUploadFileNames(
-        nonEmptyStateForInitiatingUpload
-      ).join(", ");
-      const apiMessage = "Path does not exist: /aled/eadf/test";
-      const axiosError = new Error(
-        "Request failed with status code 400"
-      ) as any;
-      axiosError.response = {
-        status: 400,
-        data: { message: apiMessage, error: "Failed to validate request" },
-      };
-      fms.initiateUpload.rejects(axiosError);
-
-      // Act
-      store.dispatch(initiateUpload());
-      await logicMiddleware.whenComplete();
-
-      // Assert
-      expect(
-        actions.includesMatch(
-          initiateUploadFailed(
-            fileNames,
-            `Something went wrong while initiating the upload. Details: ${apiMessage}`
-          )
-        )
-      ).to.be.true;
-    });
-
-    it("does not continue upload given upload directory request failure", async () => {
-      fms.initiateUpload.rejects(new Error("foo"));
-      const { actions, logicMiddleware, store } = createMockReduxStore(
-        nonEmptyStateForInitiatingUpload,
-        undefined,
-        uploadLogics
-      );
-
-      store.dispatch(initiateUpload());
-      await logicMiddleware.whenComplete();
-
-      expect(actions.includesMatch({ type: INITIATE_UPLOAD_SUCCEEDED })).to.be
-        .false;
-      expect(actions.includesMatch({ type: UPLOAD_FAILED })).to.be.false;
-      expect(actions.includesMatch({ type: UPLOAD_SUCCEEDED })).to.be.false;
-    });
-
     it("initiates upload given OK response from validateMetadataAndGetUploadDirectory", async () => {
-      fms.initiateUpload.resolves(initiatedUpload);
       const { logicMiddleware, store } = createMockReduxStore(
         nonEmptyStateForInitiatingUpload,
         undefined,
@@ -350,22 +259,21 @@ describe("Upload logics", () => {
       );
       jssClient.existsById.resolves(true);
       // before
-      expect(fms.upload.called).to.be.false;
+      expect(fms.startUpload.called).to.be.false;
 
       // apply
       store.dispatch(initiateUpload());
 
       // after
       await logicMiddleware.whenComplete();
-      expect(fms.upload.called).to.be.true;
+      expect(fms.startUpload.called).to.be.true;
     });
 
-    it("dispatches uploadFailed if fms.upload fails error", async () => {
+    it("dispatches uploadFailed if fms.startUpload fails", async () => {
       // Arrange
-      fms.initiateUpload.resolves(initiatedUpload);
       jssClient.existsById.resolves(true);
       const errorMessage = "uploadFile failed";
-      fms.upload.rejects(new Error(errorMessage));
+      fms.startUpload.rejects(new Error(errorMessage));
       const { actions, logicMiddleware, store } = createMockReduxStore(
         nonEmptyStateForInitiatingUpload,
         mockReduxLogicDeps,
@@ -381,7 +289,7 @@ describe("Upload logics", () => {
         actions.includesMatch(
           uploadFailed(
             `Something went wrong while uploading your files. Details: ${errorMessage}`,
-            initiatedUpload.jobName
+            fileName
           )
         )
       ).to.be.true;
@@ -389,7 +297,6 @@ describe("Upload logics", () => {
 
     it("uses error message from API response body when upload fails", async () => {
       // Arrange
-      fms.initiateUpload.resolves(initiatedUpload);
       jssClient.existsById.resolves(true);
       const apiMessage = "Path does not exist: /aled/eadf/test";
       const axiosError = new Error(
@@ -399,7 +306,7 @@ describe("Upload logics", () => {
         status: 400,
         data: { message: apiMessage, error: "Failed to validate request" },
       };
-      fms.upload.rejects(axiosError);
+      fms.startUpload.rejects(axiosError);
       const { actions, logicMiddleware, store } = createMockReduxStore(
         nonEmptyStateForInitiatingUpload,
         mockReduxLogicDeps,
@@ -415,7 +322,7 @@ describe("Upload logics", () => {
         actions.includesMatch(
           uploadFailed(
             `Something went wrong while uploading your files. Details: ${apiMessage}`,
-            initiatedUpload.jobName
+            fileName
           )
         )
       ).to.be.true;
@@ -423,10 +330,9 @@ describe("Upload logics", () => {
 
     it("resets upload state after initiate is complete", async () => {
       // Arrange
-      fms.initiateUpload.resolves(initiatedUpload);
       jssClient.existsById.resolves(true);
       const errorMessage = "uploadFile failed";
-      fms.upload.rejects(new Error(errorMessage));
+      fms.startUpload.rejects(new Error(errorMessage));
       const { actions, logicMiddleware, store } = createMockReduxStore(
         nonEmptyStateForInitiatingUpload,
         mockReduxLogicDeps,
@@ -1971,16 +1877,8 @@ describe("Upload logics", () => {
       );
     });
 
-    beforeEach(() => {
-      fms.initiateUpload.resolves({
-        ...mockJob,
-        jobId: "abc123",
-      });
-    });
-
     afterEach(() => {
-      fms.initiateUpload.restore();
-      fms.upload.restore();
+      fms.startUpload.restore();
     });
 
     after(async () => {
@@ -2004,8 +1902,7 @@ describe("Upload logics", () => {
       await logicMiddleware.whenComplete();
 
       // Assert
-      expect(fms.initiateUpload.callCount).to.be.equal(filePaths.length);
-      expect(fms.upload.callCount).to.be.equal(filePaths.length);
+      expect(fms.startUpload.callCount).to.be.equal(filePaths.length);
     });
 
     it("alerts user with uploadFailed action upon failure", async () => {
@@ -2015,15 +1912,8 @@ describe("Upload logics", () => {
         mockReduxLogicDeps,
         uploadLogics
       );
-      fms.initiateUpload.resolves(mockJob);
-      filePaths.forEach((filePath, index) => {
-        fms.initiateUpload.onCall(index).resolves({
-          ...mockJob,
-          jobName: path.basename(filePath),
-        });
-      });
       const error = "fake error";
-      fms.upload.rejects(new Error(error));
+      fms.startUpload.rejects(new Error(error));
 
       // Act
       store.dispatch(uploadWithoutMetadata(filePaths));
