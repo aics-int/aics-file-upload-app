@@ -11,6 +11,11 @@ describe("JSSResponseMapper", () => {
       const result = JSSResponseMapper.map(mockJSSJob);
       expect(result).to.deep.equal(mockJSSJob);
     });
+    it("maps 2.0 id to jobId", () => {
+      const { jobId, ...job } = mockJSSJob;
+      const result = JSSResponseMapper.map({ ...job, id: jobId } as any);
+      expect(result).to.deep.equal(mockJSSJob);
+    });
     it("expands service fields", () => {
       const now = new Date();
       const input: UploadJob = {

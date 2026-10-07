@@ -59,7 +59,6 @@ describe("Job logics", () => {
         ...mockWaitingUploadJob,
         jobId: "abandoned_job_id",
         jobName: "abandoned_job",
-        childIds: ["child_job_id"],
         serviceFields: {
           files: [
             {

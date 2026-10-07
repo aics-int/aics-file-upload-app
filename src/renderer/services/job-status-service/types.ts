@@ -69,9 +69,6 @@ export interface UploadServiceFields {
 }
 
 export interface JSSJob {
-  // Array of child ids of this job.
-  childIds?: string[];
-
   // Name of the most recent host to update the status of the job.
   currentHost?: string;
 
@@ -139,6 +136,7 @@ export interface UpdateJobRequest
 }
 
 interface MongoFieldQuery {
+  $eq?: any;
   $gt?: any;
   $gte?: any;
   $in?: any;
@@ -152,7 +150,6 @@ export interface JobQuery {
   created?: Date | MongoFieldQuery;
   jobId?: string | MongoFieldQuery;
   modified?: Date | MongoFieldQuery;
-  childIds?: string[] | MongoFieldQuery;
   currentHost?: string | MongoFieldQuery;
   currentStage?: string | MongoFieldQuery;
   jobName?: string | MongoFieldQuery;

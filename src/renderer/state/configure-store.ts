@@ -93,7 +93,13 @@ axiosRetry(axios, {
 });
 const httpClient = axios;
 const useCache = Boolean(process.env.USE_CACHE) || false;
-const jssClient = new JobStatusService(httpClient, storage, useCache);
+const jssClient = new JobStatusService(httpClient, storage, useCache, "1.0");
+export const jssV2Client = new JobStatusService(
+  httpClient,
+  storage,
+  useCache,
+  "2.0"
+);
 const mmsClient = new MetadataManagementService(httpClient, storage, useCache);
 const mxsClient = new MetadataExtractionService(httpClient, storage, false);
 const labkeyClient = new LabkeyClient(httpClient, storage, useCache);

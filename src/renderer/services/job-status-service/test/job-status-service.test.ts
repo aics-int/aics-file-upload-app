@@ -10,6 +10,7 @@ import { JobQuery } from "../types";
 import {
   badGatewayResponse,
   mockJobResponse,
+  mockJSSJob,
   mockCreateJobRequest,
   badRequestResponse,
   internalServerError,
@@ -30,7 +31,8 @@ describe("JobStatusService", () => {
   const jobStatusClient = new JobStatusService(
     httpClient,
     storage as any as LocalStorage,
-    false
+    false,
+    "1.0"
   );
   afterEach(() => {
     sandbox.restore();
@@ -193,6 +195,75 @@ describe("JobStatusService", () => {
       return expect(jobStatusClient.getJobs(mockQuery)).to.be.rejectedWith(
         internalServerError
       );
+    });
+  });
+});
+
+describe("JobStatusService 2.0", () => {
+  const sandbox = createSandbox();
+  const jobStatusClient = new JobStatusService(
+    httpClient,
+    storage as any as LocalStorage,
+    false,
+    "2.0"
+  );
+  const { jobId, ...mockV2Job } = { ...mockJSSJob, id: mockJSSJob.jobId };
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  describe("getJob", () => {
+    it("Returns bare job with id mapped to jobId", async () => {
+      const getStub = stub().resolves(makeAxiosResponse(mockV2Job));
+      sandbox.replace(httpClient, "get", getStub);
+
+      const result = await jobStatusClient.getJob(jobId);
+      expect(result).to.deep.equal(mockJSSJob);
+      expect(getStub.firstCall.args[0]).to.contain(`/jss/2.0/job/${jobId}`);
+    });
+  });
+
+  describe("updateJob", () => {
+    it("Returns bare job", async () => {
+      sandbox.replace(
+        httpClient,
+        "patch",
+        stub().resolves(makeAxiosResponse(mockV2Job))
+      );
+
+      const result = await jobStatusClient.updateJob(
+        jobId,
+        mockUpdateJobRequest
+      );
+      expect(result).to.deep.equal(mockV2Job);
+    });
+  });
+
+  describe("getJobs", () => {
+    it("Requests the given page and maps bare jobs", async () => {
+      const postStub = stub().resolves(makeAxiosResponse([mockV2Job]));
+      sandbox.replace(httpClient, "post", postStub);
+
+      const result = await jobStatusClient.getJobs({ user: "foo" }, 3);
+      expect(result).to.deep.equal([mockJSSJob]);
+      expect(postStub.firstCall.args[0]).to.contain(
+        "/jss/2.0/job/query?page=3&page_size=100&sort=created(DESC)"
+      );
+    });
+  });
+
+  describe("getAllJobs", () => {
+    it("Requests pages until one is empty", async () => {
+      const postStub = stub();
+      postStub.onCall(0).resolves(makeAxiosResponse([mockV2Job]));
+      postStub.onCall(1).resolves(makeAxiosResponse([mockV2Job]));
+      postStub.onCall(2).resolves(makeAxiosResponse([]));
+      sandbox.replace(httpClient, "post", postStub);
+
+      const result = await jobStatusClient.getAllJobs({ user: "foo" });
+      expect(result).to.deep.equal([mockJSSJob, mockJSSJob]);
+      expect(postStub.callCount).to.equal(3);
+      expect(postStub.thirdCall.args[0]).to.contain("page=3");
     });
   });
 });

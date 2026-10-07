@@ -5,7 +5,12 @@ import { UploadJob } from "./types";
 const SERVICE_FIELD_NAME = "serviceFields";
 
 export default class JSSResponseMapper {
-  public static map(job: UploadJob): UploadJob {
+  public static map(rawJob: UploadJob): UploadJob {
+    // 2.0 names the job's id `id` rather than `job_id`
+    const { id, ...job } = rawJob as UploadJob & { id?: string };
+    if (id !== undefined) {
+      job.jobId = id;
+    }
     const serviceFields = get(job, SERVICE_FIELD_NAME);
     if (!serviceFields) {
       return job;

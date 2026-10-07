@@ -54,7 +54,6 @@ export const mockJobResponse = {
   data: [
     {
       ...mockJSSJob,
-      childIds: null,
       currentHost: null,
       currentStage: "started",
       jobName: "Dinner",

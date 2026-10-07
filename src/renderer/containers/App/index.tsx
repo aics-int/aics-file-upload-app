@@ -11,7 +11,12 @@ import {
   RendererProcessEvents,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
-import { JSSJob, UploadJob } from "../../services/job-status-service/types";
+import {
+  JSSJob,
+  Service,
+  UploadJob,
+} from "../../services/job-status-service/types";
+import { jssV2Client } from "../../state/configure-store";
 import {
   addRequestToInProgress,
   checkForUpdate,
@@ -74,12 +79,26 @@ export default function App() {
   // Subscribe to job changes for current `limsUrl` and `user`
   useEffect(() => {
     dispatch(addRequestToInProgress(AsyncRequest.GET_JOBS));
+    // Storage service jobs written to JSS 2.0, until the 2.0 stream replaces this
+    const v2UploadJobsPromise = jssV2Client
+      .getAllJobs({
+        user,
+        service: Service.FILE_STORAGE_SERVICE,
+        parentId: { $eq: null },
+      })
+      .catch((error) => {
+        dispatch(
+          setErrorAlert(`Could not retrieve recent uploads: ${error.message}`)
+        );
+        return [];
+      });
     const eventSource = new AutoReconnectingEventSource(
       `${limsUrl}/jss/1.0/job/subscribe/${user}`,
       { withCredentials: true }
     );
 
-    eventSource.addEventListener("initialJobs", (event: MessageEvent) => {
+    eventSource.addEventListener("initialJobs", async (event: MessageEvent) => {
+      const v2UploadJobs = (await v2UploadJobsPromise) as UploadJob[];
       dispatch(removeRequestFromInProgress(AsyncRequest.GET_JOBS));
       const jobs = camelizeKeys(JSON.parse(event.data)) as JSSJob[];
       // Separate user's other jobs from ones created by this app
@@ -89,7 +108,7 @@ export default function App() {
           job.serviceFields?.type === "upload" &&
           !job.serviceFields?.replacementJobIds
       ) as UploadJob[];
-      dispatch(receiveJobs(uploadJobs));
+      dispatch(receiveJobs([...uploadJobs, ...v2UploadJobs]));
     });
 
     eventSource.addEventListener("jobInsert", (event: MessageEvent) => {
