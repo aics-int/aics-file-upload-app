@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { camelizeKeys } from "humps";
+import { camelizeKeys, decamelizeKeys } from "humps";
 import { castArray } from "lodash";
 
 import { LocalStorage } from "../../types";
@@ -84,7 +84,8 @@ export default class FileStorageService extends HttpCacheClient {
       path,
       multifile: isMultifile ?? false,
       shouldBeInLocal,
-      uploadRequest,
+      // FSS stores this as-is on the job, where JSS keys are snake_case
+      uploadRequest: decamelizeKeys(uploadRequest),
     };
     return this.post<UploadStatusResponse>(
       url,

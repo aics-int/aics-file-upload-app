@@ -57,7 +57,11 @@ describe("FileStorageService", () => {
 
       expect(actual).to.deep.equal(expectedResponse);
       const actualPostBody = postStub.firstCall.args[1];
-      expect(actualPostBody).to.include({ fileName, fileType, uploadRequest });
+      expect(actualPostBody).to.include({ fileName, fileType });
+      expect(actualPostBody.uploadRequest).to.deep.equal({
+        files: [{ file: { file_type: fileType, original_path: sourcePath } }],
+        type: "upload",
+      });
     });
   });
 });
