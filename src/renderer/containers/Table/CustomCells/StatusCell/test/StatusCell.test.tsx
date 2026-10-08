@@ -81,9 +81,56 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Uploading file"
+      "WORKING - Step 3 of 4: Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(60);
+  });
+
+  it("counts the FMS cache copy as a step for files kept in local storage", () => {
+    // Arrange
+    const row = {
+      original: {
+        serviceFields: {
+          files: [{ file: { shouldBeInLocal: true } }],
+        },
+        progress: {
+          progress: 60,
+          currentStage: "UPLOAD_TO_S3",
+        },
+      },
+    };
+
+    // Act
+    const wrapper = mount(
+      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
+    );
+
+    // Assert
+    expect(wrapper.find(Tooltip).prop("title")).to.equal(
+      "WORKING - Step 4 of 5: Uploading file"
+    );
+  });
+
+  it("shows no step while waiting to start", () => {
+    // Arrange
+    const row = {
+      original: {
+        progress: {
+          progress: 0,
+          currentStage: "INITIALIZED",
+        },
+      },
+    };
+
+    // Act
+    const wrapper = mount(
+      <StatusCell row={row} value={JSSJobStatus.WAITING} {...({} as any)} />
+    );
+
+    // Assert
+    expect(wrapper.find(Tooltip).prop("title")).to.equal(
+      "WAITING - Waiting to start"
+    );
   });
 
   it("shows unknown stages as-is", () => {
