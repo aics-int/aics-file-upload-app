@@ -2,10 +2,7 @@ import { expect } from "chai";
 import { createSandbox, createStubInstance, SinonStubbedInstance } from "sinon";
 
 import { FileManagementSystem, JobStatusService } from "../../../services";
-import {
-  FSSUpload,
-  UploadStatus,
-} from "../../../services/file-storage-service";
+import { FSSUpload } from "../../../services/file-storage-service";
 import {
   IN_PROGRESS_STATUSES,
   JSSJobStatus,
@@ -283,6 +280,7 @@ describe("Job logics", () => {
     const successfulFSSUpload: FSSUpload = {
       ...mockSuccessfulUploadJob,
       jobId: fssUploadId,
+      progress: 100,
       serviceFields: {
         fileId: "9203414",
       },
@@ -338,31 +336,28 @@ describe("Job logics", () => {
         .false;
     });
 
-    [UploadStatus.INACTIVE, UploadStatus.RETRY].forEach((currentStage) => {
-      it(`fails upload if FSS stage is ${currentStage}`, async () => {
-        // Arrange
-        const { actions, logicMiddleware, store } = createMockReduxStore(
-          stateWithMatchingUpload,
-          undefined,
-          undefined,
-          false
-        );
-        const fssUpload = {
-          ...successfulFSSUpload,
-          // Dummy value; Currently, FSS2 does not gauree that it will update jss status fields when it updates stage
-          status: JSSJobStatus.UNRECOVERABLE,
-          currentStage,
-        };
+    it("fails upload if FSS job failed", async () => {
+      // Arrange
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        stateWithMatchingUpload,
+        undefined,
+        undefined,
+        false
+      );
+      const fssUpload = {
+        ...successfulFSSUpload,
+        status: JSSJobStatus.FAILED,
+        serviceFields: {},
+      };
 
-        // Act
-        store.dispatch(receiveFSSJobCompletionUpdate(fssUpload));
-        await logicMiddleware.whenComplete();
+      // Act
+      store.dispatch(receiveFSSJobCompletionUpdate(fssUpload));
+      await logicMiddleware.whenComplete();
 
-        // Assert
-        expect(fms.failUpload).to.have.been.calledOnce;
-        expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
-          .true;
-      });
+      // Assert
+      expect(fms.failUpload).to.have.been.calledOnce;
+      expect(actions.includesType(RECEIVE_FSS_JOB_COMPLETION_UPDATE)).to.be
+        .true;
     });
     IN_PROGRESS_STATUSES.forEach((status) => {
       it(`rejects updates with ${status} status`, async () => {

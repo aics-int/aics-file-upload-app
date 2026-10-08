@@ -9,36 +9,19 @@ import {
 } from "../../../../constants";
 import { JSSJobStatus } from "../../../../services/job-status-service/types";
 import { UploadSummaryTableRow } from "../../../../state/types";
-import { getPowerOf1000 } from "../../../../util";
-
-import { Step } from "./Step";
 
 const styles = require("./styles.pcss");
 
-const POWER_OF_1000_TO_ABBREV = new Map<number, string>([
-  [0, "B"],
-  [1, "KB"],
-  [2, "MB"],
-  [3, "GB"],
-  [4, "TB"],
-]);
-
-const STEP_INFO = {
-  [Step.ONE_COPY]: "Step 1 of 2: Pre-upload, copying to FMS cache",
-  [Step.ONE_CHECKSUM]: "Step 1 of 2: Pre-upload, calculating MD5 checksum",
-  [Step.TWO]: "Step 2 of 2: Uploading file",
+// `currentStage` values set by FSS on its upload job
+const STAGE_INFO: { [stage: string]: string } = {
+  INITIALIZED: "Waiting to start",
+  CALCULATE_FILE_SIZE: "Calculating file size",
+  COPY_TO_FMS_CACHE: "Copying to FMS cache",
+  CHECKSUM: "Calculating MD5 checksum",
+  UPLOAD_TO_S3: "Uploading file",
+  S3_DOWNLOAD: "Downloading from cloud storage",
+  LABKEY_SYNC: "Registering file in FMS",
 };
-
-function getBytesDisplay(bytes: number): string {
-  const powerOf1000 = getPowerOf1000(bytes);
-  const unit = POWER_OF_1000_TO_ABBREV.get(powerOf1000);
-  const number: number = bytes / Math.pow(1000, powerOf1000);
-  let roundedNumber: string = number.toFixed(1);
-  if (roundedNumber.endsWith("0")) {
-    roundedNumber = number.toFixed(0);
-  }
-  return `${roundedNumber}${unit}`;
-}
 
 export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
   let tooltip = props.value;
@@ -70,34 +53,35 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
     // TODO SWE-875 update progress for pre and post upload
     // based on props.row.original.progress.status=[PRE | UPLOAD | POST]
   } else {
-    const {
-      bytesUploaded = 0,
-      totalBytes = 0,
-      step = 0,
-    } = props.row.original.progress || {};
+    const { progress = 0, currentStage = "" } =
+      props.row.original.progress || {};
+    const stageInfo = STAGE_INFO[currentStage] || currentStage;
 
-    const displayForStep = getBytesDisplay(bytesUploaded);
-    const totalForStep = getBytesDisplay(totalBytes);
-    let progressForStep = 0;
-    if (bytesUploaded && totalBytes) {
-      // Uploading bytes, and progress has been made.
-      progressForStep = Math.floor((bytesUploaded / totalBytes) * 100);
+    // The stages FSS runs for an upload, in order. Only files kept in local storage are copied to the FMS cache.
+    const steps = [
+      "CALCULATE_FILE_SIZE",
+      ...(props.row.original.serviceFields?.files?.[0]?.file.shouldBeInLocal
+        ? ["COPY_TO_FMS_CACHE"]
+        : []),
+      "CHECKSUM",
+      "UPLOAD_TO_S3",
+      "LABKEY_SYNC",
+    ];
+    const stepIndex = steps.indexOf(currentStage);
+    const stepInfo =
+      stepIndex === -1 ? "" : `Step ${stepIndex + 1} of ${steps.length}`;
+
+    if (stageInfo) {
+      tooltip = `${tooltip} - ${
+        stepInfo ? `${stepInfo}: ${stageInfo}` : stageInfo
+      }`;
     }
-
-    tooltip = `${tooltip} - ${STEP_INFO[step]}`;
     content = (
       <>
-        <Progress
-          type="circle"
-          percent={progressForStep}
-          width={25}
-          status="active"
-        />
+        <Progress type="circle" percent={progress} width={25} status="active" />
         <div className={styles.activeInfo}>
-          <p>Step {step + 1} of 3</p>
-          <p>
-            {displayForStep} / {totalForStep}
-          </p>
+          {stepInfo && <p>{stepInfo}</p>}
+          <p>{stageInfo}</p>
         </div>
       </>
     );

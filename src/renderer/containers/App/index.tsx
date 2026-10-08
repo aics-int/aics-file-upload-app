@@ -11,7 +11,11 @@ import {
   RendererProcessEvents,
 } from "../../../shared/constants";
 import StatusBar from "../../components/StatusBar";
-import { JSSJob, UploadJob } from "../../services/job-status-service/types";
+import {
+  JSSJob,
+  Service,
+  UploadJob,
+} from "../../services/job-status-service/types";
 import {
   addRequestToInProgress,
   checkForUpdate,
@@ -104,6 +108,41 @@ export default function App() {
       const job = camelizeKeys(JSON.parse(event.data) as object) as JSSJob;
       handleUploadJobUpdates(job, dispatch);
     });
+
+    eventSource.onDisconnect(() =>
+      dispatch(
+        setErrorAlert(
+          "Lost connection to the server, attempting to reconnect..."
+        )
+      )
+    );
+
+    eventSource.onReconnect(() =>
+      dispatch(setSuccessAlert("Reconnected successfully!"))
+    );
+
+    return function cleanUp() {
+      eventSource.close();
+    };
+  }, [limsUrl, user, dispatch]);
+
+  useEffect(() => {
+    const eventSource = new AutoReconnectingEventSource(
+      `${limsUrl}/jss/2.0/job/subscribe?user=${user}`,
+      { withCredentials: true }
+    );
+
+    const onJobChange = (event: MessageEvent) => {
+      const job = camelizeKeys(JSON.parse(event.data)) as JSSJob & {
+        id: string;
+      };
+      // Child jobs track the individual steps of an upload, the FSS job reports their combined progress
+      if (job.service === Service.FILE_STORAGE_SERVICE && !job.parentId) {
+        handleUploadJobUpdates({ ...job, jobId: job.id }, dispatch);
+      }
+    };
+    eventSource.addEventListener("jobInsert", onJobChange);
+    eventSource.addEventListener("jobUpdate", onJobChange);
 
     eventSource.onDisconnect(() =>
       dispatch(

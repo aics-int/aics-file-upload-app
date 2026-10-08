@@ -453,10 +453,11 @@ export const mockSuccessfulUploadJob: UploadJob = {
 
 export const mockFSSUploadJob: FSSUpload = {
   created: new Date(),
-  currentStage: "UPLOAD_IN_PROGRESS",
+  currentStage: "UPLOAD_TO_S3",
   jobId: "3333333333FSS",
   jobName: "mockFSSUploadJob",
   modified: new Date(),
+  progress: 50,
   service: Service.FILE_STORAGE_SERVICE,
   serviceFields: {
     fileId: "82beaf0460384911b6d6293fb333c4b0",

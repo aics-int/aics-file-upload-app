@@ -9,13 +9,10 @@ import { JSSJob } from "../job-status-service/types";
 import { HttpClient } from "../types";
 
 export interface FSSUpload extends JSSJob {
+  progress: number; // Percent complete, 0-100
   serviceFields: {
     fileId?: string;
     fileSize?: number;
-    copyToFmsCacheProgress?: number; // hybrid only
-    checksumProgress?: number; // cloud + hybrid
-    s3UploadProgress?: number; // final stage
-    multifile?: boolean;
   };
 }
 

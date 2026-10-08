@@ -1,6 +1,5 @@
 import { createLogic } from "redux-logic";
 
-import { UploadStatus } from "../../services/file-storage-service";
 import {
   FAILED_STATUSES,
   IN_PROGRESS_STATUSES,
@@ -181,9 +180,6 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
 
     // Ensure this isn't completing the upload more than once
     if (matchingUploadJob) {
-      const jobShouldFailAccordingToFSSJobStage =
-        fssUpload.currentStage === UploadStatus.INACTIVE ||
-        fssUpload.currentStage === UploadStatus.RETRY;
       const jobHasNotFailedAlready =
         matchingUploadJob.status !== JSSJobStatus.FAILED;
       if (
@@ -195,7 +191,7 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
           fssUpload.serviceFields?.fileId as string
         );
       } else if (
-        jobShouldFailAccordingToFSSJobStage &&
+        fssUpload.status === JSSJobStatus.FAILED &&
         jobHasNotFailedAlready
       ) {
         await fms.failUpload(matchingUploadJob.jobId, "FSS upload failed");
@@ -224,9 +220,8 @@ const receiveFSSJobCompletionUpdateLogics = createLogic({
     const isFileIdInLabkey =
       fssUpload.status === JSSJobStatus.SUCCEEDED &&
       fssUpload.serviceFields?.fileId;
-    const isFailed = fssUpload.currentStage === UploadStatus.INACTIVE;
-    const requiresRetry = fssUpload.currentStage === UploadStatus.RETRY;
-    if (!isDuplicateUpdate && (isFailed || isFileIdInLabkey || requiresRetry)) {
+    const isFailed = fssUpload.status === JSSJobStatus.FAILED;
+    if (!isDuplicateUpdate && (isFailed || isFileIdInLabkey)) {
       next(action);
     } else {
       reject({ type: "ignore" });

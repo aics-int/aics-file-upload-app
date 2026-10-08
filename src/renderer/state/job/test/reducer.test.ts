@@ -1,6 +1,5 @@
 import { expect } from "chai";
 
-import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 import { JSSJobStatus } from "../../../services/job-status-service/types";
 import {
   mockSuccessfulUploadJob,
@@ -60,15 +59,14 @@ describe("job reducer", () => {
   describe("updateUploadProgressInfo", () => {
     it("adds progress info for a jobId without overwriting other progress info", () => {
       const newProgress = {
-        md5BytesComputed: 1,
-        totalBytes: 2,
-        step: Step.TWO,
+        progress: 50,
+        currentStage: "UPLOAD_TO_S3",
       };
       const result = reducer(
         {
           ...initialState,
           copyProgress: {
-            abc: { md5BytesComputed: 0, totalBytes: 100, step: Step.TWO },
+            abc: { progress: 0, currentStage: "CHECKSUM" },
           },
         },
         updateUploadProgressInfo("def", newProgress)
