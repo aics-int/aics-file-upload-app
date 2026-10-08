@@ -126,7 +126,6 @@ export default function App() {
     };
   }, [limsUrl, user, dispatch]);
 
-  // FSS tracks each upload on a JSS 2.0 job, subscribe to those separately
   useEffect(() => {
     const eventSource = new AutoReconnectingEventSource(
       `${limsUrl}/jss/2.0/job/subscribe?user=${user}`,
