@@ -8,14 +8,13 @@ import HttpCacheClient from "../http-cache-client";
 import { JSSJob } from "../job-status-service/types";
 import { HttpClient } from "../types";
 
+// The JSS 2.0 job FSS creates to track an upload. Its id is the FSS upload id.
 export interface FSSUpload extends JSSJob {
+  // Percent complete, 0-100
+  progress: number;
   serviceFields: {
     fileId?: string;
     fileSize?: number;
-    copyToFmsCacheProgress?: number; // hybrid only
-    checksumProgress?: number; // cloud + hybrid
-    s3UploadProgress?: number; // final stage
-    multifile?: boolean;
   };
 }
 

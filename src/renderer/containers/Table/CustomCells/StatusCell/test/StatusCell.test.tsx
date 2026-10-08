@@ -6,7 +6,6 @@ import * as React from "react";
 
 import StatusCell from "..";
 import { JSSJobStatus } from "../../../../../services/job-status-service/types";
-import { Step } from "../Step";
 
 describe("<StatusCell />", () => {
   it("shows complete status when successful and complete", () => {
@@ -64,14 +63,13 @@ describe("<StatusCell />", () => {
     expect(wrapper.exists(CheckCircleFilled)).to.be.true;
   });
 
-  it("shows step 1 when in first step of upload", () => {
+  it("shows the FSS stage and progress while uploading", () => {
     // Arrange
     const row = {
       original: {
         progress: {
-          bytesUploaded: 4245,
-          totalBytes: 82341,
-          step: Step.ONE_CHECKSUM,
+          progress: 60,
+          currentStage: "UPLOAD_TO_S3",
         },
       },
     };
@@ -83,56 +81,44 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 1 of 2: Pre-upload, calculating MD5 checksum"
-    );
-    expect(wrapper.find(Progress).prop("percent")).to.equal(5);
-  });
-
-  it("shows step 2 when no bytes uploaded", () => {
-    // Arrange
-    const row = {
-      original: {
-        progress: {
-          bytesUploaded: 0,
-          totalBytes: 82341,
-          step: Step.TWO,
-        },
-      },
-    };
-
-    // Act
-    const wrapper = mount(
-      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
-    );
-
-    // Assert
-    expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 2: Uploading file"
-    );
-    expect(wrapper.find(Progress).prop("percent")).to.equal(0);
-  });
-
-  it("shows step 2 when bytes have been uploaded", () => {
-    // Arrange
-    const row = {
-      original: {
-        progress: {
-          bytesUploaded: 50001,
-          totalBytes: 82341,
-          step: Step.TWO,
-        },
-      },
-    };
-
-    // Act
-    const wrapper = mount(
-      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
-    );
-
-    // Assert
-    expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 2 of 2: Uploading file"
+      "WORKING - Uploading file"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(60);
+  });
+
+  it("shows unknown stages as-is", () => {
+    // Arrange
+    const row = {
+      original: {
+        progress: {
+          progress: 10,
+          currentStage: "NEW_STAGE",
+        },
+      },
+    };
+
+    // Act
+    const wrapper = mount(
+      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
+    );
+
+    // Assert
+    expect(wrapper.find(Tooltip).prop("title")).to.equal("WORKING - NEW_STAGE");
+  });
+
+  it("shows no progress before FSS has reported any", () => {
+    // Arrange
+    const row = {
+      original: {},
+    };
+
+    // Act
+    const wrapper = mount(
+      <StatusCell row={row} value={JSSJobStatus.WAITING} {...({} as any)} />
+    );
+
+    // Assert
+    expect(wrapper.find(Tooltip).prop("title")).to.equal("WAITING");
+    expect(wrapper.find(Progress).prop("percent")).to.equal(0);
   });
 });

@@ -1,6 +1,5 @@
 import { expect } from "chai";
 
-import { Step } from "../../../containers/Table/CustomCells/StatusCell/Step";
 import {
   UploadJob,
   JSSJobStatus,
@@ -42,9 +41,8 @@ describe("Job selectors", () => {
           uploadJobs: [middle, oldest, newest],
           copyProgress: {
             [mockWorkingUploadJob.jobId]: {
-              completedBytes: 2,
-              totalBytes: 100,
-              step: Step.TWO,
+              progress: 2,
+              currentStage: "UPLOAD_TO_S3",
             },
           },
         },

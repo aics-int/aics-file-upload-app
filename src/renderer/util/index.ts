@@ -124,19 +124,6 @@ export async function getDirectorySize(dir: string): Promise<number> {
     .reduce((i, size) => i + size, 0);
 }
 
-/**
- * Returns largest factor of 1000 for num
- * @param num
- */
-export const getPowerOf1000 = (num: number) => {
-  let count = 0;
-  while (Math.floor(num / 1000) > 0) {
-    count++;
-    num = num / 1000;
-  }
-  return count;
-};
-
 const getCanvasContext = memoize(() => {
   return window.document.createElement("canvas").getContext("2d");
 });
