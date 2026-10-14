@@ -23,11 +23,7 @@ import Table from "../Table";
 import DefaultCell from "../Table/DefaultCells/DefaultCell";
 import DefaultHeader from "../Table/Headers/DefaultHeader";
 
-import {
-  getCanShowImagingSessionColumn,
-  getCanShowWellColumn,
-  getColumnsForTable,
-} from "./selectors";
+import { getCanShowWellColumn, getColumnsForTable } from "./selectors";
 import TableToolHeader from "./TableToolHeader";
 import { CustomColumn } from "./types";
 
@@ -61,9 +57,6 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
   const isMassEditing = useSelector(getMassEditRow);
   const columnDefinitions = useSelector(getColumnsForTable);
   const canShowWellColumn = useSelector(getCanShowWellColumn);
-  const canShowImagingSessionColumn = useSelector(
-    getCanShowImagingSessionColumn
-  );
 
   const data = React.useMemo(() => rows, [rows]);
   const columns: CustomColumn[] = React.useMemo(
@@ -114,10 +107,7 @@ export default function CustomDataTable({ hasSubmitBeenAttempted }: Props) {
     useResizeColumns
   );
 
-  const columnsToHide = [
-    ...(canShowImagingSessionColumn ? [] : [AnnotationName.IMAGING_SESSION]),
-    ...(canShowWellColumn ? [] : [AnnotationName.WELL]),
-  ];
+  const columnsToHide = canShowWellColumn ? [] : [AnnotationName.WELL];
   useHiddenColumns(tableInstance, columnsToHide);
 
   if (!template || !data.length) {

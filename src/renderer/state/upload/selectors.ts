@@ -24,6 +24,8 @@ import {
   LIST_DELIMITER_SPLIT,
   MINUTE_AS_MS,
   PROGRAM_ANNOTATION_ID,
+  IMAGING_SESSION_ANNOTATION_ID,
+  IMAGING_SESSION_NONE,
 } from "../../constants";
 import { ColumnType } from "../../services/labkey-client/types";
 import { MXSResult } from "../../services/metadata-extraction-service";
@@ -39,7 +41,6 @@ import {
   getLookupAnnotationTypeId,
   getNumberAnnotationTypeId,
   getOriginalUpload,
-  getPlateBarcodeToPlates,
   getTextAnnotationTypeId,
 } from "../metadata/selectors";
 import { getMetadataExtractionState } from "../metadataExtraction/selectors";
@@ -277,14 +278,12 @@ export const getUploadValidationErrors = createSelector(
     getUploadAsTableRows,
     getFileToAnnotationHasValueMap,
     getUploadKeyToAnnotationErrorMap,
-    getPlateBarcodeToPlates,
     getCompleteAppliedTemplate,
   ],
   (
     rows,
     fileToAnnotationHasValueMap,
     validationErrorsMap,
-    plateBarcodeToPlates,
     template?
   ): string[] => {
     if (!template) {
@@ -320,19 +319,6 @@ export const getUploadValidationErrors = createSelector(
             (annotation) => !annotationHasValueMap[annotation]
           );
         if (annotationHasValueMap[AnnotationName.PLATE_BARCODE]) {
-          if (!annotationHasValueMap[AnnotationName.IMAGING_SESSION]) {
-            const plateBarcode = rows.find((r) => r.file === file)?.[
-              AnnotationName.PLATE_BARCODE
-            ]?.[0];
-            const plateInfoForBarcode =
-              plateBarcodeToPlates[plateBarcode || ""];
-            // If there are imaging sessions to choose from then the user should have to
-            if (plateInfoForBarcode?.find((p) => !!p.name)) {
-              requiredAnnotationsThatDontHaveValues.push(
-                AnnotationName.IMAGING_SESSION
-              );
-            }
-          }
           if (!annotationHasValueMap[AnnotationName.WELL]) {
             requiredAnnotationsThatDontHaveValues.push(AnnotationName.WELL);
           }
@@ -340,6 +326,12 @@ export const getUploadValidationErrors = createSelector(
 
         if (!annotationHasValueMap[AnnotationName.PROGRAM]) {
           requiredAnnotationsThatDontHaveValues.push(AnnotationName.PROGRAM);
+        }
+
+        if (!annotationHasValueMap[AnnotationName.IMAGING_SESSION]) {
+          requiredAnnotationsThatDontHaveValues.push(
+            AnnotationName.IMAGING_SESSION
+          );
         }
 
         if (requiredAnnotationsThatDontHaveValues.length) {
@@ -375,6 +367,19 @@ export const getAnnotations = (
     }),
     {}
   );
+
+  // "None" means the plate has no imaging session, so nothing is saved for it
+  // I double checked to make sure this is how files
+  // with no imaging session is treated on fms -bk
+  if (
+    castArray(fileMetadata[AnnotationName.IMAGING_SESSION])[0] ===
+    IMAGING_SESSION_NONE
+  ) {
+    fileMetadata = omit(
+      fileMetadata,
+      AnnotationName.IMAGING_SESSION
+    ) as FileModel;
+  }
 
   const customData = removeExcludedFields(fileMetadata);
   const annotations = Object.entries(customData).reduce(
@@ -457,6 +462,23 @@ export const getAnnotations = (
       annotations.push({
         annotationId: PROGRAM_ANNOTATION_ID,
         values: castArray(programValue),
+      });
+    }
+  }
+
+  const imagingSessionValue = fileMetadata[AnnotationName.IMAGING_SESSION];
+  const imagingSessionPresent = Array.isArray(imagingSessionValue)
+    ? !isEmpty(imagingSessionValue)
+    : !isNil(imagingSessionValue);
+
+  if (imagingSessionPresent) {
+    const alreadyIncluded = annotations.some(
+      (ann) => ann.annotationId === IMAGING_SESSION_ANNOTATION_ID
+    );
+    if (!alreadyIncluded) {
+      annotations.push({
+        annotationId: IMAGING_SESSION_ANNOTATION_ID,
+        values: castArray(imagingSessionValue),
       });
     }
   }

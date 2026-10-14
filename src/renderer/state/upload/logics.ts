@@ -6,7 +6,11 @@ import { isDate, isMoment } from "moment";
 import { createLogic } from "redux-logic";
 
 import { RendererProcessEvents } from "../../../shared/constants";
-import { AnnotationName, LIST_DELIMITER_SPLIT } from "../../constants";
+import {
+  AnnotationName,
+  IMAGING_SESSION_NONE,
+  LIST_DELIMITER_SPLIT,
+} from "../../constants";
 import BatchedTaskQueue from "../../entities/BatchedTaskQueue";
 import FileManagementSystem from "../../services/file-management-system";
 import { UploadJob } from "../../services/job-status-service/types";
@@ -393,9 +397,14 @@ const updateUploadLogic = createLogic({
       done();
       return;
     }
-    const imagingSessionName =
+    const selectedImagingSession =
       upload[AnnotationName.IMAGING_SESSION]?.[0] ??
       storedRow?.[AnnotationName.IMAGING_SESSION]?.[0];
+    // "None" means the plate has no imaging session
+    const imagingSessionName =
+      selectedImagingSession === IMAGING_SESSION_NONE
+        ? undefined
+        : selectedImagingSession;
 
     const plateBarcodeToPlates = getPlateBarcodeToPlates(state);
     let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
@@ -441,6 +450,22 @@ const updateUploadLogic = createLogic({
       dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
     }
 
+    // If the plate has no imaging sessions None is the only option
+    // and is auto selected for the plate
+    if (
+      fileKey &&
+      !selectedImagingSession &&
+      !updatedPlateBarcodeToPlates[plateBarcode]?.some((p) => p.name)
+    ) {
+      dispatch(
+        updateUpload(fileKey, {
+          [AnnotationName.IMAGING_SESSION]: [IMAGING_SESSION_NONE],
+        })
+      );
+      done();
+      return;
+    }
+
     // autoselect well if row and col data available from mxs
     const mxsData = fileKey
       ? deps.getState().metadataExtraction[fileKey]?.metadata
@@ -448,7 +473,12 @@ const updateUploadLogic = createLogic({
     const rowValue = mxsData?.["Row"]?.value;
     const colValue = mxsData?.["Column"]?.value;
 
-    if (fileKey && rowValue !== undefined && colValue !== undefined) {
+    if (
+      fileKey &&
+      selectedImagingSession &&
+      rowValue !== undefined &&
+      colValue !== undefined
+    ) {
       // row and col are 1-indexed in metadata, convert to 0-indexed
       const row = Number(rowValue) - 1;
       const col = Number(colValue) - 1;

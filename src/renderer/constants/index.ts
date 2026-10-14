@@ -27,3 +27,10 @@ export const TOOLTIP_LEAVE_DELAY = 0;
 
 // Program annotation ID
 export const PROGRAM_ANNOTATION_ID = 153;
+
+// Imaging Session annotation ID
+export const IMAGING_SESSION_ANNOTATION_ID = 13;
+
+// Imaging Session option for plates without imaging sessions (or no plate),
+// satisfies the required check but is not saved to FMS
+export const IMAGING_SESSION_NONE = "None";
