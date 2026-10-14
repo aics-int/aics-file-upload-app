@@ -12,7 +12,6 @@ import {
   mockTemplateStateBranch,
 } from "../../../state/test/mocks";
 import {
-  getCanShowImagingSessionColumn,
   getCanShowWellColumn,
   getColumnsForTable,
   getColumnWidthForType,
@@ -115,77 +114,6 @@ describe("CustomDataTable selectors", () => {
     it("returns false when no plates have been selected", () => {
       // Act
       const actual = getCanShowWellColumn(mockState);
-
-      // Assert
-      expect(actual).to.be.false;
-    });
-  });
-
-  describe("getCanShowImagingSessionColumn", () => {
-    it("returns true when plates with imaging sessions have been selected", () => {
-      // Arrange
-      const plateBarcode = "230141";
-      const state = {
-        ...mockState,
-        metadata: {
-          ...mockState.metadata,
-          plateBarcodeToPlates: {
-            [plateBarcode]: [
-              {
-                name: "imaging session 1",
-                imagingSessionId: 4,
-                wells: [],
-              },
-            ],
-          },
-        },
-        upload: getMockStateWithHistory({
-          abc123: {
-            file: "abc123",
-            [AnnotationName.PLATE_BARCODE]: [plateBarcode],
-          },
-        }),
-      };
-
-      // Act
-      const actual = getCanShowImagingSessionColumn(state);
-
-      // Assert
-      expect(actual).to.be.true;
-    });
-
-    it("returns false when no plates with imaging sessions have been selected", () => {
-      // Arrange
-      const state = {
-        ...mockState,
-        upload: getMockStateWithHistory({
-          abc123: {
-            file: "abc123",
-            [AnnotationName.PLATE_BARCODE]: ["230141"],
-          },
-        }),
-      };
-
-      // Act
-      const actual = getCanShowImagingSessionColumn(state);
-
-      // Assert
-      expect(actual).to.be.false;
-    });
-
-    it("returns false when no plates have been selected", () => {
-      // Arrange
-      const state = {
-        ...mockState,
-        upload: getMockStateWithHistory({
-          abc123: {
-            file: "abc123",
-          },
-        }),
-      };
-
-      // Act
-      const actual = getCanShowImagingSessionColumn(state);
 
       // Assert
       expect(actual).to.be.false;
