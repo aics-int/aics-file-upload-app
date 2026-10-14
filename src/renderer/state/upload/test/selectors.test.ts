@@ -1047,6 +1047,7 @@ describe("Upload selectors", () => {
             [AnnotationName.PLATE_BARCODE]: ["1491201"],
             [AnnotationName.WELL]: [],
             [AnnotationName.PROGRAM]: ["foo"],
+            [AnnotationName.IMAGING_SESSION]: ["2 hours"],
           },
         }),
       });
@@ -1072,6 +1073,7 @@ describe("Upload selectors", () => {
             [AnnotationName.PLATE_BARCODE]: ["1491201"],
             [AnnotationName.WELL]: [1],
             [AnnotationName.PROGRAM]: [],
+            [AnnotationName.IMAGING_SESSION]: ["2 hours"],
           },
         }),
       });
@@ -1094,6 +1096,7 @@ describe("Upload selectors", () => {
             [AnnotationName.NOTES]: [],
             [AnnotationName.WELL]: [1],
             [AnnotationName.PROGRAM]: [2],
+            [AnnotationName.IMAGING_SESSION]: ["2 hours"],
           },
         }),
       });

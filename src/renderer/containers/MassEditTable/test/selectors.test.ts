@@ -2,11 +2,7 @@ import { expect } from "chai";
 
 import { AnnotationName } from "../../../constants";
 import { mockState } from "../../../state/test/mocks";
-import {
-  getCanShowImagingSessionColumn,
-  getCanShowWellColumn,
-  getSelectedPlateBarcodes,
-} from "../selectors";
+import { getCanShowWellColumn, getSelectedPlateBarcodes } from "../selectors";
 
 describe("MassEditRow selectors", () => {
   describe("getSelectedPlateBarcodes", () => {
@@ -65,67 +61,6 @@ describe("MassEditRow selectors", () => {
 
       // Assert
       expect(actual).to.be.true;
-    });
-  });
-
-  describe("getCanShowImagingSessionColumn", () => {
-    it("returns true when selected plates have imaging session options", () => {
-      // Arrange
-      const plateBarcode = "1234123";
-      const state = {
-        ...mockState,
-        metadata: {
-          ...mockState.metadata,
-          plateBarcodeToPlates: {
-            [plateBarcode]: [
-              {
-                name: "imaging session 1",
-                imagingSessionId: 4,
-                wells: [],
-              },
-            ],
-          },
-        },
-        selection: {
-          ...mockState.selection,
-          massEditRow: {
-            [AnnotationName.PLATE_BARCODE]: [plateBarcode],
-          },
-        },
-      };
-
-      // Act
-      const actual = getCanShowImagingSessionColumn(state);
-
-      // Assert
-      expect(actual).to.be.true;
-    });
-
-    it("returns false when selected plates do not have imaging session options", () => {
-      // Arrange
-      const state = {
-        ...mockState,
-        selection: {
-          ...mockState.selection,
-          massEditRow: {
-            [AnnotationName.PLATE_BARCODE]: ["12341234"],
-          },
-        },
-      };
-
-      // Act
-      const actual = getCanShowImagingSessionColumn(state);
-
-      // Assert
-      expect(actual).to.be.false;
-    });
-
-    it("returns false when no plates are selected", () => {
-      // Act
-      const actual = getCanShowImagingSessionColumn(mockState);
-
-      // Assert
-      expect(actual).to.be.false;
     });
   });
 });
