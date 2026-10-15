@@ -17,8 +17,8 @@ const STAGE_INFO: { [stage: string]: string } = {
   INITIALIZED: "Waiting to start",
   CALCULATE_FILE_SIZE: "Calculating file size",
   COPY_TO_FMS_CACHE: "Copying to FMS cache",
-  CHECKSUM: "Calculating MD5 checksum",
-  UPLOAD_TO_S3: "Uploading file",
+  CHECKSUM: "Calculating checksum",
+  UPLOAD_TO_S3: "Uploading file to cloud",
   S3_DOWNLOAD: "Downloading from cloud storage",
   LABKEY_SYNC: "Registering file in FMS",
 };
@@ -57,30 +57,13 @@ export default function StatusCell(props: CellProps<UploadSummaryTableRow>) {
       props.row.original.progress || {};
     const stageInfo = STAGE_INFO[currentStage] || currentStage;
 
-    // The stages FSS runs for an upload, in order. Only files kept in local storage are copied to the FMS cache.
-    const steps = [
-      "CALCULATE_FILE_SIZE",
-      ...(props.row.original.serviceFields?.files?.[0]?.file.shouldBeInLocal
-        ? ["COPY_TO_FMS_CACHE"]
-        : []),
-      "CHECKSUM",
-      "UPLOAD_TO_S3",
-      "LABKEY_SYNC",
-    ];
-    const stepIndex = steps.indexOf(currentStage);
-    const stepInfo =
-      stepIndex === -1 ? "" : `Step ${stepIndex + 1} of ${steps.length}`;
-
     if (stageInfo) {
-      tooltip = `${tooltip} - ${
-        stepInfo ? `${stepInfo}: ${stageInfo}` : stageInfo
-      }`;
+      tooltip = `${tooltip} - ${stageInfo}`;
     }
     content = (
       <>
         <Progress type="circle" percent={progress} width={25} status="active" />
         <div className={styles.activeInfo}>
-          {stepInfo && <p>{stepInfo}</p>}
           <p>{stageInfo}</p>
         </div>
       </>

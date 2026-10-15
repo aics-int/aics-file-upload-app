@@ -147,7 +147,7 @@ export default function App() {
     eventSource.onDisconnect(() =>
       dispatch(
         setErrorAlert(
-          "Lost connection to the server, attempting to reconnect..."
+          "Lost connection to the job status service (JSS 2.0), attempting to reconnect..."
         )
       )
     );
