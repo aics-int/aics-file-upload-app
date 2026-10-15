@@ -112,7 +112,7 @@ export default function App() {
     eventSource.onDisconnect(() =>
       dispatch(
         setErrorAlert(
-          "Lost connection to the server, attempting to reconnect..."
+          "Lost connection to the job status service (JSS), attempting to reconnect..."
         )
       )
     );
@@ -143,18 +143,6 @@ export default function App() {
     };
     eventSource.addEventListener("jobInsert", onJobChange);
     eventSource.addEventListener("jobUpdate", onJobChange);
-
-    eventSource.onDisconnect(() =>
-      dispatch(
-        setErrorAlert(
-          "Lost connection to the job status service (JSS 2.0), attempting to reconnect..."
-        )
-      )
-    );
-
-    eventSource.onReconnect(() =>
-      dispatch(setSuccessAlert("Reconnected successfully!"))
-    );
 
     return function cleanUp() {
       eventSource.close();
