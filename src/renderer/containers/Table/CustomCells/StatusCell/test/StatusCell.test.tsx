@@ -81,37 +81,12 @@ describe("<StatusCell />", () => {
 
     // Assert
     expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 3 of 4: Uploading file"
+      "WORKING - Uploading file to cloud"
     );
     expect(wrapper.find(Progress).prop("percent")).to.equal(60);
   });
 
-  it("counts the FMS cache copy as a step for files kept in local storage", () => {
-    // Arrange
-    const row = {
-      original: {
-        serviceFields: {
-          files: [{ file: { shouldBeInLocal: true } }],
-        },
-        progress: {
-          progress: 60,
-          currentStage: "UPLOAD_TO_S3",
-        },
-      },
-    };
-
-    // Act
-    const wrapper = mount(
-      <StatusCell row={row} value={JSSJobStatus.WORKING} {...({} as any)} />
-    );
-
-    // Assert
-    expect(wrapper.find(Tooltip).prop("title")).to.equal(
-      "WORKING - Step 4 of 5: Uploading file"
-    );
-  });
-
-  it("shows no step while waiting to start", () => {
+  it("shows the waiting stage before the upload starts", () => {
     // Arrange
     const row = {
       original: {
