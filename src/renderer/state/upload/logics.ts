@@ -441,12 +441,16 @@ const updateUploadLogic = createLogic({
       dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
     }
 
-    // autoselect well if row and col data available from mxs
+    // autoselect well if row and col data available, preferring mxs data and
+    // falling back to the values stored on the row (e.g. when editing an
+    // already-uploaded file, where mxs is never fetched)
     const mxsData = fileKey
       ? deps.getState().metadataExtraction[fileKey]?.metadata
       : undefined;
-    const rowValue = mxsData?.["Row"]?.value;
-    const colValue = mxsData?.["Column"]?.value;
+    const rowValue =
+      mxsData?.["Row"]?.value ?? storedRow?.[AnnotationName.ROW]?.[0];
+    const colValue =
+      mxsData?.["Column"]?.value ?? storedRow?.[AnnotationName.COLUMN]?.[0];
 
     if (fileKey && rowValue !== undefined && colValue !== undefined) {
       // row and col are 1-indexed in metadata, convert to 0-indexed
