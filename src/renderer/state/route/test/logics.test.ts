@@ -35,6 +35,8 @@ import {
   mockFailedUploadJob,
   mockFavoriteColorAnnotation,
   mockMMSTemplate,
+  mockNotesAnnotation,
+  mockProgramAnnotation,
   mockState,
   mockSuccessfulUploadJob,
   mockSuccessfulUploadJobWithUnexposedAnnotation,
@@ -541,6 +543,43 @@ describe("Route logics", () => {
       await logicMiddleware.whenComplete();
 
       expect(actions.includesMatch(expectedAction)).to.be.true;
+    });
+
+    it("populates Well, Notes, and Program on edit, even when not in template", async () => {
+      const programValues = ["Variance"];
+      const wellValues = ["A1", "B6"];
+      const notesValues = ["Additional info about the file"];
+      const mockDeps = stubMethods();
+      mmsClient.getFileMetadata.resolves({
+        ...fileMetadata,
+        templateId: 1,
+        annotations: [
+          { ...mockFavoriteColorAnnotation, values: ["Blue"] },
+          { ...mockWellAnnotation, values: wellValues },
+          { ...mockProgramAnnotation, values: programValues },
+          { ...mockNotesAnnotation, values: notesValues },
+        ],
+      });
+      mmsClient.getTemplate.resolves(mockMMSTemplate); // only has color annotation, not program
+      const { logicMiddleware, store } = createMockReduxStore(
+        mockStateWithMetadata,
+        mockDeps
+      );
+
+      store.dispatch(viewUploads([mockSuccessfulUploadJob]));
+      await logicMiddleware.whenComplete();
+
+      const upload = getUpload(store.getState());
+
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.PROGRAM]
+      ).to.deep.equal(programValues);
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.WELL]
+      ).to.deep.equal(wellValues);
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.NOTES]
+      ).to.deep.equal(notesValues);
     });
   });
 });
