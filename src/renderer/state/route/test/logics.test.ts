@@ -560,7 +560,7 @@ describe("Route logics", () => {
           { ...mockNotesAnnotation, values: notesValues },
         ],
       });
-      mmsClient.getTemplate.resolves(mockMMSTemplate); // only has color annotation, not program
+      mmsClient.getTemplate.resolves(mockMMSTemplate); // only has color annotation, not program, well, or notes
       const { logicMiddleware, store } = createMockReduxStore(
         mockStateWithMetadata,
         mockDeps
