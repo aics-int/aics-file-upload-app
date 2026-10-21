@@ -5,7 +5,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CellProps } from "react-table";
 
-import { AnnotationName } from "../../../../constants";
+import { AnnotationName, IMAGING_SESSION_NONE } from "../../../../constants";
 import { getPlateBarcodeToPlates } from "../../../../state/metadata/selectors";
 import { Well } from "../../../../state/selection/types";
 import { FileModel } from "../../../../state/types";
@@ -42,8 +42,13 @@ export default function WellCell(props: CellProps<FileModel>) {
     props.row.original.autofilledFields?.includes(AnnotationName.WELL) ?? false;
   const associatedWells = props.row.original[AnnotationName.WELL] || [];
   const plateBarcode = props.row.original[AnnotationName.PLATE_BARCODE]?.[0];
-  const imagingSessionName =
+  const selectedImagingSession =
     props.row.original[AnnotationName.IMAGING_SESSION]?.[0];
+  // "None" means the plate has no imaging session
+  const imagingSessionName =
+    selectedImagingSession === IMAGING_SESSION_NONE
+      ? undefined
+      : selectedImagingSession;
 
   const wells = React.useMemo(() => {
     if (plateBarcode && plateBarcodeToPlates[plateBarcode]) {

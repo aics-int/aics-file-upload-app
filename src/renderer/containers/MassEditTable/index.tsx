@@ -16,10 +16,7 @@ import DefaultCell from "../Table/DefaultCells/DefaultCell";
 import ReadOnlyCell from "../Table/DefaultCells/ReadOnlyCell";
 import DefaultHeader from "../Table/Headers/DefaultHeader";
 
-import {
-  getCanShowImagingSessionColumn,
-  getCanShowWellColumn,
-} from "./selectors";
+import { getCanShowWellColumn } from "./selectors";
 
 const styles = require("./styles.pcss");
 
@@ -55,9 +52,6 @@ export default function MassEditTable({ columnToWidthMap }: Props) {
   const row = useSelector(getMassEditRowAsTableRow);
   const templateColumns = useSelector(getTemplateColumnsForTable);
   const canShowWellColumn = useSelector(getCanShowWellColumn);
-  const canShowImagingSessionColumn = useSelector(
-    getCanShowImagingSessionColumn
-  );
 
   const data: any[] = React.useMemo(() => [row], [row]);
   const columns = React.useMemo(
@@ -98,10 +92,7 @@ export default function MassEditTable({ columnToWidthMap }: Props) {
     useResizeColumns
   );
 
-  const columnsToHide = [
-    ...(canShowImagingSessionColumn ? [] : [AnnotationName.IMAGING_SESSION]),
-    ...(canShowWellColumn ? [] : [AnnotationName.WELL]),
-  ];
+  const columnsToHide = canShowWellColumn ? [] : [AnnotationName.WELL];
   useHiddenColumns(tableInstance, columnsToHide);
 
   return (

@@ -4,10 +4,7 @@ import { createSelector } from "reselect";
 
 import { MAIN_FONT_WIDTH, AnnotationName } from "../../constants";
 import { ColumnType } from "../../services/labkey-client/types";
-import {
-  getAnnotationTypes,
-  getPlateBarcodeToPlates,
-} from "../../state/metadata/selectors";
+import { getAnnotationTypes } from "../../state/metadata/selectors";
 import { getAreSelectedUploadsInFlight } from "../../state/selection/selectors";
 import { getAppliedTemplate } from "../../state/template/selectors";
 import { getUpload } from "../../state/upload/selectors";
@@ -135,15 +132,6 @@ export const getSelectedPlateBarcodes = createSelector(
 export const getCanShowWellColumn = createSelector(
   [getSelectedPlateBarcodes],
   (selectedPlateBarcodes): boolean => !!selectedPlateBarcodes.length
-);
-
-// If no selected plates have imaging sessions ignore imaging session
-export const getCanShowImagingSessionColumn = createSelector(
-  [getSelectedPlateBarcodes, getPlateBarcodeToPlates],
-  (selectedPlateBarcodes, plateBarcodeToPlates): boolean =>
-    selectedPlateBarcodes.some((pb) =>
-      plateBarcodeToPlates[pb]?.some((i) => i?.name)
-    )
 );
 
 const METADATA_COLUMN: CustomColumn = {
