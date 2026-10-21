@@ -101,6 +101,16 @@ export const mockNotesAnnotation: Annotation = {
   "annotationTypeId/Name": ColumnType.TEXT,
 };
 
+export const mockProgramAnnotation: Annotation = {
+  ...mockAuditInfo,
+  annotationId: 153,
+  annotationTypeId: 1,
+  description: "Program associated with the file",
+  exposeToFileUploadApp: true,
+  name: AnnotationName.PROGRAM,
+  "annotationTypeId/Name": ColumnType.TEXT,
+};
+
 const mockUnusableStructureAnnotation: Annotation = {
   ...mockAuditInfo,
   annotationId: 4,
@@ -144,6 +154,7 @@ export const mockAnnotations = [
   mockIntervalAnnotation,
   mockWellAnnotation,
   mockNotesAnnotation,
+  mockProgramAnnotation,
   mockUnusableStructureAnnotation,
 ];
 

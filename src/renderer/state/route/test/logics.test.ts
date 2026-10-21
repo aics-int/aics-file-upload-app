@@ -35,6 +35,8 @@ import {
   mockFailedUploadJob,
   mockFavoriteColorAnnotation,
   mockMMSTemplate,
+  mockNotesAnnotation,
+  mockProgramAnnotation,
   mockState,
   mockSuccessfulUploadJob,
   mockSuccessfulUploadJobWithUnexposedAnnotation,
@@ -541,6 +543,102 @@ describe("Route logics", () => {
       await logicMiddleware.whenComplete();
 
       expect(actions.includesMatch(expectedAction)).to.be.true;
+    });
+
+    it("populates Well, Notes, and Program on edit, even when not in template", async () => {
+      const programValues = ["Variance"];
+      const wellValues = ["A1", "B6"];
+      const notesValues = ["Additional info about the file"];
+      const mockDeps = stubMethods();
+      mmsClient.getFileMetadata.resolves({
+        ...fileMetadata,
+        templateId: 1,
+        annotations: [
+          { ...mockFavoriteColorAnnotation, values: ["Blue"] },
+          { ...mockWellAnnotation, values: wellValues },
+          { ...mockProgramAnnotation, values: programValues },
+          { ...mockNotesAnnotation, values: notesValues },
+        ],
+      });
+      mmsClient.getTemplate.resolves(mockMMSTemplate); // only has color annotation, not program, well, or notes
+      const { logicMiddleware, store } = createMockReduxStore(
+        mockStateWithMetadata,
+        mockDeps
+      );
+
+      store.dispatch(viewUploads([mockSuccessfulUploadJob]));
+      await logicMiddleware.whenComplete();
+
+      const upload = getUpload(store.getState());
+
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.PROGRAM]
+      ).to.deep.equal(programValues);
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.WELL]
+      ).to.deep.equal(wellValues);
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.NOTES]
+      ).to.deep.equal(notesValues);
+    });
+
+    it("populates other template annotations on edit when Well/Notes/Program are missing", async () => {
+      // Arrange
+      const notesValues = ["Additional info about the file"];
+      const mockDeps = stubMethods();
+      mmsClient.getFileMetadata.resolves({
+        ...fileMetadata,
+        templateId: 1,
+        annotations: [
+          { ...mockFavoriteColorAnnotation, values: ["Blue"] },
+          { ...mockNotesAnnotation, values: notesValues },
+        ],
+      });
+      // Has color and well, but not notes or program
+      mmsClient.getTemplate.resolves({
+        ...mockMMSTemplate,
+        annotations: [
+          {
+            ...mockFavoriteColorAnnotation,
+            orderIndex: 1,
+            required: false,
+          },
+          {
+            ...mockWellAnnotation,
+            orderIndex: 1,
+            required: false,
+          },
+        ],
+      });
+      const { logicMiddleware, store } = createMockReduxStore(
+        mockStateWithMetadata,
+        mockDeps
+      );
+
+      // Act
+      store.dispatch(viewUploads([mockSuccessfulUploadJob]));
+      await logicMiddleware.whenComplete();
+
+      const upload = getUpload(store.getState());
+
+      // Assert
+      expect(
+        upload[fileMetadata.publicFilePath][mockFavoriteColorAnnotation.name]
+      ).to.deep.equal(["Blue"]);
+
+      // Template does not have annotation, file does (Notes)
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.NOTES]
+      ).to.deep.equal(notesValues);
+
+      // Template has annotation, file does not (Well)
+      expect(
+        upload[fileMetadata.publicFilePath][AnnotationName.WELL]
+      ).to.deep.equal([]); // non-present template field values get filled with an empty array
+
+      // Template does not have annotation, file also does not (Program)
+      expect(upload[fileMetadata.publicFilePath][AnnotationName.PROGRAM]).to.be
+        .undefined;
     });
   });
 });
