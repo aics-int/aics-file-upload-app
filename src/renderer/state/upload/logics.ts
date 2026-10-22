@@ -445,8 +445,12 @@ const updateUploadLogic = createLogic({
     const mxsData = fileKey
       ? deps.getState().metadataExtraction[fileKey]?.metadata
       : undefined;
-    const rowValue = mxsData?.["Row"]?.value;
-    const colValue = mxsData?.["Column"]?.value;
+    // when editing an already-uploaded file mxs is never fetched, so fall
+    // back to the row and column stored on the file
+    const rowValue =
+      mxsData?.["Row"]?.value ?? storedRow?.[AnnotationName.ROW]?.[0];
+    const colValue =
+      mxsData?.["Column"]?.value ?? storedRow?.[AnnotationName.COLUMN]?.[0];
 
     if (fileKey && rowValue !== undefined && colValue !== undefined) {
       // row and col are 1-indexed in metadata, convert to 0-indexed
