@@ -11,6 +11,8 @@ export enum AnnotationName {
   PLATE_BARCODE = "Plate Barcode",
   WELL = "Well",
   PROGRAM = "Program",
+  ROW = "Row",
+  COLUMN = "Column",
 }
 
 // This was calculated by finding an element with the main font size (18px), getting the clientWidth
