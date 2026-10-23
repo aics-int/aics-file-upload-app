@@ -74,7 +74,7 @@ export default function DurationEditor({ initialValue, commitChanges }: Props) {
   }
 
   return (
-    <div onKeyPress={createEnterKeyHandler(handleCommit)}>
+    <div onKeyDown={createEnterKeyHandler(handleCommit)}>
       <Input.Group
         compact
         className={classNames(

@@ -1,7 +1,7 @@
 import React from "react";
 
-export function createEnterKeyHandler(handler: () => void) {
-  return (e: React.KeyboardEvent) => {
+export function createEnterKeyHandler<T>(handler: () => void) {
+  return (e: React.KeyboardEvent<T>) => {
     if (e.key === "Enter") {
       handler();
     }
