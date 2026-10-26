@@ -173,12 +173,15 @@ function convertUploadRequestsToUploadStateBranch(
           annotationIdToAnnotationMap[annotation.annotationId]?.[0];
         // Only include annotations that are on the template in the metadata for the branch,
         // otherwise this might try to overwrite metadata from other applications unintentionally
-        // But do include Well, Notes, and Program, because they are included in the grid by default.
+        // But do include Well, Notes, and Program, because they are included in the grid by default,
+        // and Row and Column, because they are needed to autofill Well when the plate barcode changes.
         if (
           !setOfAnnotationIdsFromTemplate.has(annotation.annotationId) &&
           annotationDefinition?.name !== AnnotationName.WELL &&
           annotationDefinition?.name !== AnnotationName.NOTES &&
-          annotationDefinition?.name !== AnnotationName.PROGRAM
+          annotationDefinition?.name !== AnnotationName.PROGRAM &&
+          annotationDefinition?.name !== AnnotationName.ROW &&
+          annotationDefinition?.name !== AnnotationName.COLUMN
         ) {
           return keyToMetadataSoFar;
         }
