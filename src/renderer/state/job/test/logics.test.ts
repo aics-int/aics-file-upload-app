@@ -121,6 +121,71 @@ describe("Job logics", () => {
       ]);
     });
 
+    it("syncs status for a failed job that FSS had already accepted", async () => {
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        logicDeps,
+        [handleAbandonedJobsLogic]
+      );
+      const failedAfterFSSUploadJob: UploadJob = {
+        ...mockFailedUploadJob,
+        serviceFields: {
+          ...mockFailedUploadJob.serviceFields,
+          fssUploadId: "fss_upload_id",
+          error:
+            "Something went wrong trying to complete this app's portion of the upload. Details: Network Error",
+        },
+      };
+      fms.syncAbandonedUploadStatus.resolves(true);
+
+      store.dispatch(receiveJobs([failedAfterFSSUploadJob]));
+
+      await logicMiddleware.whenComplete();
+      expect(fms.syncAbandonedUploadStatus).to.have.been.calledOnceWith(
+        failedAfterFSSUploadJob.jobId
+      );
+      expect(actions.list).to.deep.equal([
+        receiveJobs([failedAfterFSSUploadJob]),
+        setInfoAlert(`Checking status of "${failedAfterFSSUploadJob.jobName}"`),
+        setInfoAlert(
+          `Upload "${failedAfterFSSUploadJob.jobName}" was already completed.`
+        ),
+      ]);
+    });
+
+    it("does not sync failed jobs that were cancelled or already have a result", async () => {
+      const { actions, logicMiddleware, store } = createMockReduxStore(
+        mockState,
+        logicDeps,
+        [handleAbandonedJobsLogic]
+      );
+      const cancelledJob: UploadJob = {
+        ...mockFailedUploadJob,
+        jobId: "cancelled_job_id",
+        serviceFields: {
+          ...mockFailedUploadJob.serviceFields,
+          fssUploadId: "fss_upload_id_1",
+          cancelled: true,
+        },
+      };
+      const jobWithResult: UploadJob = {
+        ...mockFailedUploadJob,
+        jobId: "job_with_result_id",
+        serviceFields: {
+          ...mockFailedUploadJob.serviceFields,
+          fssUploadId: "fss_upload_id_2",
+          result: [{ fileId: "file_id", fileName: "file", readPath: "path" }],
+        },
+      };
+      const action = receiveJobs([cancelledJob, jobWithResult]);
+
+      store.dispatch(action);
+
+      await logicMiddleware.whenComplete();
+      expect(fms.syncAbandonedUploadStatus).to.not.have.been.called;
+      expect(actions.list).to.deep.equal([action]);
+    });
+
     it("sets error alert if an error is thrown", async () => {
       const { actions, logicMiddleware, store } = createMockReduxStore(
         mockState,
