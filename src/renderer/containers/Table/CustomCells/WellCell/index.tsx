@@ -6,7 +6,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { CellProps } from "react-table";
 
 import { AnnotationName } from "../../../../constants";
-import { getPlateBarcodeToPlates } from "../../../../state/metadata/selectors";
+import {
+  getIsWellLoading,
+  getPlateBarcodeToPlates,
+} from "../../../../state/metadata/selectors";
 import { Well } from "../../../../state/selection/types";
 import { FileModel } from "../../../../state/types";
 import { updateUpload } from "../../../../state/upload/actions";
@@ -36,6 +39,7 @@ function getWellLabel(well?: AicsGridCell, noneText = "None"): string {
 export default function WellCell(props: CellProps<FileModel>) {
   const dispatch = useDispatch();
   const plateBarcodeToPlates = useSelector(getPlateBarcodeToPlates);
+  const isLoading = useSelector(getIsWellLoading(props.row.id));
   const [isEditing, setIsEditing] = React.useState(false);
   const [selectedWells, setSelectedWells] = React.useState<AicsGridCell[]>([]);
   const isAutofilled =
@@ -157,6 +161,7 @@ export default function WellCell(props: CellProps<FileModel>) {
         {...props}
         value={wellLabels.sort()}
         disabled={!wells?.[0].length}
+        isLoading={isLoading}
         onTabExit={() => setIsEditing(false)}
         onStartEditing={() =>
           !isAutofilled && wells?.[0].length && setIsEditing(true)
