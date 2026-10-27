@@ -12,7 +12,11 @@ import {
   JobStatusService,
   MetadataManagementService,
 } from "../..";
-import { mockJob, mockWorkingUploadJob } from "../../../state/test/mocks";
+import {
+  mockJob,
+  mockWaitingUploadJob,
+  mockWorkingUploadJob,
+} from "../../../state/test/mocks";
 import { UploadStatus } from "../../file-storage-service";
 import { JSSJobStatus, UploadJob } from "../../job-status-service/types";
 
@@ -278,6 +282,66 @@ describe("FileManagementSystem", () => {
 
       // Assert
       expect(jss.updateJob).to.have.been.calledOnce;
+    });
+  });
+
+  describe("syncAbandonedUploadStatus", () => {
+    const mockFssUploadId = "fss-upload-id";
+
+    it("checks FSS status using the FSS upload id, not the JSS job id", async () => {
+      // Arrange
+      jss.getJob.resolves({
+        ...mockWorkingUploadJob,
+        serviceFields: {
+          ...mockWorkingUploadJob.serviceFields,
+          fssUploadId: mockFssUploadId,
+        },
+      });
+      fss.getStatus.resolves({
+        uploadId: mockFssUploadId,
+        status: UploadStatus.WORKING,
+        fileId: "",
+      } as any);
+
+      // Act
+      const isComplete = await fms.syncAbandonedUploadStatus(
+        mockWorkingUploadJob.jobId
+      );
+
+      // Assert
+      expect(isComplete).to.be.false;
+      expect(fss.getStatus).to.have.been.calledOnceWith(mockFssUploadId);
+    });
+
+    it("completes the upload with the FSS file id when FSS is complete", async () => {
+      // Arrange
+      const mockFileId = "fss-file-id";
+      jss.getJob.resolves({
+        ...mockWaitingUploadJob,
+        serviceFields: {
+          ...mockWaitingUploadJob.serviceFields,
+          fssUploadId: mockFssUploadId,
+        },
+      });
+      fss.getStatus.resolves({
+        uploadId: mockFssUploadId,
+        status: UploadStatus.COMPLETE,
+        fileId: mockFileId,
+      } as any);
+      fss.getFileAttributes.resolves({
+        fileId: mockFileId,
+        localPath: "/some/path",
+        name: "file.txt",
+      } as any);
+
+      // Act
+      const isComplete = await fms.syncAbandonedUploadStatus(
+        mockWorkingUploadJob.jobId
+      );
+
+      // Assert
+      expect(isComplete).to.be.true;
+      expect(mms.createFileMetadata).to.have.been.calledOnceWith(mockFileId);
     });
   });
 

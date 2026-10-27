@@ -199,7 +199,10 @@ export default class FileManagementSystem {
    */
   public async syncAbandonedUploadStatus(uploadId: string): Promise<boolean> {
     const fssManagedJSSJob = (await this.jss.getJob(uploadId)) as UploadJob;
-    const fssStatus = await this.fss.getStatus(uploadId);
+    // FSS tracks the upload under its own id, not the FUA JSS job id
+    const fssStatus = await this.fss.getStatus(
+      fssManagedJSSJob.serviceFields.fssUploadId as string
+    );
 
     // if jss or fss succeeded, complete job
     if (
