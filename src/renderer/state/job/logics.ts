@@ -39,14 +39,27 @@ import {
   ReceiveJobUpdateAction,
 } from "./types";
 
+// A job can be marked FAILED after FSS finishes the upload if theres
+// a failure in the complete method due to something like a network error.
+// those jobs will have a fss id, and need to be re synced
+function isFailedAfterFSSUpload(job: UploadJob): boolean {
+  return (
+    job.status === JSSJobStatus.FAILED &&
+    Boolean(job.serviceFields?.fssUploadId) &&
+    !job.serviceFields?.cancelled &&
+    !job.serviceFields?.result?.length
+  );
+}
+
 export const handleAbandonedJobsLogic = createLogic({
   process: async (
     { action, fms }: ReduxLogicProcessDependenciesWithAction<ReceiveJobsAction>,
     dispatch: ReduxLogicNextCb,
     done: ReduxLogicDoneCb
   ) => {
-    const abandonedUploads = action.payload.filter(({ status }) =>
-      IN_PROGRESS_STATUSES.includes(status)
+    const abandonedUploads = action.payload.filter(
+      (job) =>
+        IN_PROGRESS_STATUSES.includes(job.status) || isFailedAfterFSSUpload(job)
     );
 
     await Promise.all(
