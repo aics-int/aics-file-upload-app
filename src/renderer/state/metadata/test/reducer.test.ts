@@ -17,6 +17,8 @@ import {
   receiveMetadata,
   resetHistory,
   receiveProgramOptions,
+  startWellLookup,
+  finishWellLookup,
 } from "../actions";
 import reducer from "../reducer";
 import { initialState } from "../reducer";
@@ -118,6 +120,52 @@ describe("metadata reducer", () => {
 
       const result = reducer(initialState, receiveProgramOptions(fakeOptions));
       expect(result.programOptions).to.deep.equal(fakeOptions);
+    });
+  });
+  describe("start/finishWellLookup", () => {
+    const mockRowId = "abc";
+    it("sets an untracked row to 1", () => {
+      const result = reducer(initialState, startWellLookup(mockRowId));
+      expect(result.loadingWellFileKeys?.[mockRowId]).to.equal(1);
+    });
+    it("increments/decrements an already tracked row", () => {
+      const mockState = {
+        ...initialState,
+        loadingWellFileKeys: { [mockRowId]: 1 },
+      };
+      const afterStart = reducer(mockState, startWellLookup(mockRowId));
+      const result = reducer(afterStart, finishWellLookup(mockRowId));
+
+      expect(afterStart.loadingWellFileKeys?.[mockRowId]).to.equal(2);
+      expect(result.loadingWellFileKeys?.[mockRowId]).to.equal(1);
+    });
+    it("removes a row when count becomes zero", () => {
+      const afterStart = reducer(initialState, startWellLookup(mockRowId));
+      const result = reducer(afterStart, finishWellLookup(mockRowId));
+      expect(result.loadingWellFileKeys).to.deep.equal({});
+    });
+    it("avoids setting an untracked row to negative", () => {
+      const result = reducer(initialState, finishWellLookup(mockRowId));
+      expect(result.loadingWellFileKeys).to.deep.equal({});
+    });
+    it("handles multiple well records", () => {
+      const mockRowId1 = "def";
+      const mockRowId2 = "ghi";
+
+      const startBoth = reducer(
+        reducer(initialState, startWellLookup(mockRowId1)),
+        startWellLookup(mockRowId2)
+      );
+      const endOne = reducer(startBoth, finishWellLookup(mockRowId1));
+      const result = reducer(endOne, startWellLookup(mockRowId2));
+
+      expect(Object.keys(startBoth.loadingWellFileKeys).length).to.equal(2);
+      expect(startBoth.loadingWellFileKeys[mockRowId1]).to.equal(1);
+      expect(startBoth.loadingWellFileKeys[mockRowId2]).to.equal(1);
+
+      expect(Object.keys(result.loadingWellFileKeys).length).to.equal(1); // mockRowId1 has been removed
+      expect(result.loadingWellFileKeys[mockRowId1]).to.be.undefined;
+      expect(result.loadingWellFileKeys[mockRowId2]).to.equal(2);
     });
   });
 });

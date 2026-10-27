@@ -17,9 +17,16 @@ import { UploadJob } from "../../../services/job-status-service/types";
 import { ColumnType } from "../../../services/labkey-client/types";
 import { requestFailed } from "../../actions";
 import { SET_ALERT } from "../../feedback/constants";
-import { setPlateBarcodeToPlates } from "../../metadata/actions";
+import {
+  finishWellLookup,
+  setPlateBarcodeToPlates,
+  startWellLookup,
+} from "../../metadata/actions";
 import { SET_PLATE_BARCODE_TO_PLATES } from "../../metadata/constants";
-import { getPlateBarcodeToPlates } from "../../metadata/selectors";
+import {
+  getIsWellLoading,
+  getPlateBarcodeToPlates,
+} from "../../metadata/selectors";
 import { resetUpload } from "../../route/actions";
 import { setAppliedTemplate } from "../../template/actions";
 import {
@@ -826,6 +833,116 @@ describe("Upload logics", () => {
       expect(
         getUpload(store.getState())[uploadRowKey][AnnotationName.PLATE_BARCODE]
       ).to.deep.equal([plateBarcode]);
+    });
+
+    it("tracks whether a well is loading while waiting for plate barcode lookup", async () => {
+      // Arrange
+      const { actions, store, logicMiddleware } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        metadata: {
+          ...nonEmptyStateForInitiatingUpload.metadata,
+        },
+        upload: getMockStateWithHistory({
+          [uploadRowKey]: {
+            file: "/path/to/file3",
+            templateId: 8,
+          },
+        }),
+      });
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([
+        { ImagingSessionId: 9, "ImagingSessionId/Name": "imaging session 9" },
+      ]);
+      mmsClient.getPlate.resolves({
+        plate: {
+          barcode: "",
+          comments: "",
+          plateGeometryId: 8,
+          plateId: 14,
+          plateStatusId: 3,
+          ...mockAuditInfo,
+        },
+        wells: [],
+      });
+
+      // Act
+      store.dispatch(
+        updateUpload(uploadRowKey, {
+          [AnnotationName.PLATE_BARCODE]: ["490109230"],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(actions.includesType(SET_ALERT)).to.be.false;
+      expect(actions.includesMatch(startWellLookup(uploadRowKey))).to.be.true;
+      expect(actions.includesMatch(finishWellLookup(uploadRowKey))).to.be.true;
+      expect(getIsWellLoading(uploadRowKey)(store.getState())).to.be.false;
+    });
+
+    it("skips tracking well loading when no plate barcode is present", async () => {
+      // Arrange
+      const { actions, store, logicMiddleware } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        template: {
+          ...mockTemplateStateBranch,
+          appliedTemplate: {
+            ...mockTemplateWithManyValues,
+            annotations: [mockTextAnnotation],
+          },
+        },
+        upload: getMockStateWithHistory({
+          [uploadRowKey]: {
+            [mockTextAnnotation.name]: [],
+            file: "/path/to/file3",
+            templateId: 8,
+          },
+        }),
+      });
+
+      // Act
+      store.dispatch(
+        updateUpload(uploadRowKey, { [mockTextAnnotation.name]: "test" })
+      );
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(actions.includesMatch(startWellLookup(uploadRowKey))).to.be.false;
+      expect(actions.includesMatch(finishWellLookup(uploadRowKey))).to.be.false;
+      expect(getIsWellLoading(uploadRowKey)(store.getState())).to.be.false;
+    });
+
+    it("clears file key from well loading record even if lookup fails", async () => {
+      // Arrange
+      const { actions, store, logicMiddleware } = createMockReduxStore({
+        ...nonEmptyStateForInitiatingUpload,
+        metadata: {
+          ...nonEmptyStateForInitiatingUpload.metadata,
+        },
+        upload: getMockStateWithHistory({
+          [uploadRowKey]: {
+            file: "/path/to/file3",
+            templateId: 8,
+          },
+        }),
+      });
+      labkeyClient.findImagingSessionsByPlateBarcode.resolves([
+        { ImagingSessionId: 9, "ImagingSessionId/Name": "imaging session 9" },
+      ]);
+      mmsClient.getPlate.rejects("This is an error");
+
+      // Act
+      store.dispatch(
+        updateUpload(uploadRowKey, {
+          [AnnotationName.PLATE_BARCODE]: ["490109230"],
+        })
+      );
+      await logicMiddleware.whenComplete();
+
+      // Assert
+      expect(actions.includesType(SET_ALERT)).to.be.true;
+      expect(actions.includesMatch(startWellLookup(uploadRowKey))).to.be.true;
+      expect(actions.includesMatch(finishWellLookup(uploadRowKey))).to.be.true;
+      expect(getIsWellLoading(uploadRowKey)(store.getState())).to.be.false;
     });
 
     it("autoselects well when mxs has row and col data", async () => {
