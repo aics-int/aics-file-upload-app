@@ -336,7 +336,7 @@ describe("FileManagementSystem", () => {
 
       // Act
       const isComplete = await fms.syncAbandonedUploadStatus(
-        mockWorkingUploadJob.jobId
+        mockWaitingUploadJob.jobId
       );
 
       // Assert
