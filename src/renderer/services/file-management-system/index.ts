@@ -198,19 +198,19 @@ export default class FileManagementSystem {
    * while app is closed. Used on app restart to update any abandoned uploads.
    */
   public async syncAbandonedUploadStatus(jobId: string): Promise<boolean> {
-    // this is the FUA JSS job id
-    const fuaManagedJobID = (await this.jss.getJob(jobId)) as UploadJob;
+    // this is the FUA JSS job
+    const fuaManagedJob = (await this.jss.getJob(jobId)) as UploadJob;
     // FSS tracks the upload under its own id, not the FUA JSS job id
     const fssStatus = await this.fss.getStatus(
-      fuaManagedJobID.serviceFields.fssUploadId as string
+      fuaManagedJob.serviceFields.fssUploadId as string
     );
 
     // if jss or fss succeeded, complete job
     if (
-      fuaManagedJobID.status === JSSJobStatus.SUCCEEDED ||
+      fuaManagedJob.status === JSSJobStatus.SUCCEEDED ||
       fssStatus.status === UploadStatus.COMPLETE
     ) {
-      await this.complete(fuaManagedJobID, fssStatus.fileId);
+      await this.complete(fuaManagedJob, fssStatus.fileId);
       return true;
     }
     // upload is still in progress
