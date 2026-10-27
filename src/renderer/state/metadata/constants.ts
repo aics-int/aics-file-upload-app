@@ -45,3 +45,10 @@ export const RECEIVE_PROGRAM_OPTIONS = makeConstant(
   BRANCH_NAME,
   "receive-program-options"
 );
+
+export const START_WELL_LOOKUP = makeConstant(BRANCH_NAME, "start-well-lookup");
+
+export const FINISH_WELL_LOOKUP = makeConstant(
+  BRANCH_NAME,
+  "finish-well-lookup"
+);

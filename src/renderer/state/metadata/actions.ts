@@ -22,6 +22,8 @@ import {
   SET_PLATE_BARCODE_TO_PLATES,
   GET_PROGRAM_OPTIONS,
   RECEIVE_PROGRAM_OPTIONS,
+  START_WELL_LOOKUP,
+  FINISH_WELL_LOOKUP,
 } from "./constants";
 import { initialState } from "./reducer";
 import {
@@ -151,5 +153,19 @@ export function receiveProgramOptions(options: AnnotationOption[]) {
   return {
     type: RECEIVE_PROGRAM_OPTIONS,
     payload: options,
+  };
+}
+
+export function startWellLookup(fileKey: string) {
+  return {
+    type: START_WELL_LOOKUP,
+    payload: fileKey,
+  };
+}
+
+export function finishWellLookup(fileKey: string) {
+  return {
+    type: FINISH_WELL_LOOKUP,
+    payload: fileKey,
   };
 }

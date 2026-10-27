@@ -25,6 +25,8 @@ import {
   RESET_HISTORY,
   SET_PLATE_BARCODE_TO_PLATES,
   RECEIVE_PROGRAM_OPTIONS,
+  START_WELL_LOOKUP,
+  FINISH_WELL_LOOKUP,
 } from "./constants";
 import {
   ClearOptionsForLookupAction,
@@ -33,6 +35,8 @@ import {
   ResetHistoryAction,
   SetPlateBarcodeToPlatesAction,
   ReceiveProgramOptionsAction,
+  StartWellLookupAction,
+  FinishWellLookupAction,
 } from "./types";
 
 export const initialState: MetadataStateBranch = {
@@ -47,6 +51,7 @@ export const initialState: MetadataStateBranch = {
     upload: {},
   },
   imagingSessions: [],
+  loadingWellFileKeys: {},
   lookups: [],
   plateBarcodeToPlates: {},
   templates: [],
@@ -168,6 +173,31 @@ const actionToConfigMap: TypeToDescriptionMap<MetadataStateBranch> = {
       ...state,
       programOptions: action.payload,
     }),
+  },
+  [START_WELL_LOOKUP]: {
+    accepts: (action: AnyAction): action is StartWellLookupAction =>
+      action.type === START_WELL_LOOKUP,
+    perform: (state: MetadataStateBranch, action: StartWellLookupAction) => ({
+      ...state,
+      loadingWellFileKeys: {
+        ...state.loadingWellFileKeys,
+        [action.payload]: (state.loadingWellFileKeys[action.payload] ?? 0) + 1,
+      },
+    }),
+  },
+  [FINISH_WELL_LOOKUP]: {
+    accepts: (action: AnyAction): action is FinishWellLookupAction =>
+      action.type === FINISH_WELL_LOOKUP,
+    perform: (state: MetadataStateBranch, action: FinishWellLookupAction) => {
+      // drop the file key if count will be zero
+      const { [action.payload]: count = 0, ...rest } =
+        state.loadingWellFileKeys;
+      return {
+        ...state,
+        loadingWellFileKeys:
+          count > 1 ? { ...rest, [action.payload]: count - 1 } : rest,
+      };
+    },
   },
 };
 
