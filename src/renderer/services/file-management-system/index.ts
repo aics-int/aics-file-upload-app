@@ -2,7 +2,6 @@ import * as path from "path";
 
 import * as uuid from "uuid";
 
-import { Step } from "../../containers/Table/CustomCells/StatusCell/Step";
 import { extensionToFileTypeMap, FileType } from "../../util";
 import FileStorageService, { UploadStatus } from "../file-storage-service";
 import JobStatusService from "../job-status-service";
@@ -23,10 +22,9 @@ interface FileManagementClientConfig {
 }
 
 export interface UploadProgressInfo {
-  md5BytesComputed?: number;
-  bytesUploaded?: number;
-  totalBytes: number;
-  step: Step;
+  // Percent complete, 0-100
+  progress: number;
+  currentStage?: string;
 }
 
 /**

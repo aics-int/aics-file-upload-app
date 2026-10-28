@@ -10,7 +10,6 @@ import { restore, SinonStub, stub } from "sinon";
 import {
   convertToVastPath,
   getDirectorySize,
-  getPowerOf1000,
   handleFileSelection,
   splitTrimAndFilter,
 } from "../";
@@ -62,18 +61,6 @@ describe("General utilities", () => {
     it("returns empty array give comma", () => {
       const result = splitTrimAndFilter(",");
       expect(result).to.deep.equal([]);
-    });
-  });
-
-  describe("getPowerOf1000", () => {
-    it("returns 0 if input is 9", () => {
-      expect(getPowerOf1000(9)).to.equal(0);
-    });
-    it("returns 1 if input is 1001", () => {
-      expect(getPowerOf1000(1001)).to.equal(1);
-    });
-    it("returns 1 if input is 999999", () => {
-      expect(getPowerOf1000(999999)).to.equal(1);
     });
   });
 
