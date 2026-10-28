@@ -75,3 +75,13 @@ export interface ReceiveProgramOptionsAction {
   type: typeof RECEIVE_PROGRAM_OPTIONS;
   payload: AnnotationOption[];
 }
+
+export interface StartWellLookupAction {
+  payload: string;
+  type: string;
+}
+
+export interface FinishWellLookupAction {
+  payload: string;
+  type: string;
+}

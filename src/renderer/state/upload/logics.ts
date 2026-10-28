@@ -20,7 +20,11 @@ import {
 } from "../../util";
 import { requestFailed } from "../actions";
 import { setErrorAlert, stopLoading } from "../feedback/actions";
-import { setPlateBarcodeToPlates } from "../metadata/actions";
+import {
+  finishWellLookup,
+  setPlateBarcodeToPlates,
+  startWellLookup,
+} from "../metadata/actions";
 import {
   getAnnotations,
   getAnnotationTypes,
@@ -397,82 +401,98 @@ const updateUploadLogic = createLogic({
       upload[AnnotationName.IMAGING_SESSION]?.[0] ??
       storedRow?.[AnnotationName.IMAGING_SESSION]?.[0];
 
-    const plateBarcodeToPlates = getPlateBarcodeToPlates(state);
-    let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
-    const cachedPlates = plateBarcodeToPlates[plateBarcode];
-    // Avoid re-querying for the imaging sessions if this plate barcode has
-    // been selected before, unless the entry is stale (e.g. restored from a
-    // draft) and doesn't know about the selected imaging session
-    const isCacheMissingImagingSession =
-      !!imagingSessionName &&
-      !cachedPlates?.some((p) => p.name === imagingSessionName);
-    if (!cachedPlates || isCacheMissingImagingSession) {
-      const imagingSessionsForPlateBarcode =
-        await deps.labkeyClient.findImagingSessionsByPlateBarcode(plateBarcode);
-      // A barcode resolves to one plate per imaging session it was imaged at
-      const platesForBarcode: PlateAtImagingSession[] = await Promise.all(
-        imagingSessionsForPlateBarcode.map(async (is) => {
-          const { wells } = await deps.mmsClient.getPlate(
-            plateBarcode,
-            is["ImagingSessionId"]
+    try {
+      // Mass edit does not use fileKeys, so may be undefined
+      if (fileKey) dispatch(startWellLookup(fileKey));
+
+      const plateBarcodeToPlates = getPlateBarcodeToPlates(state);
+      let updatedPlateBarcodeToPlates = plateBarcodeToPlates;
+      const cachedPlates = plateBarcodeToPlates[plateBarcode];
+      // Avoid re-querying for the imaging sessions if this plate barcode has
+      // been selected before, unless the entry is stale (e.g. restored from a
+      // draft) and doesn't know about the selected imaging session
+      const isCacheMissingImagingSession =
+        !!imagingSessionName &&
+        !cachedPlates?.some((p) => p.name === imagingSessionName);
+      if (!cachedPlates || isCacheMissingImagingSession) {
+        const imagingSessionsForPlateBarcode =
+          await deps.labkeyClient.findImagingSessionsByPlateBarcode(
+            plateBarcode
           );
+        // A barcode resolves to one plate per imaging session it was imaged at
+        const platesForBarcode: PlateAtImagingSession[] = await Promise.all(
+          imagingSessionsForPlateBarcode.map(async (is) => {
+            const { wells } = await deps.mmsClient.getPlate(
+              plateBarcode,
+              is["ImagingSessionId"]
+            );
 
-          return {
-            wells,
-            imagingSessionId: is["ImagingSessionId"],
-            name: is["ImagingSessionId/Name"],
-          };
-        })
-      );
-
-      // A barcode with no imaging sessions has a single session-less plate,
-      // represented as an entry without a name/imagingSessionId so consumers
-      // (well autofill below, WellCell) can match it when no imaging session
-      // is selected
-      if (!platesForBarcode.length) {
-        const { wells } = await deps.mmsClient.getPlate(plateBarcode);
-        platesForBarcode.push({ wells });
-      }
-
-      updatedPlateBarcodeToPlates = {
-        ...plateBarcodeToPlates,
-        [plateBarcode]: platesForBarcode,
-      };
-      dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
-    }
-
-    // autoselect well if row and col data available from mxs
-    const mxsData = fileKey
-      ? deps.getState().metadataExtraction[fileKey]?.metadata
-      : undefined;
-    // when editing an already-uploaded file mxs is never fetched, so fall
-    // back to the row and column stored on the file
-    const rowValue =
-      mxsData?.["Row"]?.value ?? storedRow?.[AnnotationName.ROW]?.[0];
-    const colValue =
-      mxsData?.["Column"]?.value ?? storedRow?.[AnnotationName.COLUMN]?.[0];
-
-    if (fileKey && rowValue !== undefined && colValue !== undefined) {
-      // row and col are 1-indexed in metadata, convert to 0-indexed
-      const row = Number(rowValue) - 1;
-      const col = Number(colValue) - 1;
-      const plates = updatedPlateBarcodeToPlates[plateBarcode];
-      // this should match the logic in WellCell
-      const plate = plates?.find((p) =>
-        imagingSessionName ? p.name === imagingSessionName : !p.name
-      );
-      const well = plate?.wells.find((w) => w.row === row && w.col === col);
-      if (well) {
-        dispatch(
-          updateUpload(fileKey, {
-            [AnnotationName.WELL]: [well.wellId],
-            autofilledFields: [AnnotationName.WELL],
+            return {
+              wells,
+              imagingSessionId: is["ImagingSessionId"],
+              name: is["ImagingSessionId/Name"],
+            };
           })
         );
-      }
-    }
 
-    done();
+        // A barcode with no imaging sessions has a single session-less plate,
+        // represented as an entry without a name/imagingSessionId so consumers
+        // (well autofill below, WellCell) can match it when no imaging session
+        // is selected
+        if (!platesForBarcode.length) {
+          const { wells } = await deps.mmsClient.getPlate(plateBarcode);
+          platesForBarcode.push({ wells });
+        }
+
+        updatedPlateBarcodeToPlates = {
+          ...plateBarcodeToPlates,
+          [plateBarcode]: platesForBarcode,
+        };
+        dispatch(setPlateBarcodeToPlates(updatedPlateBarcodeToPlates));
+      }
+
+      // autoselect well if row and col data available from mxs
+      const mxsData = fileKey
+        ? deps.getState().metadataExtraction[fileKey]?.metadata
+        : undefined;
+      // when editing an already-uploaded file mxs is never fetched, so fall
+      // back to the row and column stored on the file
+      const rowValue =
+        mxsData?.["Row"]?.value ?? storedRow?.[AnnotationName.ROW]?.[0];
+      const colValue =
+        mxsData?.["Column"]?.value ?? storedRow?.[AnnotationName.COLUMN]?.[0];
+
+      if (fileKey && rowValue !== undefined && colValue !== undefined) {
+        // row and col are 1-indexed in metadata, convert to 0-indexed
+        const row = Number(rowValue) - 1;
+        const col = Number(colValue) - 1;
+        const plates = updatedPlateBarcodeToPlates[plateBarcode];
+        // this should match the logic in WellCell
+        const plate = plates?.find((p) =>
+          imagingSessionName ? p.name === imagingSessionName : !p.name
+        );
+        const well = plate?.wells.find((w) => w.row === row && w.col === col);
+        if (well) {
+          dispatch(
+            updateUpload(fileKey, {
+              [AnnotationName.WELL]: [well.wellId],
+              autofilledFields: [AnnotationName.WELL],
+            })
+          );
+        }
+      }
+    } catch (e) {
+      dispatch(
+        setErrorAlert(
+          `Unexpected failure looking up plate and well metadata${
+            fileKey ? ` for file ${fileKey}` : ""
+          }. Details: ${e}`
+        )
+      );
+    } finally {
+      if (fileKey) dispatch(finishWellLookup(fileKey));
+      done();
+    }
   },
   transform: (
     {

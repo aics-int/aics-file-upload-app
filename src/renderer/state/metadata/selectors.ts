@@ -41,6 +41,10 @@ export const getUnits = (state: State) => state.metadata.units;
 export const getUsers = (state: State) => state.metadata.users;
 export const getUploadHistory = (state: State) => state.metadata.history.upload;
 
+// Is a particular well (identified by its rowId) currently waiting on a plate barcode to load info
+export const getIsWellLoading = (rowId: string) => (state: State) =>
+  (state.metadata.loadingWellFileKeys[rowId] ?? 0) > 0;
+
 // Some annotations are used purely for displaying data in the File Explorer, here we exclude those
 export const getAnnotations = createSelector(
   [getAllAnnotations],

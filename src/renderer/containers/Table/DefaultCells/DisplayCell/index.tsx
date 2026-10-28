@@ -1,5 +1,5 @@
 import { CloseCircleFilled } from "@ant-design/icons";
-import { Tooltip } from "antd";
+import { Spin, Tooltip } from "antd";
 import classNames from "classnames";
 import moment from "moment";
 import * as React from "react";
@@ -32,6 +32,7 @@ const styles = require("./styles.pcss");
 interface Props extends CellProps<FileModel> {
   disabled?: boolean;
   hasTypeError?: boolean;
+  isLoading?: boolean;
   onStartEditing: () => void;
   onTabExit?: () => void;
 }
@@ -224,6 +225,11 @@ export default function DisplayCell(props: Props) {
           onCopy={onCopy}
           onPaste={onPaste}
         >
+          {props.isLoading && (
+            <div className={styles.loadingOverlay}>
+              <Spin size="small" />
+            </div>
+          )}
           <input
             readOnly
             disabled={props.disabled || isAutofilled}
