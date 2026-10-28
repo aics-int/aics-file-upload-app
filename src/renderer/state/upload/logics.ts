@@ -483,7 +483,11 @@ const updateUploadLogic = createLogic({
       }
     } catch (e) {
       dispatch(
-        setErrorAlert(`Encountered error while updating metadata: ${e}`)
+        setErrorAlert(
+          `Unexpected failure looking up plate and well metadata${
+            fileKey ? ` for file ${fileKey}` : ""
+          }. Details: ${e}`
+        )
       );
     } finally {
       if (fileKey) dispatch(finishWellLookup(fileKey));

@@ -122,11 +122,11 @@ describe("metadata reducer", () => {
       expect(result.programOptions).to.deep.equal(fakeOptions);
     });
   });
-  describe("start/finishWellLookup", () => {
+  describe("startWellLookup/finishWellLookup", () => {
     const mockRowId = "abc";
     it("sets an untracked row to 1", () => {
       const result = reducer(initialState, startWellLookup(mockRowId));
-      expect(result.loadingWellFileKeys?.[mockRowId]).to.equal(1);
+      expect(result.loadingWellFileKeys[mockRowId]).to.equal(1);
     });
     it("increments/decrements an already tracked row", () => {
       const mockState = {
@@ -136,8 +136,8 @@ describe("metadata reducer", () => {
       const afterStart = reducer(mockState, startWellLookup(mockRowId));
       const result = reducer(afterStart, finishWellLookup(mockRowId));
 
-      expect(afterStart.loadingWellFileKeys?.[mockRowId]).to.equal(2);
-      expect(result.loadingWellFileKeys?.[mockRowId]).to.equal(1);
+      expect(afterStart.loadingWellFileKeys[mockRowId]).to.equal(2);
+      expect(result.loadingWellFileKeys[mockRowId]).to.equal(1);
     });
     it("removes a row when count becomes zero", () => {
       const afterStart = reducer(initialState, startWellLookup(mockRowId));
